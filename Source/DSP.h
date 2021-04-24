@@ -341,6 +341,7 @@ private:
 //==============================================================================
 namespace {
 const int MAX_NUM_OSC = 4;
+const double GAIN_AT_CENTER = std::cos(juce::MathConstants<double>::halfPi/2);
 }
 class MultiOsc
 {
@@ -360,13 +361,17 @@ public:
         }
     }
     void step(double numOsc, double detune, double spread, double freq, double angleShift, double* outout) {
-        setUnison(numOsc, detune, spread);
-        outout[0] = 0;
-        outout[1] = 0;
-        for(int i = 0; i < currentNumOsc; i++) {
-            auto value = oscs[i].step(freq * detunes[i], angleShifts[i] + angleShift);
-            outout[0] += value * pans[i][0];
-            outout[1] += value * pans[i][1];
+        if(numOsc == 1) {
+            outout[0] = outout[1] = oscs[0].step(freq, angleShift) * GAIN_AT_CENTER;
+        } else {
+            setUnison(numOsc, detune, spread);
+            outout[0] = 0;
+            outout[1] = 0;
+            for(int i = 0; i < currentNumOsc; i++) {
+                auto value = oscs[i].step(freq * detunes[i], angleShifts[i] + angleShift);
+                outout[0] += value * pans[i][0];
+                outout[1] += value * pans[i][1];
+            }
         }
     }
 private:
