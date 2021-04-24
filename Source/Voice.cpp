@@ -162,25 +162,41 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
         int numChannels = outputBuffer.getNumChannels();
         jassert(numChannels <= 2);
         
+        double angleShift[NUM_OSC] {};
+        double octShift[NUM_OSC] {};
+        double detuneRatio[NUM_OSC] {};
+        double spreadRatio[NUM_OSC] {};
+        double gain[NUM_OSC] {};
+        double filterOctShift[NUM_FILTER] {};
+        double filterQExp[NUM_FILTER] {};
+        double lfoOctShift[NUM_LFO] {};
+        double lfoAmountGain[NUM_LFO] {};
+        
         while (--numSamples >= 0)
         {
 #if JUCE_DEBUG
-            perf.start();
+//            perf.start();
 #endif
             smoothVelocity.step();
             for(int i = 0; i < NUM_ENVELOPE; i++) {
                 adsr[i].step(sampleRate);
             }
             
-            double angleShift[NUM_OSC] {0, 0, 0};
-            double octShift[NUM_OSC] {0, 0, 0};
-            double detuneRatio[NUM_OSC] {1.0, 1.0, 1.0};
-            double spreadRatio[NUM_OSC] {1.0, 1.0, 1.0};
-            double gain[NUM_OSC] {1.0, 1.0, 1.0};
-            double filterOctShift[NUM_FILTER] {0, 0};
-            double filterQExp[NUM_FILTER] {1.0, 1.0};
-            double lfoOctShift[NUM_LFO] {0, 0, 0};
-            double lfoAmountGain[NUM_LFO] {1.0, 1.0, 1.0};
+            for(int i = 0; i < NUM_OSC; i++) {
+                angleShift[i] = 0;
+                octShift[i] = 0;
+                detuneRatio[i] = 1.0;
+                spreadRatio[i] = 1.0;
+                gain[i] = 1.0;
+            }
+            for(int i = 0; i < NUM_FILTER; i++) {
+                filterOctShift[i] = 0;
+                filterQExp[i] = 1.0;
+            }
+            for(int i = 0; i < NUM_LFO; i++) {
+                lfoOctShift[i] = 0;
+                lfoAmountGain[i] = 1.0;
+            }
             
             // ---------------- MODENV ----------------
             for(int i = 0; i < NUM_MODENV; i++) {
@@ -314,20 +330,14 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                                     freq,
                                     angleShift[oscIndex],
                                     o);
-                double adsrValue = 0;
-                auto targetEnvelope = OSC_ENV_VALUES[oscParams[oscIndex].Envelope->getIndex()];
-                for(int envelopeIndex = 0; envelopeIndex < NUM_ENVELOPE; envelopeIndex++) {
-                    if(targetEnvelope & (0x1 << envelopeIndex)) {
-                        adsrValue += adsr[envelopeIndex].getValue();
-                        if(adsr[envelopeIndex].isActive()) {
-                            active = true;
+                int envelopeIndex = oscParams[oscIndex].Envelope->getIndex();
+                if(adsr[envelopeIndex].isActive()) {
+                    active = true;
 //                            sparseLog.log("active", "osc:" + std::to_string(oscIndex) + ", envelope:" + std::to_string(envelopeIndex));
-                        }
-                    }
                 }
+                auto oscGain = 0.30 * adsr[envelopeIndex].getValue() * gain[oscIndex] * oscParams[oscIndex].Gain->get() * smoothVelocity.value;
                 for (auto ch = 0; ch < numChannels; ch++) {
-                    o[ch] *= 0.30 * adsrValue * gain[oscIndex] * oscParams[oscIndex].Gain->get() * smoothVelocity.value;
-                    
+                    o[ch] *= oscGain;
                     for(int filterIndex = 0; filterIndex < NUM_FILTER; filterIndex++) {
                         if(!filterParams[filterIndex].Enabled->get()) {
                             continue;
@@ -368,12 +378,12 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                 outputBuffer.addSample (ch, startSample, out[ch]);
             }
 #if JUCE_DEBUG
-            for (auto ch = 0; ch < numChannels; ch++) {
-                auto value = outputBuffer.getSample(ch, startSample);
-                jassert(value >= -1);
-                jassert(value <= 1);
-            }
-            perf.stop();
+//            for (auto ch = 0; ch < numChannels; ch++) {
+//                auto value = outputBuffer.getSample(ch, startSample);
+//                jassert(value >= -1);
+//                jassert(value <= 1);
+//            }
+//            perf.stop();
 #endif
             ++startSample;
             if(!active) {

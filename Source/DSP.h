@@ -326,9 +326,9 @@ public:
         auto angle = currentAngle + angleShift;
         switch(waveform) {
             case OSC_WAVEFORM::Sine:
-                return sinf(angle);
+                return sin(angle);
             case OSC_WAVEFORM::Noise:
-                return (whiteNoise.nextFloat() * 2.0f - 1.0f);
+                return whiteNoise.nextDouble() * 2.0 - 1.0;
         }
     }
 private:
