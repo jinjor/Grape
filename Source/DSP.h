@@ -351,12 +351,12 @@ public:
         DBG("MultiOsc's destructor called.");
     }
     void setWaveform (OSC_WAVEFORM waveform) {
-        for(int i = 0; i < MAX_NUM_OSC; i++) {
+        for(int i = 0; i < MAX_NUM_OSC; ++i) {
             oscs[i].setWaveform(waveform);
         }
     }
     void setSampleRate (double sampleRate) {
-        for(int i = 0; i < MAX_NUM_OSC; i++) {
+        for(int i = 0; i < MAX_NUM_OSC; ++i) {
             oscs[i].setSampleRate(sampleRate);
         }
     }
@@ -367,7 +367,7 @@ public:
             setUnison(numOsc, detune, spread);
             outout[0] = 0;
             outout[1] = 0;
-            for(int i = 0; i < currentNumOsc; i++) {
+            for(int i = 0; i < currentNumOsc; ++i) {
                 auto value = oscs[i].step(freq * detunes[i], angleShifts[i] + angleShift);
                 outout[0] += value * pans[i][0];
                 outout[1] += value * pans[i][1];
@@ -384,13 +384,13 @@ private:
     double currentSpread = 1;
     void setUnison(double numOsc, double detune, double spread) {
         if(detune != currentDetune || numOsc != currentNumOsc) {
-            for(int i = 0; i < numOsc; i++) {
+            for(int i = 0; i < numOsc; ++i) {
                 double detuneValue = numOsc == 1 ? 0 : -detune + (detune * 2) / (numOsc - 1) * i;
                 detunes[i] = std::pow(2, detuneValue / 20);
             }
         }
         if(spread != currentSpread || numOsc != currentNumOsc) {
-            for(int i = 0; i < numOsc; i++) {
+            for(int i = 0; i < numOsc; ++i) {
                 double pan = numOsc == 1 ? 0 : -spread + (spread * 2) / (numOsc - 1) * i;// [-1;1]
                 double theta = (pan + 1) / 2 * juce::MathConstants<double>::halfPi;
                 pans[i][0] = std::cos(theta);
@@ -398,7 +398,7 @@ private:
             }
         }
         if(numOsc != currentNumOsc) {
-            for(int i = 0; i < numOsc; i++) {
+            for(int i = 0; i < numOsc; ++i) {
                 angleShifts[i] = juce::MathConstants<double>::pi * i / numOsc;
             }
         }

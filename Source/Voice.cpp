@@ -21,7 +21,7 @@ GrapeVoice::GrapeVoice(OscParams* oscParams, EnvelopeParams* envelopeParams, Fil
 , lfos { Osc(), Osc(), Osc() }
 , modEnvs { Adsr(), Adsr(), Adsr() }
 {
-//    for(int i = 0; i < NUM_ENVELOPE; i++) {
+//    for(int i = 0; i < NUM_ENVELOPE; ++i) {
 //        adsr[i].setParams(envelopeParams[i].Attack->get(),
 //                          0.0,
 //                          envelopeParams[i].Decay->get(),
@@ -51,12 +51,12 @@ void GrapeVoice::startNote (int midiNoteNumber, float velocity,
         }
         stolen = false;
         
-        for(int i = 0; i < NUM_OSC; i++) {
+        for(int i = 0; i < NUM_OSC; ++i) {
             if(!stolen) {
 //                oscs[i].setAngle(0.0);
             }
         }
-        for(int i = 0; i < NUM_ENVELOPE; i++) {
+        for(int i = 0; i < NUM_ENVELOPE; ++i) {
             adsr[i].setParams(envelopeParams[i].Attack->get(),
                               0.0,
                               envelopeParams[i].Decay->get(),
@@ -64,13 +64,13 @@ void GrapeVoice::startNote (int midiNoteNumber, float velocity,
                               envelopeParams[i].Release->get());
             adsr[i].doAttack(sampleRate);
         }
-        for(int i = 0; i < NUM_FILTER; i++) {
+        for(int i = 0; i < NUM_FILTER; ++i) {
             filters[i].initializePastData();
         }
-        for(int i = 0; i < NUM_LFO; i++) {
+        for(int i = 0; i < NUM_LFO; ++i) {
             // noop
         }
-        for(int i = 0; i < NUM_MODENV; i++) {
+        for(int i = 0; i < NUM_MODENV; ++i) {
             if(modEnvParams[i].shouldUseHold()) {
                 modEnvs[i].setParams(0.0,
                                      modEnvParams[i].Wait->get(),
@@ -95,15 +95,15 @@ void GrapeVoice::stopNote (float velocity, bool allowTailOff)
     {
         if(allowTailOff) {
             auto sampleRate = getSampleRate();
-            for(int i = 0; i < NUM_ENVELOPE; i++) {
+            for(int i = 0; i < NUM_ENVELOPE; ++i) {
                 adsr[i].doRelease(sampleRate);
             }
         } else {
             stolen = true;
-            for(int i = 0; i < NUM_OSC; i++) {
+            for(int i = 0; i < NUM_OSC; ++i) {
                 oscs[i].setSampleRate(0.0);// stop
             }
-            for(int i = 0; i < NUM_ENVELOPE; i++) {
+            for(int i = 0; i < NUM_ENVELOPE; ++i) {
                 adsr[i].forceStop();
             }
             midiNoteNumber = 0;
@@ -121,29 +121,29 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
         auto sampleRate = getSampleRate();
         
         int shiftedNoteNumbers[NUM_OSC] {midiNoteNumber, midiNoteNumber, midiNoteNumber};
-        for(int i = 0; i < NUM_OSC; i++) {
+        for(int i = 0; i < NUM_OSC; ++i) {
             shiftedNoteNumbers[i] += oscParams[i].Octave->get() * 12;
             shiftedNoteNumbers[i] += oscParams[i].Coarse->get();
         }
-        for(int i = 0; i < NUM_OSC; i++) {
+        for(int i = 0; i < NUM_OSC; ++i) {
             oscs[i].setSampleRate(sampleRate);
             oscs[i].setWaveform(static_cast<OSC_WAVEFORM>(oscParams[i].Waveform->getIndex()));
         }
-        for(int i = 0; i < NUM_ENVELOPE; i++) {
+        for(int i = 0; i < NUM_ENVELOPE; ++i) {
             adsr[i].setParams(envelopeParams[i].Attack->get(),
                               0.0,
                               envelopeParams[i].Decay->get(),
                               envelopeParams[i].Sustain->get(),
                               envelopeParams[i].Release->get());
         }
-        for(int i = 0; i < NUM_FILTER; i++) {
+        for(int i = 0; i < NUM_FILTER; ++i) {
             filters[i].setSampleRate(sampleRate);
         }
-        for(int i = 0; i < NUM_LFO; i++) {
+        for(int i = 0; i < NUM_LFO; ++i) {
             lfos[i].setSampleRate(sampleRate);
             // waveform?
         }
-        for(int i = 0; i < NUM_MODENV; i++) {
+        for(int i = 0; i < NUM_MODENV; ++i) {
             if(modEnvParams[i].shouldUseHold()) {
                 modEnvs[i].setParams(0.0,
                                      modEnvParams[i].Wait->get(),
@@ -178,28 +178,28 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
 //            perf.start();
 #endif
             smoothVelocity.step();
-            for(int i = 0; i < NUM_ENVELOPE; i++) {
+            for(int i = 0; i < NUM_ENVELOPE; ++i) {
                 adsr[i].step(sampleRate);
             }
             
-            for(int i = 0; i < NUM_OSC; i++) {
+            for(int i = 0; i < NUM_OSC; ++i) {
                 angleShift[i] = 0;
                 octShift[i] = 0;
                 detuneRatio[i] = 1.0;
                 spreadRatio[i] = 1.0;
                 gain[i] = 1.0;
             }
-            for(int i = 0; i < NUM_FILTER; i++) {
+            for(int i = 0; i < NUM_FILTER; ++i) {
                 filterOctShift[i] = 0;
                 filterQExp[i] = 1.0;
             }
-            for(int i = 0; i < NUM_LFO; i++) {
+            for(int i = 0; i < NUM_LFO; ++i) {
                 lfoOctShift[i] = 0;
                 lfoAmountGain[i] = 1.0;
             }
             
             // ---------------- MODENV ----------------
-            for(int i = 0; i < NUM_MODENV; i++) {
+            for(int i = 0; i < NUM_MODENV; ++i) {
                 auto params = &modEnvParams[i];
                 if(!params->Enabled->get()) {
                     continue;
@@ -211,7 +211,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     case MODENV_TARGET_TYPE::OSC: {
                         int targetIndex = params->TargetOsc->getIndex();
                         auto targetParam = static_cast<MODENV_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
-                        for(int oscIndex = 0; oscIndex < NUM_OSC; oscIndex++) {
+                        for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
                             if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
                                 switch(targetParam) {
                                     case MODENV_TARGET_OSC_PARAM::Freq: {
@@ -240,7 +240,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     case MODENV_TARGET_TYPE::Filter: {
                         int targetIndex = params->TargetFilter->getIndex();
                         auto targetParam = static_cast<MODENV_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
-                        for(int filterIndex = 0; filterIndex < NUM_FILTER; filterIndex++) {
+                        for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
                             if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
                                 switch (targetParam) {
                                     case MODENV_TARGET_FILTER_PARAM::Freq: {
@@ -262,7 +262,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     case MODENV_TARGET_TYPE::LFO: {
                         int targetIndex = params->TargetLfo->getIndex();
                         auto targetParam = static_cast<MODENV_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
-                        for(int lfoIndex = 0; lfoIndex < NUM_MODENV; lfoIndex++) {
+                        for(int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
                             if(targetIndex == lfoIndex || targetIndex == NUM_LFO) {
                                 switch(targetParam) {
                                     case MODENV_TARGET_LFO_PARAM::Freq: {
@@ -284,7 +284,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                 }
             }
             // ---------------- LFO ----------------
-            for(int i = 0; i < NUM_LFO; i++) {
+            for(int i = 0; i < NUM_LFO; ++i) {
                 auto params = &lfoParams[i];
                 if(!params->Enabled->get()) {
                     continue;
@@ -310,7 +310,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     case LFO_TARGET_TYPE::OSC: {
                         int targetIndex = params->TargetOsc->getIndex();
                         auto param = static_cast<LFO_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
-                        for(int oscIndex = 0; oscIndex < NUM_OSC; oscIndex++) {
+                        for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
                             if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
                                 switch(param) {
                                     case LFO_TARGET_OSC_PARAM::Vibrato: {
@@ -337,7 +337,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     case LFO_TARGET_TYPE::Filter: {
                         int targetIndex = params->TargetFilter->getIndex();
                         auto param = static_cast<LFO_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
-                        for(int filterIndex = 0; filterIndex < NUM_FILTER; filterIndex++) {
+                        for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
                             if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
                                 switch (param) {
                                     case LFO_TARGET_FILTER_PARAM::Freq: {
@@ -358,7 +358,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
             bool active = false;
             double out[2] {0, 0};
             // ---------------- OSC with Envelope and Filter ----------------
-            for(int oscIndex = 0; oscIndex < NUM_OSC; oscIndex++) {
+            for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
                 if(!oscParams[oscIndex].Enabled->get()) {
                     continue;
                 }
@@ -378,10 +378,10 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
 //                            sparseLog.log("active", "osc:" + std::to_string(oscIndex) + ", envelope:" + std::to_string(envelopeIndex));
                 }
                 auto oscGain = adsr[envelopeIndex].getValue() * gain[oscIndex] * oscParams[oscIndex].Gain->get();
-                for (auto ch = 0; ch < numChannels; ch++) {
+                for (auto ch = 0; ch < numChannels; ++ch) {
                     o[ch] *= oscGain;
                 }
-                for(int filterIndex = 0; filterIndex < NUM_FILTER; filterIndex++) {
+                for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
                     if(!filterParams[filterIndex].Enabled->get()) {
                         continue;
                     }
@@ -395,7 +395,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                         if(filterQExp[filterIndex] != 1.0) {
                             q = std::pow(q, filterQExp[filterIndex]);
                         }
-                        for (auto ch = 0; ch < numChannels; ch++) {
+                        for (auto ch = 0; ch < numChannels; ++ch) {
                             o[ch] = filters[filterIndex].step(filterType, freq, q, ch, o[ch]);
                         }
                     }
@@ -403,7 +403,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                 out[0] += o[0];
                 out[1] += o[1];
             }
-            for(int filterIndex = 0; filterIndex < NUM_FILTER; filterIndex++) {
+            for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
                 if(!filterParams[filterIndex].Enabled->get()) {
                     continue;
                 }
@@ -417,20 +417,20 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     if(filterQExp[filterIndex] != 1.0) {
                         q = std::pow(q, filterQExp[filterIndex]);
                     }
-                    for (auto ch = 0; ch < numChannels; ch++) {
+                    for (auto ch = 0; ch < numChannels; ++ch) {
                         out[ch] = filters[filterIndex].step(filterType, freq, q, ch, out[ch]);
                     }
                 }
             }
             auto finalGain = 0.30 * smoothVelocity.value;
-            for (auto ch = 0; ch < numChannels; ch++) {
+            for (auto ch = 0; ch < numChannels; ++ch) {
                 out[ch] *= finalGain;
             }
-            for (auto ch = 0; ch < numChannels; ch++) {
+            for (auto ch = 0; ch < numChannels; ++ch) {
                 outputBuffer.addSample (ch, startSample, out[ch]);
             }
 #if JUCE_DEBUG
-//            for (auto ch = 0; ch < numChannels; ch++) {
+//            for (auto ch = 0; ch < numChannels; ++ch) {
 //                auto value = outputBuffer.getSample(ch, startSample);
 //                jassert(value >= -1);
 //                jassert(value <= 1);
