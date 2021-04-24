@@ -299,7 +299,9 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     freq *= lfoParams[i].FastFreq->get();
                 } else {
                     freq = lfoParams[i].SlowFreq->get();
-                    freq *= std::pow(2.0, lfoOctShift[i]);
+                    if(lfoOctShift[i] != 0.0) {
+                        freq *= std::pow(2.0, lfoOctShift[i]);
+                    }
                 }
                 lfoValue = lfos[i].step(freq, 0.0);
                 auto lfoAmount = params->Amount->get() * lfoAmountGain[i];
@@ -309,7 +311,6 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                         int targetIndex = params->TargetOsc->getIndex();
                         auto param = LFO_TARGET_OSC_PARAM_VALUES[params->TargetOscParam->getIndex()];
                         for(int oscIndex = 0; oscIndex < NUM_OSC; oscIndex++) {
-                            
                             if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
                                 switch(param) {
                                     case LFO_TARGET_OSC_PARAM::Vibrato: {
@@ -376,7 +377,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     active = true;
 //                            sparseLog.log("active", "osc:" + std::to_string(oscIndex) + ", envelope:" + std::to_string(envelopeIndex));
                 }
-                auto oscGain = 0.30 * adsr[envelopeIndex].getValue() * gain[oscIndex] * oscParams[oscIndex].Gain->get() * smoothVelocity.value;
+                auto oscGain = adsr[envelopeIndex].getValue() * gain[oscIndex] * oscParams[oscIndex].Gain->get();
                 for (auto ch = 0; ch < numChannels; ch++) {
                     o[ch] *= oscGain;
                 }
@@ -391,7 +392,9 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                         shiftedNoteNumber += filterOctShift[filterIndex] * 12;
                         auto freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
                         auto q = filterParams[filterIndex].Q->get();
-                        q = std::pow(q, filterQExp[filterIndex]);
+                        if(filterQExp[filterIndex] != 1.0) {
+                            q = std::pow(q, filterQExp[filterIndex]);
+                        }
                         for (auto ch = 0; ch < numChannels; ch++) {
                             o[ch] = filters[filterIndex].step(filterType, freq, q, ch, o[ch]);
                         }
@@ -411,11 +414,17 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     shiftedNoteNumber += filterOctShift[filterIndex] * 12;
                     auto freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
                     auto q = filterParams[filterIndex].Q->get();
-                    q = std::pow(q, filterQExp[filterIndex]);
+                    if(filterQExp[filterIndex] != 1.0) {
+                        q = std::pow(q, filterQExp[filterIndex]);
+                    }
                     for (auto ch = 0; ch < numChannels; ch++) {
                         out[ch] = filters[filterIndex].step(filterType, freq, q, ch, out[ch]);
                     }
                 }
+            }
+            auto finalGain = 0.30 * smoothVelocity.value;
+            for (auto ch = 0; ch < numChannels; ch++) {
+                out[ch] *= finalGain;
             }
             for (auto ch = 0; ch < numChannels; ch++) {
                 outputBuffer.addSample (ch, startSample, out[ch]);
