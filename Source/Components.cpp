@@ -770,16 +770,22 @@ void LfoComponent::resized()
         auto paramArea = area.removeFromLeft(110);
         targetOscParamSelector.setBounds(paramArea.reduced(LOCAL_MARGIN));
         targetFilterParamSelector.setBounds(paramArea.reduced(LOCAL_MARGIN));
-        if(LFO_TARGET_TYPE_VALUES[_paramsPtr->TargetType->getIndex()] == LFO_TARGET_TYPE::OSC) {
-            targetOscSelector.setVisible(true);
-            targetFilterSelector.setVisible(false);
-            targetOscParamSelector.setVisible(true);
-            targetFilterParamSelector.setVisible(false);
-        } else if(LFO_TARGET_TYPE_VALUES[_paramsPtr->TargetType->getIndex()] == LFO_TARGET_TYPE::Filter) {
-            targetOscSelector.setVisible(false);
-            targetFilterSelector.setVisible(true);
-            targetOscParamSelector.setVisible(false);
-            targetFilterParamSelector.setVisible(true);
+        switch(static_cast<LFO_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
+            case LFO_TARGET_TYPE::OSC: {
+                targetOscSelector.setVisible(true);
+                targetFilterSelector.setVisible(false);
+                targetOscParamSelector.setVisible(true);
+                targetFilterParamSelector.setVisible(false);
+                break;
+            }
+            case LFO_TARGET_TYPE::Filter: {
+                targetOscSelector.setVisible(false);
+                targetFilterSelector.setVisible(true);
+                targetOscParamSelector.setVisible(false);
+                targetFilterParamSelector.setVisible(true);
+                break;
+            }
+                
         }
     }
     {
@@ -787,9 +793,9 @@ void LfoComponent::resized()
         freqLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         fastFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
         slowFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
-        if(LFO_TARGET_TYPE_VALUES[_paramsPtr->TargetType->getIndex()] == LFO_TARGET_TYPE::OSC &&
-           (LFO_TARGET_OSC_PARAM_VALUES[_paramsPtr->TargetOscParam->getIndex()] == LFO_TARGET_OSC_PARAM::FM ||
-            LFO_TARGET_OSC_PARAM_VALUES[_paramsPtr->TargetOscParam->getIndex()] == LFO_TARGET_OSC_PARAM::AM
+        if(static_cast<LFO_TARGET_TYPE>(_paramsPtr->TargetType->getIndex()) == LFO_TARGET_TYPE::OSC &&
+           (static_cast<LFO_TARGET_OSC_PARAM>(_paramsPtr->TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::FM ||
+            static_cast<LFO_TARGET_OSC_PARAM>(_paramsPtr->TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::AM
             )
            ) {
             fastFreqSlider.setVisible(true);
@@ -1074,27 +1080,34 @@ void ModEnvComponent::resized()
         targetOscParamSelector.setBounds(paramArea.reduced(LOCAL_MARGIN));
         targetFilterParamSelector.setBounds(paramArea.reduced(LOCAL_MARGIN));
         targetLfoParamSelector.setBounds(paramArea.reduced(LOCAL_MARGIN));
-        if(MODENV_TARGET_TYPE_VALUES[_paramsPtr->TargetType->getIndex()] == MODENV_TARGET_TYPE::OSC) {
-            targetOscSelector.setVisible(true);
-            targetFilterSelector.setVisible(false);
-            targetLfoSelector.setVisible(false);
-            targetOscParamSelector.setVisible(true);
-            targetFilterParamSelector.setVisible(false);
-            targetLfoParamSelector.setVisible(false);
-        } else if(MODENV_TARGET_TYPE_VALUES[_paramsPtr->TargetType->getIndex()] == MODENV_TARGET_TYPE::Filter) {
-            targetOscSelector.setVisible(false);
-            targetFilterSelector.setVisible(true);
-            targetLfoSelector.setVisible(false);
-            targetOscParamSelector.setVisible(false);
-            targetFilterParamSelector.setVisible(true);
-            targetLfoParamSelector.setVisible(false);
-        } else if(MODENV_TARGET_TYPE_VALUES[_paramsPtr->TargetType->getIndex()] == MODENV_TARGET_TYPE::LFO) {
-            targetOscSelector.setVisible(false);
-            targetFilterSelector.setVisible(false);
-            targetLfoSelector.setVisible(true);
-            targetOscParamSelector.setVisible(false);
-            targetFilterParamSelector.setVisible(false);
-            targetLfoParamSelector.setVisible(true);
+        switch(static_cast<MODENV_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
+            case MODENV_TARGET_TYPE::OSC: {
+                targetOscSelector.setVisible(true);
+                targetFilterSelector.setVisible(false);
+                targetLfoSelector.setVisible(false);
+                targetOscParamSelector.setVisible(true);
+                targetFilterParamSelector.setVisible(false);
+                targetLfoParamSelector.setVisible(false);
+                break;
+            }
+            case MODENV_TARGET_TYPE::Filter: {
+                targetOscSelector.setVisible(false);
+                targetFilterSelector.setVisible(true);
+                targetLfoSelector.setVisible(false);
+                targetOscParamSelector.setVisible(false);
+                targetFilterParamSelector.setVisible(true);
+                targetLfoParamSelector.setVisible(false);
+                break;
+            }
+            case MODENV_TARGET_TYPE::LFO: {
+                targetOscSelector.setVisible(false);
+                targetFilterSelector.setVisible(false);
+                targetLfoSelector.setVisible(true);
+                targetOscParamSelector.setVisible(false);
+                targetFilterParamSelector.setVisible(false);
+                targetLfoParamSelector.setVisible(true);
+                break;
+            }
         }
     }
     {
@@ -1132,7 +1145,7 @@ void ModEnvComponent::resized()
             peakFreqSlider.setVisible(false);
             fadeSelector.setVisible(true);
             // 2
-            if(MODENV_FADE_VALUES[_paramsPtr->Fade->getIndex()] == MODENV_FADE::In) {
+            if(static_cast<MODENV_FADE>(_paramsPtr->Fade->getIndex()) == MODENV_FADE::In) {
                 waitLabel.setVisible(true);
                 attackLabel.setVisible(false);
                 waitSlider.setVisible(true);

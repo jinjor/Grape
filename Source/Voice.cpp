@@ -127,7 +127,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
         }
         for(int i = 0; i < NUM_OSC; i++) {
             oscs[i].setSampleRate(sampleRate);
-            oscs[i].setWaveform(OSC_WAVEFORM_VALUES[oscParams[i].Waveform->getIndex()]);
+            oscs[i].setWaveform(static_cast<OSC_WAVEFORM>(oscParams[i].Waveform->getIndex()));
         }
         for(int i = 0; i < NUM_ENVELOPE; i++) {
             adsr[i].setParams(envelopeParams[i].Attack->get(),
@@ -206,11 +206,11 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                 }
                 modEnvs[i].step(sampleRate);
                 auto modEnvValue = modEnvs[i].getValue();
-                auto targetType = MODENV_TARGET_TYPE_VALUES[params->TargetType->getIndex()];
+                auto targetType = static_cast<MODENV_TARGET_TYPE>(params->TargetType->getIndex());
                 switch(targetType) {
                     case MODENV_TARGET_TYPE::OSC: {
                         int targetIndex = params->TargetOsc->getIndex();
-                        auto targetParam = MODENV_TARGET_OSC_PARAM_VALUES[params->TargetOscParam->getIndex()];
+                        auto targetParam = static_cast<MODENV_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
                         for(int oscIndex = 0; oscIndex < NUM_OSC; oscIndex++) {
                             if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
                                 switch(targetParam) {
@@ -219,14 +219,14 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                                         break;
                                     }
                                     case MODENV_TARGET_OSC_PARAM::Detune: {
-                                        if(MODENV_FADE_VALUES[params->Fade->getIndex()] == MODENV_FADE::In) {
+                                        if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
                                             modEnvValue = 1 - modEnvValue;
                                         }
                                         detuneRatio[oscIndex] *= modEnvValue;
                                         break;
                                     }
                                     case MODENV_TARGET_OSC_PARAM::Spread: {
-                                        if(MODENV_FADE_VALUES[params->Fade->getIndex()] == MODENV_FADE::In) {
+                                        if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
                                             modEnvValue = 1 - modEnvValue;
                                         }
                                         spreadRatio[oscIndex] *= modEnvValue;
@@ -239,7 +239,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     }
                     case MODENV_TARGET_TYPE::Filter: {
                         int targetIndex = params->TargetFilter->getIndex();
-                        auto targetParam = MODENV_TARGET_FILTER_PARAM_VALUES[params->TargetFilterParam->getIndex()];
+                        auto targetParam = static_cast<MODENV_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
                         for(int filterIndex = 0; filterIndex < NUM_FILTER; filterIndex++) {
                             if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
                                 switch (targetParam) {
@@ -248,7 +248,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                                         break;
                                     }
                                     case MODENV_TARGET_FILTER_PARAM::Q: {
-                                        if(MODENV_FADE_VALUES[params->Fade->getIndex()] == MODENV_FADE::In) {
+                                        if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
                                             modEnvValue = 1 - modEnvValue;
                                         }
                                         filterQExp[filterIndex] *= modEnvValue;
@@ -261,7 +261,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     }
                     case MODENV_TARGET_TYPE::LFO: {
                         int targetIndex = params->TargetLfo->getIndex();
-                        auto targetParam = MODENV_TARGET_LFO_PARAM_VALUES[params->TargetLfoParam->getIndex()];
+                        auto targetParam = static_cast<MODENV_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
                         for(int lfoIndex = 0; lfoIndex < NUM_MODENV; lfoIndex++) {
                             if(targetIndex == lfoIndex || targetIndex == NUM_LFO) {
                                 switch(targetParam) {
@@ -270,7 +270,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                                         break;
                                     }
                                     case MODENV_TARGET_LFO_PARAM::Amount: {
-                                        if(MODENV_FADE_VALUES[params->Fade->getIndex()] == MODENV_FADE::In) {
+                                        if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
                                             modEnvValue = 1 - modEnvValue;
                                         }
                                         lfoAmountGain[lfoIndex] *= modEnvValue;
@@ -305,11 +305,11 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                 }
                 lfoValue = lfos[i].step(freq, 0.0);
                 auto lfoAmount = params->Amount->get() * lfoAmountGain[i];
-                auto targetType = LFO_TARGET_TYPE_VALUES[params->TargetType->getIndex()];
+                auto targetType = static_cast<LFO_TARGET_TYPE>(params->TargetType->getIndex());
                 switch(targetType) {
                     case LFO_TARGET_TYPE::OSC: {
                         int targetIndex = params->TargetOsc->getIndex();
-                        auto param = LFO_TARGET_OSC_PARAM_VALUES[params->TargetOscParam->getIndex()];
+                        auto param = static_cast<LFO_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
                         for(int oscIndex = 0; oscIndex < NUM_OSC; oscIndex++) {
                             if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
                                 switch(param) {
@@ -336,7 +336,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     }
                     case LFO_TARGET_TYPE::Filter: {
                         int targetIndex = params->TargetFilter->getIndex();
-                        auto param = LFO_TARGET_FILTER_PARAM_VALUES[params->TargetFilterParam->getIndex()];
+                        auto param = static_cast<LFO_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
                         for(int filterIndex = 0; filterIndex < NUM_FILTER; filterIndex++) {
                             if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
                                 switch (param) {
@@ -386,7 +386,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                         continue;
                     }
                     if(filterParams[filterIndex].Target->getIndex() == oscIndex) {
-                        auto filterType = FILTER_TYPE_VALUES[filterParams[filterIndex].Type->getIndex()];
+                        auto filterType = static_cast<FILTER_TYPE>(filterParams[filterIndex].Type->getIndex());
                         double shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
                         shiftedNoteNumber += filterParams[filterIndex].Octave->get() * 12;
                         shiftedNoteNumber += filterOctShift[filterIndex] * 12;
@@ -408,7 +408,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     continue;
                 }
                 if(filterParams[filterIndex].Target->getIndex() == NUM_OSC) {// All
-                    auto filterType = FILTER_TYPE_VALUES[filterParams[filterIndex].Type->getIndex()];
+                    auto filterType = static_cast<FILTER_TYPE>(filterParams[filterIndex].Type->getIndex());
                     double shiftedNoteNumber = midiNoteNumber;
                     shiftedNoteNumber += filterParams[filterIndex].Octave->get() * 12;
                     shiftedNoteNumber += filterOctShift[filterIndex] * 12;
