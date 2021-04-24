@@ -241,7 +241,7 @@ private:
     double currentFreq = 0.0;
     double currentQ = 0.0;
     void setParams (FILTER_TYPE filterType, double freq, double q) {
-        freq = std::min(sampleRate/2 - 10, freq);
+        freq = std::min(sampleRate * 0.5 - 10, freq);
         if(filterType == currentFilterType && freq == currentFreq && q == currentQ) {
             return;
         }
@@ -266,9 +266,9 @@ private:
         auto fc = freq / sampleRate;
         auto w0 = 2 * juce::MathConstants<double>::pi * fc;
         auto alpha = std::sin(w0) / (2 * q);
-        auto b0 = (1 - std::cos(w0)) / 2;
+        auto b0 = (1 - std::cos(w0)) * 0.5;
         auto b1 = (1 - std::cos(w0));
-        auto b2 = (1 - std::cos(w0)) / 2;
+        auto b2 = (1 - std::cos(w0)) * 0.5;
         auto a0 = 1 + alpha;
         auto a1 = -2 * std::cos(w0);
         auto a2 = 1 - alpha;
@@ -283,9 +283,9 @@ private:
         auto fc = freq / sampleRate;
         auto w0 = 2 * juce::MathConstants<double>::pi * fc;
         auto alpha = std::sin(w0) / (2 * q);
-        auto b0 = (1 + std::cos(w0)) / 2;
+        auto b0 = (1 + std::cos(w0)) * 0.5;
         auto b1 = -(1 + std::cos(w0));
-        auto b2 = (1 + std::cos(w0)) / 2;
+        auto b2 = (1 + std::cos(w0)) * 0.5;
         auto a0 = 1 + alpha;
         auto a1 = -2 * std::cos(w0);
         auto a2 = 1 - alpha;
@@ -392,7 +392,7 @@ private:
         if(spread != currentSpread || numOsc != currentNumOsc) {
             for(int i = 0; i < numOsc; ++i) {
                 double pan = numOsc == 1 ? 0 : -spread + (spread * 2) / (numOsc - 1) * i;// [-1;1]
-                double theta = (pan + 1) / 2 * juce::MathConstants<double>::halfPi;
+                double theta = (pan + 1) * 0.5 * juce::MathConstants<double>::halfPi;
                 pans[i][0] = std::cos(theta);
                 pans[i][1] = std::sin(theta);
             }

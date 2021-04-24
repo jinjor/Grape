@@ -318,7 +318,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                                         break;
                                     }
                                     case LFO_TARGET_OSC_PARAM::Tremolo: {
-                                        gain[oscIndex] *= 1 - ((lfoValue + 1) / 2 * lfoAmount);
+                                        gain[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
                                         break;
                                     }
                                     case LFO_TARGET_OSC_PARAM::FM: {
@@ -326,7 +326,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                                         break;
                                     }
                                     case LFO_TARGET_OSC_PARAM::AM: {
-                                        gain[oscIndex] *= 1 - ((lfoValue + 1) / 2 * lfoAmount);
+                                        gain[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
                                         break;
                                     }
                                 }
@@ -345,7 +345,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                                         break;
                                     }
                                     case LFO_TARGET_FILTER_PARAM::Q: {
-                                        filterQExp[filterIndex] *= 1 - ((lfoValue + 1) / 2 * lfoAmount);
+                                        filterQExp[filterIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
                                         break;
                                     }
                                 }

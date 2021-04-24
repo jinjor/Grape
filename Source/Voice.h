@@ -46,6 +46,7 @@ const int NUM_ENVELOPE = 2;
 const int NUM_FILTER = 2;
 const int NUM_LFO = 3;
 const int NUM_MODENV = 3;
+const double A = 1.0 / 12.0;
 const double X = std::pow(2.0, 1.0/12.0);
 const double Y = 440.0 / std::pow(X, 69);
 }
@@ -80,7 +81,7 @@ private:
     SparseLog sparseLog = SparseLog(10000);
     double getMidiNoteInHertzDouble (double noteNumber)
     {
-        return 440.0 * std::pow (2.0, (noteNumber - 69) / 12.0);
+        return 440.0 * std::pow (2.0, (noteNumber - 69) * A);
 //        return Y * std::pow(X, noteNumber);// こっちの方がパフォーマンス悪かった
     }
 };
