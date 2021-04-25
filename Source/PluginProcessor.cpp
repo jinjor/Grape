@@ -190,7 +190,9 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 }
 , delayParams {
     new juce::AudioParameterBool("DELAY_ENABLED", "Enabled", false),
-    new juce::AudioParameterFloat("DELAY_TIME", "Time", 0.01f, 1.0f, 0.1f),
+    new juce::AudioParameterChoice("DELAY_TYPE", "Type", DELAY_TYPE_NAMES, DELAY_TYPE_NAMES.indexOf("Parallel")),
+    new juce::AudioParameterFloat("DELAY_TIME_L", "TimeL", 0.01f, 1.0f, 0.1f),
+    new juce::AudioParameterFloat("DELAY_TIME_R", "TimeR", 0.01f, 1.0f, 0.1f),
     new juce::AudioParameterFloat("DELAY_LOW_FREQ", "LowFfreq", 10.0f, 20000.0f, 10.0f),
     new juce::AudioParameterFloat("DELAY_HIGH_FREQ", "HighFreq", 10.0f, 20000.0f, 20000.0f),
     new juce::AudioParameterFloat("DELAY_FEEDBACK", "Feedback", 0.0f, 1.0f, 0.3f),
@@ -346,9 +348,10 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     auto* leftOut = buffer.getWritePointer(0);
     auto* rightOut = buffer.getWritePointer(1);
     
-    delayEffect.setParams(getSampleRate(),
-                          false,
-                          delayParams.Time->get(),
+    stereoDelay.setParams(getSampleRate(),
+                          static_cast<DELAY_TYPE>(delayParams.Type->getIndex()),
+                          delayParams.TimeL->get(),
+                          delayParams.TimeR->get(),
                           delayParams.LowFreq->get(),
                           delayParams.HighFreq->get(),
                           delayParams.Feedback->get(),
@@ -357,7 +360,11 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
         for(int i = 0; i < buffer.getNumSamples(); ++i)
         {
             double sample[2] { leftIn[i], rightIn[i] };
-            delayEffect.step(sample);
+            jassert(sample[0] >= -1);
+            jassert(sample[0] <= 1);
+            jassert(sample[1] >= -1);
+            jassert(sample[1] <= 1);
+            stereoDelay.step(sample);
             jassert(sample[0] >= -1);
             jassert(sample[0] <= 1);
             jassert(sample[1] >= -1);

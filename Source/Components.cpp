@@ -1249,7 +1249,9 @@ void ModEnvComponent::timerCallback()
 DelayComponent::DelayComponent(DelayParams* params)
 : _paramsPtr(params)
 , enabledButton("Enabled")
-, timeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+, typeSelector("Type")
+, timeLSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+, timeRSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , lowFreqSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , highFreqSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , feedbackSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -1269,14 +1271,30 @@ DelayComponent::DelayComponent(DelayParams* params)
     titleLabel.setEditable(false, false, false);
     addAndMakeVisible(titleLabel);
     
-    timeSlider.setLookAndFeel(&grapeLookAndFeel);
-    timeSlider.setRange(_paramsPtr->Time->range.start,
-                          _paramsPtr->Time->range.end, 0.01);
-    timeSlider.setValue(_paramsPtr->Time->get(), juce::dontSendNotification);
-    timeSlider.setPopupDisplayEnabled(true, true, this);
-    timeSlider.setPopupMenuEnabled(true);
-    timeSlider.addListener(this);
-    body.addAndMakeVisible(timeSlider);
+    typeSelector.setLookAndFeel(&grapeLookAndFeel);
+    typeSelector.addItemList(_paramsPtr->Type->getAllValueStrings(), 1);
+    typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
+    typeSelector.setJustificationType(juce::Justification::centred);
+    typeSelector.addListener(this);
+    body.addAndMakeVisible(typeSelector);
+    
+    timeLSlider.setLookAndFeel(&grapeLookAndFeel);
+    timeLSlider.setRange(_paramsPtr->TimeL->range.start,
+                          _paramsPtr->TimeL->range.end, 0.01);
+    timeLSlider.setValue(_paramsPtr->TimeL->get(), juce::dontSendNotification);
+    timeLSlider.setPopupDisplayEnabled(true, true, this);
+    timeLSlider.setPopupMenuEnabled(true);
+    timeLSlider.addListener(this);
+    body.addAndMakeVisible(timeLSlider);
+    
+    timeRSlider.setLookAndFeel(&grapeLookAndFeel);
+    timeRSlider.setRange(_paramsPtr->TimeR->range.start,
+                          _paramsPtr->TimeR->range.end, 0.01);
+    timeRSlider.setValue(_paramsPtr->TimeR->get(), juce::dontSendNotification);
+    timeRSlider.setPopupDisplayEnabled(true, true, this);
+    timeRSlider.setPopupMenuEnabled(true);
+    timeRSlider.addListener(this);
+    body.addAndMakeVisible(timeRSlider);
     
     
     lowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
@@ -1315,11 +1333,23 @@ DelayComponent::DelayComponent(DelayParams* params)
     mixSlider.addListener(this);
     body.addAndMakeVisible(mixSlider);
     
-    timeLabel.setFont(paramLabelFont);
-    timeLabel.setText("Time", juce::dontSendNotification);
-    timeLabel.setJustificationType(juce::Justification::centred);
-    timeLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(timeLabel);
+    typeLabel.setFont(paramLabelFont);
+    typeLabel.setText("Type", juce::dontSendNotification);
+    typeLabel.setJustificationType(juce::Justification::centred);
+    typeLabel.setEditable(false, false, false);
+    body.addAndMakeVisible(typeLabel);
+    
+    timeLLabel.setFont(paramLabelFont);
+    timeLLabel.setText("Time(L)", juce::dontSendNotification);
+    timeLLabel.setJustificationType(juce::Justification::centred);
+    timeLLabel.setEditable(false, false, false);
+    body.addAndMakeVisible(timeLLabel);
+    
+    timeRLabel.setFont(paramLabelFont);
+    timeRLabel.setText("Time(R)", juce::dontSendNotification);
+    timeRLabel.setJustificationType(juce::Justification::centred);
+    timeRLabel.setEditable(false, false, false);
+    body.addAndMakeVisible(timeRLabel);
     
     lowFreqLabel.setFont(paramLabelFont);
     lowFreqLabel.setText("Low Freq", juce::dontSendNotification);
@@ -1377,28 +1407,42 @@ void DelayComponent::resized()
     }
     body.setBounds(bounds);
     bounds = body.getLocalBounds();
+    auto bodyHeight = bounds.getHeight();
+    auto upperArea = bounds.removeFromTop(bodyHeight / 2);
+    auto lowerArea = bounds;
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
-        timeLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        timeSlider.setBounds(area.reduced(LOCAL_MARGIN));
+        juce::Rectangle<int> area = upperArea.removeFromLeft(120).removeFromTop(height);
+        typeLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        typeSelector.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
         lowFreqLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         lowFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
         highFreqLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         highFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        timeLLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        timeLSlider.setBounds(area.reduced(LOCAL_MARGIN));
+    }
+    {
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        timeRLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        timeRSlider.setBounds(area.reduced(LOCAL_MARGIN));
+    }
+
+    {
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         feedbackLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         feedbackSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         mixLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         mixSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -1410,12 +1454,20 @@ void DelayComponent::buttonClicked(juce::Button* button) {
     }
 }
 void DelayComponent::comboBoxChanged(juce::ComboBox* comboBox) {
+    if(comboBox == &typeSelector)
+    {
+        *_paramsPtr->Type = typeSelector.getSelectedItemIndex();
+    }
 }
 void DelayComponent::sliderValueChanged(juce::Slider *slider)
 {
-    if(slider == &timeSlider)
+    if(slider == &timeLSlider)
     {
-        *_paramsPtr->Time = (float)timeSlider.getValue();
+        *_paramsPtr->TimeL = (float)timeLSlider.getValue();
+    }
+    else if(slider == &timeRSlider)
+    {
+        *_paramsPtr->TimeR = (float)timeRSlider.getValue();
     }
     else if(slider == &lowFreqSlider)
     {
@@ -1438,7 +1490,9 @@ void DelayComponent::timerCallback()
 {
     body.setEnabled(_paramsPtr->Enabled->get());
     enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    timeSlider.setValue(_paramsPtr->Time->get(), juce::dontSendNotification);
+    typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
+    timeLSlider.setValue(_paramsPtr->TimeL->get(), juce::dontSendNotification);
+    timeRSlider.setValue(_paramsPtr->TimeR->get(), juce::dontSendNotification);
     lowFreqSlider.setValue(_paramsPtr->LowFreq->get(), juce::dontSendNotification);
     highFreqSlider.setValue(_paramsPtr->HighFreq->get(), juce::dontSendNotification);
     feedbackSlider.setValue(_paramsPtr->Feedback->get(), juce::dontSendNotification);

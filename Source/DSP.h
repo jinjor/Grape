@@ -409,48 +409,51 @@ private:
 };
 
 //==============================================================================
-class DelayEffect
+class StereoDelay
 {
 public:
-    DelayEffect() {
+    StereoDelay() {
     }
-    ~DelayEffect() {
+    ~StereoDelay() {
         DBG("DelayEffect's destructor called.");
     }
-    void setParams(double sampleRate, bool pingpong, double delayTime, double lowFreq, double highFreq, double feedback, double mix) {
+    void setParams(double sampleRate, DELAY_TYPE type, double delayTimeL, double delayTimeR, double lowFreq, double highFreq, double feedback, double mix) {
         lowpass.setSampleRate(sampleRate);
         highpass.setSampleRate(sampleRate);
-        delayLength = std::max(1.0, std::min(48000.0, sampleRate * delayTime));
-        this->pingpong = pingpong;
+        delayLength[0] = std::max(1.0, std::min(48000.0, sampleRate * delayTimeL));
+        delayLength[1] = std::max(1.0, std::min(48000.0, sampleRate * delayTimeR));
+        this->type = type;
         this->lowFreq = lowFreq;
         this->highFreq = highFreq;
         this->feedback = feedback;
         this->mix = mix;
     }
     void step(double* input) {
-        double tmp[2] { past[0][cursor], past[1][cursor] };
+        double tmp[2] { past[0][cursor[0]], past[1][cursor[1]] };// loop の中で past を上書きするのでここに保持しておく
         for(int ch = 0; ch < 2; ch++) {
             auto dry = input[ch];
-            auto wet = past[ch][cursor];
+            auto wet = past[ch][cursor[ch]];
             input[ch] = dry * (1-mix) + wet * mix;
             
-            auto newWet = dry + tmp[pingpong ? 1 - ch : ch] * feedback;
+            auto newWet = dry + tmp[type == DELAY_TYPE::PingPong ? 1 - ch : ch] * feedback;
             newWet = lowpass.step(FILTER_TYPE::Lowpass, highFreq, 1.0, ch, newWet);
             newWet = highpass.step(FILTER_TYPE::Highpass, lowFreq, 1.0, ch, newWet);
-            past[ch][cursor] = newWet;
+            past[ch][cursor[ch]] = newWet;
         }
-        cursor++;
-        if(cursor >= delayLength) {
-            cursor = 0;
+        for(int ch = 0; ch < 2; ch++) {
+            cursor[ch]++;
+            if(cursor[ch] >= delayLength[ch]) {
+                cursor[ch] = 0;
+            }
         }
     }
 private:
-    double past[2][48000];
-    int delayLength = 1;
-    int cursor = 0;
+    double past[2][48000]{};
+    int delayLength[2] { 1, 1 };
+    int cursor[2]{};
     Filter lowpass;
     Filter highpass;
-    bool pingpong = false;
+    DELAY_TYPE type = DELAY_TYPE::Parallel;
     double lowFreq = 10;
     double highFreq = 20000;
     double feedback = 0;

@@ -47,6 +47,9 @@ const juce::StringArray MODENV_TARGET_LFO_PARAM_NAMES = juce::StringArray("Freq"
 
 enum class MODENV_FADE { In, Out };
 const juce::StringArray MODENV_FADE_NAMES = juce::StringArray("In", "Out");
+
+enum class DELAY_TYPE { Parallel, PingPong };
+const juce::StringArray DELAY_TYPE_NAMES = juce::StringArray("Parallel", "PingPong");
 }
 //==============================================================================
 class SynthParametersBase
@@ -226,17 +229,21 @@ class DelayParams : public SynthParametersBase
 {
 public:
     juce::AudioParameterBool* Enabled;
-    juce::AudioParameterFloat* Time;
+    juce::AudioParameterChoice* Type;
+    juce::AudioParameterFloat* TimeL;
+    juce::AudioParameterFloat* TimeR;
     juce::AudioParameterFloat* LowFreq;
     juce::AudioParameterFloat* HighFreq;
     juce::AudioParameterFloat* Feedback;
     juce::AudioParameterFloat* Mix;
     DelayParams(juce::AudioParameterBool* enabled,
-                juce::AudioParameterFloat* time,
-                 juce::AudioParameterFloat* lowFreq,
-                 juce::AudioParameterFloat* highFreq,
-                 juce::AudioParameterFloat* feedback,
-                 juce::AudioParameterFloat* mix);
+                juce::AudioParameterChoice* type,
+                juce::AudioParameterFloat* timeL,
+                juce::AudioParameterFloat* timeR,
+                juce::AudioParameterFloat* lowFreq,
+                juce::AudioParameterFloat* highFreq,
+                juce::AudioParameterFloat* feedback,
+                juce::AudioParameterFloat* mix);
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;

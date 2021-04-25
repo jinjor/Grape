@@ -126,7 +126,7 @@ void GrapeAudioProcessorEditor::resized()
     auto effectArea = bounds;
     auto effectHeight = effectArea.getHeight();
     {
-        juce::Rectangle<int> area = effectArea.removeFromTop(effectHeight / 3);
+        juce::Rectangle<int> area = effectArea.removeFromTop(effectHeight / 3 * 2);
         delayComponent.setBounds(area.reduced(PANEL_MARGIN));
     }
 //    {
