@@ -5,8 +5,9 @@
 namespace {
 const float PANEL_NAME_FONT_SIZE = 15.0f;
 const float PARAM_LABEL_FONT_SIZE = 14.0f;
-const int PANEL_NAME_HEIGHT = 26;
-const int LOCAL_MARGIN = 2;
+const float PANEL_NAME_HEIGHT = 26.0;
+const float LOCAL_MARGIN = 2.0;
+const float LINE_HEIGHT = 28.0;
 const juce::Colour TEXT_COLOUR = juce::Colour(200,200,200);
 const juce::Colour PANEL_NAME_COLOUR = juce::Colour(50,50,50);
 }
@@ -139,7 +140,7 @@ OscComponent::OscComponent(int index, OscParams* params)
     body.addAndMakeVisible(gainSlider);
     
     envelopeLabel.setFont(paramLabelFont);
-    envelopeLabel.setText("Envelope", juce::dontSendNotification);
+    envelopeLabel.setText("Amp Env", juce::dontSendNotification);
     envelopeLabel.setJustificationType(juce::Justification::centred);
     envelopeLabel.setEditable(false, false, false);
     body.addAndMakeVisible(envelopeLabel);
@@ -197,24 +198,11 @@ OscComponent::~OscComponent()
 
 void OscComponent::paint(juce::Graphics& g)
 {
-    juce::Rectangle<int> bounds = getLocalBounds();
-    juce::Rectangle<int> nameArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    g.setColour(PANEL_NAME_COLOUR);
-    g.fillRect(nameArea);
-    
-    juce::GlyphArrangement ga;
-    ga.addLineOfText(juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold"),
-                     "OSC " + std::to_string(index+1), 0, 0);
-    juce::Path p;
-    ga.createPath(p);
-    auto pathBounds = p.getBounds();
-    p.applyTransform(juce::AffineTransform()
-                         .rotated(-juce::MathConstants<float>::halfPi, 0, 0)
-                         .translated(pathBounds.getHeight()/2 + nameArea.getWidth()/2, pathBounds.getWidth() + PANEL_NAME_HEIGHT + 4.0)
-                         );
-    g.setColour(juce::Colours::white);
-    g.fillPath(p);
-    g.setColour(PANEL_NAME_COLOUR);
+//    juce::Rectangle<int> bounds = getLocalBounds();
+//    juce::Path p;
+//    p.addLineSegment(juce::Line<float>(0, bounds.getHeight() - 0.5, bounds.getWidth(), bounds.getHeight() - 0.5), 1.0);
+//    g.setColour(PANEL_NAME_COLOUR);
+//    g.fillPath(p);
 }
 
 void OscComponent::resized()
@@ -233,14 +221,16 @@ void OscComponent::resized()
     auto upperArea = bounds.removeFromTop(bodyHeight/2);
     auto lowerArea = bounds;
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(60).removeFromTop(height);
+        float selectorWidth = 60.0f;
+        juce::Rectangle<int> area = upperArea.removeFromLeft(selectorWidth).removeFromTop(height);
         envelopeLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        envelopeSelector.setBounds(area.reduced(LOCAL_MARGIN));
+        envelopeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
     }
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(120).removeFromTop(height);
+        float selectorWidth = 120.0f;
+        juce::Rectangle<int> area = upperArea.removeFromLeft(selectorWidth).removeFromTop(height);
         waveformLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        waveformSelector.setBounds(area.reduced(LOCAL_MARGIN));
+        waveformSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
     }
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
@@ -527,7 +517,7 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     body.addAndMakeVisible(qSlider);
 
     targetLabel.setFont(paramLabelFont);
-    targetLabel.setText("Target", juce::dontSendNotification);
+    targetLabel.setText("OSC", juce::dontSendNotification);
     targetLabel.setJustificationType(juce::Justification::centred);
     targetLabel.setEditable(false, false, false);
     body.addAndMakeVisible(targetLabel);
@@ -579,14 +569,16 @@ void FilterComponent::resized()
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto lowerArea = bounds;
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(90).removeFromTop(height);
+        float selectorWidth = 70.0f;
+        juce::Rectangle<int> area = upperArea.removeFromLeft(selectorWidth).removeFromTop(height);
         targetLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        targetSelector.setBounds(area.reduced(LOCAL_MARGIN));
+        targetSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
     }
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(120).removeFromTop(height);
+        float selectorWidth = 120.0f;
+        juce::Rectangle<int> area = upperArea.removeFromLeft(selectorWidth).removeFromTop(height);
         typeLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        typeSelector.setBounds(area.reduced(LOCAL_MARGIN));
+        typeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
@@ -723,7 +715,7 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
     body.addAndMakeVisible(amountSlider);
 
     targetLabel.setFont(paramLabelFont);
-    targetLabel.setText("Target", juce::dontSendNotification);
+    targetLabel.setText("Destination", juce::dontSendNotification);
     targetLabel.setJustificationType(juce::Justification::centred);
     targetLabel.setEditable(false, false, false);
     body.addAndMakeVisible(targetLabel);
@@ -778,13 +770,15 @@ void LfoComponent::resized()
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(280).removeFromTop(height);
         targetLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        targetTypeSelector.setBounds(area.removeFromLeft(90).reduced(LOCAL_MARGIN));
-        auto indexArea = area.removeFromLeft(80);
-        targetOscSelector.setBounds(indexArea.reduced(LOCAL_MARGIN));
-        targetFilterSelector.setBounds(indexArea.reduced(LOCAL_MARGIN));
-        auto paramArea = area.removeFromLeft(110);
-        targetOscParamSelector.setBounds(paramArea.reduced(LOCAL_MARGIN));
-        targetFilterParamSelector.setBounds(paramArea.reduced(LOCAL_MARGIN));
+        auto selectorsArea = area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT);
+        
+        targetTypeSelector.setBounds(selectorsArea.removeFromLeft(90));
+        auto indexArea = selectorsArea.removeFromLeft(70);
+        targetOscSelector.setBounds(indexArea);
+        targetFilterSelector.setBounds(indexArea);
+        auto paramArea = selectorsArea.removeFromLeft(110);
+        targetOscParamSelector.setBounds(paramArea);
+        targetFilterParamSelector.setBounds(paramArea);
         switch(static_cast<LFO_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
             case LFO_TARGET_TYPE::OSC: {
                 targetOscSelector.setVisible(true);
@@ -1003,7 +997,7 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     body.addAndMakeVisible(decaySlider);
 
     targetLabel.setFont(paramLabelFont);
-    targetLabel.setText("Target", juce::dontSendNotification);
+    targetLabel.setText("Destination", juce::dontSendNotification);
     targetLabel.setJustificationType(juce::Justification::centred);
     targetLabel.setEditable(false, false, false);
     body.addAndMakeVisible(targetLabel);
@@ -1076,15 +1070,18 @@ void ModEnvComponent::resized()
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(280).removeFromTop(height);
         targetLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        targetTypeSelector.setBounds(area.removeFromLeft(90).reduced(LOCAL_MARGIN));
-        auto indexArea = area.removeFromLeft(80);
-        targetOscSelector.setBounds(indexArea.reduced(LOCAL_MARGIN));
-        targetFilterSelector.setBounds(indexArea.reduced(LOCAL_MARGIN));
-        targetLfoSelector.setBounds(indexArea.reduced(LOCAL_MARGIN));
-        auto paramArea = area.removeFromLeft(110);
-        targetOscParamSelector.setBounds(paramArea.reduced(LOCAL_MARGIN));
-        targetFilterParamSelector.setBounds(paramArea.reduced(LOCAL_MARGIN));
-        targetLfoParamSelector.setBounds(paramArea.reduced(LOCAL_MARGIN));
+        
+        auto selectorsArea = area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT);
+        
+        targetTypeSelector.setBounds(selectorsArea.removeFromLeft(90));
+        auto indexArea = selectorsArea.removeFromLeft(70);
+        targetOscSelector.setBounds(indexArea);
+        targetFilterSelector.setBounds(indexArea);
+        targetLfoSelector.setBounds(indexArea);
+        auto paramArea = selectorsArea.removeFromLeft(110);
+        targetOscParamSelector.setBounds(paramArea);
+        targetFilterParamSelector.setBounds(paramArea);
+        targetLfoParamSelector.setBounds(paramArea);
         switch(static_cast<MODENV_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
             case MODENV_TARGET_TYPE::OSC: {
                 targetOscSelector.setVisible(true);
@@ -1121,7 +1118,7 @@ void ModEnvComponent::resized()
         peakFreqLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
         fadeLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
         peakFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
-        fadeSelector.setBounds(area.reduced(LOCAL_MARGIN));
+        fadeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
@@ -1405,7 +1402,7 @@ void DelayComponent::resized()
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(120).removeFromTop(height);
         typeLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        typeSelector.setBounds(area.reduced(LOCAL_MARGIN));
+        typeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
     }
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);

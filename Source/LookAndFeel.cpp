@@ -9,7 +9,7 @@ const int KNOB_WIDTH = 40;
 const float SLIT_WIDTH = 2.0f;
 const float POINTER_RADIUS = 4.0f;
 const float BORDER_WIDTH = 1.0f;
-const float ARROW_ZONE_WIDTH = 24.0f;
+const float ARROW_ZONE_WIDTH = 18.0f;
 }
 
 GrapeLookAndFeel::GrapeLookAndFeel()
@@ -116,7 +116,7 @@ void GrapeLookAndFeel::drawComboBox(juce::Graphics& g, int width, int height, bo
         }
     }
     {
-        juce::Rectangle<float> arrowZone (width - ARROW_ZONE_WIDTH, 0, ARROW_ZONE_WIDTH, height);
+        juce::Rectangle<float> arrowZone (width - ARROW_ZONE_WIDTH, 0, ARROW_ZONE_WIDTH - 6.0, height);
         juce::Path p;
         p.addTriangle(arrowZone.getCentreX() - 4, arrowZone.getCentreY() - 2,
                       arrowZone.getCentreX() + 4, arrowZone.getCentreY() - 2,
