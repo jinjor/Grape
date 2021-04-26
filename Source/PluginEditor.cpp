@@ -65,8 +65,8 @@ void GrapeAudioProcessorEditor::resized()
     
     auto upperArea = bounds.removeFromTop(height * 0.5);
     auto upperHeight = upperArea.getHeight();
-    auto leftArea = upperArea.removeFromLeft(width * 0.25);
-    auto rightArea = upperArea.removeFromRight(width * 0.3);
+    auto leftArea = upperArea.removeFromLeft(width * 0.33);
+    auto rightArea = upperArea.removeFromRight(width * 0.33);
     {
         juce::Rectangle<int> area = upperArea.removeFromTop(upperHeight / 3);
         oscComponents[0].setBounds(area.reduced(PANEL_MARGIN));
@@ -80,22 +80,22 @@ void GrapeAudioProcessorEditor::resized()
         oscComponents[2].setBounds(area.reduced(PANEL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = leftArea.removeFromTop(upperHeight / 2);
+        juce::Rectangle<int> area = leftArea.removeFromTop(upperHeight / 3);
         envelopeComponents[0].setBounds(area.reduced(PANEL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = leftArea.removeFromTop(upperHeight / 2);
+        juce::Rectangle<int> area = leftArea.removeFromTop(upperHeight / 3);
         envelopeComponents[1].setBounds(area.reduced(PANEL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = rightArea.removeFromTop(upperHeight / 2);
+        juce::Rectangle<int> area = rightArea.removeFromTop(upperHeight / 3);
         filterComponents[0].setBounds(area.reduced(PANEL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = rightArea.removeFromTop(upperHeight / 2);
+        juce::Rectangle<int> area = rightArea.removeFromTop(upperHeight / 3);
         filterComponents[1].setBounds(area.reduced(PANEL_MARGIN));
     }
-    auto lfoArea = bounds.removeFromLeft(width * 0.35);
+    auto lfoArea = bounds.removeFromLeft(width * 0.33);
     auto lfoHeight = lfoArea.getHeight();
     {
         juce::Rectangle<int> area = lfoArea.removeFromTop(lfoHeight / 3);
@@ -109,7 +109,7 @@ void GrapeAudioProcessorEditor::resized()
         juce::Rectangle<int> area = lfoArea.removeFromTop(lfoHeight / 3);
         lfoComponents[2].setBounds(area.reduced(PANEL_MARGIN));
     }
-    auto modEnvArea = bounds.removeFromLeft(width * 0.4);
+    auto modEnvArea = bounds.removeFromLeft(width * 0.33);
     auto modEnvHeight = modEnvArea.getHeight();
     {
         juce::Rectangle<int> area = modEnvArea.removeFromTop(modEnvHeight / 3);
@@ -126,7 +126,7 @@ void GrapeAudioProcessorEditor::resized()
     auto effectArea = bounds;
     auto effectHeight = effectArea.getHeight();
     {
-        juce::Rectangle<int> area = effectArea.removeFromTop(effectHeight / 3 * 2);
+        juce::Rectangle<int> area = effectArea.removeFromTop(effectHeight / 3);
         delayComponent.setBounds(area.reduced(PANEL_MARGIN));
     }
 //    {

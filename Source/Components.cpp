@@ -12,10 +12,49 @@ const juce::Colour PANEL_NAME_COLOUR = juce::Colour(50,50,50);
 }
 
 //==============================================================================
+HeaderComponent::HeaderComponent(std::string name, bool hasEnableButton)
+: enabledButton("Enabled")
+, name(name)
+, hasEnableButton (hasEnableButton)
+{
+    if(hasEnableButton) {
+        addAndMakeVisible(enabledButton);
+    }
+}
+HeaderComponent::~HeaderComponent(){}
+void HeaderComponent::paint(juce::Graphics& g)
+{
+    juce::Rectangle<int> bounds = getLocalBounds();
+    g.setColour(PANEL_NAME_COLOUR);
+    g.fillRect(bounds);
+    
+    juce::GlyphArrangement ga;
+    juce::Font font = juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold");
+    ga.addLineOfText(font, name, 0, 0);
+    juce::Path p;
+    ga.createPath(p);
+    auto pathBounds = p.getBounds();
+    p.applyTransform(juce::AffineTransform()
+                         .rotated(-juce::MathConstants<float>::halfPi, 0, 0)
+                         .translated(pathBounds.getHeight()/2 + bounds.getWidth()/2,
+                                     pathBounds.getWidth() + PANEL_NAME_HEIGHT + 4.0)
+                         );
+    g.setColour(TEXT_COLOUR);
+    g.fillPath(p);
+}
+void HeaderComponent::resized()
+{
+    juce::Rectangle<int> bounds = getLocalBounds();
+    auto enabledButtonArea = bounds.removeFromTop(bounds.getWidth());
+    enabledButton.setBounds(enabledButtonArea.reduced(2.0));
+}
+
+//==============================================================================
 OscComponent::OscComponent(int index, OscParams* params)
 : index(index)
 , _paramsPtr(params)
-, enabledButton("Enabled")
+//, enabledButton("Enabled")
+, header("OSC " + std::to_string(index+1), true)
 , envelopeSelector("Envelope")
 , waveformSelector("Waveform")
 , octaveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -25,19 +64,11 @@ OscComponent::OscComponent(int index, OscParams* params)
 , spreadSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , gainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
-    juce::Font panelNameFont = juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold");
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
     
-    enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    enabledButton.addListener(this);
-    addAndMakeVisible(enabledButton);
-    
-    titleLabel.setFont(panelNameFont);
-    titleLabel.setText("OSC " + std::to_string(index+1), juce::dontSendNotification);
-    titleLabel.setJustificationType(juce::Justification::left);
-    titleLabel.setEditable(false, false, false);
-    addAndMakeVisible(titleLabel);
+    header.enabledButton.addListener(this);
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    addAndMakeVisible(header);
     
     envelopeSelector.setLookAndFeel(&grapeLookAndFeel);
     envelopeSelector.addItemList(_paramsPtr->Envelope->getAllValueStrings(), 1);
@@ -167,9 +198,23 @@ OscComponent::~OscComponent()
 void OscComponent::paint(juce::Graphics& g)
 {
     juce::Rectangle<int> bounds = getLocalBounds();
-    juce::Rectangle<int> textArea = bounds.removeFromTop(PANEL_NAME_HEIGHT).reduced(LOCAL_MARGIN);
+    juce::Rectangle<int> nameArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
     g.setColour(PANEL_NAME_COLOUR);
-    g.fillRect(textArea);
+    g.fillRect(nameArea);
+    
+    juce::GlyphArrangement ga;
+    ga.addLineOfText(juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold"),
+                     "OSC " + std::to_string(index+1), 0, 0);
+    juce::Path p;
+    ga.createPath(p);
+    auto pathBounds = p.getBounds();
+    p.applyTransform(juce::AffineTransform()
+                         .rotated(-juce::MathConstants<float>::halfPi, 0, 0)
+                         .translated(pathBounds.getHeight()/2 + nameArea.getWidth()/2, pathBounds.getWidth() + PANEL_NAME_HEIGHT + 4.0)
+                         );
+    g.setColour(juce::Colours::white);
+    g.fillPath(p);
+    g.setColour(PANEL_NAME_COLOUR);
 }
 
 void OscComponent::resized()
@@ -179,59 +224,59 @@ void OscComponent::resized()
     int height = 60;
     
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto nameArea = bounds.removeFromTop(PANEL_NAME_HEIGHT);
-    {
-        auto enabledButtonArea = nameArea.removeFromLeft(nameArea.getHeight());
-        enabledButton.setBounds(enabledButtonArea.reduced(4.0));
-        titleLabel.setBounds(nameArea);
-    }
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+    
     body.setBounds(bounds);
     bounds = body.getLocalBounds();
+    auto bodyHeight = bounds.getHeight();
+    auto upperArea = bounds.removeFromTop(bodyHeight/2);
+    auto lowerArea = bounds;
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(60).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(60).removeFromTop(height);
         envelopeLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         envelopeSelector.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(120).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(120).removeFromTop(height);
         waveformLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         waveformSelector.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
         octaveLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         octaveSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
         coarseLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         coarseSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         unisonLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         unisonSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         detuneLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         detuneSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         spreadLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         spreadSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         gainLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         gainSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
 void OscComponent::buttonClicked(juce::Button* button) {
-    if(button == &enabledButton)
+    if(button == &header.enabledButton)
     {
-        *_paramsPtr->Enabled = enabledButton.getToggleState();
+        *_paramsPtr->Enabled = header.enabledButton.getToggleState();
     }
 }
 void OscComponent::comboBoxChanged(juce::ComboBox* comboBox) {
@@ -273,8 +318,8 @@ void OscComponent::sliderValueChanged(juce::Slider *slider)
 }
 void OscComponent::timerCallback()
 {
+    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
     body.setEnabled(_paramsPtr->Enabled->get());
-    enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
     envelopeSelector.setSelectedItemIndex(_paramsPtr->Envelope->getIndex(), juce::dontSendNotification);
     waveformSelector.setSelectedItemIndex(_paramsPtr->Waveform->getIndex(), juce::dontSendNotification);
     octaveSlider.setValue(_paramsPtr->Octave->get(), juce::dontSendNotification);
@@ -289,6 +334,7 @@ void OscComponent::timerCallback()
 EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
 : index(index)
 , _paramsPtr(params)
+, header("AMP ENV " + std::to_string(index+1), false)
 , attackSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , decaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , sustainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -296,12 +342,9 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
 {
     juce::Font panelNameFont = juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold");
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-    
-    titleLabel.setFont(panelNameFont);
-    titleLabel.setText("Envelope " + std::to_string(index+1), juce::dontSendNotification);
-    titleLabel.setJustificationType(juce::Justification::left);
-    titleLabel.setEditable(false, false, false);
-    addAndMakeVisible(titleLabel);
+
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    addAndMakeVisible(header);
     
     attackSlider.setLookAndFeel(&grapeLookAndFeel);
     attackSlider.setRange(_paramsPtr->Attack->range.start,
@@ -374,10 +417,6 @@ EnvelopeComponent::~EnvelopeComponent()
 
 void EnvelopeComponent::paint(juce::Graphics& g)
 {
-    juce::Rectangle<int> bounds = getLocalBounds();
-    juce::Rectangle<int> textArea = bounds.removeFromTop(PANEL_NAME_HEIGHT).reduced(LOCAL_MARGIN);
-    g.setColour(PANEL_NAME_COLOUR);
-    g.fillRect(textArea);
 }
 
 void EnvelopeComponent::resized()
@@ -387,10 +426,8 @@ void EnvelopeComponent::resized()
     int height = 60;
     
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto nameArea = bounds.removeFromTop(PANEL_NAME_HEIGHT);
-    {
-        titleLabel.setBounds(nameArea);
-    }
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
     {
         juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
         attackLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
@@ -443,25 +480,18 @@ void EnvelopeComponent::timerCallback()
 FilterComponent::FilterComponent(int index, FilterParams* params)
 : index(index)
 , _paramsPtr(params)
-, enabledButton("Enabled")
+, header("FILTER " + std::to_string(index+1), true)
 , targetSelector("Target")
 , typeSelector("Type")
 , octaveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , qSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
-    juce::Font panelNameFont = juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold");
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-    
-    enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    enabledButton.addListener(this);
-    addAndMakeVisible(enabledButton);
-    
-    titleLabel.setFont(panelNameFont);
-    titleLabel.setText("Filter " + std::to_string(index+1), juce::dontSendNotification);
-    titleLabel.setJustificationType(juce::Justification::left);
-    titleLabel.setEditable(false, false, false);
-    addAndMakeVisible(titleLabel);
+
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
+    header.enabledButton.addListener(this);
+    addAndMakeVisible(header);
 
     targetSelector.setLookAndFeel(&grapeLookAndFeel);
     targetSelector.addItemList(_paramsPtr->Target->getAllValueStrings(), 1);
@@ -531,12 +561,6 @@ FilterComponent::~FilterComponent()
 
 void FilterComponent::paint(juce::Graphics& g)
 {
-    body.setEnabled(_paramsPtr->Enabled->get());
-    enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    juce::Rectangle<int> bounds = getLocalBounds();
-    juce::Rectangle<int> textArea = bounds.removeFromTop(PANEL_NAME_HEIGHT).reduced(LOCAL_MARGIN);
-    g.setColour(PANEL_NAME_COLOUR);
-    g.fillRect(textArea);
 }
 
 void FilterComponent::resized()
@@ -546,39 +570,39 @@ void FilterComponent::resized()
     int height = 60;
     
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto nameArea = bounds.removeFromTop(PANEL_NAME_HEIGHT);
-    {
-        auto enabledButtonArea = nameArea.removeFromLeft(nameArea.getHeight());
-        enabledButton.setBounds(enabledButtonArea.reduced(4.0));
-        titleLabel.setBounds(nameArea);
-    }
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+    
     body.setBounds(bounds);
     bounds = body.getLocalBounds();
+    auto bodyHeight = bounds.getHeight();
+    auto upperArea = bounds.removeFromTop(bodyHeight / 2);
+    auto lowerArea = bounds;
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(90).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(90).removeFromTop(height);
         targetLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         targetSelector.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(120).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(120).removeFromTop(height);
         typeLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         typeSelector.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         octaveLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         octaveSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         qLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         qSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
 void FilterComponent::buttonClicked(juce::Button* button) {
-    if(button == &enabledButton)
+    if(button == &header.enabledButton)
     {
-        *_paramsPtr->Enabled = enabledButton.getToggleState();
+        *_paramsPtr->Enabled = header.enabledButton.getToggleState();
     }
 }
 void FilterComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
@@ -605,6 +629,7 @@ void FilterComponent::sliderValueChanged(juce::Slider *slider)
 }
 void FilterComponent::timerCallback()
 {
+    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
     targetSelector.setSelectedItemIndex(_paramsPtr->Target->getIndex(), juce::dontSendNotification);
     typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
     octaveSlider.setValue(_paramsPtr->Octave->get(), juce::dontSendNotification);
@@ -615,7 +640,7 @@ void FilterComponent::timerCallback()
 LfoComponent::LfoComponent(int index, LfoParams* params)
 : index(index)
 , _paramsPtr(params)
-, enabledButton("Enabled")
+, header("LFO " + std::to_string(index+1), true)
 , targetTypeSelector("TargetType")
 , targetOscSelector("TargetOsc")
 , targetFilterSelector("TargetFilter")
@@ -625,19 +650,12 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
 , fastFreqSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , amountSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
-    juce::Font panelNameFont = juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold");
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
-    enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    enabledButton.addListener(this);
-    addAndMakeVisible(enabledButton);
     
-    titleLabel.setFont(panelNameFont);
-    titleLabel.setText("LFO " + std::to_string(index+1), juce::dontSendNotification);
-    titleLabel.setJustificationType(juce::Justification::left);
-    titleLabel.setEditable(false, false, false);
-    addAndMakeVisible(titleLabel);
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
+    header.enabledButton.addListener(this);
+    addAndMakeVisible(header);
 
     targetTypeSelector.setLookAndFeel(&grapeLookAndFeel);
     targetTypeSelector.addItemList(_paramsPtr->TargetType->getAllValueStrings(), 1);
@@ -739,10 +757,6 @@ LfoComponent::~LfoComponent()
 
 void LfoComponent::paint(juce::Graphics& g)
 {
-    juce::Rectangle<int> bounds = getLocalBounds();
-    juce::Rectangle<int> textArea = bounds.removeFromTop(PANEL_NAME_HEIGHT).reduced(LOCAL_MARGIN);
-    g.setColour(PANEL_NAME_COLOUR);
-    g.fillRect(textArea);
 }
 
 void LfoComponent::resized()
@@ -752,16 +766,17 @@ void LfoComponent::resized()
     int height = 60;
 
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto nameArea = bounds.removeFromTop(PANEL_NAME_HEIGHT);
-    {
-        auto enabledButtonArea = nameArea.removeFromLeft(nameArea.getHeight());
-        enabledButton.setBounds(enabledButtonArea.reduced(4.0));
-        titleLabel.setBounds(nameArea);
-    }
+    
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+    
     body.setBounds(bounds);
     bounds = body.getLocalBounds();
+    auto bodyHeight = bounds.getHeight();
+    auto upperArea = bounds.removeFromTop(bodyHeight / 2);
+    auto lowerArea = bounds;
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(280).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(280).removeFromTop(height);
         targetLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         targetTypeSelector.setBounds(area.removeFromLeft(90).reduced(LOCAL_MARGIN));
         auto indexArea = area.removeFromLeft(80);
@@ -789,7 +804,7 @@ void LfoComponent::resized()
         }
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         freqLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         fastFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
         slowFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
@@ -806,15 +821,15 @@ void LfoComponent::resized()
         }
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         amountLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         amountSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
 void LfoComponent::buttonClicked(juce::Button* button) {
-    if(button == &enabledButton)
+    if(button == &header.enabledButton)
     {
-        *_paramsPtr->Enabled = enabledButton.getToggleState();
+        *_paramsPtr->Enabled = header.enabledButton.getToggleState();
     }
 }
 void LfoComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
@@ -858,8 +873,8 @@ void LfoComponent::sliderValueChanged(juce::Slider *slider)
 }
 void LfoComponent::timerCallback()
 {
+    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
     body.setEnabled(_paramsPtr->Enabled->get());
-    enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
     
     targetTypeSelector.setSelectedItemIndex(_paramsPtr->TargetType->getIndex(), juce::dontSendNotification);
     targetOscSelector.setSelectedItemIndex(_paramsPtr->TargetOsc->getIndex(), juce::dontSendNotification);
@@ -876,7 +891,7 @@ void LfoComponent::timerCallback()
 ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
 : index(index)
 , _paramsPtr(params)
-, enabledButton("Enabled")
+, header("MOD ENV " + std::to_string(index+1), true)
 , targetTypeSelector("TargetType")
 , targetOscSelector("TargetOsc")
 , targetFilterSelector("TargetFilter")
@@ -887,19 +902,12 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
 , attackSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , decaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
-    juce::Font panelNameFont = juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold");
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
-    enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    enabledButton.addListener(this);
-    addAndMakeVisible(enabledButton);
     
-    titleLabel.setFont(panelNameFont);
-    titleLabel.setText("Mod Envelope " + std::to_string(index+1), juce::dontSendNotification);
-    titleLabel.setJustificationType(juce::Justification::left);
-    titleLabel.setEditable(false, false, false);
-    addAndMakeVisible(titleLabel);
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
+    header.enabledButton.addListener(this);
+    addAndMakeVisible(header);
 
     targetTypeSelector.setLookAndFeel(&grapeLookAndFeel);
     targetTypeSelector.addItemList(_paramsPtr->TargetType->getAllValueStrings(), 1);
@@ -1047,10 +1055,6 @@ ModEnvComponent::~ModEnvComponent()
 
 void ModEnvComponent::paint(juce::Graphics& g)
 {
-    juce::Rectangle<int> bounds = getLocalBounds();
-    juce::Rectangle<int> textArea = bounds.removeFromTop(PANEL_NAME_HEIGHT).reduced(LOCAL_MARGIN);
-    g.setColour(PANEL_NAME_COLOUR);
-    g.fillRect(textArea);
 }
 
 void ModEnvComponent::resized()
@@ -1060,16 +1064,17 @@ void ModEnvComponent::resized()
     int height = 60;
 
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto nameArea = bounds.removeFromTop(PANEL_NAME_HEIGHT);
-    {
-        auto enabledButtonArea = nameArea.removeFromLeft(nameArea.getHeight());
-        enabledButton.setBounds(enabledButtonArea.reduced(4.0));
-        titleLabel.setBounds(nameArea);
-    }
+
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+    
     body.setBounds(bounds);
     bounds = body.getLocalBounds();
+    auto bodyHeight = bounds.getHeight();
+    auto upperArea = bounds.removeFromTop(bodyHeight / 2);
+    auto lowerArea = bounds;
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(280).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(280).removeFromTop(height);
         targetLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         targetTypeSelector.setBounds(area.removeFromLeft(90).reduced(LOCAL_MARGIN));
         auto indexArea = area.removeFromLeft(80);
@@ -1111,7 +1116,7 @@ void ModEnvComponent::resized()
         }
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         auto lebelArea = area.removeFromTop(labelHeight);
         peakFreqLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
         fadeLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
@@ -1119,7 +1124,7 @@ void ModEnvComponent::resized()
         fadeSelector.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         auto lebelArea = area.removeFromTop(labelHeight);
         waitLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
         attackLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
@@ -1159,15 +1164,15 @@ void ModEnvComponent::resized()
         }
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         decayLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         decaySlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
 void ModEnvComponent::buttonClicked(juce::Button* button) {
-    if(button == &enabledButton)
+    if(button == &header.enabledButton)
     {
-        *_paramsPtr->Enabled = enabledButton.getToggleState();
+        *_paramsPtr->Enabled = header.enabledButton.getToggleState();
     }
 }
 void ModEnvComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
@@ -1227,8 +1232,8 @@ void ModEnvComponent::sliderValueChanged(juce::Slider *slider)
 }
 void ModEnvComponent::timerCallback()
 {
+    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
     body.setEnabled(_paramsPtr->Enabled->get());
-    enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
     
     targetTypeSelector.setSelectedItemIndex(_paramsPtr->TargetType->getIndex(), juce::dontSendNotification);
     targetOscSelector.setSelectedItemIndex(_paramsPtr->TargetOsc->getIndex(), juce::dontSendNotification);
@@ -1248,7 +1253,7 @@ void ModEnvComponent::timerCallback()
 //==============================================================================
 DelayComponent::DelayComponent(DelayParams* params)
 : _paramsPtr(params)
-, enabledButton("Enabled")
+, header("DELAY", true)
 , typeSelector("Type")
 , timeLSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , timeRSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -1257,19 +1262,12 @@ DelayComponent::DelayComponent(DelayParams* params)
 , feedbackSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , mixSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
-    juce::Font panelNameFont = juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold");
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
     
-    enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    enabledButton.addListener(this);
-    addAndMakeVisible(enabledButton);
-    
-    titleLabel.setFont(panelNameFont);
-    titleLabel.setText("Delay", juce::dontSendNotification);
-    titleLabel.setJustificationType(juce::Justification::left);
-    titleLabel.setEditable(false, false, false);
-    addAndMakeVisible(titleLabel);
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
+    header.enabledButton.addListener(this);
+    addAndMakeVisible(header);
     
     typeSelector.setLookAndFeel(&grapeLookAndFeel);
     typeSelector.addItemList(_paramsPtr->Type->getAllValueStrings(), 1);
@@ -1386,10 +1384,6 @@ DelayComponent::~DelayComponent()
 
 void DelayComponent::paint(juce::Graphics& g)
 {
-    juce::Rectangle<int> bounds = getLocalBounds();
-    juce::Rectangle<int> textArea = bounds.removeFromTop(PANEL_NAME_HEIGHT).reduced(LOCAL_MARGIN);
-    g.setColour(PANEL_NAME_COLOUR);
-    g.fillRect(textArea);
 }
 
 void DelayComponent::resized()
@@ -1399,12 +1393,10 @@ void DelayComponent::resized()
     int height = 60;
     
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto nameArea = bounds.removeFromTop(PANEL_NAME_HEIGHT);
-    {
-        auto enabledButtonArea = nameArea.removeFromLeft(nameArea.getHeight());
-        enabledButton.setBounds(enabledButtonArea.reduced(4.0));
-        titleLabel.setBounds(nameArea);
-    }
+    
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+    
     body.setBounds(bounds);
     bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
@@ -1448,9 +1440,9 @@ void DelayComponent::resized()
     }
 }
 void DelayComponent::buttonClicked(juce::Button* button) {
-    if(button == &enabledButton)
+    if(button == &header.enabledButton)
     {
-        *_paramsPtr->Enabled = enabledButton.getToggleState();
+        *_paramsPtr->Enabled = header.enabledButton.getToggleState();
     }
 }
 void DelayComponent::comboBoxChanged(juce::ComboBox* comboBox) {
@@ -1488,8 +1480,9 @@ void DelayComponent::sliderValueChanged(juce::Slider *slider)
 }
 void DelayComponent::timerCallback()
 {
+    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
     body.setEnabled(_paramsPtr->Enabled->get());
-    enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
+    
     typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
     timeLSlider.setValue(_paramsPtr->TimeL->get(), juce::dontSendNotification);
     timeRSlider.setValue(_paramsPtr->TimeR->get(), juce::dontSendNotification);

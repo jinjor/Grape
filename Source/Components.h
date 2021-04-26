@@ -6,6 +6,21 @@
 #include "PluginProcessor.h"
 
 //==============================================================================
+class HeaderComponent : public juce::Component
+{
+public:
+    HeaderComponent(std::string name, bool hasEnableButton);
+    virtual ~HeaderComponent();
+    juce::ToggleButton enabledButton;
+    virtual void paint(juce::Graphics& g) override;
+    virtual void resized() override;
+    
+private:
+    std::string name;
+    bool hasEnableButton;
+};
+
+//==============================================================================
 class OscComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
@@ -25,9 +40,7 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     OscParams* _paramsPtr;
    
-    juce::ToggleButton enabledButton;
-    juce::Label titleLabel;
-    
+    HeaderComponent header;
     juce::Component body;
     
     juce::ComboBox envelopeSelector;
@@ -67,7 +80,7 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     EnvelopeParams* _paramsPtr;
     
-    juce::Label titleLabel;
+    HeaderComponent header;
     
     juce::Slider attackSlider;
     juce::Slider decaySlider;
@@ -100,8 +113,7 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     FilterParams* _paramsPtr;
     
-    juce::ToggleButton enabledButton;
-    juce::Label titleLabel;
+    HeaderComponent header;
     
     juce::Component body;
     
@@ -136,8 +148,7 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     LfoParams* _paramsPtr;
     
-    juce::ToggleButton enabledButton;
-    juce::Label titleLabel;
+    HeaderComponent header;
     
     juce::Component body;
     
@@ -176,8 +187,7 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     ModEnvParams* _paramsPtr;
     
-    juce::ToggleButton enabledButton;
-    juce::Label titleLabel;
+    HeaderComponent header;
     
     juce::Component body;
     
@@ -222,8 +232,7 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     DelayParams* _paramsPtr;
    
-    juce::ToggleButton enabledButton;
-    juce::Label titleLabel;
+    HeaderComponent header;
     
     juce::Component body;
     
