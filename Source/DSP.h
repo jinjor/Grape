@@ -323,16 +323,51 @@ public:
         }
         auto angleDelta = freq * juce::MathConstants<double>::twoPi / sampleRate;
         currentAngle += angleDelta;
+        if(currentAngle > juce::MathConstants<double>::twoPi) {
+            currentAngle -= juce::MathConstants<double>::twoPi;
+        }
         auto angle = currentAngle + angleShift;
         switch(waveform) {
             case OSC_WAVEFORM::Sine:
                 return sin(angle);
-            case OSC_WAVEFORM::Noise:
+            case OSC_WAVEFORM::Triangle:
+                return angle >= juce::MathConstants<double>::pi ?
+                    angle / juce::MathConstants<double>::twoPi * 4.0 - 1.0 :
+                    angle / juce::MathConstants<double>::twoPi - 4.0 + 3.0;
+            case OSC_WAVEFORM::Saw:
+                return angle / juce::MathConstants<double>::twoPi * 2.0 - 1.0;
+            case OSC_WAVEFORM::Square:
+                return angle < juce::MathConstants<double>::pi ? 1.0 : -1.0;
+            case OSC_WAVEFORM::Pulse:
+                return angle < juce::MathConstants<double>::halfPi ? 1.0 : -1.0;
+            case OSC_WAVEFORM::Pink: {
+                auto white = (whiteNoise.nextDouble() * 2.0 - 1.0) * 0.5;
+                bool eco = true;
+                if(eco) {
+                    pink[0] = 0.99765 * pink[0] + white * 0.0990460;
+                    pink[1] = 0.96300 * pink[1] + white * 0.2965164;
+                    pink[2] = 0.57000 * pink[2] + white * 1.0526913;
+                    auto value = pink[0] + pink[1] + pink[2] + white * 0.1848;
+                    return value;
+                } else {
+                    pink[0] = 0.99886 * pink[0] + white * 0.0555179;
+                    pink[1] = 0.99332 * pink[1] + white * 0.0750759;
+                    pink[2] = 0.96900 * pink[2] + white * 0.1538520;
+                    pink[3] = 0.86650 * pink[3] + white * 0.3104856;
+                    pink[4] = 0.55000 * pink[4] + white * 0.5329522;
+                    pink[5] = -0.7616 * pink[5] - white * 0.0168980;
+                    auto value = pink[0] + pink[1] + pink[2] + pink[3] + pink[4] + pink[5] + pink[6] + white * 0.5362;
+                    pink[6] = white * 0.115926;
+                    return value;
+                }
+            }
+            case OSC_WAVEFORM::White:
                 return whiteNoise.nextDouble() * 2.0 - 1.0;
         }
     }
 private:
     double currentAngle = 0.0;
+    double pink[7]{};
     juce::Random whiteNoise;
     OSC_WAVEFORM waveform = OSC_WAVEFORM::Sine;
     double sampleRate = 0.0;

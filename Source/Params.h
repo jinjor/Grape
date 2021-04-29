@@ -4,8 +4,8 @@
 
 namespace {
 
-enum class OSC_WAVEFORM { Sine, Noise };
-const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Noise");
+enum class OSC_WAVEFORM { Sine, Triangle, Saw, Square, Pulse, Pink, White };
+const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Square", "Pulse", "Pink", "White");
 
 const juce::StringArray OSC_ENV_NAMES = juce::StringArray("1", "2");
 }

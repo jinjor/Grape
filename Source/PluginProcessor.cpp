@@ -66,7 +66,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     },
     OscParams {
         new juce::AudioParameterBool("OSC2_ENABLED", "Enabled", false),
-        new juce::AudioParameterChoice("OSC2_WAVEFOEM", "Waveform", OSC_WAVEFORM_NAMES, OSC_WAVEFORM_NAMES.indexOf("Noise")),
+        new juce::AudioParameterChoice("OSC2_WAVEFOEM", "Waveform", OSC_WAVEFORM_NAMES, OSC_WAVEFORM_NAMES.indexOf("White")),
         new juce::AudioParameterInt("OSC2_OCTAVE", "Octave", -2, 2, 0),
         new juce::AudioParameterInt("OSC2_COARSE", "Coarse",  -12, 12, 0),
         new juce::AudioParameterInt("OSC2_UNISON", "Unison", 1, 4, 1),
