@@ -134,6 +134,7 @@ LfoParams::LfoParams(juce::AudioParameterBool* enabled,
                      juce::AudioParameterChoice* targetFilter,
                      juce::AudioParameterChoice* targetOscParam,
                      juce::AudioParameterChoice* targetFilterParam,
+                     juce::AudioParameterChoice* waveform,
                      juce::AudioParameterFloat* slowFreq,
                      juce::AudioParameterFloat* fastFreq,
                      juce::AudioParameterFloat* amount)
@@ -143,6 +144,7 @@ LfoParams::LfoParams(juce::AudioParameterBool* enabled,
 , TargetFilter(targetFilter)
 , TargetOscParam(targetOscParam)
 , TargetFilterParam(targetFilterParam)
+, Waveform(waveform)
 , SlowFreq(slowFreq)
 , FastFreq(fastFreq)
 , Amount(amount)

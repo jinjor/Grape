@@ -307,7 +307,7 @@ public:
     ~Osc() {
         DBG("Osc's destructor called.");
     }
-    void setWaveform (OSC_WAVEFORM waveform) {
+    void setWaveform (WAVEFORM waveform) {
         this->waveform = waveform;
     }
     void setSampleRate (double sampleRate) {
@@ -325,22 +325,30 @@ public:
         currentAngle += angleDelta;
         if(currentAngle > juce::MathConstants<double>::twoPi) {
             currentAngle -= juce::MathConstants<double>::twoPi;
+            currentRandomValue = 0.0;
         }
         auto angle = currentAngle + angleShift;
         switch(waveform) {
-            case OSC_WAVEFORM::Sine:
+            case WAVEFORM::Sine:
                 return sin(angle);
-            case OSC_WAVEFORM::Triangle:
+            case WAVEFORM::Triangle:
                 return angle >= juce::MathConstants<double>::pi ?
                     angle / juce::MathConstants<double>::twoPi * 4.0 - 1.0 :
                     angle / juce::MathConstants<double>::twoPi - 4.0 + 3.0;
-            case OSC_WAVEFORM::Saw:
+            case WAVEFORM::SawUp:
                 return angle / juce::MathConstants<double>::twoPi * 2.0 - 1.0;
-            case OSC_WAVEFORM::Square:
+            case WAVEFORM::SawDown:
+                return angle / juce::MathConstants<double>::twoPi * -2.0 + 1.0;
+            case WAVEFORM::Square:
                 return angle < juce::MathConstants<double>::pi ? 1.0 : -1.0;
-            case OSC_WAVEFORM::Pulse:
+            case WAVEFORM::Pulse:
                 return angle < juce::MathConstants<double>::halfPi ? 1.0 : -1.0;
-            case OSC_WAVEFORM::Pink: {
+            case WAVEFORM::Random:
+                if(currentRandomValue == 0.0) {
+                    currentRandomValue = whiteNoise.nextDouble() * 2.0 - 1.0;
+                }
+                return currentRandomValue;
+            case WAVEFORM::Pink: {
                 auto white = (whiteNoise.nextDouble() * 2.0 - 1.0) * 0.5;
                 bool eco = true;
                 if(eco) {
@@ -361,15 +369,16 @@ public:
                     return value;
                 }
             }
-            case OSC_WAVEFORM::White:
+            case WAVEFORM::White:
                 return whiteNoise.nextDouble() * 2.0 - 1.0;
         }
     }
 private:
     double currentAngle = 0.0;
+    double currentRandomValue = 0.0;
     double pink[7]{};
     juce::Random whiteNoise;
-    OSC_WAVEFORM waveform = OSC_WAVEFORM::Sine;
+    WAVEFORM waveform = WAVEFORM::Sine;
     double sampleRate = 0.0;
 };
 
@@ -385,7 +394,7 @@ public:
     ~MultiOsc() {
         DBG("MultiOsc's destructor called.");
     }
-    void setWaveform (OSC_WAVEFORM waveform) {
+    void setWaveform (WAVEFORM waveform) {
         for(int i = 0; i < MAX_NUM_OSC; ++i) {
             oscs[i].setWaveform(waveform);
         }

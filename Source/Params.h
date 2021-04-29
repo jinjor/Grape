@@ -3,19 +3,17 @@
 #include <JuceHeader.h>
 
 namespace {
-
-enum class OSC_WAVEFORM { Sine, Triangle, Saw, Square, Pulse, Pink, White };
+enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Pulse, Random, Pink, White };
 const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Square", "Pulse", "Pink", "White");
+const WAVEFORM OSC_WAVEFORM_Values[sizeof OSC_WAVEFORM_NAMES] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Pink, WAVEFORM::White };
 
 const juce::StringArray OSC_ENV_NAMES = juce::StringArray("1", "2");
-}
-namespace {
+
 const juce::StringArray FILTER_TARGET_NAMES = juce::StringArray("1", "2", "3", "All");
 
 enum class FILTER_TYPE { Lowpass, Highpass };
 const juce::StringArray FILTER_TYPE_NAMES = juce::StringArray("Lowpass", "Highpass");
-}
-namespace {
+
 enum class LFO_TARGET_TYPE { OSC, Filter };
 const juce::StringArray LFO_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter");
 
@@ -27,8 +25,10 @@ const juce::StringArray LFO_TARGET_OSC_PARAM_NAMES = juce::StringArray("Vibrato"
 
 enum class LFO_TARGET_FILTER_PARAM { Freq, Q };
 const juce::StringArray LFO_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
-}
-namespace {
+
+const juce::StringArray LFO_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw-Up", "Saw-Down", "Square", "Pulse", "Random");
+const WAVEFORM LFO_WAVEFORM_Values[sizeof LFO_WAVEFORM_NAMES] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Random };
+
 enum class MODENV_TARGET_TYPE { OSC, Filter, LFO };
 const juce::StringArray MODENV_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO");
 
@@ -145,6 +145,7 @@ public:
     juce::AudioParameterChoice* TargetFilter;
     juce::AudioParameterChoice* TargetOscParam;
     juce::AudioParameterChoice* TargetFilterParam;
+    juce::AudioParameterChoice* Waveform;
     juce::AudioParameterFloat* SlowFreq;
     juce::AudioParameterFloat* FastFreq;
     juce::AudioParameterFloat* Amount;
@@ -154,6 +155,7 @@ public:
               juce::AudioParameterChoice* targetFilter,
               juce::AudioParameterChoice* targetOscParam,
               juce::AudioParameterChoice* targetFilterParam,
+              juce::AudioParameterChoice* waveform,
               juce::AudioParameterFloat* slowFreq,
               juce::AudioParameterFloat* fastFreq,
               juce::AudioParameterFloat* amount);

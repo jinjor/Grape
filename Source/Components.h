@@ -157,12 +157,14 @@ private:
     juce::ComboBox targetFilterSelector;
     juce::ComboBox targetOscParamSelector;
     juce::ComboBox targetFilterParamSelector;
+    juce::ComboBox waveformSelector;
     juce::Slider slowFreqSlider;
     juce::Slider fastFreqSlider;
     juce::Slider amountSlider;
     
     juce::Label targetLabel;
     juce::Label typeLabel;
+    juce::Label waveformLabel;
     juce::Label freqLabel;
     juce::Label amountLabel;
 };

@@ -638,6 +638,7 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
 , targetFilterSelector("TargetFilter")
 , targetOscParamSelector("TargetOscParam")
 , targetFilterParamSelector("TargetFilterParam")
+, waveformSelector("Waveform")
 , slowFreqSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , fastFreqSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , amountSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -684,6 +685,13 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
     targetFilterParamSelector.addListener(this);
     body.addAndMakeVisible(targetFilterParamSelector);
     
+    waveformSelector.setLookAndFeel(&grapeLookAndFeel);
+    waveformSelector.addItemList(_paramsPtr->Waveform->getAllValueStrings(), 1);
+    waveformSelector.setSelectedItemIndex(_paramsPtr->Waveform->getIndex(), juce::dontSendNotification);
+    waveformSelector.setJustificationType(juce::Justification::centred);
+    waveformSelector.addListener(this);
+    body.addAndMakeVisible(waveformSelector);
+    
     slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     slowFreqSlider.setRange(_paramsPtr->SlowFreq->range.start,
                            _paramsPtr->SlowFreq->range.end, 0.01);
@@ -725,6 +733,12 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
     typeLabel.setJustificationType(juce::Justification::centred);
     typeLabel.setEditable(false, false, false);
     body.addAndMakeVisible(typeLabel);
+    
+    waveformLabel.setFont(paramLabelFont);
+    waveformLabel.setText("Waveform", juce::dontSendNotification);
+    waveformLabel.setJustificationType(juce::Justification::centred);
+    waveformLabel.setEditable(false, false, false);
+    body.addAndMakeVisible(waveformLabel);
     
     freqLabel.setFont(paramLabelFont);
     freqLabel.setText("Freq", juce::dontSendNotification);
@@ -798,6 +812,11 @@ void LfoComponent::resized()
         }
     }
     {
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(120).removeFromTop(height);
+        waveformLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        waveformSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
+    }
+    {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         freqLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         fastFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
@@ -848,6 +867,10 @@ void LfoComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
     {
         *_paramsPtr->TargetFilterParam = targetFilterParamSelector.getSelectedItemIndex();
     }
+    else if(comboBoxThatHasChanged == &waveformSelector)
+    {
+        *_paramsPtr->Waveform = waveformSelector.getSelectedItemIndex();
+    }
     resized();// re-render
 }
 void LfoComponent::sliderValueChanged(juce::Slider *slider)
@@ -875,6 +898,7 @@ void LfoComponent::timerCallback()
     targetFilterSelector.setSelectedItemIndex(_paramsPtr->TargetFilter->getIndex(), juce::dontSendNotification);
     targetOscParamSelector.setSelectedItemIndex(_paramsPtr->TargetOscParam->getIndex(), juce::dontSendNotification);
     targetFilterParamSelector.setSelectedItemIndex(_paramsPtr->TargetFilterParam->getIndex(), juce::dontSendNotification);
+    waveformSelector.setSelectedItemIndex(_paramsPtr->Waveform->getIndex(), juce::dontSendNotification);
     
     slowFreqSlider.setValue(_paramsPtr->SlowFreq->get(), juce::dontSendNotification);
     fastFreqSlider.setValue(_paramsPtr->FastFreq->get(), juce::dontSendNotification);
