@@ -8,8 +8,9 @@ bool GrapeSound::appliesToNote(int) { return true; }
 bool GrapeSound::appliesToChannel(int) { return true; }
 
 //==============================================================================
-GrapeVoice::GrapeVoice(OscParams* oscParams, EnvelopeParams* envelopeParams, FilterParams* filterParams, LfoParams* lfoParams, ModEnvParams* modEnvParams)
+GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, OscParams* oscParams, EnvelopeParams* envelopeParams, FilterParams* filterParams, LfoParams* lfoParams, ModEnvParams* modEnvParams)
 : perf(juce::PerformanceCounter("voice cycle", 100000))
+, currentPositionInfo(currentPositionInfo)
 , oscParams(oscParams)
 , envelopeParams(envelopeParams)
 , filterParams(filterParams)

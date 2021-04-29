@@ -67,6 +67,8 @@ public:
     juce::MidiKeyboardState keyboardState;
     AnalyserState analyserState;
     juce::Synthesiser synth;
+    juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo;
+    
     OscParams oscParams[NUM_OSC];
     EnvelopeParams envelopeParams[NUM_ENVELOPE];
     FilterParams filterParams[NUM_FILTER];

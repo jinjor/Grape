@@ -53,7 +53,7 @@ const double Y = 440.0 / std::pow(X, 69);
 class GrapeVoice   : public juce::SynthesiserVoice
 {
 public:
-    GrapeVoice(OscParams* oscParams, EnvelopeParams* envelopeParams, FilterParams* filterParams, LfoParams* lfoParams, ModEnvParams* modEnvParams);
+    GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, OscParams* oscParams, EnvelopeParams* envelopeParams, FilterParams* filterParams, LfoParams* lfoParams, ModEnvParams* modEnvParams);
     ~GrapeVoice();
     bool canPlaySound (juce::SynthesiserSound* sound) override;
     void startNote (int midiNoteNumber, float velocity,
@@ -64,6 +64,8 @@ public:
     void renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int startSample, int numSamples) override;
 private:
     juce::PerformanceCounter perf;
+    juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo;
+    
     OscParams* oscParams;
     EnvelopeParams* envelopeParams;
     FilterParams* filterParams;

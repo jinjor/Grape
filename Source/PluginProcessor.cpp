@@ -204,7 +204,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 {
     int numVoices = 64;
     for (auto i = 0; i < numVoices; ++i) {
-        synth.addVoice (new GrapeVoice(oscParams, envelopeParams, filterParams, lfoParams, modEnvParams));
+        synth.addVoice (new GrapeVoice(&currentPositionInfo, oscParams, envelopeParams, filterParams, lfoParams, modEnvParams));
     }
     synth.addSound (new GrapeSound());
     
@@ -342,6 +342,10 @@ bool GrapeAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) co
 
 void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    if (auto* playHead = getPlayHead())
+    {
+        playHead->getCurrentPosition(currentPositionInfo);
+    }
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
     synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
     midiMessages.clear();
