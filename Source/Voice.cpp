@@ -68,7 +68,7 @@ void GrapeVoice::startNote (int midiNoteNumber, float velocity,
             filters[i].initializePastData();
         }
         for(int i = 0; i < NUM_LFO; ++i) {
-            // noop
+            lfos[i].setAngle(0.0);
         }
         for(int i = 0; i < NUM_MODENV; ++i) {
             if(modEnvParams[i].shouldUseHold()) {
