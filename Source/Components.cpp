@@ -622,6 +622,8 @@ void FilterComponent::sliderValueChanged(juce::Slider *slider)
 void FilterComponent::timerCallback()
 {
     header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
+    body.setEnabled(_paramsPtr->Enabled->get());
+    
     targetSelector.setSelectedItemIndex(_paramsPtr->Target->getIndex(), juce::dontSendNotification);
     typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
     octaveSlider.setValue(_paramsPtr->Octave->get(), juce::dontSendNotification);
