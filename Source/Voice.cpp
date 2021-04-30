@@ -112,6 +112,12 @@ void GrapeVoice::stopNote (float velocity, bool allowTailOff)
         }
     }
 }
+void GrapeVoice::pitchWheelMoved (int value) {
+    pitch = value;
+}
+void GrapeVoice::controllerMoved (int number, int value) {
+    cc[number] = value;
+}
 void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
     if(GrapeSound* playingSound = dynamic_cast<GrapeSound*>(getCurrentlyPlayingSound().get()))
@@ -167,6 +173,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
         double octShift[NUM_OSC] {};
         double detuneRatio[NUM_OSC] {};
         double spreadRatio[NUM_OSC] {};
+        double pan[NUM_OSC] {};
         double gain[NUM_OSC] {};
         double filterOctShift[NUM_FILTER] {};
         double filterQExp[NUM_FILTER] {};

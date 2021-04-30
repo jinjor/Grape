@@ -46,6 +46,7 @@ const int NUM_ENVELOPE = 2;
 const int NUM_FILTER = 2;
 const int NUM_LFO = 3;
 const int NUM_MODENV = 3;
+const int NUM_CONTROL = 6;
 const double A = 1.0 / 12.0;
 const double X = std::pow(2.0, 1.0/12.0);
 const double Y = 440.0 / std::pow(X, 69);
@@ -59,8 +60,8 @@ public:
     void startNote (int midiNoteNumber, float velocity,
                     juce::SynthesiserSound*, int currentPitchWheelPosition) override;
     void stopNote (float velocity, bool allowTailOff) override;
-    virtual void pitchWheelMoved (int) override      {}
-    virtual void controllerMoved (int, int) override {}
+    virtual void pitchWheelMoved (int) override;
+    virtual void controllerMoved (int, int) override;
     void renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int startSample, int numSamples) override;
 private:
     juce::PerformanceCounter perf;
@@ -76,6 +77,10 @@ private:
     Filter filters[NUM_FILTER];
     Osc lfos[NUM_LFO];
     Adsr modEnvs[NUM_MODENV];
+    
+    int pitch = 0;
+    int cc[128]{};
+    
     int midiNoteNumber = 0;
     TransitiveValue smoothVelocity;
     bool stolen = false;
