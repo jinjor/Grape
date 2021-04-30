@@ -5,7 +5,7 @@
 namespace {
 enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Pulse, Random, Pink, White };
 const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Square", "Pulse", "Pink", "White");
-const WAVEFORM OSC_WAVEFORM_Values[sizeof OSC_WAVEFORM_NAMES] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Pink, WAVEFORM::White };
+const WAVEFORM OSC_WAVEFORM_VALUES[sizeof OSC_WAVEFORM_NAMES] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Pink, WAVEFORM::White };
 
 const juce::StringArray OSC_ENV_NAMES = juce::StringArray("1", "2");
 
@@ -27,7 +27,7 @@ enum class LFO_TARGET_FILTER_PARAM { Freq, Q };
 const juce::StringArray LFO_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
 
 const juce::StringArray LFO_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw-Up", "Saw-Down", "Square", "Pulse", "Random");
-const WAVEFORM LFO_WAVEFORM_Values[sizeof LFO_WAVEFORM_NAMES] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Random };
+const WAVEFORM LFO_WAVEFORM_VALUES[sizeof LFO_WAVEFORM_NAMES] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Random };
 
 enum class MODENV_TARGET_TYPE { OSC, Filter, LFO };
 const juce::StringArray MODENV_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO");
@@ -49,7 +49,16 @@ enum class MODENV_FADE { In, Out };
 const juce::StringArray MODENV_FADE_NAMES = juce::StringArray("In", "Out");
 
 enum class DELAY_TYPE { Parallel, PingPong };
-const juce::StringArray DELAY_TYPE_NAMES = juce::StringArray("Parallel", "PingPong");
+const juce::StringArray DELAY_TYPE_NAMES = juce::StringArray("Parallel", "Ping-Pong");
+
+const juce::StringArray DELAY_TIME_SYNC_NAMES = juce::StringArray(
+    "1/1",   "1/2",   "1/4",   "1/8",   "1/16",   "1/32",
+    "1/1 T", "1/2 T", "1/4 T", "1/8 T", "1/16 T", "1/32 T",
+    "1/1 D", "1/2 D", "1/4 D", "1/8 D", "1/16 D", "1/32 D");
+const double DELAY_TIME_SYNC_VALUES[sizeof DELAY_TIME_SYNC_NAMES] = {
+    1.0,       0.5,       0.25,       0.125,       0.0625,       0.03125,
+    1.0 * 2/3, 0.5 * 2/3, 0.25 * 2/3, 0.125 * 2/3, 0.0625 * 2/3, 0.03125 * 2/3,
+    1.0 * 3/2, 0.5 * 3/2, 0.25 * 3/2, 0.125 * 3/2, 0.0625 * 3/2, 0.03125 * 3/2 };
 }
 //==============================================================================
 class SynthParametersBase
@@ -232,16 +241,22 @@ class DelayParams : public SynthParametersBase
 public:
     juce::AudioParameterBool* Enabled;
     juce::AudioParameterChoice* Type;
+    juce::AudioParameterBool* Sync;
     juce::AudioParameterFloat* TimeL;
     juce::AudioParameterFloat* TimeR;
+    juce::AudioParameterChoice* TimeSyncL;
+    juce::AudioParameterChoice* TimeSyncR;
     juce::AudioParameterFloat* LowFreq;
     juce::AudioParameterFloat* HighFreq;
     juce::AudioParameterFloat* Feedback;
     juce::AudioParameterFloat* Mix;
     DelayParams(juce::AudioParameterBool* enabled,
                 juce::AudioParameterChoice* type,
+                juce::AudioParameterBool* sync,
                 juce::AudioParameterFloat* timeL,
                 juce::AudioParameterFloat* timeR,
+                juce::AudioParameterChoice* timeSyncL,
+                juce::AudioParameterChoice* timeSyncR,
                 juce::AudioParameterFloat* lowFreq,
                 juce::AudioParameterFloat* highFreq,
                 juce::AudioParameterFloat* feedback,

@@ -128,7 +128,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
         }
         for(int i = 0; i < NUM_OSC; ++i) {
             oscs[i].setSampleRate(sampleRate);
-            oscs[i].setWaveform(OSC_WAVEFORM_Values[oscParams[i].Waveform->getIndex()]);
+            oscs[i].setWaveform(OSC_WAVEFORM_VALUES[oscParams[i].Waveform->getIndex()]);
         }
         for(int i = 0; i < NUM_ENVELOPE; ++i) {
             adsr[i].setParams(envelopeParams[i].Attack->get(),
@@ -142,7 +142,7 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
         }
         for(int i = 0; i < NUM_LFO; ++i) {
             lfos[i].setSampleRate(sampleRate);
-            lfos[i].setWaveform(LFO_WAVEFORM_Values[lfoParams[i].Waveform->getIndex()]);
+            lfos[i].setWaveform(LFO_WAVEFORM_VALUES[lfoParams[i].Waveform->getIndex()]);
         }
         for(int i = 0; i < NUM_MODENV; ++i) {
             if(modEnvParams[i].shouldUseHold()) {

@@ -239,14 +239,18 @@ private:
     juce::Component body;
     
     juce::ComboBox typeSelector;
+    juce::ComboBox syncSelector;
     juce::Slider timeLSlider;
     juce::Slider timeRSlider;
+    juce::Slider timeSyncLSlider;
+    juce::Slider timeSyncRSlider;
     juce::Slider lowFreqSlider;
     juce::Slider highFreqSlider;
     juce::Slider feedbackSlider;
     juce::Slider mixSlider;
 
     juce::Label typeLabel;
+    juce::Label syncLabel;
     juce::Label timeLLabel;
     juce::Label timeRLabel;
     juce::Label lowFreqLabel;

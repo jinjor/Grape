@@ -266,16 +266,22 @@ void ModEnvParams::loadParameters(juce::XmlElement& xml)
 //==============================================================================
 DelayParams::DelayParams(juce::AudioParameterBool* enabled,
                          juce::AudioParameterChoice* type,
+                         juce::AudioParameterBool* sync,
                          juce::AudioParameterFloat* timeL,
                          juce::AudioParameterFloat* timeR,
+                         juce::AudioParameterChoice* timeSyncL,
+                         juce::AudioParameterChoice* timeSyncR,
                          juce::AudioParameterFloat* lowFreq,
                          juce::AudioParameterFloat* highFreq,
                          juce::AudioParameterFloat* feedback,
                          juce::AudioParameterFloat* mix)
 : Enabled(enabled)
 , Type(type)
+, Sync(sync)
 , TimeL(timeL)
 , TimeR(timeR)
+, TimeSyncL(timeSyncL)
+, TimeSyncR(timeSyncR)
 , LowFreq(lowFreq)
 , HighFreq(highFreq)
 , Feedback(feedback)
@@ -285,8 +291,11 @@ void DelayParams::addAllParameters(juce::AudioProcessor& processor)
 {
     processor.addParameter(Enabled);
     processor.addParameter(Type);
+    processor.addParameter(Sync);
     processor.addParameter(TimeL);
     processor.addParameter(TimeR);
+    processor.addParameter(TimeSyncL);
+    processor.addParameter(TimeSyncR);
     processor.addParameter(LowFreq);
     processor.addParameter(HighFreq);
     processor.addParameter(Feedback);
@@ -296,8 +305,11 @@ void DelayParams::saveParameters(juce::XmlElement& xml)
 {
     xml.setAttribute(Enabled->paramID, Enabled->get());
     xml.setAttribute(Type->paramID, Type->getIndex());
+    xml.setAttribute(Sync->paramID, Sync->get());
     xml.setAttribute(TimeL->paramID, (double)TimeL->get());
     xml.setAttribute(TimeR->paramID, (double)TimeR->get());
+    xml.setAttribute(TimeSyncL->paramID, TimeSyncL->getIndex());
+    xml.setAttribute(TimeSyncR->paramID, TimeSyncR->getIndex());
     xml.setAttribute(LowFreq->paramID, (double)LowFreq->get());
     xml.setAttribute(HighFreq->paramID, (double)HighFreq->get());
     xml.setAttribute(Feedback->paramID, (double)Feedback->get());
@@ -305,10 +317,13 @@ void DelayParams::saveParameters(juce::XmlElement& xml)
 }
 void DelayParams::loadParameters(juce::XmlElement& xml)
 {
-    *Enabled = xml.getIntAttribute(Enabled->paramID, 0);
-    *Type = (float)xml.getDoubleAttribute(Type->paramID, 0);
+    *Enabled = xml.getBoolAttribute(Enabled->paramID, false);
+    *Type = xml.getIntAttribute(Type->paramID, 0);
+    *Sync = xml.getBoolAttribute(Sync->paramID, false);
     *TimeL = (float)xml.getDoubleAttribute(TimeL->paramID, 0.01);
     *TimeR = (float)xml.getDoubleAttribute(TimeR->paramID, 0.01);
+    *TimeSyncL = xml.getIntAttribute(TimeSyncL->paramID, 0);
+    *TimeSyncR = xml.getIntAttribute(TimeSyncR->paramID, 0);
     *LowFreq = (float)xml.getDoubleAttribute(LowFreq->paramID, 10);
     *HighFreq = (float)xml.getDoubleAttribute(HighFreq->paramID, 20000);
     *Feedback = (float)xml.getDoubleAttribute(Feedback->paramID, 0);

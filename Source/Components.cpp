@@ -1280,6 +1280,8 @@ DelayComponent::DelayComponent(DelayParams* params)
 , typeSelector("Type")
 , timeLSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , timeRSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+, timeSyncLSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+, timeSyncRSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , lowFreqSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , highFreqSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , feedbackSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -1299,6 +1301,13 @@ DelayComponent::DelayComponent(DelayParams* params)
     typeSelector.addListener(this);
     body.addAndMakeVisible(typeSelector);
     
+    syncSelector.setLookAndFeel(&grapeLookAndFeel);
+    syncSelector.addItemList(_paramsPtr->Sync->getAllValueStrings(), 1);
+    syncSelector.setSelectedItemIndex(_paramsPtr->Sync->get(), juce::dontSendNotification);
+    syncSelector.setJustificationType(juce::Justification::centred);
+    syncSelector.addListener(this);
+    body.addAndMakeVisible(syncSelector);
+    
     timeLSlider.setLookAndFeel(&grapeLookAndFeel);
     timeLSlider.setRange(_paramsPtr->TimeL->range.start,
                           _paramsPtr->TimeL->range.end, 0.01);
@@ -1317,6 +1326,23 @@ DelayComponent::DelayComponent(DelayParams* params)
     timeRSlider.addListener(this);
     body.addAndMakeVisible(timeRSlider);
     
+    timeSyncLSlider.setLookAndFeel(&grapeLookAndFeel);
+    timeSyncLSlider.setRange(0, sizeof DELAY_TIME_SYNC_NAMES - 1, 1);
+    timeSyncLSlider.setValue(_paramsPtr->TimeSyncL->getIndex(), juce::dontSendNotification);
+    timeSyncLSlider.setPopupDisplayEnabled(true, true, this);
+    timeSyncLSlider.setPopupMenuEnabled(true);
+    timeSyncLSlider.textFromValueFunction = [](double index){ return DELAY_TIME_SYNC_NAMES[index]; };
+    timeSyncLSlider.addListener(this);
+    body.addAndMakeVisible(timeSyncLSlider);
+    
+    timeSyncRSlider.setLookAndFeel(&grapeLookAndFeel);
+    timeSyncRSlider.setRange(0, sizeof DELAY_TIME_SYNC_NAMES - 1, 1);
+    timeSyncRSlider.setValue(_paramsPtr->TimeSyncR->getIndex(), juce::dontSendNotification);
+    timeSyncRSlider.setPopupDisplayEnabled(true, true, this);
+    timeSyncRSlider.setPopupMenuEnabled(true);
+    timeSyncRSlider.textFromValueFunction = [](double index){ return DELAY_TIME_SYNC_NAMES[index]; };
+    timeSyncRSlider.addListener(this);
+    body.addAndMakeVisible(timeSyncRSlider);
     
     lowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     lowFreqSlider.setRange(_paramsPtr->LowFreq->range.start,
@@ -1359,6 +1385,12 @@ DelayComponent::DelayComponent(DelayParams* params)
     typeLabel.setJustificationType(juce::Justification::centred);
     typeLabel.setEditable(false, false, false);
     body.addAndMakeVisible(typeLabel);
+    
+    syncLabel.setFont(paramLabelFont);
+    syncLabel.setText("Sync", juce::dontSendNotification);
+    syncLabel.setJustificationType(juce::Justification::centred);
+    syncLabel.setEditable(false, false, false);
+    body.addAndMakeVisible(syncLabel);
     
     timeLLabel.setFont(paramLabelFont);
     timeLLabel.setText("Time(L)", juce::dontSendNotification);
@@ -1431,6 +1463,11 @@ void DelayComponent::resized()
         typeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
     }
     {
+        juce::Rectangle<int> area = upperArea.removeFromLeft(80).removeFromTop(height);
+        syncLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        syncSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
+    }
+    {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
         lowFreqLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         lowFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
@@ -1443,12 +1480,16 @@ void DelayComponent::resized()
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         timeLLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        timeLSlider.setBounds(area.reduced(LOCAL_MARGIN));
+        auto sliderBounds = area.reduced(LOCAL_MARGIN);
+        timeLSlider.setBounds(sliderBounds);
+        timeSyncLSlider.setBounds(sliderBounds);
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         timeRLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        timeRSlider.setBounds(area.reduced(LOCAL_MARGIN));
+        auto sliderBounds = area.reduced(LOCAL_MARGIN);
+        timeRSlider.setBounds(sliderBounds);
+        timeSyncRSlider.setBounds(sliderBounds);
     }
 
     {
@@ -1473,6 +1514,10 @@ void DelayComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     {
         *_paramsPtr->Type = typeSelector.getSelectedItemIndex();
     }
+    else if(comboBox == &syncSelector)
+    {
+        *_paramsPtr->Sync = syncSelector.getSelectedItemIndex();
+    }
 }
 void DelayComponent::sliderValueChanged(juce::Slider *slider)
 {
@@ -1483,6 +1528,14 @@ void DelayComponent::sliderValueChanged(juce::Slider *slider)
     else if(slider == &timeRSlider)
     {
         *_paramsPtr->TimeR = (float)timeRSlider.getValue();
+    }
+    else if(slider == &timeSyncLSlider)
+    {
+        *_paramsPtr->TimeSyncL = timeSyncLSlider.getValue();
+    }
+    else if(slider == &timeSyncRSlider)
+    {
+        *_paramsPtr->TimeSyncR = timeSyncRSlider.getValue();
     }
     else if(slider == &lowFreqSlider)
     {
@@ -1507,8 +1560,16 @@ void DelayComponent::timerCallback()
     body.setEnabled(_paramsPtr->Enabled->get());
     
     typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
+    syncSelector.setSelectedItemIndex(_paramsPtr->Sync->get(), juce::dontSendNotification);
+    timeLSlider.setVisible(!_paramsPtr->Sync->get());
+    timeRSlider.setVisible(!_paramsPtr->Sync->get());
+    timeSyncLSlider.setVisible(_paramsPtr->Sync->get());
+    timeSyncRSlider.setVisible(_paramsPtr->Sync->get());
     timeLSlider.setValue(_paramsPtr->TimeL->get(), juce::dontSendNotification);
     timeRSlider.setValue(_paramsPtr->TimeR->get(), juce::dontSendNotification);
+    timeSyncLSlider.setValue(_paramsPtr->TimeSyncL->getIndex(), juce::dontSendNotification);
+    timeSyncRSlider.setValue(_paramsPtr->TimeSyncR->getIndex(), juce::dontSendNotification);
+
     lowFreqSlider.setValue(_paramsPtr->LowFreq->get(), juce::dontSendNotification);
     highFreqSlider.setValue(_paramsPtr->HighFreq->get(), juce::dontSendNotification);
     feedbackSlider.setValue(_paramsPtr->Feedback->get(), juce::dontSendNotification);

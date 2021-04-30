@@ -194,8 +194,11 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 , delayParams {
     new juce::AudioParameterBool("DELAY_ENABLED", "Enabled", false),
     new juce::AudioParameterChoice("DELAY_TYPE", "Type", DELAY_TYPE_NAMES, DELAY_TYPE_NAMES.indexOf("Parallel")),
+    new juce::AudioParameterBool("DELAY_SYNC", "Sync", false),
     new juce::AudioParameterFloat("DELAY_TIME_L", "TimeL", 0.01f, 1.0f, 0.1f),
     new juce::AudioParameterFloat("DELAY_TIME_R", "TimeR", 0.01f, 1.0f, 0.1f),
+    new juce::AudioParameterChoice("DELAY_TIME_SYNC_L", "TimeSyncL", DELAY_TIME_SYNC_NAMES, DELAY_TIME_SYNC_NAMES.indexOf("1/8")),
+    new juce::AudioParameterChoice("DELAY_TIME_SYNC_R", "TimeSyncR", DELAY_TIME_SYNC_NAMES, DELAY_TIME_SYNC_NAMES.indexOf("1/8")),
     new juce::AudioParameterFloat("DELAY_LOW_FREQ", "LowFfreq", 10.0f, 20000.0f, 10.0f),
     new juce::AudioParameterFloat("DELAY_HIGH_FREQ", "HighFreq", 10.0f, 20000.0f, 20000.0f),
     new juce::AudioParameterFloat("DELAY_FEEDBACK", "Feedback", 0.0f, 1.0f, 0.3f),
