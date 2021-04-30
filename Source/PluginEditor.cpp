@@ -40,7 +40,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
     addAndMakeVisible (modEnvComponents[2]);
     addAndMakeVisible (delayComponent);
     addAndMakeVisible (analyserComponent);
-    setSize (1200, 800);
+    setSize (1024, 768);
     startTimer (400);
     setResizable(true, true);
 }
@@ -59,7 +59,8 @@ void GrapeAudioProcessorEditor::resized()
 {
     juce::Rectangle<int> bounds = getLocalBounds();
         
-    keyboardComponent.setBounds(bounds.removeFromBottom(KEY_HEIGHT));
+//    keyboardComponent.setBounds(bounds.removeFromBottom(KEY_HEIGHT));
+    bounds.reduce(5, 5);
     auto width = bounds.getWidth();
     auto height = bounds.getHeight();
     
