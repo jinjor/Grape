@@ -80,11 +80,11 @@ const juce::StringArray CONTROL_TARGET_FILTER_PARAM_NAMES = juce::StringArray("F
 enum class CONTROL_TARGET_LFO_PARAM { Freq, Amount };
 const juce::StringArray CONTROL_TARGET_LFO_PARAM_NAMES = juce::StringArray("Freq", "Amount");
 
-enum class CONTROL_TARGET_MODENV_PARAM { Amount };
-const juce::StringArray CONTROL_TARGET_MODENV_PARAM_NAMES = juce::StringArray("Amount");
+enum class CONTROL_TARGET_MODENV_PARAM { Amount, _ };
+const juce::StringArray CONTROL_TARGET_MODENV_PARAM_NAMES = juce::StringArray("Amount", "_");
 
-enum class CONTROL_TARGET_DELAY_PARAM { Mix };
-const juce::StringArray CONTROL_TARGET_DELAY_PARAM_NAMES = juce::StringArray("Mix");
+enum class CONTROL_TARGET_DELAY_PARAM { Mix, _ };
+const juce::StringArray CONTROL_TARGET_DELAY_PARAM_NAMES = juce::StringArray("Mix", "_");
 }
 //==============================================================================
 class SynthParametersBase

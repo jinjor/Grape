@@ -20,6 +20,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 , lfoComponents { LfoComponent(0, p.lfoParams), LfoComponent(1, p.lfoParams+1), LfoComponent(2, p.lfoParams+2) }
 , modEnvComponents { ModEnvComponent(0, p.modEnvParams), ModEnvComponent(1, p.modEnvParams+1), ModEnvComponent(2, p.modEnvParams+2) }
 , delayComponent { DelayComponent(&p.delayParams) }
+, controlComponent { ControlComponent(p.controlItemParams) }
 , analyserComponent (&p.analyserState)
 {
     getLookAndFeel().setColour(juce::Label::textColourId, TEXT_COLOUR);
@@ -39,6 +40,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
     addAndMakeVisible (modEnvComponents[1]);
     addAndMakeVisible (modEnvComponents[2]);
     addAndMakeVisible (delayComponent);
+    addAndMakeVisible (controlComponent);
     addAndMakeVisible (analyserComponent);
     setSize (1024, 768);
     startTimer (400);
@@ -129,6 +131,10 @@ void GrapeAudioProcessorEditor::resized()
     {
         juce::Rectangle<int> area = effectArea.removeFromTop(effectHeight / 3);
         delayComponent.setBounds(area.reduced(PANEL_MARGIN));
+    }
+    {
+        juce::Rectangle<int> area = effectArea;
+        controlComponent.setBounds(area.reduced(PANEL_MARGIN));
     }
 //    {
 //        juce::Rectangle<int> area = effectArea;

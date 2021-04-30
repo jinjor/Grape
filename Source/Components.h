@@ -283,3 +283,55 @@ private:
     void drawNextFrameOfSpectrum();
     void drawFrame(juce::Graphics& g);
 };
+
+//==============================================================================
+//class ControlItemComponent : public juce::Component, juce::ComboBox::Listener
+//{
+//public:
+//    ControlItemComponent(ControlItemParams* params);
+//    virtual ~ControlItemComponent();
+//
+//    virtual void paint(juce::Graphics& g) override;
+//    virtual void resized() override;
+//    void timerCallback();
+//private:
+//    virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
+//
+//    GrapeLookAndFeel grapeLookAndFeel;
+//    ControlItemParams* _paramsPtr;
+//
+//    juce::ComboBox numberSelector;
+//    juce::ComboBox targetTypeSelector;
+//    juce::ComboBox targetOscSelector;
+//    juce::ComboBox targetFilterSelector;
+//    juce::ComboBox targetLfoSelector;
+//    juce::ComboBox targetModEnvSelector;
+//    juce::ComboBox targetOscParamSelector;
+//    juce::ComboBox targetFilterParamSelector;
+//    juce::ComboBox targetLfoParamSelector;
+//    juce::ComboBox targetModEnvParamSelector;
+//
+//    juce::Label numberLabel;
+//    juce::Label targetLabel;
+//};
+
+//==============================================================================
+class ControlComponent : public juce::Component, private juce::Timer
+{
+public:
+    ControlComponent(ControlItemParams* params);
+    virtual ~ControlComponent();
+
+    virtual void paint(juce::Graphics& g) override;
+
+    virtual void resized() override;
+
+private:
+    virtual void timerCallback() override;
+    GrapeLookAndFeel grapeLookAndFeel;
+    ModEnvParams* _paramsPtr;
+
+    HeaderComponent header;
+
+//    ControlItemComponent controlItemComponents[NUM_CONTROL];
+};

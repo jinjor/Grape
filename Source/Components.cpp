@@ -1577,6 +1577,40 @@ void DelayComponent::timerCallback()
 }
 
 //==============================================================================
+ControlComponent::ControlComponent(ControlItemParams* params)
+: header("CONTROLS", false)
+{
+    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
+    
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    addAndMakeVisible(header);
+
+    startTimerHz(30.0f);
+}
+
+ControlComponent::~ControlComponent()
+{}
+
+void ControlComponent::paint(juce::Graphics& g)
+{
+}
+
+void ControlComponent::resized()
+{
+//    int labelHeight = 20;
+//    int width = 60;
+//    int height = 60;
+
+    juce::Rectangle<int> bounds = getLocalBounds();
+
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+}
+void ControlComponent::timerCallback()
+{
+}
+
+//==============================================================================
 AnalyserComponent::AnalyserComponent(AnalyserState* analyserState)
 : analyserState(analyserState)
 , forwardFFT (analyserState->fftOrder)

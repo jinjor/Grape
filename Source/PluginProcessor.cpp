@@ -204,10 +204,24 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     new juce::AudioParameterFloat("DELAY_FEEDBACK", "Feedback", 0.0f, 1.0f, 0.3f),
     new juce::AudioParameterFloat("DELAY_MIX", "Mix", 0.0f, 1.0f, 0.3f)
 }
+, controlItemParams {
+    ControlItemParams {
+        new juce::AudioParameterChoice("CONTROL0_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("11: Expression")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("OSC")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_MODENV", "TargetLfo", CONTROL_TARGET_MODENV_NAMES, CONTROL_TARGET_MODENV_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Freq")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_MODENV_PARAM", "TargetModEnvParam", CONTROL_TARGET_MODENV_PARAM_NAMES, CONTROL_TARGET_MODENV_PARAM_NAMES.indexOf("Amount")),
+    }
+}
 {
     int numVoices = 64;
     for (auto i = 0; i < numVoices; ++i) {
-        synth.addVoice (new GrapeVoice(&currentPositionInfo, oscParams, envelopeParams, filterParams, lfoParams, modEnvParams));
+        synth.addVoice (new GrapeVoice(&currentPositionInfo, oscParams, envelopeParams, filterParams, lfoParams, modEnvParams, controlItemParams));
     }
     synth.addSound (new GrapeSound());
     
@@ -225,6 +239,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     modEnvParams[1].addAllParameters(*this);
     modEnvParams[2].addAllParameters(*this);
     delayParams.addAllParameters(*this);
+    controlItemParams[0].addAllParameters(*this);
 }
 
 GrapeAudioProcessor::~GrapeAudioProcessor()
@@ -421,6 +436,7 @@ void GrapeAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     modEnvParams[1].saveParameters(xml);
     modEnvParams[2].saveParameters(xml);
     delayParams.saveParameters(xml);
+    controlItemParams[0].saveParameters(xml);
     
     copyXmlToBinary(xml, destData);
 }
@@ -446,6 +462,7 @@ void GrapeAudioProcessor::setStateInformation (const void* data, int sizeInBytes
             modEnvParams[1].loadParameters(*xml);
             modEnvParams[2].loadParameters(*xml);
             delayParams.loadParameters(*xml);
+            controlItemParams[0].loadParameters(*xml);
         }
     }
 }

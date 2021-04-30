@@ -75,6 +75,7 @@ public:
     LfoParams lfoParams[NUM_LFO];
     ModEnvParams modEnvParams[NUM_MODENV];
     DelayParams delayParams;
+    ControlItemParams controlItemParams[NUM_CONTROL];
     
     StereoDelay stereoDelay;
 private:

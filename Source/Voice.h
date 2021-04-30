@@ -46,7 +46,7 @@ const int NUM_ENVELOPE = 2;
 const int NUM_FILTER = 2;
 const int NUM_LFO = 3;
 const int NUM_MODENV = 3;
-const int NUM_CONTROL = 6;
+const int NUM_CONTROL = 1;
 const double A = 1.0 / 12.0;
 const double X = std::pow(2.0, 1.0/12.0);
 const double Y = 440.0 / std::pow(X, 69);
@@ -54,7 +54,13 @@ const double Y = 440.0 / std::pow(X, 69);
 class GrapeVoice   : public juce::SynthesiserVoice
 {
 public:
-    GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, OscParams* oscParams, EnvelopeParams* envelopeParams, FilterParams* filterParams, LfoParams* lfoParams, ModEnvParams* modEnvParams);
+    GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo,
+               OscParams* oscParams,
+               EnvelopeParams* envelopeParams,
+               FilterParams* filterParams,
+               LfoParams* lfoParams,
+               ModEnvParams* modEnvParams,
+               ControlItemParams* controlItemParams);
     ~GrapeVoice();
     bool canPlaySound (juce::SynthesiserSound* sound) override;
     void startNote (int midiNoteNumber, float velocity,
@@ -72,6 +78,8 @@ private:
     FilterParams* filterParams;
     LfoParams* lfoParams;
     ModEnvParams* modEnvParams;
+    ControlItemParams* controlItemParams;
+    
     MultiOsc oscs[NUM_OSC];
     Adsr adsr[NUM_ENVELOPE];
     Filter filters[NUM_FILTER];
