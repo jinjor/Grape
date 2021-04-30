@@ -54,18 +54,27 @@ GrapeAudioProcessorEditor::~GrapeAudioProcessorEditor()
 //==============================================================================
 void GrapeAudioProcessorEditor::paint (juce::Graphics& g)
 {
+    juce::Rectangle<int> bounds = getLocalBounds();
+    auto height = bounds.getHeight();
+    auto upperArea = bounds.removeFromTop(height * 0.12);
+    auto middleArea = bounds.removeFromTop(bounds.getHeight() * 2 / 5);
+    
     g.fillAll(BACKGROUND_COLOUR);
+    juce::Path p;
+    p.addLineSegment(juce::Line<float>(0, upperArea.getBottom() - 0.5, upperArea.getWidth(), upperArea.getBottom() - 0.5), 1.0);
+    p.addLineSegment(juce::Line<float>(0, middleArea.getBottom() - 0.5, middleArea.getWidth(), middleArea.getBottom() - 0.5), 1.0);
+    g.setColour (juce::Colour(20,20,20));
+    g.strokePath(p, juce::PathStrokeType(0.5));
 }
 
 void GrapeAudioProcessorEditor::resized()
 {
     juce::Rectangle<int> bounds = getLocalBounds();
         
-    bounds.reduce(5, 5);
     auto width = bounds.getWidth();
     auto height = bounds.getHeight();
     
-    auto upperArea = bounds.removeFromTop(height * 0.12);
+    auto upperArea = bounds.removeFromTop(height * 0.12).reduced(6, 2);
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width/3);
     }
@@ -78,9 +87,9 @@ void GrapeAudioProcessorEditor::resized()
 //        keyboardComponent.setBounds(area.reduced(PANEL_MARGIN));
     }
     
-    auto middleArea = bounds.removeFromTop(bounds.getHeight() * 2 / 5);
+    auto middleArea = bounds.removeFromTop(bounds.getHeight() * 2 / 5).reduced(6, 2);
     auto middleHeight = middleArea.getHeight();
-    auto lowerArea = bounds;
+    auto lowerArea = bounds.reduced(6, 2);
     
     auto leftArea = middleArea.removeFromLeft(width * 0.38);
     auto centreArea = middleArea.removeFromLeft(width * 0.38);
