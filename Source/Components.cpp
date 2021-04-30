@@ -418,23 +418,27 @@ void EnvelopeComponent::resized()
     juce::Rectangle<int> bounds = getLocalBounds();
     auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
     header.setBounds(headerArea);
+    
+    auto bodyHeight = bounds.getHeight();
+    auto upperArea = bounds.removeFromTop(bodyHeight/2);
+    auto lowerArea = bounds;
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
         attackLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         attackSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
         decayLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         decaySlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         sustainLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         sustainSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
         releaseLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
         releaseSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -1393,25 +1397,25 @@ DelayComponent::DelayComponent(DelayParams* params)
     body.addAndMakeVisible(syncLabel);
     
     timeLLabel.setFont(paramLabelFont);
-    timeLLabel.setText("Time(L)", juce::dontSendNotification);
+    timeLLabel.setText("Time L", juce::dontSendNotification);
     timeLLabel.setJustificationType(juce::Justification::centred);
     timeLLabel.setEditable(false, false, false);
     body.addAndMakeVisible(timeLLabel);
     
     timeRLabel.setFont(paramLabelFont);
-    timeRLabel.setText("Time(R)", juce::dontSendNotification);
+    timeRLabel.setText("Time R", juce::dontSendNotification);
     timeRLabel.setJustificationType(juce::Justification::centred);
     timeRLabel.setEditable(false, false, false);
     body.addAndMakeVisible(timeRLabel);
     
     lowFreqLabel.setFont(paramLabelFont);
-    lowFreqLabel.setText("Low Freq", juce::dontSendNotification);
+    lowFreqLabel.setText("Lo Cut", juce::dontSendNotification);
     lowFreqLabel.setJustificationType(juce::Justification::centred);
     lowFreqLabel.setEditable(false, false, false);
     body.addAndMakeVisible(lowFreqLabel);
     
     highFreqLabel.setFont(paramLabelFont);
-    highFreqLabel.setText("high Freq", juce::dontSendNotification);
+    highFreqLabel.setText("Hi Cut", juce::dontSendNotification);
     highFreqLabel.setJustificationType(juce::Justification::centred);
     highFreqLabel.setEditable(false, false, false);
     body.addAndMakeVisible(highFreqLabel);
@@ -1641,11 +1645,11 @@ void AnalyserComponent::drawNextFrameOfSpectrum()
 
 void AnalyserComponent::paint(juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
-    g.setOpacity (1.0f);
-    g.setColour (juce::Colours::white);
+    g.fillAll(juce::Colours::black);
+    g.setOpacity(1.0f);
+    g.setColour(juce::Colour(100,190,140));
     if(readyToDrawFrame) {
-        drawFrame (g);
+        drawFrame(g);
     }
 }
 
