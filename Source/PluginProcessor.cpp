@@ -359,9 +359,13 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     auto* rightOut = buffer.getWritePointer(1);
     
     stereoDelay.setParams(getSampleRate(),
+                          currentPositionInfo.bpm,
                           static_cast<DELAY_TYPE>(delayParams.Type->getIndex()),
+                          delayParams.Sync->get(),
                           delayParams.TimeL->get(),
                           delayParams.TimeR->get(),
+                          DELAY_TIME_SYNC_VALUES[delayParams.TimeSyncL->getIndex()],
+                          DELAY_TIME_SYNC_VALUES[delayParams.TimeSyncR->getIndex()],
                           delayParams.LowFreq->get(),
                           delayParams.HighFreq->get(),
                           delayParams.Feedback->get(),

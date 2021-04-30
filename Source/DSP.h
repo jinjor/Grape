@@ -461,11 +461,27 @@ public:
     ~StereoDelay() {
         DBG("DelayEffect's destructor called.");
     }
-    void setParams(double sampleRate, DELAY_TYPE type, double delayTimeL, double delayTimeR, double lowFreq, double highFreq, double feedback, double mix) {
+    void setParams(double sampleRate,
+                   double bpm,
+                   DELAY_TYPE type,
+                   bool sync,
+                   double delayTimeL,
+                   double delayTimeR,
+                   double delayTimeSyncL,
+                   double delayTimeSyncR,
+                   double lowFreq,
+                   double highFreq,
+                   double feedback,
+                   double mix) {
         lowpass.setSampleRate(sampleRate);
         highpass.setSampleRate(sampleRate);
-        delayLength[0] = std::max(1.0, std::min(48000.0, sampleRate * delayTimeL));
-        delayLength[1] = std::max(1.0, std::min(48000.0, sampleRate * delayTimeR));
+        if(sync) {
+            auto timePerBar = 60 * 4 / bpm;
+            delayTimeL = timePerBar * delayTimeSyncL;
+            delayTimeR = timePerBar * delayTimeSyncR;
+        }
+        delayLength[0] = std::max(1.0, std::min(192000.0, sampleRate * delayTimeL));
+        delayLength[1] = std::max(1.0, std::min(192000.0, sampleRate * delayTimeR));
         this->type = type;
         this->lowFreq = lowFreq;
         this->highFreq = highFreq;
@@ -492,7 +508,7 @@ public:
         }
     }
 private:
-    double past[2][48000]{};
+    float past[2][192000]{};
     int delayLength[2] { 1, 1 };
     int cursor[2]{};
     Filter lowpass;
