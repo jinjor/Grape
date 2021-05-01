@@ -7,7 +7,8 @@ const float PANEL_NAME_FONT_SIZE = 15.0f;
 const float PARAM_LABEL_FONT_SIZE = 14.0f;
 const float PANEL_NAME_HEIGHT = 26.0;
 const float LOCAL_MARGIN = 2.0;
-const float LINE_HEIGHT = 28.0;
+const float LABEL_HEIGHT = 20.0;
+const float COMBO_BOX_HEIGHT = 28.0;
 const juce::Colour TEXT_COLOUR = juce::Colour(200,200,200);
 const juce::Colour PANEL_NAME_COLOUR = juce::Colour(50,50,50);
 }
@@ -207,7 +208,6 @@ void OscComponent::paint(juce::Graphics& g)
 
 void OscComponent::resized()
 {
-    int labelHeight = 20;
     int width = 60;
     int height = 60;
     
@@ -223,43 +223,43 @@ void OscComponent::resized()
     {
         float selectorWidth = 60.0f;
         juce::Rectangle<int> area = upperArea.removeFromLeft(selectorWidth).removeFromTop(height);
-        envelopeLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        envelopeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
+        envelopeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        envelopeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
         float selectorWidth = 120.0f;
         juce::Rectangle<int> area = upperArea.removeFromLeft(selectorWidth).removeFromTop(height);
-        waveformLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        waveformSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
+        waveformLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        waveformSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
-        octaveLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        octaveLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         octaveSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
-        coarseLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        coarseLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         coarseSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        unisonLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        unisonLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         unisonSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        detuneLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        detuneLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         detuneSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        spreadLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        spreadLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         spreadSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        gainLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        gainLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         gainSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
@@ -411,7 +411,6 @@ void EnvelopeComponent::paint(juce::Graphics& g)
 
 void EnvelopeComponent::resized()
 {
-    int labelHeight = 20;
     int width = 60;
     int height = 60;
     
@@ -424,22 +423,22 @@ void EnvelopeComponent::resized()
     auto lowerArea = bounds;
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
-        attackLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        attackLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         attackSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
-        decayLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        decayLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         decaySlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        sustainLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        sustainLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         sustainSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        releaseLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        releaseLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         releaseSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
@@ -544,7 +543,6 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     qLabel.setEditable(false, false, false);
     body.addAndMakeVisible(qLabel);
     
-    body.setEnabled(_paramsPtr->Enabled->get());
     addAndMakeVisible(body);
     
     startTimerHz(30.0f);
@@ -559,7 +557,6 @@ void FilterComponent::paint(juce::Graphics& g)
 
 void FilterComponent::resized()
 {
-    int labelHeight = 20;
     int width = 60;
     int height = 60;
     
@@ -575,23 +572,23 @@ void FilterComponent::resized()
     {
         float selectorWidth = 70.0f;
         juce::Rectangle<int> area = upperArea.removeFromLeft(selectorWidth).removeFromTop(height);
-        targetLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        targetSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
+        targetLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        targetSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
         float selectorWidth = 120.0f;
         juce::Rectangle<int> area = upperArea.removeFromLeft(selectorWidth).removeFromTop(height);
-        typeLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        typeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
+        typeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        typeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        octaveLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        octaveLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         octaveSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        qLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        qLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         qSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
@@ -758,7 +755,6 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
     amountLabel.setEditable(false, false, false);
     body.addAndMakeVisible(amountLabel);
     
-    body.setEnabled(_paramsPtr->Enabled->get());
     addAndMakeVisible(body);
     
     startTimerHz(30.0f);
@@ -773,7 +769,6 @@ void LfoComponent::paint(juce::Graphics& g)
 
 void LfoComponent::resized()
 {
-    int labelHeight = 20;
     int width = 60;
     int height = 60;
 
@@ -789,8 +784,8 @@ void LfoComponent::resized()
     auto lowerArea = bounds;
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(280).removeFromTop(height);
-        targetLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        auto selectorsArea = area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT);
+        targetLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        auto selectorsArea = area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT);
         
         targetTypeSelector.setBounds(selectorsArea.removeFromLeft(90));
         auto indexArea = selectorsArea.removeFromLeft(70);
@@ -799,49 +794,21 @@ void LfoComponent::resized()
         auto paramArea = selectorsArea.removeFromLeft(110);
         targetOscParamSelector.setBounds(paramArea);
         targetFilterParamSelector.setBounds(paramArea);
-        switch(static_cast<LFO_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
-            case LFO_TARGET_TYPE::OSC: {
-                targetOscSelector.setVisible(true);
-                targetFilterSelector.setVisible(false);
-                targetOscParamSelector.setVisible(true);
-                targetFilterParamSelector.setVisible(false);
-                break;
-            }
-            case LFO_TARGET_TYPE::Filter: {
-                targetOscSelector.setVisible(false);
-                targetFilterSelector.setVisible(true);
-                targetOscParamSelector.setVisible(false);
-                targetFilterParamSelector.setVisible(true);
-                break;
-            }
-                
-        }
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(120).removeFromTop(height);
-        waveformLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        waveformSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
+        waveformLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        waveformSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        freqLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        freqLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         fastFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
         slowFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
-        if(static_cast<LFO_TARGET_TYPE>(_paramsPtr->TargetType->getIndex()) == LFO_TARGET_TYPE::OSC &&
-           (static_cast<LFO_TARGET_OSC_PARAM>(_paramsPtr->TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::FM ||
-            static_cast<LFO_TARGET_OSC_PARAM>(_paramsPtr->TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::AM
-            )
-           ) {
-            fastFreqSlider.setVisible(true);
-            slowFreqSlider.setVisible(false);
-        } else {
-            fastFreqSlider.setVisible(false);
-            slowFreqSlider.setVisible(true);
-        }
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        amountLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        amountLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         amountSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
@@ -909,6 +876,33 @@ void LfoComponent::timerCallback()
     slowFreqSlider.setValue(_paramsPtr->SlowFreq->get(), juce::dontSendNotification);
     fastFreqSlider.setValue(_paramsPtr->FastFreq->get(), juce::dontSendNotification);
     amountSlider.setValue(_paramsPtr->Amount->get(), juce::dontSendNotification);
+    switch(static_cast<LFO_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
+        case LFO_TARGET_TYPE::OSC: {
+            targetOscSelector.setVisible(true);
+            targetFilterSelector.setVisible(false);
+            targetOscParamSelector.setVisible(true);
+            targetFilterParamSelector.setVisible(false);
+            break;
+        }
+        case LFO_TARGET_TYPE::Filter: {
+            targetOscSelector.setVisible(false);
+            targetFilterSelector.setVisible(true);
+            targetOscParamSelector.setVisible(false);
+            targetFilterParamSelector.setVisible(true);
+            break;
+        }
+    }
+    if(static_cast<LFO_TARGET_TYPE>(_paramsPtr->TargetType->getIndex()) == LFO_TARGET_TYPE::OSC &&
+       (static_cast<LFO_TARGET_OSC_PARAM>(_paramsPtr->TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::FM ||
+        static_cast<LFO_TARGET_OSC_PARAM>(_paramsPtr->TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::AM
+        )
+       ) {
+        fastFreqSlider.setVisible(true);
+        slowFreqSlider.setVisible(false);
+    } else {
+        fastFreqSlider.setVisible(false);
+        slowFreqSlider.setVisible(true);
+    }
 }
 
 //==============================================================================
@@ -1068,7 +1062,6 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     decayLabel.setEditable(false, false, false);
     body.addAndMakeVisible(decayLabel);
     
-    body.setEnabled(_paramsPtr->Enabled->get());
     addAndMakeVisible(body);
     
     startTimerHz(30.0f);
@@ -1083,7 +1076,6 @@ void ModEnvComponent::paint(juce::Graphics& g)
 
 void ModEnvComponent::resized()
 {
-    int labelHeight = 20;
     int width = 60;
     int height = 60;
 
@@ -1099,9 +1091,9 @@ void ModEnvComponent::resized()
     auto lowerArea = bounds;
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(280).removeFromTop(height);
-        targetLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        targetLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         
-        auto selectorsArea = area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT);
+        auto selectorsArea = area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT);
         
         targetTypeSelector.setBounds(selectorsArea.removeFromLeft(90));
         auto indexArea = selectorsArea.removeFromLeft(70);
@@ -1112,87 +1104,26 @@ void ModEnvComponent::resized()
         targetOscParamSelector.setBounds(paramArea);
         targetFilterParamSelector.setBounds(paramArea);
         targetLfoParamSelector.setBounds(paramArea);
-        switch(static_cast<MODENV_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
-            case MODENV_TARGET_TYPE::OSC: {
-                targetOscSelector.setVisible(true);
-                targetFilterSelector.setVisible(false);
-                targetLfoSelector.setVisible(false);
-                targetOscParamSelector.setVisible(true);
-                targetFilterParamSelector.setVisible(false);
-                targetLfoParamSelector.setVisible(false);
-                break;
-            }
-            case MODENV_TARGET_TYPE::Filter: {
-                targetOscSelector.setVisible(false);
-                targetFilterSelector.setVisible(true);
-                targetLfoSelector.setVisible(false);
-                targetOscParamSelector.setVisible(false);
-                targetFilterParamSelector.setVisible(true);
-                targetLfoParamSelector.setVisible(false);
-                break;
-            }
-            case MODENV_TARGET_TYPE::LFO: {
-                targetOscSelector.setVisible(false);
-                targetFilterSelector.setVisible(false);
-                targetLfoSelector.setVisible(true);
-                targetOscParamSelector.setVisible(false);
-                targetFilterParamSelector.setVisible(false);
-                targetLfoParamSelector.setVisible(true);
-                break;
-            }
-        }
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        auto lebelArea = area.removeFromTop(labelHeight);
+        auto lebelArea = area.removeFromTop(LABEL_HEIGHT);
         peakFreqLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
         fadeLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
         peakFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
-        fadeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
+        fadeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        auto lebelArea = area.removeFromTop(labelHeight);
+        auto lebelArea = area.removeFromTop(LABEL_HEIGHT);
         waitLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
         attackLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
         waitSlider.setBounds(area.reduced(LOCAL_MARGIN));
         attackSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        if(_paramsPtr->isTargetFreq()) {
-            // 1
-            peakFreqLabel.setVisible(true);
-            fadeLabel.setVisible(false);
-            peakFreqSlider.setVisible(true);
-            fadeSelector.setVisible(false);
-            // 2
-            waitLabel.setVisible(false);
-            attackLabel.setVisible(true);
-            waitSlider.setVisible(false);
-            attackSlider.setVisible(true);
-        } else {
-            // 1
-            peakFreqLabel.setVisible(false);
-            fadeLabel.setVisible(true);
-            peakFreqSlider.setVisible(false);
-            fadeSelector.setVisible(true);
-            // 2
-            if(static_cast<MODENV_FADE>(_paramsPtr->Fade->getIndex()) == MODENV_FADE::In) {
-                waitLabel.setVisible(true);
-                attackLabel.setVisible(false);
-                waitSlider.setVisible(true);
-                attackSlider.setVisible(false);
-            } else {
-                waitLabel.setVisible(false);
-                attackLabel.setVisible(true);
-                waitSlider.setVisible(false);
-                attackSlider.setVisible(true);
-            }
-        }
-    }
-    {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        decayLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        decayLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         decaySlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
@@ -1275,6 +1206,65 @@ void ModEnvComponent::timerCallback()
     waitSlider.setValue(_paramsPtr->Wait->get(), juce::dontSendNotification);
     attackSlider.setValue(_paramsPtr->Attack->get(), juce::dontSendNotification);
     decaySlider.setValue(_paramsPtr->Decay->get(), juce::dontSendNotification);
+    switch(static_cast<MODENV_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
+        case MODENV_TARGET_TYPE::OSC: {
+            targetOscSelector.setVisible(true);
+            targetFilterSelector.setVisible(false);
+            targetLfoSelector.setVisible(false);
+            targetOscParamSelector.setVisible(true);
+            targetFilterParamSelector.setVisible(false);
+            targetLfoParamSelector.setVisible(false);
+            break;
+        }
+        case MODENV_TARGET_TYPE::Filter: {
+            targetOscSelector.setVisible(false);
+            targetFilterSelector.setVisible(true);
+            targetLfoSelector.setVisible(false);
+            targetOscParamSelector.setVisible(false);
+            targetFilterParamSelector.setVisible(true);
+            targetLfoParamSelector.setVisible(false);
+            break;
+        }
+        case MODENV_TARGET_TYPE::LFO: {
+            targetOscSelector.setVisible(false);
+            targetFilterSelector.setVisible(false);
+            targetLfoSelector.setVisible(true);
+            targetOscParamSelector.setVisible(false);
+            targetFilterParamSelector.setVisible(false);
+            targetLfoParamSelector.setVisible(true);
+            break;
+        }
+    }
+    if(_paramsPtr->isTargetFreq()) {
+        // 1
+        peakFreqLabel.setVisible(true);
+        fadeLabel.setVisible(false);
+        peakFreqSlider.setVisible(true);
+        fadeSelector.setVisible(false);
+        // 2
+        waitLabel.setVisible(false);
+        attackLabel.setVisible(true);
+        waitSlider.setVisible(false);
+        attackSlider.setVisible(true);
+    } else {
+        // 1
+        peakFreqLabel.setVisible(false);
+        fadeLabel.setVisible(true);
+        peakFreqSlider.setVisible(false);
+        fadeSelector.setVisible(true);
+        // 2
+        if(static_cast<MODENV_FADE>(_paramsPtr->Fade->getIndex()) == MODENV_FADE::In) {
+            waitLabel.setVisible(true);
+            attackLabel.setVisible(false);
+            waitSlider.setVisible(true);
+            attackSlider.setVisible(false);
+        } else {
+            waitLabel.setVisible(false);
+            attackLabel.setVisible(true);
+            waitSlider.setVisible(false);
+            attackSlider.setVisible(true);
+        }
+    }
 }
 
 //==============================================================================
@@ -1432,7 +1422,6 @@ DelayComponent::DelayComponent(DelayParams* params)
     mixLabel.setEditable(false, false, false);
     body.addAndMakeVisible(mixLabel);
     
-    body.setEnabled(_paramsPtr->Enabled->get());
     addAndMakeVisible(body);
     
     startTimerHz(30.0f);
@@ -1447,7 +1436,6 @@ void DelayComponent::paint(juce::Graphics& g)
 
 void DelayComponent::resized()
 {
-    int labelHeight = 20;
     int width = 60;
     int height = 60;
     
@@ -1463,34 +1451,34 @@ void DelayComponent::resized()
     auto lowerArea = bounds;
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(120).removeFromTop(height);
-        typeLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        typeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
+        typeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        typeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(80).removeFromTop(height);
-        syncLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
-        syncSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(LINE_HEIGHT));
+        syncLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        syncSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
-        lowFreqLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        lowFreqLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         lowFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
-        highFreqLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        highFreqLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         highFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        timeLLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        timeLLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         auto sliderBounds = area.reduced(LOCAL_MARGIN);
         timeLSlider.setBounds(sliderBounds);
         timeSyncLSlider.setBounds(sliderBounds);
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        timeRLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        timeRLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         auto sliderBounds = area.reduced(LOCAL_MARGIN);
         timeRSlider.setBounds(sliderBounds);
         timeSyncRSlider.setBounds(sliderBounds);
@@ -1498,12 +1486,12 @@ void DelayComponent::resized()
 
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        feedbackLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        feedbackLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         feedbackSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
-        mixLabel.setBounds(area.removeFromTop(labelHeight).reduced(LOCAL_MARGIN));
+        mixLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         mixSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
@@ -1580,16 +1568,223 @@ void DelayComponent::timerCallback()
     mixSlider.setValue(_paramsPtr->Mix->get(), juce::dontSendNotification);
 }
 
+
+//==============================================================================
+ControlItemComponent::ControlItemComponent(ControlItemParams* params)
+: _paramsPtr(params)
+, numberSelector("Number")
+, targetTypeSelector("TargetType")
+, targetOscSelector("TargetOsc")
+, targetFilterSelector("TargetFilter")
+, targetOscParamSelector("TargetOscParam")
+, targetFilterParamSelector("TargetFilterParam")
+{
+    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
+
+    numberSelector.setLookAndFeel(&grapeLookAndFeel);
+    numberSelector.addItemList(_paramsPtr->Number->getAllValueStrings(), 1);
+    numberSelector.setSelectedItemIndex(_paramsPtr->Number->getIndex(), juce::dontSendNotification);
+    numberSelector.setJustificationType(juce::Justification::centred);
+    numberSelector.addListener(this);
+    addAndMakeVisible(numberSelector);
+    
+    targetTypeSelector.setLookAndFeel(&grapeLookAndFeel);
+    targetTypeSelector.addItemList(_paramsPtr->TargetType->getAllValueStrings(), 1);
+    targetTypeSelector.setSelectedItemIndex(_paramsPtr->TargetType->getIndex(), juce::dontSendNotification);
+    targetTypeSelector.setJustificationType(juce::Justification::centred);
+    targetTypeSelector.addListener(this);
+    addAndMakeVisible(targetTypeSelector);
+    
+    targetOscSelector.setLookAndFeel(&grapeLookAndFeel);
+    targetOscSelector.addItemList(_paramsPtr->TargetOsc->getAllValueStrings(), 1);
+    targetOscSelector.setSelectedItemIndex(_paramsPtr->TargetOsc->getIndex(), juce::dontSendNotification);
+    targetOscSelector.setJustificationType(juce::Justification::centred);
+    targetOscSelector.addListener(this);
+    addAndMakeVisible(targetOscSelector);
+    
+    targetFilterSelector.setLookAndFeel(&grapeLookAndFeel);
+    targetFilterSelector.addItemList(_paramsPtr->TargetFilter->getAllValueStrings(), 1);
+    targetFilterSelector.setSelectedItemIndex(_paramsPtr->TargetFilter->getIndex(), juce::dontSendNotification);
+    targetFilterSelector.setJustificationType(juce::Justification::centred);
+    targetFilterSelector.addListener(this);
+    addAndMakeVisible(targetFilterSelector);
+    
+    targetLfoSelector.setLookAndFeel(&grapeLookAndFeel);
+    targetLfoSelector.addItemList(_paramsPtr->TargetLfo->getAllValueStrings(), 1);
+    targetLfoSelector.setSelectedItemIndex(_paramsPtr->TargetLfo->getIndex(), juce::dontSendNotification);
+    targetLfoSelector.setJustificationType(juce::Justification::centred);
+    targetLfoSelector.addListener(this);
+    addAndMakeVisible(targetLfoSelector);
+    
+    targetOscParamSelector.setLookAndFeel(&grapeLookAndFeel);
+    targetOscParamSelector.addItemList(_paramsPtr->TargetOscParam->getAllValueStrings(), 1);
+    targetOscParamSelector.setSelectedItemIndex(_paramsPtr->TargetOscParam->getIndex(), juce::dontSendNotification);
+    targetOscParamSelector.setJustificationType(juce::Justification::centred);
+    targetOscParamSelector.addListener(this);
+    addAndMakeVisible(targetOscParamSelector);
+    
+    targetFilterParamSelector.setLookAndFeel(&grapeLookAndFeel);
+    targetFilterParamSelector.addItemList(_paramsPtr->TargetFilterParam->getAllValueStrings(), 1);
+    targetFilterParamSelector.setSelectedItemIndex(_paramsPtr->TargetFilterParam->getIndex(), juce::dontSendNotification);
+    targetFilterParamSelector.setJustificationType(juce::Justification::centred);
+    targetFilterParamSelector.addListener(this);
+    addAndMakeVisible(targetFilterParamSelector);
+    
+    targetLfoParamSelector.setLookAndFeel(&grapeLookAndFeel);
+    targetLfoParamSelector.addItemList(_paramsPtr->TargetLfoParam->getAllValueStrings(), 1);
+    targetLfoParamSelector.setSelectedItemIndex(_paramsPtr->TargetLfoParam->getIndex(), juce::dontSendNotification);
+    targetLfoParamSelector.setJustificationType(juce::Justification::centred);
+    targetLfoParamSelector.addListener(this);
+    addAndMakeVisible(targetLfoParamSelector);
+    
+    startTimerHz(30.0f);
+}
+
+ControlItemComponent::~ControlItemComponent()
+{}
+
+void ControlItemComponent::paint(juce::Graphics& g)
+{
+}
+
+void ControlItemComponent::resized()
+{
+    int width = 60;
+    int height = 60;
+
+    juce::Rectangle<int> bounds = getLocalBounds();
+    {
+        juce::Rectangle<int> area = bounds.removeFromLeft(bounds.getWidth()/5).reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT);
+        numberSelector.setBounds(area);
+    }
+    {
+        juce::Rectangle<int> area = bounds.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT);
+        
+        targetTypeSelector.setBounds(area.removeFromLeft(90));
+        auto indexArea = area.removeFromLeft(70);
+        targetOscSelector.setBounds(indexArea);
+        targetFilterSelector.setBounds(indexArea);
+        targetLfoSelector.setBounds(indexArea);
+        auto paramArea = area.removeFromLeft(110);
+        targetOscParamSelector.setBounds(paramArea);
+        targetFilterParamSelector.setBounds(paramArea);
+        targetLfoParamSelector.setBounds(paramArea);
+    }
+}
+void ControlItemComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
+{
+    if(comboBoxThatHasChanged == &numberSelector)
+    {
+        *_paramsPtr->Number = numberSelector.getSelectedItemIndex();
+    }
+    else if(comboBoxThatHasChanged == &targetTypeSelector)
+    {
+        *_paramsPtr->TargetType = targetTypeSelector.getSelectedItemIndex();
+    }
+    else if(comboBoxThatHasChanged == &targetOscSelector)
+    {
+        *_paramsPtr->TargetOsc = targetOscSelector.getSelectedItemIndex();
+    }
+    else if(comboBoxThatHasChanged == &targetFilterSelector)
+    {
+        *_paramsPtr->TargetFilter = targetFilterSelector.getSelectedItemIndex();
+    }
+    else if(comboBoxThatHasChanged == &targetLfoSelector)
+    {
+        *_paramsPtr->TargetLfo = targetLfoSelector.getSelectedItemIndex();
+    }
+    else if(comboBoxThatHasChanged == &targetOscParamSelector)
+    {
+        *_paramsPtr->TargetOscParam = targetOscParamSelector.getSelectedItemIndex();
+    }
+    else if(comboBoxThatHasChanged == &targetFilterParamSelector)
+    {
+        *_paramsPtr->TargetFilterParam = targetFilterParamSelector.getSelectedItemIndex();
+    }
+    else if(comboBoxThatHasChanged == &targetLfoParamSelector)
+    {
+        *_paramsPtr->TargetLfoParam = targetLfoParamSelector.getSelectedItemIndex();
+    }
+    resized();// re-render
+}
+void ControlItemComponent::timerCallback()
+{
+    numberSelector.setSelectedItemIndex(_paramsPtr->Number->getIndex(), juce::dontSendNotification);
+    targetTypeSelector.setSelectedItemIndex(_paramsPtr->TargetType->getIndex(), juce::dontSendNotification);
+    targetOscSelector.setSelectedItemIndex(_paramsPtr->TargetOsc->getIndex(), juce::dontSendNotification);
+    targetFilterSelector.setSelectedItemIndex(_paramsPtr->TargetFilter->getIndex(), juce::dontSendNotification);
+    targetLfoSelector.setSelectedItemIndex(_paramsPtr->TargetLfo->getIndex(), juce::dontSendNotification);
+    targetOscParamSelector.setSelectedItemIndex(_paramsPtr->TargetOscParam->getIndex(), juce::dontSendNotification);
+    targetFilterParamSelector.setSelectedItemIndex(_paramsPtr->TargetFilterParam->getIndex(), juce::dontSendNotification);
+    targetLfoParamSelector.setSelectedItemIndex(_paramsPtr->TargetLfoParam->getIndex(), juce::dontSendNotification);
+    auto enabled = _paramsPtr->Number->getIndex() != 0;
+    targetTypeSelector.setEnabled(enabled);
+    targetOscSelector.setEnabled(enabled);
+    targetFilterSelector.setEnabled(enabled);
+    targetLfoSelector.setEnabled(enabled);
+    targetOscParamSelector.setEnabled(enabled);
+    targetFilterParamSelector.setEnabled(enabled);
+    targetLfoParamSelector.setEnabled(enabled);
+    switch(static_cast<MODENV_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
+        case MODENV_TARGET_TYPE::OSC: {
+            targetOscSelector.setVisible(true);
+            targetFilterSelector.setVisible(false);
+            targetLfoSelector.setVisible(false);
+            targetOscParamSelector.setVisible(true);
+            targetFilterParamSelector.setVisible(false);
+            targetLfoParamSelector.setVisible(false);
+            break;
+        }
+        case MODENV_TARGET_TYPE::Filter: {
+            targetOscSelector.setVisible(false);
+            targetFilterSelector.setVisible(true);
+            targetLfoSelector.setVisible(false);
+            targetOscParamSelector.setVisible(false);
+            targetFilterParamSelector.setVisible(true);
+            targetLfoParamSelector.setVisible(false);
+            break;
+        }
+        case MODENV_TARGET_TYPE::LFO: {
+            targetOscSelector.setVisible(false);
+            targetFilterSelector.setVisible(false);
+            targetLfoSelector.setVisible(true);
+            targetOscParamSelector.setVisible(false);
+            targetFilterParamSelector.setVisible(false);
+            targetLfoParamSelector.setVisible(true);
+            break;
+        }
+    }
+}
+
+
 //==============================================================================
 ControlComponent::ControlComponent(ControlItemParams* params)
 : header("CONTROLS", false)
+, controlItemComponents {
+    ControlItemComponent(params),
+//    ControlItemComponent(params+1),
+}
 {
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
     
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
-
-    startTimerHz(30.0f);
+    
+    numberLabel.setFont(paramLabelFont);
+    numberLabel.setText("CC", juce::dontSendNotification);
+    numberLabel.setJustificationType(juce::Justification::centred);
+    numberLabel.setEditable(false, false, false);
+    addAndMakeVisible(numberLabel);
+    
+    targetLabel.setFont(paramLabelFont);
+    targetLabel.setText("Destination", juce::dontSendNotification);
+    targetLabel.setJustificationType(juce::Justification::centred);
+    targetLabel.setEditable(false, false, false);
+    addAndMakeVisible(targetLabel);
+    
+    for(int i = 0; i < NUM_CONTROL; i++) {
+        addAndMakeVisible(controlItemComponents[i]);
+    }
 }
 
 ControlComponent::~ControlComponent()
@@ -1601,17 +1796,22 @@ void ControlComponent::paint(juce::Graphics& g)
 
 void ControlComponent::resized()
 {
-//    int labelHeight = 20;
 //    int width = 60;
 //    int height = 60;
 
     juce::Rectangle<int> bounds = getLocalBounds();
+    auto width = bounds.getWidth();
 
     auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
     header.setBounds(headerArea);
-}
-void ControlComponent::timerCallback()
-{
+    auto labelArea = bounds.removeFromTop(LABEL_HEIGHT);
+    numberLabel.setBounds(labelArea.removeFromLeft(width / 5));
+    targetLabel.setBounds(labelArea);
+    
+    auto itemHeight = bounds.getHeight() / NUM_CONTROL;
+    for(int i = 0; i < NUM_CONTROL; i++) {
+        controlItemComponents[i].setBounds(bounds.removeFromTop(itemHeight));
+    }
 }
 
 //==============================================================================

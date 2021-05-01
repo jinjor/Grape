@@ -211,11 +211,9 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("CONTROL0_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
-        new juce::AudioParameterChoice("CONTROL0_TARGET_MODENV", "TargetLfo", CONTROL_TARGET_MODENV_NAMES, CONTROL_TARGET_MODENV_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Freq")),
-        new juce::AudioParameterChoice("CONTROL0_TARGET_MODENV_PARAM", "TargetModEnvParam", CONTROL_TARGET_MODENV_PARAM_NAMES, CONTROL_TARGET_MODENV_PARAM_NAMES.indexOf("Amount")),
     }
 }
 {

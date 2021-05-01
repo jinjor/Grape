@@ -336,21 +336,17 @@ ControlItemParams::ControlItemParams(juce::AudioParameterChoice* number,
                                      juce::AudioParameterChoice* targetOsc,
                                      juce::AudioParameterChoice* targetFilter,
                                      juce::AudioParameterChoice* targetLfo,
-                                     juce::AudioParameterChoice* targetModEnv,
                                      juce::AudioParameterChoice* targetOscParam,
                                      juce::AudioParameterChoice* targetFilterParam,
-                                     juce::AudioParameterChoice* targetLfoParam,
-                                     juce::AudioParameterChoice* targetModEnvParam)
+                                     juce::AudioParameterChoice* targetLfoParam)
 : Number(number)
 , TargetType(targetType)
 , TargetOsc(targetOsc)
 , TargetFilter(targetFilter)
 , TargetLfo(targetLfo)
-, TargetModEnv(targetModEnv)
 , TargetOscParam(targetOscParam)
 , TargetFilterParam(targetFilterParam)
 , TargetLfoParam(targetLfoParam)
-, TargetModEnvParam(targetModEnvParam)
 {}
 void ControlItemParams::addAllParameters(juce::AudioProcessor& processor)
 {
@@ -359,11 +355,9 @@ void ControlItemParams::addAllParameters(juce::AudioProcessor& processor)
     processor.addParameter(TargetOsc);
     processor.addParameter(TargetFilter);
     processor.addParameter(TargetLfo);
-    processor.addParameter(TargetModEnv);
     processor.addParameter(TargetOscParam);
     processor.addParameter(TargetFilterParam);
     processor.addParameter(TargetLfoParam);
-    processor.addParameter(TargetModEnvParam);
 }
 void ControlItemParams::saveParameters(juce::XmlElement& xml)
 {
@@ -372,11 +366,9 @@ void ControlItemParams::saveParameters(juce::XmlElement& xml)
     xml.setAttribute(TargetOsc->paramID, TargetOsc->getIndex());
     xml.setAttribute(TargetFilter->paramID, TargetFilter->getIndex());
     xml.setAttribute(TargetLfo->paramID, TargetLfo->getIndex());
-    xml.setAttribute(TargetModEnv->paramID, TargetModEnv->getIndex());
     xml.setAttribute(TargetOscParam->paramID, TargetOscParam->getIndex());
     xml.setAttribute(TargetFilterParam->paramID, TargetFilterParam->getIndex());
     xml.setAttribute(TargetLfoParam->paramID, TargetLfoParam->getIndex());
-    xml.setAttribute(TargetModEnvParam->paramID, TargetModEnvParam->getIndex());
 }
 void ControlItemParams::loadParameters(juce::XmlElement& xml)
 {
@@ -385,9 +377,7 @@ void ControlItemParams::loadParameters(juce::XmlElement& xml)
     *TargetOsc = xml.getIntAttribute(TargetOsc->paramID, NUM_OSC);
     *TargetFilter = xml.getIntAttribute(TargetOsc->paramID, NUM_FILTER);
     *TargetLfo = xml.getIntAttribute(TargetOsc->paramID, NUM_LFO);
-    *TargetModEnv = xml.getIntAttribute(TargetModEnv->paramID, NUM_MODENV);
     *TargetOscParam = xml.getIntAttribute(TargetOscParam->paramID, 0);
     *TargetFilterParam = xml.getIntAttribute(TargetFilterParam->paramID, 0);
     *TargetLfoParam = xml.getIntAttribute(TargetLfoParam->paramID, 0);
-    *TargetModEnvParam = xml.getIntAttribute(TargetModEnvParam->paramID, 0);
 }

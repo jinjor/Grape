@@ -44,7 +44,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
     addAndMakeVisible (analyserComponent);
     setSize (1024, 768);
     startTimer (400);
-    setResizable(true, true);
+//    setResizable(true, true);
 }
 
 GrapeAudioProcessorEditor::~GrapeAudioProcessorEditor()
