@@ -216,12 +216,14 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("CONTROL0_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Freq")),
     }
 }
+, modifiers(controlItemParams)
+, synth(&sound, &modifiers)
 {
     int numVoices = 64;
     for (auto i = 0; i < numVoices; ++i) {
-        synth.addVoice (new GrapeVoice(&currentPositionInfo, oscParams, envelopeParams, filterParams, lfoParams, modEnvParams, controlItemParams));
+        synth.addVoice (new GrapeVoice(&currentPositionInfo, oscParams, envelopeParams, filterParams, lfoParams, modEnvParams, &modifiers));
     }
-    synth.addSound (new GrapeSound());
+    synth.addSound (&sound);
     
     oscParams[0].addAllParameters(*this);
     oscParams[1].addAllParameters(*this);

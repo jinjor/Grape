@@ -8,13 +8,124 @@ bool GrapeSound::appliesToNote(int) { return true; }
 bool GrapeSound::appliesToChannel(int) { return true; }
 
 //==============================================================================
+Modifiers::Modifiers(ControlItemParams* controlItemParams) : controlItemParams(controlItemParams) {
+    std::fill_n(angleShift, NUM_OSC, 0);
+    std::fill_n(octShift, NUM_OSC, 0);
+    std::fill_n(detuneRatio, NUM_OSC, 1.0);
+    std::fill_n(spreadRatio, NUM_OSC, 1.0);
+    std::fill_n(gain, NUM_OSC, 1.0);
+    
+    std::fill_n(filterOctShift, NUM_FILTER, 0);
+    std::fill_n(filterQExp, NUM_FILTER, 1.0);
+    
+    std::fill_n(lfoOctShift, NUM_LFO, 0);
+    std::fill_n(lfoAmountGain, NUM_LFO, 1.0);
+}
+void Modifiers::pitchWheelMoved(int value) {
+    if(pitch == value) {
+        return;
+    }
+    pitch = value;
+    for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+        octShift[oscIndex] = (value == 0 ? -8192.0 : value - 8192.0) / 8191.0;// TODO: sensibility
+    }
+}
+void Modifiers::controllerMoved(int number, int value) {
+    if(cc[number] == value) {
+        return;
+    }
+    cc[number] = value;
+    auto normalizedValue = value / 127.0;
+    
+    // ---------------- CONTROL ----------------
+    for(int i = 0; i < NUM_CONTROL; ++i) {
+        auto params = &controlItemParams[i];
+        if(number != CONTROL_NUMBER_VALUES[params->Number->getIndex()]) {
+            continue;
+        }
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        switch(targetType) {
+            case CONTROL_TARGET_TYPE::OSC: {
+                int targetIndex = params->TargetOsc->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
+                for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                    if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
+                        switch(targetParam) {
+                            case CONTROL_TARGET_OSC_PARAM::Freq: {
+                                octShift[oscIndex] = 4.0 * normalizedValue;
+                                break;
+                            }
+                            case CONTROL_TARGET_OSC_PARAM::Detune: {
+                                detuneRatio[oscIndex] = normalizedValue;
+                                break;
+                            }
+                            case CONTROL_TARGET_OSC_PARAM::Spread: {
+                                spreadRatio[oscIndex] = normalizedValue;
+                                break;
+                            }
+                            case CONTROL_TARGET_OSC_PARAM::Pan: {
+//                                        pan[oscIndex] = normalizedValue * 2 - 1.0;
+                                break;
+                            }
+                            case CONTROL_TARGET_OSC_PARAM::Gain: {
+                                gain[oscIndex] = normalizedValue;
+                                break;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            case CONTROL_TARGET_TYPE::Filter: {
+                int targetIndex = params->TargetFilter->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
+                for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+                    if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
+                        switch (targetParam) {
+                            case CONTROL_TARGET_FILTER_PARAM::Freq: {
+                                filterOctShift[filterIndex] = 4.0 * normalizedValue;
+                                break;
+                            }
+                            case CONTROL_TARGET_FILTER_PARAM::Q: {
+                                filterQExp[filterIndex] = normalizedValue;
+                                break;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            case CONTROL_TARGET_TYPE::LFO: {
+                int targetIndex = params->TargetLfo->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
+                for(int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
+                    if(targetIndex == lfoIndex || targetIndex == NUM_LFO) {
+                        switch(targetParam) {
+                            case CONTROL_TARGET_LFO_PARAM::Freq: {
+                                lfoOctShift[lfoIndex] = 4.0 * normalizedValue;
+                                break;
+                            }
+                            case CONTROL_TARGET_LFO_PARAM::Amount: {
+                                lfoAmountGain[lfoIndex] = normalizedValue;
+                                break;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+        }
+    }
+}
+
+//==============================================================================
 GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo,
                        OscParams* oscParams,
                        EnvelopeParams* envelopeParams,
                        FilterParams* filterParams,
                        LfoParams* lfoParams,
                        ModEnvParams* modEnvParams,
-                       ControlItemParams* controlItemParams)
+                       Modifiers* modifiers)
 : perf(juce::PerformanceCounter("voice cycle", 100000))
 , currentPositionInfo(currentPositionInfo)
 , oscParams(oscParams)
@@ -22,7 +133,7 @@ GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPosition
 , filterParams(filterParams)
 , lfoParams(lfoParams)
 , modEnvParams(modEnvParams)
-, controlItemParams(controlItemParams)
+, modifiers(modifiers)
 , oscs { MultiOsc(), MultiOsc(), MultiOsc() }
 , adsr { Adsr(), Adsr() }
 , filters { Filter(), Filter() }
@@ -119,14 +230,6 @@ void GrapeVoice::stopNote (float velocity, bool allowTailOff)
         }
     }
 }
-void GrapeVoice::pitchWheelMoved (int value) {
-    pitch = value;
-    DBG("pitchWheelMoved " << "pitch" + std::to_string(value));
-}
-void GrapeVoice::controllerMoved (int number, int value) {
-    cc[number] = value;
-    DBG("controllerMoved " << "number: " + std::to_string(number) + ", value: " + std::to_string(value));
-}
 void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
     if(GrapeSound* playingSound = dynamic_cast<GrapeSound*>(getCurrentlyPlayingSound().get()))
@@ -178,122 +281,17 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
         int numChannels = outputBuffer.getNumChannels();
         jassert(numChannels <= 2);
         
-        double angleShift[NUM_OSC] {};
-        double octShift[NUM_OSC] {};
-        double detuneRatio[NUM_OSC] {};
-        double spreadRatio[NUM_OSC] {};
-//        double pan[NUM_OSC] {};
-        double gain[NUM_OSC] {};
-        double filterOctShift[NUM_FILTER] {};
-        double filterQExp[NUM_FILTER] {};
-        double lfoOctShift[NUM_LFO] {};
-        double lfoAmountGain[NUM_LFO] {};
-        
         while (--numSamples >= 0)
         {
 #if JUCE_DEBUG
 //            perf.start();
 #endif
             smoothVelocity.step();
+            
+            auto modifiers = *(this->modifiers);// clone -- includes controled values
+            
             for(int i = 0; i < NUM_ENVELOPE; ++i) {
                 adsr[i].step(sampleRate);
-            }
-            for(int i = 0; i < NUM_OSC; ++i) {
-                angleShift[i] = 0;
-                octShift[i] = 0;
-                detuneRatio[i] = 1.0;
-                spreadRatio[i] = 1.0;
-                gain[i] = 1.0;
-            }
-            for(int i = 0; i < NUM_FILTER; ++i) {
-                filterOctShift[i] = 0;
-                filterQExp[i] = 1.0;
-            }
-            for(int i = 0; i < NUM_LFO; ++i) {
-                lfoOctShift[i] = 0;
-                lfoAmountGain[i] = 1.0;
-            }
-            
-            // ---------------- CONTROL ----------------
-            for(int i = 0; i < NUM_CONTROL; ++i) {
-                auto params = &controlItemParams[i];
-                auto number = CONTROL_NUMBER_VALUES[params->Number->getIndex()];
-                if(number < 0) {
-                    continue;
-                }
-                auto normalizedValue = (double)cc[number] / 127;
-                auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
-                switch(targetType) {
-                    case CONTROL_TARGET_TYPE::OSC: {
-                        int targetIndex = params->TargetOsc->getIndex();
-                        auto targetParam = static_cast<CONTROL_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
-                        for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                            if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
-                                switch(targetParam) {
-                                    case CONTROL_TARGET_OSC_PARAM::Freq: {
-//                                        octShift[oscIndex] += params->PeakFreq->get() * modEnvValue;
-                                        break;
-                                    }
-                                    case CONTROL_TARGET_OSC_PARAM::Detune: {
-                                        detuneRatio[oscIndex] *= normalizedValue;
-                                        break;
-                                    }
-                                    case CONTROL_TARGET_OSC_PARAM::Spread: {
-                                        spreadRatio[oscIndex] *= normalizedValue;
-                                        break;
-                                    }
-                                    case CONTROL_TARGET_OSC_PARAM::Pan: {
-//                                        pan[oscIndex] = normalizedValue * 2 - 1.0;
-                                        break;
-                                    }
-                                    case CONTROL_TARGET_OSC_PARAM::Gain: {
-                                        gain[oscIndex] *= normalizedValue;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    case CONTROL_TARGET_TYPE::Filter: {
-                        int targetIndex = params->TargetFilter->getIndex();
-                        auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
-                        for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-                            if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
-                                switch (targetParam) {
-                                    case CONTROL_TARGET_FILTER_PARAM::Freq: {
-//                                        filterOctShift[filterIndex] += params->PeakFreq->get() * modEnvValue;
-                                        break;
-                                    }
-                                    case CONTROL_TARGET_FILTER_PARAM::Q: {
-                                        filterQExp[filterIndex] *= normalizedValue;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    case CONTROL_TARGET_TYPE::LFO: {
-                        int targetIndex = params->TargetLfo->getIndex();
-                        auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
-                        for(int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
-                            if(targetIndex == lfoIndex || targetIndex == NUM_LFO) {
-                                switch(targetParam) {
-                                    case CONTROL_TARGET_LFO_PARAM::Freq: {
-//                                        lfoOctShift[lfoIndex] += params->PeakFreq->get() * modEnvValue;
-                                        break;
-                                    }
-                                    case CONTROL_TARGET_LFO_PARAM::Amount: {
-                                        lfoAmountGain[lfoIndex] *= normalizedValue;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
-                }
             }
             
             // ---------------- MODENV ----------------
@@ -313,21 +311,21 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                             if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
                                 switch(targetParam) {
                                     case MODENV_TARGET_OSC_PARAM::Freq: {
-                                        octShift[oscIndex] += params->PeakFreq->get() * modEnvValue;
+                                        modifiers.octShift[oscIndex] += params->PeakFreq->get() * modEnvValue;
                                         break;
                                     }
                                     case MODENV_TARGET_OSC_PARAM::Detune: {
                                         if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
                                             modEnvValue = 1 - modEnvValue;
                                         }
-                                        detuneRatio[oscIndex] *= modEnvValue;
+                                        modifiers.detuneRatio[oscIndex] *= modEnvValue;
                                         break;
                                     }
                                     case MODENV_TARGET_OSC_PARAM::Spread: {
                                         if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
                                             modEnvValue = 1 - modEnvValue;
                                         }
-                                        spreadRatio[oscIndex] *= modEnvValue;
+                                        modifiers.spreadRatio[oscIndex] *= modEnvValue;
                                         break;
                                     }
                                 }
@@ -342,14 +340,14 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                             if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
                                 switch (targetParam) {
                                     case MODENV_TARGET_FILTER_PARAM::Freq: {
-                                        filterOctShift[filterIndex] += params->PeakFreq->get() * modEnvValue;
+                                        modifiers.filterOctShift[filterIndex] += params->PeakFreq->get() * modEnvValue;
                                         break;
                                     }
                                     case MODENV_TARGET_FILTER_PARAM::Q: {
                                         if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
                                             modEnvValue = 1 - modEnvValue;
                                         }
-                                        filterQExp[filterIndex] *= modEnvValue;
+                                        modifiers.filterQExp[filterIndex] *= modEnvValue;
                                         break;
                                     }
                                 }
@@ -364,14 +362,14 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                             if(targetIndex == lfoIndex || targetIndex == NUM_LFO) {
                                 switch(targetParam) {
                                     case MODENV_TARGET_LFO_PARAM::Freq: {
-                                        lfoOctShift[lfoIndex] += params->PeakFreq->get() * modEnvValue;
+                                        modifiers.lfoOctShift[lfoIndex] += params->PeakFreq->get() * modEnvValue;
                                         break;
                                     }
                                     case MODENV_TARGET_LFO_PARAM::Amount: {
                                         if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
                                             modEnvValue = 1 - modEnvValue;
                                         }
-                                        lfoAmountGain[lfoIndex] *= modEnvValue;
+                                        modifiers.lfoAmountGain[lfoIndex] *= modEnvValue;
                                         break;
                                     }
                                 }
@@ -392,17 +390,17 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                 if(lfoParams[i].shouldUseFastFreq()) {
                     int target = lfoParams[i].TargetOsc->getIndex();
                     auto shiftedNoteNumber = target == NUM_OSC ? midiNoteNumber : shiftedNoteNumbers[target];
-                    shiftedNoteNumber += lfoOctShift[i];
+                    shiftedNoteNumber += modifiers.lfoOctShift[i];
                     freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
                     freq *= lfoParams[i].FastFreq->get();
                 } else {
                     freq = lfoParams[i].SlowFreq->get();
-                    if(lfoOctShift[i] != 0.0) {
-                        freq *= std::pow(2.0, lfoOctShift[i]);
+                    if(modifiers.lfoOctShift[i] != 0.0) {
+                        freq *= std::pow(2.0, modifiers.lfoOctShift[i]);
                     }
                 }
                 lfoValue = lfos[i].step(freq, 0.0);
-                auto lfoAmount = params->Amount->get() * lfoAmountGain[i];
+                auto lfoAmount = params->Amount->get() * modifiers.lfoAmountGain[i];
                 auto targetType = static_cast<LFO_TARGET_TYPE>(params->TargetType->getIndex());
                 switch(targetType) {
                     case LFO_TARGET_TYPE::OSC: {
@@ -412,19 +410,19 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                             if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
                                 switch(param) {
                                     case LFO_TARGET_OSC_PARAM::Vibrato: {
-                                        octShift[oscIndex] += lfoValue * lfoAmount;
+                                        modifiers.octShift[oscIndex] += lfoValue * lfoAmount;
                                         break;
                                     }
                                     case LFO_TARGET_OSC_PARAM::Tremolo: {
-                                        gain[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                                        modifiers.gain[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
                                         break;
                                     }
                                     case LFO_TARGET_OSC_PARAM::FM: {
-                                        angleShift[oscIndex] += lfoValue * lfoAmount * juce::MathConstants<double>::twoPi;
+                                        modifiers.angleShift[oscIndex] += lfoValue * lfoAmount * juce::MathConstants<double>::twoPi;
                                         break;
                                     }
                                     case LFO_TARGET_OSC_PARAM::AM: {
-                                        gain[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                                        modifiers.gain[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
                                         break;
                                     }
                                 }
@@ -439,11 +437,11 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                             if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
                                 switch (param) {
                                     case LFO_TARGET_FILTER_PARAM::Freq: {
-                                        filterOctShift[filterIndex] += lfoValue * lfoAmount;
+                                        modifiers.filterOctShift[filterIndex] += lfoValue * lfoAmount;
                                         break;
                                     }
                                     case LFO_TARGET_FILTER_PARAM::Q: {
-                                        filterQExp[filterIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                                        modifiers.filterQExp[filterIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
                                         break;
                                     }
                                 }
@@ -460,22 +458,22 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                 if(!oscParams[oscIndex].Enabled->get()) {
                     continue;
                 }
-                auto freq = getMidiNoteInHertzDouble(shiftedNoteNumbers[oscIndex] + octShift[oscIndex] * 12);
-                auto detune = oscParams[oscIndex].Detune->get() * detuneRatio[oscIndex];
-                auto spread = oscParams[oscIndex].Spread->get() * spreadRatio[oscIndex];
+                auto freq = getMidiNoteInHertzDouble(shiftedNoteNumbers[oscIndex] + modifiers.octShift[oscIndex] * 12);
+                auto detune = oscParams[oscIndex].Detune->get() * modifiers.detuneRatio[oscIndex];
+                auto spread = oscParams[oscIndex].Spread->get() * modifiers.spreadRatio[oscIndex];
                 double o[2] {0, 0};
                 oscs[oscIndex].step(oscParams[oscIndex].Unison->get(),
                                     detune,
                                     spread,
                                     freq,
-                                    angleShift[oscIndex],
+                                    modifiers.angleShift[oscIndex],
                                     o);
                 int envelopeIndex = oscParams[oscIndex].Envelope->getIndex();
                 if(adsr[envelopeIndex].isActive()) {
                     active = true;
 //                            sparseLog.log("active", "osc:" + std::to_string(oscIndex) + ", envelope:" + std::to_string(envelopeIndex));
                 }
-                auto oscGain = adsr[envelopeIndex].getValue() * gain[oscIndex] * oscParams[oscIndex].Gain->get();
+                auto oscGain = adsr[envelopeIndex].getValue() * modifiers.gain[oscIndex] * oscParams[oscIndex].Gain->get();
                 for (auto ch = 0; ch < numChannels; ++ch) {
                     o[ch] *= oscGain;
                 }
@@ -487,11 +485,11 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                         auto filterType = static_cast<FILTER_TYPE>(filterParams[filterIndex].Type->getIndex());
                         double shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
                         shiftedNoteNumber += filterParams[filterIndex].Octave->get() * 12;
-                        shiftedNoteNumber += filterOctShift[filterIndex] * 12;
+                        shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
                         auto freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
                         auto q = filterParams[filterIndex].Q->get();
-                        if(filterQExp[filterIndex] != 1.0) {
-                            q = std::pow(q, filterQExp[filterIndex]);
+                        if(modifiers.filterQExp[filterIndex] != 1.0) {
+                            q = std::pow(q, modifiers.filterQExp[filterIndex]);
                         }
                         for (auto ch = 0; ch < numChannels; ++ch) {
                             o[ch] = filters[filterIndex].step(filterType, freq, q, ch, o[ch]);
@@ -509,11 +507,11 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
                     auto filterType = static_cast<FILTER_TYPE>(filterParams[filterIndex].Type->getIndex());
                     double shiftedNoteNumber = midiNoteNumber;
                     shiftedNoteNumber += filterParams[filterIndex].Octave->get() * 12;
-                    shiftedNoteNumber += filterOctShift[filterIndex] * 12;
+                    shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
                     auto freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
                     auto q = filterParams[filterIndex].Q->get();
-                    if(filterQExp[filterIndex] != 1.0) {
-                        q = std::pow(q, filterQExp[filterIndex]);
+                    if(modifiers.filterQExp[filterIndex] != 1.0) {
+                        q = std::pow(q, modifiers.filterQExp[filterIndex]);
                     }
                     for (auto ch = 0; ch < numChannels; ++ch) {
                         out[ch] = filters[filterIndex].step(filterType, freq, q, ch, out[ch]);

@@ -66,7 +66,6 @@ public:
     int currentProgram = 0;
     juce::MidiKeyboardState keyboardState;
     AnalyserState analyserState;
-    juce::Synthesiser synth;
     juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo;
     
     OscParams oscParams[NUM_OSC];
@@ -78,6 +77,10 @@ public:
     ControlItemParams controlItemParams[NUM_CONTROL];
     
     StereoDelay stereoDelay;
+    
+    Modifiers modifiers;
+    GrapeSound sound;
+    GrapeSynthesiser synth;
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GrapeAudioProcessor)
