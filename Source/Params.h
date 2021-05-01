@@ -63,7 +63,7 @@ const double DELAY_TIME_SYNC_VALUES[sizeof DELAY_TIME_SYNC_NAMES] = {
 const juce::StringArray CONTROL_NUMBER_NAMES = juce::StringArray("None", "1: Modulation", "2: Breath", "4: Foot", "5: Portamento Time", "7: Main Volume", "10: Pan", "11: Expression", "71: Resonance", "74: Brightness", "75: Sound Control", "76: Sound Control", "77: Sound Control", "78: Sound Control", "79: Sound Control", "91: Reverb", "92: Tremolo", "93: Chorus", "94: Detune", "95: Phaser");
 const int CONTROL_NUMBER_VALUES[sizeof CONTROL_NUMBER_NAMES] { -1, 1, 2, 4, 5, 7, 10, 11, 71, 74, 75, 76, 77, 78, 79, 91, 92, 93, 94, 95 };
 
-enum class CONTROL_TARGET_TYPE { OSC, Filter, LFO, ModEnv, Delay };
+enum class CONTROL_TARGET_TYPE { OSC, Filter, LFO };
 const juce::StringArray CONTROL_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO");
 
 const juce::StringArray CONTROL_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3", "All");

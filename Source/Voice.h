@@ -86,8 +86,8 @@ private:
     Osc lfos[NUM_LFO];
     Adsr modEnvs[NUM_MODENV];
     
-    int pitch = 0;
-    int cc[128]{};
+    int pitch = 0;// [0;16383] center=8192
+    int cc[128]{};// [0;127]
     
     int midiNoteNumber = 0;
     TransitiveValue smoothVelocity;

@@ -1649,9 +1649,6 @@ void ControlItemComponent::paint(juce::Graphics& g)
 
 void ControlItemComponent::resized()
 {
-    int width = 60;
-    int height = 60;
-
     juce::Rectangle<int> bounds = getLocalBounds();
     {
         juce::Rectangle<int> area = bounds.removeFromLeft(bounds.getWidth()/5).reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT);

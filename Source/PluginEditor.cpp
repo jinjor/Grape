@@ -3,7 +3,6 @@
 #include "Voice.h"
 
 namespace {
-const float KEY_HEIGHT = 40.0f;
 const juce::Colour BACKGROUND_COLOUR = juce::Colour(40,40,40);
 const juce::Colour TEXT_COLOUR = juce::Colour(200,200,200);
 const int PANEL_MARGIN = 2;
