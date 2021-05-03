@@ -308,11 +308,13 @@ private:
     juce::ComboBox targetOscSelector;
     juce::ComboBox targetFilterSelector;
     juce::ComboBox targetLfoSelector;
+    
     juce::ComboBox targetModEnvSelector;
     juce::ComboBox targetOscParamSelector;
     juce::ComboBox targetFilterParamSelector;
     juce::ComboBox targetLfoParamSelector;
     juce::ComboBox targetModEnvParamSelector;
+    juce::ComboBox targetMasterParamSelector;
 };
 
 //==============================================================================

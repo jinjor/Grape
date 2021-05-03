@@ -76,7 +76,7 @@ public:
     DelayParams delayParams;
     ControlItemParams controlItemParams[NUM_CONTROL];
     
-    StereoDelay stereoDelay;
+//    StereoDelay stereoDelay;
     
     Modifiers modifiers;
     GrapeSound sound;

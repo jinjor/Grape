@@ -63,12 +63,13 @@ public:
     double octShift[NUM_OSC] {};
     double detuneRatio[NUM_OSC] {};
     double spreadRatio[NUM_OSC] {};
-    //        double pan[NUM_OSC] {};
     double gain[NUM_OSC] {};
     double filterOctShift[NUM_FILTER] {};
     double filterQExp[NUM_FILTER] {};
     double lfoOctShift[NUM_LFO] {};
     double lfoAmountGain[NUM_LFO] {};
+    double masterVolume = 1.0;
+    double masterPan = 0.0;
     void pitchWheelMoved (int);
     void controllerMoved (int, int);
 private:
@@ -128,7 +129,7 @@ private:
 class GrapeSynthesiser   : public juce::Synthesiser
 {
 public:
-    GrapeSynthesiser(GrapeSound* sound, Modifiers* modifiers) : sound(sound), modifiers(modifiers) {}
+    GrapeSynthesiser(GrapeSound* sound, juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, Modifiers* modifiers, DelayParams* delayParams) : sound(sound), currentPositionInfo(currentPositionInfo), modifiers(modifiers), delayParams(delayParams) {}
     ~GrapeSynthesiser() {}
     void handleController (const int midiChannel,
                                         const int controllerNumber,
@@ -148,7 +149,67 @@ public:
             modifiers->pitchWheelMoved(wheelValue);
         }
     }
+    void renderVoices (juce::AudioBuffer<float>& buffer, int startSample, int numSamples) override
+    {
+        juce::Synthesiser::renderVoices(buffer, startSample, numSamples);
+        
+        stereoDelay.setParams(getSampleRate(),
+                              currentPositionInfo->bpm,
+                              static_cast<DELAY_TYPE>(delayParams->Type->getIndex()),
+                              delayParams->Sync->get(),
+                              delayParams->TimeL->get(),
+                              delayParams->TimeR->get(),
+                              DELAY_TIME_SYNC_VALUES[delayParams->TimeSyncL->getIndex()],
+                              DELAY_TIME_SYNC_VALUES[delayParams->TimeSyncR->getIndex()],
+                              delayParams->LowFreq->get(),
+                              delayParams->HighFreq->get(),
+                              delayParams->Feedback->get(),
+                              delayParams->Mix->get());
+        
+        auto* leftIn = buffer.getReadPointer(0, startSample);
+        auto* rightIn = buffer.getReadPointer(1, startSample);
+        auto* leftOut = buffer.getWritePointer(0, startSample);
+        auto* rightOut = buffer.getWritePointer(1, startSample);
+        
+        for(int i = 0; i < numSamples; ++i)
+        {
+            double sample[2] { leftIn[i], rightIn[i] };
+            
+            // Delay
+            if(delayParams->Enabled->get()) {
+                stereoDelay.step(sample);
+            }
+            
+            // Master Volume
+            sample[0] *= modifiers->masterVolume;
+            sample[1] *= modifiers->masterVolume;
+            
+            // Master Pan
+            // https://forum.juce.com/t/how-do-stereo-panning-knobs-work/25773/9
+            auto pan = modifiers->masterPan;
+            bool useMS = true;
+            if(useMS) {
+                auto mSignal = 0.5 * (sample[0] + sample[1]);
+                auto sSignal = sample[0] - sample[1];
+                sample[0] = 0.5 * (1.0 + pan) * mSignal + sSignal;
+                sample[1] = 0.5 * (1.0 - pan) * mSignal - sSignal;
+            } else {
+                sample[0] = sample[0] * std::min(1 - pan, 1.0);
+                sample[1] = sample[1] * std::min(1 + pan, 1.0);
+            }
+            leftOut[i] = sample[0];
+            rightOut[i] = sample[1];
+        }
+    }
+//    void renderVoices (juce::AudioBuffer<double>& buffer, int startSample, int numSamples) override
+//    {
+//        juce::Synthesiser::renderVoices(buffer, startSample, numSamples);
+//    }
 private:
     GrapeSound* sound;
+    juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo;
     Modifiers* modifiers;
+    DelayParams* delayParams;
+    
+    StereoDelay stereoDelay;
 };

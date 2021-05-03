@@ -114,6 +114,20 @@ void Modifiers::controllerMoved(int number, int value) {
                 }
                 break;
             }
+            case CONTROL_TARGET_TYPE::Master: {
+                auto targetParam = static_cast<CONTROL_TARGET_MASTER_PARAM>(params->TargetMasterParam->getIndex());
+                switch(targetParam) {
+                    case CONTROL_TARGET_MASTER_PARAM::Volume: {
+                        masterVolume = normalizedValue;
+                        break;
+                    }
+                    case CONTROL_TARGET_MASTER_PARAM::Pan: {
+                        masterPan = normalizedValue * 2.0 - 1.0;
+                        break;
+                    }
+                }
+                break;
+            }
         }
     }
 }
@@ -153,7 +167,10 @@ GrapeVoice::~GrapeVoice() {
 }
 bool GrapeVoice::canPlaySound (juce::SynthesiserSound* sound)
 {
-    return dynamic_cast<GrapeSound*> (sound) != nullptr;
+    if(dynamic_cast<GrapeSound*>(sound) != nullptr) {
+        return true;
+    }
+    return false;
 }
 void GrapeVoice::startNote (int midiNoteNumber, float velocity,
                 juce::SynthesiserSound*, int currentPitchWheelPosition)
@@ -230,7 +247,7 @@ void GrapeVoice::stopNote (float velocity, bool allowTailOff)
         }
     }
 }
-void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
+void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples)
 {
     if(GrapeSound* playingSound = dynamic_cast<GrapeSound*>(getCurrentlyPlayingSound().get()))
     {
@@ -535,14 +552,6 @@ void GrapeVoice::renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int sta
             for (auto ch = 0; ch < numChannels; ++ch) {
                 outputBuffer.addSample (ch, startSample, out[ch]);
             }
-#if JUCE_DEBUG
-//            for (auto ch = 0; ch < numChannels; ++ch) {
-//                auto value = outputBuffer.getSample(ch, startSample);
-//                jassert(value >= -1);
-//                jassert(value <= 1);
-//            }
-//            perf.stop();
-#endif
             ++startSample;
             if(!active) {
                 midiNoteNumber = 0;

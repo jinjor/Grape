@@ -218,26 +218,29 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("CONTROL0_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Volume")),
     },
     ControlItemParams {
-        new juce::AudioParameterChoice("CONTROL1_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("None")),// TODO Portament Time
-        new juce::AudioParameterChoice("CONTROL1_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("OSC")),
+        new juce::AudioParameterChoice("CONTROL1_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("7: Main Volume")),
+        new juce::AudioParameterChoice("CONTROL1_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("Master")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
+        new juce::AudioParameterChoice("CONTROL1_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Volume")),
     },
     ControlItemParams {
-        new juce::AudioParameterChoice("CONTROL2_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("7: Main Volume")),
-        new juce::AudioParameterChoice("CONTROL2_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("OSC")),
+        new juce::AudioParameterChoice("CONTROL2_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("10: Pan")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("Master")),
         new juce::AudioParameterChoice("CONTROL2_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL2_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL2_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL2_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL2_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
         new juce::AudioParameterChoice("CONTROL2_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Pan")),
     },
     ControlItemParams {
         new juce::AudioParameterChoice("CONTROL3_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("11: Expression")),
@@ -248,6 +251,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("CONTROL3_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL3_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
         new juce::AudioParameterChoice("CONTROL3_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
+        new juce::AudioParameterChoice("CONTROL3_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Volume")),
     },
     ControlItemParams {
         new juce::AudioParameterChoice("CONTROL4_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("71: Resonance")),
@@ -258,6 +262,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("CONTROL4_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL4_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Q")),
         new juce::AudioParameterChoice("CONTROL4_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
+        new juce::AudioParameterChoice("CONTROL4_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Volume")),
     },
     ControlItemParams {
         new juce::AudioParameterChoice("CONTROL5_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("74: Brightness")),
@@ -268,10 +273,11 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("CONTROL5_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL5_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
         new juce::AudioParameterChoice("CONTROL5_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
+        new juce::AudioParameterChoice("CONTROL5_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Volume")),
     }
 }
 , modifiers(controlItemParams)
-, synth(&sound, &modifiers)
+, synth(&sound, &currentPositionInfo, &modifiers, &delayParams)
 {
     int numVoices = 64;
     for (auto i = 0; i < numVoices; ++i) {
@@ -426,40 +432,17 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
     midiMessages.clear();
     
+#if JUCE_DEBUG
     auto* leftIn = buffer.getReadPointer(0);
     auto* rightIn = buffer.getReadPointer(1);
-    auto* leftOut = buffer.getWritePointer(0);
-    auto* rightOut = buffer.getWritePointer(1);
-    
-    stereoDelay.setParams(getSampleRate(),
-                          currentPositionInfo.bpm,
-                          static_cast<DELAY_TYPE>(delayParams.Type->getIndex()),
-                          delayParams.Sync->get(),
-                          delayParams.TimeL->get(),
-                          delayParams.TimeR->get(),
-                          DELAY_TIME_SYNC_VALUES[delayParams.TimeSyncL->getIndex()],
-                          DELAY_TIME_SYNC_VALUES[delayParams.TimeSyncR->getIndex()],
-                          delayParams.LowFreq->get(),
-                          delayParams.HighFreq->get(),
-                          delayParams.Feedback->get(),
-                          delayParams.Mix->get());
-    if(delayParams.Enabled->get()) {
-        for(int i = 0; i < buffer.getNumSamples(); ++i)
-        {
-            double sample[2] { leftIn[i], rightIn[i] };
-            jassert(sample[0] >= -1);
-            jassert(sample[0] <= 1);
-            jassert(sample[1] >= -1);
-            jassert(sample[1] <= 1);
-            stereoDelay.step(sample);
-            jassert(sample[0] >= -1);
-            jassert(sample[0] <= 1);
-            jassert(sample[1] >= -1);
-            jassert(sample[1] <= 1);
-            leftOut[i] = sample[0];
-            rightOut[i] = sample[1];
-        }
+    for(int i = 0; i < buffer.getNumSamples(); ++i)
+    {
+        jassert(leftIn[i] >= -1);
+        jassert(leftIn[i] <= 1);
+        jassert(rightIn[i] >= -1);
+        jassert(rightIn[i] <= 1);
     }
+#endif
     analyserState.pushFFTData(buffer);
 }
 
