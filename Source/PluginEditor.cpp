@@ -90,8 +90,8 @@ void GrapeAudioProcessorEditor::resized()
     auto middleHeight = middleArea.getHeight();
     auto lowerArea = bounds.reduced(6, 2);
     
-    auto leftArea = middleArea.removeFromLeft(width * 0.38);
-    auto centreArea = middleArea.removeFromLeft(width * 0.38);
+    auto leftArea = middleArea.removeFromLeft(width * 0.35);
+    auto centreArea = middleArea.removeFromLeft(width * 0.35);
     auto rightArea = middleArea;
     {
         juce::Rectangle<int> leftUpperArea = leftArea.removeFromTop(middleHeight / 2);
@@ -121,7 +121,7 @@ void GrapeAudioProcessorEditor::resized()
         juce::Rectangle<int> area = rightArea;
         filterComponents[1].setBounds(area.reduced(PANEL_MARGIN));
     }
-    auto lfoArea = lowerArea.removeFromLeft(width * 0.32);
+    auto lfoArea = lowerArea.removeFromLeft(width * 0.31);
     auto lfoHeight = lfoArea.getHeight();
     {
         juce::Rectangle<int> area = lfoArea.removeFromTop(lfoHeight / 3);
@@ -135,7 +135,7 @@ void GrapeAudioProcessorEditor::resized()
         juce::Rectangle<int> area = lfoArea.removeFromTop(lfoHeight / 3);
         lfoComponents[2].setBounds(area.reduced(PANEL_MARGIN));
     }
-    auto modEnvArea = lowerArea.removeFromLeft(width * 0.32);
+    auto modEnvArea = lowerArea.removeFromLeft(width * 0.31);
     auto modEnvHeight = modEnvArea.getHeight();
     {
         juce::Rectangle<int> area = modEnvArea.removeFromTop(modEnvHeight / 3);

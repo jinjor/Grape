@@ -14,6 +14,9 @@ const juce::StringArray FILTER_TARGET_NAMES = juce::StringArray("1", "2", "3", "
 enum class FILTER_TYPE { Lowpass, Highpass };
 const juce::StringArray FILTER_TYPE_NAMES = juce::StringArray("Lowpass", "Highpass");
 
+enum class FILTER_FREQ_TYPE { Absolute, Relative };
+const juce::StringArray FILTER_FREQ_TYPE_NAMES = juce::StringArray("Absolute", "Relative");
+
 enum class LFO_TARGET_TYPE { OSC, Filter };
 const juce::StringArray LFO_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter");
 
@@ -150,11 +153,15 @@ public:
     juce::AudioParameterBool* Enabled;
     juce::AudioParameterChoice* Target;
     juce::AudioParameterChoice* Type;
+    juce::AudioParameterChoice* FreqType;
+    juce::AudioParameterFloat* Hz;
     juce::AudioParameterFloat* Octave;
     juce::AudioParameterFloat* Q;
     FilterParams(juce::AudioParameterBool* enabled,
                  juce::AudioParameterChoice* target,
                  juce::AudioParameterChoice* type,
+                 juce::AudioParameterChoice* freqType,
+                 juce::AudioParameterFloat* hz,
                  juce::AudioParameterFloat* octave,
                  juce::AudioParameterFloat* q);
     

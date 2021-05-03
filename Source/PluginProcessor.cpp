@@ -92,17 +92,21 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 }
 , filterParams {
     FilterParams {
-        new juce::AudioParameterBool("FILTER0_ENABLED", "Enabled", true),
+        new juce::AudioParameterBool("FILTER0_ENABLED", "Enabled", false),
         new juce::AudioParameterChoice("FILTER0_TARGET", "Target", FILTER_TARGET_NAMES, FILTER_TARGET_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("FILTER0_TYPE", "Type", FILTER_TYPE_NAMES, FILTER_TYPE_NAMES.indexOf("Lowpass")),
-        new juce::AudioParameterFloat("FILTER0_OCTAVE", "Octave", -4.0f, 4.0f, 0.0f),
+        new juce::AudioParameterChoice("FILTER0_FREQ_TYPE", "Freq Type", FILTER_FREQ_TYPE_NAMES, FILTER_FREQ_TYPE_NAMES.indexOf("Absolute")),
+        new juce::AudioParameterFloat("FILTER0_HZ", "Hz", 30.0f, 20000.0f, 2000.0f),
+        new juce::AudioParameterFloat("FILTER0_OCTAVE", "Octave", -4.0f, 4.0f, 1.0f),
         new juce::AudioParameterFloat("FILTER0_Q", "Q", 0.01f, 100.0f, 1.0f),
     },
     FilterParams {
         new juce::AudioParameterBool("FILTER1_ENABLED", "Enabled", false),
         new juce::AudioParameterChoice("FILTER1_TARGET", "Target", FILTER_TARGET_NAMES, FILTER_TARGET_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("FILTER1_TYPE", "Type", FILTER_TYPE_NAMES, FILTER_TYPE_NAMES.indexOf("Lowpass")),
-        new juce::AudioParameterFloat("FILTER1_OCTAVE", "Octave", -4.0f, 4.0f, 0.0f),
+        new juce::AudioParameterChoice("FILTER1_FREQ_TYPE", "Freq Type", FILTER_FREQ_TYPE_NAMES, FILTER_FREQ_TYPE_NAMES.indexOf("Absolute")),
+        new juce::AudioParameterFloat("FILTER1_HZ", "Hz", 30.0f, 20000.0f, 2000.0f),
+        new juce::AudioParameterFloat("FILTER1_OCTAVE", "Octave", -4.0f, 4.0f, 1.0f),
         new juce::AudioParameterFloat("FILTER1_Q", "Q", 0.01f, 100.0f, 1.0f),
     },
 }

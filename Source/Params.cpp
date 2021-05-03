@@ -94,11 +94,15 @@ void EnvelopeParams::loadParameters(juce::XmlElement& xml)
 FilterParams::FilterParams(juce::AudioParameterBool* enabled,
                            juce::AudioParameterChoice* target,
                            juce::AudioParameterChoice* type,
+                           juce::AudioParameterChoice* freqType,
+                           juce::AudioParameterFloat* hz,
                            juce::AudioParameterFloat* octave,
                            juce::AudioParameterFloat* q)
 : Enabled(enabled)
 , Target(target)
 , Type(type)
+, FreqType(freqType)
+, Hz(hz)
 , Octave(octave)
 , Q(q)
 {}
@@ -107,6 +111,8 @@ void FilterParams::addAllParameters(juce::AudioProcessor& processor)
     processor.addParameter(Enabled);
     processor.addParameter(Target);
     processor.addParameter(Type);
+    processor.addParameter(FreqType);
+    processor.addParameter(Hz);
     processor.addParameter(Octave);
     processor.addParameter(Q);
 }
@@ -115,6 +121,8 @@ void FilterParams::saveParameters(juce::XmlElement& xml)
     xml.setAttribute(Enabled->paramID, Enabled->get());
     xml.setAttribute(Target->paramID, Target->getIndex());
     xml.setAttribute(Type->paramID, Type->getIndex());
+    xml.setAttribute(FreqType->paramID, FreqType->getIndex());
+    xml.setAttribute(Hz->paramID, (double)Hz->get());
     xml.setAttribute(Octave->paramID, (double)Octave->get());
     xml.setAttribute(Q->paramID, (double)Q->get());
 }
@@ -123,6 +131,8 @@ void FilterParams::loadParameters(juce::XmlElement& xml)
     *Enabled = xml.getIntAttribute(Enabled->paramID, 0);
     *Target = xml.getIntAttribute(Target->paramID, NUM_OSC);
     *Type = xml.getIntAttribute(Type->paramID, 0);
+    *FreqType = xml.getIntAttribute(FreqType->paramID, 0);
+    *Hz = (float)xml.getDoubleAttribute(Hz->paramID, 0);
     *Octave = (float)xml.getDoubleAttribute(Octave->paramID, 0);
     *Q = (float)xml.getDoubleAttribute(Q->paramID, 1.0);
 }

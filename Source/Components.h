@@ -119,12 +119,15 @@ private:
     
     juce::ComboBox targetSelector;
     juce::ComboBox typeSelector;
+    juce::ComboBox freqTypeSelector;
+    juce::Slider hzSlider;
     juce::Slider octaveSlider;
     juce::Slider qSlider;
     
     juce::Label targetLabel;
     juce::Label typeLabel;
-    juce::Label octaveLabel;
+    juce::Label freqTypeLabel;
+    juce::Label freqLabel;
     juce::Label qLabel;
 };
 
