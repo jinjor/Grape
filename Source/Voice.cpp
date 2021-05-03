@@ -20,6 +20,10 @@ Modifiers::Modifiers(ControlItemParams* controlItemParams) : controlItemParams(c
     
     std::fill_n(lfoOctShift, NUM_LFO, 0);
     std::fill_n(lfoAmountGain, NUM_LFO, 1.0);
+    
+    portamentoAmount = 1.0;
+    delayAmount = 1.0;
+    masterVolume = 1.0;
 }
 void Modifiers::pitchWheelMoved(int value) {
     if(pitch == value) {
@@ -115,14 +119,18 @@ void Modifiers::controllerMoved(int number, int value) {
                 break;
             }
             case CONTROL_TARGET_TYPE::Master: {
-                auto targetParam = static_cast<CONTROL_TARGET_MASTER_PARAM>(params->TargetMasterParam->getIndex());
+                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(params->TargetMiscParam->getIndex());
                 switch(targetParam) {
-                    case CONTROL_TARGET_MASTER_PARAM::Volume: {
-                        masterVolume = normalizedValue;
+                    case CONTROL_TARGET_MISC_PARAM::PortamentoAmount: {
+                        portamentoAmount = normalizedValue;
                         break;
                     }
-                    case CONTROL_TARGET_MASTER_PARAM::Pan: {
-                        masterPan = normalizedValue * 2.0 - 1.0;
+                    case CONTROL_TARGET_MISC_PARAM::DelayAmount: {
+                        delayAmount = normalizedValue;
+                        break;
+                    }
+                    case CONTROL_TARGET_MISC_PARAM::MasterVolume: {
+                        masterVolume = normalizedValue;
                         break;
                     }
                 }

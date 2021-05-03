@@ -349,7 +349,7 @@ ControlItemParams::ControlItemParams(juce::AudioParameterChoice* number,
                                      juce::AudioParameterChoice* targetOscParam,
                                      juce::AudioParameterChoice* targetFilterParam,
                                      juce::AudioParameterChoice* targetLfoParam,
-                                     juce::AudioParameterChoice* targetMasterParam)
+                                     juce::AudioParameterChoice* targetMiscParam)
 : Number(number)
 , TargetType(targetType)
 , TargetOsc(targetOsc)
@@ -358,7 +358,7 @@ ControlItemParams::ControlItemParams(juce::AudioParameterChoice* number,
 , TargetOscParam(targetOscParam)
 , TargetFilterParam(targetFilterParam)
 , TargetLfoParam(targetLfoParam)
-, TargetMasterParam(targetMasterParam)
+, TargetMiscParam(targetMiscParam)
 {}
 void ControlItemParams::addAllParameters(juce::AudioProcessor& processor)
 {
@@ -370,7 +370,7 @@ void ControlItemParams::addAllParameters(juce::AudioProcessor& processor)
     processor.addParameter(TargetOscParam);
     processor.addParameter(TargetFilterParam);
     processor.addParameter(TargetLfoParam);
-    processor.addParameter(TargetMasterParam);
+    processor.addParameter(TargetMiscParam);
 }
 void ControlItemParams::saveParameters(juce::XmlElement& xml)
 {
@@ -382,7 +382,7 @@ void ControlItemParams::saveParameters(juce::XmlElement& xml)
     xml.setAttribute(TargetOscParam->paramID, TargetOscParam->getIndex());
     xml.setAttribute(TargetFilterParam->paramID, TargetFilterParam->getIndex());
     xml.setAttribute(TargetLfoParam->paramID, TargetLfoParam->getIndex());
-    xml.setAttribute(TargetMasterParam->paramID, TargetMasterParam->getIndex());
+    xml.setAttribute(TargetMiscParam->paramID, TargetMiscParam->getIndex());
 }
 void ControlItemParams::loadParameters(juce::XmlElement& xml)
 {
@@ -394,5 +394,5 @@ void ControlItemParams::loadParameters(juce::XmlElement& xml)
     *TargetOscParam = xml.getIntAttribute(TargetOscParam->paramID, 0);
     *TargetFilterParam = xml.getIntAttribute(TargetFilterParam->paramID, 0);
     *TargetLfoParam = xml.getIntAttribute(TargetLfoParam->paramID, 0);
-    *TargetMasterParam = xml.getIntAttribute(TargetMasterParam->paramID, 0);
+    *TargetMiscParam = xml.getIntAttribute(TargetMiscParam->paramID, 0);
 }

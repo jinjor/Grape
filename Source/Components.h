@@ -314,7 +314,7 @@ private:
     juce::ComboBox targetFilterParamSelector;
     juce::ComboBox targetLfoParamSelector;
     juce::ComboBox targetModEnvParamSelector;
-    juce::ComboBox targetMasterParamSelector;
+    juce::ComboBox targetMiscParamSelector;
 };
 
 //==============================================================================

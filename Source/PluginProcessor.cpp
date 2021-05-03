@@ -218,29 +218,29 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("CONTROL0_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
-        new juce::AudioParameterChoice("CONTROL0_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Volume")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_MISC_PARAM", "TargetMiscParam", CONTROL_TARGET_MISC_PARAM_NAMES, CONTROL_TARGET_MISC_PARAM_NAMES.indexOf("Master Volume")),
     },
     ControlItemParams {
         new juce::AudioParameterChoice("CONTROL1_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("7: Main Volume")),
-        new juce::AudioParameterChoice("CONTROL1_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("Master")),
+        new juce::AudioParameterChoice("CONTROL1_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("Misc")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
         new juce::AudioParameterChoice("CONTROL1_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
-        new juce::AudioParameterChoice("CONTROL1_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Volume")),
+        new juce::AudioParameterChoice("CONTROL1_TARGET_MISC_PARAM", "TargetMiscParam", CONTROL_TARGET_MISC_PARAM_NAMES, CONTROL_TARGET_MISC_PARAM_NAMES.indexOf("Master Volume")),
     },
     ControlItemParams {
         new juce::AudioParameterChoice("CONTROL2_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("10: Pan")),
-        new juce::AudioParameterChoice("CONTROL2_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("Master")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("OSC")),
         new juce::AudioParameterChoice("CONTROL2_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL2_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL2_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
-        new juce::AudioParameterChoice("CONTROL2_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Pan")),
         new juce::AudioParameterChoice("CONTROL2_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
         new juce::AudioParameterChoice("CONTROL2_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
-        new juce::AudioParameterChoice("CONTROL2_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Pan")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_MISC_PARAM", "TargetMiscParam", CONTROL_TARGET_MISC_PARAM_NAMES, CONTROL_TARGET_MISC_PARAM_NAMES.indexOf("Master Volume")),
     },
     ControlItemParams {
         new juce::AudioParameterChoice("CONTROL3_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("11: Expression")),
@@ -251,7 +251,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("CONTROL3_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL3_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
         new juce::AudioParameterChoice("CONTROL3_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
-        new juce::AudioParameterChoice("CONTROL3_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Volume")),
+        new juce::AudioParameterChoice("CONTROL3_TARGET_MISC_PARAM", "TargetMiscParam", CONTROL_TARGET_MISC_PARAM_NAMES, CONTROL_TARGET_MISC_PARAM_NAMES.indexOf("Master Volume")),
     },
     ControlItemParams {
         new juce::AudioParameterChoice("CONTROL4_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("71: Resonance")),
@@ -262,7 +262,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("CONTROL4_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL4_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Q")),
         new juce::AudioParameterChoice("CONTROL4_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
-        new juce::AudioParameterChoice("CONTROL4_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Volume")),
+        new juce::AudioParameterChoice("CONTROL4_TARGET_MISC_PARAM", "TargetMiscParam", CONTROL_TARGET_MISC_PARAM_NAMES, CONTROL_TARGET_MISC_PARAM_NAMES.indexOf("Master Volume")),
     },
     ControlItemParams {
         new juce::AudioParameterChoice("CONTROL5_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("74: Brightness")),
@@ -273,7 +273,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("CONTROL5_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL5_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
         new juce::AudioParameterChoice("CONTROL5_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
-        new juce::AudioParameterChoice("CONTROL5_TARGET_MASTER_PARAM", "TargetMasterParam", CONTROL_TARGET_MASTER_PARAM_NAMES, CONTROL_TARGET_MASTER_PARAM_NAMES.indexOf("Volume")),
+        new juce::AudioParameterChoice("CONTROL5_TARGET_MISC_PARAM", "TargetMiscParam", CONTROL_TARGET_MISC_PARAM_NAMES, CONTROL_TARGET_MISC_PARAM_NAMES.indexOf("Master Volume")),
     }
 }
 , modifiers(controlItemParams)

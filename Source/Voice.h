@@ -68,8 +68,9 @@ public:
     double filterQExp[NUM_FILTER] {};
     double lfoOctShift[NUM_LFO] {};
     double lfoAmountGain[NUM_LFO] {};
+    double portamentoAmount = 0.0;
+    double delayAmount = 0.0;
     double masterVolume = 1.0;
-    double masterPan = 0.0;
     void pitchWheelMoved (int);
     void controllerMoved (int, int);
 private:
@@ -164,7 +165,7 @@ public:
                               delayParams->LowFreq->get(),
                               delayParams->HighFreq->get(),
                               delayParams->Feedback->get(),
-                              delayParams->Mix->get());
+                              delayParams->Mix->get() * modifiers->delayAmount);
         
         auto* leftIn = buffer.getReadPointer(0, startSample);
         auto* rightIn = buffer.getReadPointer(1, startSample);
@@ -184,19 +185,6 @@ public:
             sample[0] *= modifiers->masterVolume;
             sample[1] *= modifiers->masterVolume;
             
-            // Master Pan
-            // https://forum.juce.com/t/how-do-stereo-panning-knobs-work/25773/9
-            auto pan = modifiers->masterPan;
-            bool useMS = true;
-            if(useMS) {
-                auto mSignal = 0.5 * (sample[0] + sample[1]);
-                auto sSignal = sample[0] - sample[1];
-                sample[0] = 0.5 * (1.0 + pan) * mSignal + sSignal;
-                sample[1] = 0.5 * (1.0 - pan) * mSignal - sSignal;
-            } else {
-                sample[0] = sample[0] * std::min(1 - pan, 1.0);
-                sample[1] = sample[1] * std::min(1 + pan, 1.0);
-            }
             leftOut[i] = sample[0];
             rightOut[i] = sample[1];
         }

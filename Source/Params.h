@@ -67,7 +67,7 @@ const juce::StringArray CONTROL_NUMBER_NAMES = juce::StringArray("None", "1: Mod
 const int CONTROL_NUMBER_VALUES[sizeof CONTROL_NUMBER_NAMES] { -1, 1, 2, 4, 5, 7, 10, 11, 71, 74, 75, 76, 77, 78, 79, 91, 92, 93, 94, 95 };
 
 enum class CONTROL_TARGET_TYPE { OSC, Filter, LFO, Master };
-const juce::StringArray CONTROL_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO", "Master");
+const juce::StringArray CONTROL_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO", "Misc");
 
 const juce::StringArray CONTROL_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3", "All");
 const juce::StringArray CONTROL_TARGET_FILTER_NAMES = juce::StringArray("1", "2", "All");
@@ -83,8 +83,8 @@ const juce::StringArray CONTROL_TARGET_FILTER_PARAM_NAMES = juce::StringArray("F
 enum class CONTROL_TARGET_LFO_PARAM { Freq, Amount };
 const juce::StringArray CONTROL_TARGET_LFO_PARAM_NAMES = juce::StringArray("Freq", "Amount");
 
-enum class CONTROL_TARGET_MASTER_PARAM { Volume, Pan };
-const juce::StringArray CONTROL_TARGET_MASTER_PARAM_NAMES = juce::StringArray("Volume", "Pan");
+enum class CONTROL_TARGET_MISC_PARAM { PortamentoAmount, DelayAmount, MasterVolume };
+const juce::StringArray CONTROL_TARGET_MISC_PARAM_NAMES = juce::StringArray("Portamento Amount", "Delay Amount", "Master Volume");
 
 }
 //==============================================================================
@@ -311,7 +311,7 @@ public:
     juce::AudioParameterChoice* TargetOscParam;
     juce::AudioParameterChoice* TargetFilterParam;
     juce::AudioParameterChoice* TargetLfoParam;
-    juce::AudioParameterChoice* TargetMasterParam;
+    juce::AudioParameterChoice* TargetMiscParam;
     ControlItemParams(juce::AudioParameterChoice* number,
                       juce::AudioParameterChoice* targetType,
                       juce::AudioParameterChoice* targetOsc,
@@ -320,7 +320,7 @@ public:
                       juce::AudioParameterChoice* targetOscParam,
                       juce::AudioParameterChoice* targetFilterParam,
                       juce::AudioParameterChoice* targetLfoParam,
-                      juce::AudioParameterChoice* targetMasterParam);
+                      juce::AudioParameterChoice* targetMiscParam);
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;

@@ -1619,7 +1619,7 @@ ControlItemComponent::ControlItemComponent(ControlItemParams* params)
 , targetFilterSelector("TargetFilter")
 , targetOscParamSelector("TargetOscParam")
 , targetFilterParamSelector("TargetFilterParam")
-, targetMasterParamSelector("TargetMasterParam")
+, targetMiscParamSelector("TargetMiscParam")
 {
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
 
@@ -1679,12 +1679,12 @@ ControlItemComponent::ControlItemComponent(ControlItemParams* params)
     targetLfoParamSelector.addListener(this);
     addAndMakeVisible(targetLfoParamSelector);
     
-    targetMasterParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetMasterParamSelector.addItemList(_paramsPtr->TargetMasterParam->getAllValueStrings(), 1);
-    targetMasterParamSelector.setSelectedItemIndex(_paramsPtr->TargetMasterParam->getIndex(), juce::dontSendNotification);
-    targetMasterParamSelector.setJustificationType(juce::Justification::centred);
-    targetMasterParamSelector.addListener(this);
-    addAndMakeVisible(targetMasterParamSelector);
+    targetMiscParamSelector.setLookAndFeel(&grapeLookAndFeel);
+    targetMiscParamSelector.addItemList(_paramsPtr->TargetMiscParam->getAllValueStrings(), 1);
+    targetMiscParamSelector.setSelectedItemIndex(_paramsPtr->TargetMiscParam->getIndex(), juce::dontSendNotification);
+    targetMiscParamSelector.setJustificationType(juce::Justification::centred);
+    targetMiscParamSelector.addListener(this);
+    addAndMakeVisible(targetMiscParamSelector);
     
     startTimerHz(30.0f);
 }
@@ -1707,15 +1707,18 @@ void ControlItemComponent::resized()
         juce::Rectangle<int> area = bounds.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT);
         
         targetTypeSelector.setBounds(area.removeFromLeft(90));
+        
+        targetMiscParamSelector.setBounds(area);
+        
         auto indexArea = area.removeFromLeft(70);
         targetOscSelector.setBounds(indexArea);
         targetFilterSelector.setBounds(indexArea);
         targetLfoSelector.setBounds(indexArea);
-        auto paramArea = area.removeFromLeft(110);
+        
+        auto paramArea = area;
         targetOscParamSelector.setBounds(paramArea);
         targetFilterParamSelector.setBounds(paramArea);
         targetLfoParamSelector.setBounds(paramArea);
-        targetMasterParamSelector.setBounds(paramArea);
     }
 }
 void ControlItemComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
@@ -1752,9 +1755,9 @@ void ControlItemComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChange
     {
         *_paramsPtr->TargetLfoParam = targetLfoParamSelector.getSelectedItemIndex();
     }
-    else if(comboBoxThatHasChanged == &targetMasterParamSelector)
+    else if(comboBoxThatHasChanged == &targetMiscParamSelector)
     {
-        *_paramsPtr->TargetMasterParam = targetMasterParamSelector.getSelectedItemIndex();
+        *_paramsPtr->TargetMiscParam = targetMiscParamSelector.getSelectedItemIndex();
     }
     resized();// re-render
 }
@@ -1768,7 +1771,7 @@ void ControlItemComponent::timerCallback()
     targetOscParamSelector.setSelectedItemIndex(_paramsPtr->TargetOscParam->getIndex(), juce::dontSendNotification);
     targetFilterParamSelector.setSelectedItemIndex(_paramsPtr->TargetFilterParam->getIndex(), juce::dontSendNotification);
     targetLfoParamSelector.setSelectedItemIndex(_paramsPtr->TargetLfoParam->getIndex(), juce::dontSendNotification);
-    targetMasterParamSelector.setSelectedItemIndex(_paramsPtr->TargetMasterParam->getIndex(), juce::dontSendNotification);
+    targetMiscParamSelector.setSelectedItemIndex(_paramsPtr->TargetMiscParam->getIndex(), juce::dontSendNotification);
     auto enabled = _paramsPtr->Number->getIndex() != 0;
     targetTypeSelector.setEnabled(enabled);
     targetOscSelector.setEnabled(enabled);
@@ -1777,7 +1780,7 @@ void ControlItemComponent::timerCallback()
     targetOscParamSelector.setEnabled(enabled);
     targetFilterParamSelector.setEnabled(enabled);
     targetLfoParamSelector.setEnabled(enabled);
-    targetMasterParamSelector.setEnabled(enabled);
+    targetMiscParamSelector.setEnabled(enabled);
     switch(static_cast<CONTROL_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
         case CONTROL_TARGET_TYPE::OSC: {
             targetOscSelector.setVisible(true);
@@ -1786,7 +1789,7 @@ void ControlItemComponent::timerCallback()
             targetOscParamSelector.setVisible(true);
             targetFilterParamSelector.setVisible(false);
             targetLfoParamSelector.setVisible(false);
-            targetMasterParamSelector.setVisible(false);
+            targetMiscParamSelector.setVisible(false);
             break;
         }
         case CONTROL_TARGET_TYPE::Filter: {
@@ -1796,7 +1799,7 @@ void ControlItemComponent::timerCallback()
             targetOscParamSelector.setVisible(false);
             targetFilterParamSelector.setVisible(true);
             targetLfoParamSelector.setVisible(false);
-            targetMasterParamSelector.setVisible(false);
+            targetMiscParamSelector.setVisible(false);
             break;
         }
         case CONTROL_TARGET_TYPE::LFO: {
@@ -1806,7 +1809,7 @@ void ControlItemComponent::timerCallback()
             targetOscParamSelector.setVisible(false);
             targetFilterParamSelector.setVisible(false);
             targetLfoParamSelector.setVisible(true);
-            targetMasterParamSelector.setVisible(false);
+            targetMiscParamSelector.setVisible(false);
             break;
         }
         case CONTROL_TARGET_TYPE::Master: {
@@ -1816,7 +1819,7 @@ void ControlItemComponent::timerCallback()
             targetOscParamSelector.setVisible(false);
             targetFilterParamSelector.setVisible(false);
             targetLfoParamSelector.setVisible(false);
-            targetMasterParamSelector.setVisible(true);
+            targetMiscParamSelector.setVisible(true);
             break;
         }
     }
