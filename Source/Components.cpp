@@ -1759,7 +1759,11 @@ ControlComponent::ControlComponent(ControlItemParams* params)
 : header("CONTROLS", false)
 , controlItemComponents {
     ControlItemComponent(params),
-//    ControlItemComponent(params+1),
+    ControlItemComponent(params+1),
+    ControlItemComponent(params+2),
+    ControlItemComponent(params+3),
+    ControlItemComponent(params+4),
+    ControlItemComponent(params+5)
 }
 {
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");

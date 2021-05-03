@@ -206,14 +206,64 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 }
 , controlItemParams {
     ControlItemParams {
-        new juce::AudioParameterChoice("CONTROL0_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("11: Expression")),
-        new juce::AudioParameterChoice("CONTROL0_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("OSC")),
+        new juce::AudioParameterChoice("CONTROL0_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("1: Modulation")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("LFO")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
         new juce::AudioParameterChoice("CONTROL0_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
-        new juce::AudioParameterChoice("CONTROL0_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Freq")),
+        new juce::AudioParameterChoice("CONTROL0_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
+    },
+    ControlItemParams {
+        new juce::AudioParameterChoice("CONTROL1_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("None")),// TODO Portament Time
+        new juce::AudioParameterChoice("CONTROL1_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("OSC")),
+        new juce::AudioParameterChoice("CONTROL1_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL1_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL1_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL1_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
+        new juce::AudioParameterChoice("CONTROL1_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
+        new juce::AudioParameterChoice("CONTROL1_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
+    },
+    ControlItemParams {
+        new juce::AudioParameterChoice("CONTROL2_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("7: Main Volume")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("OSC")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
+        new juce::AudioParameterChoice("CONTROL2_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
+    },
+    ControlItemParams {
+        new juce::AudioParameterChoice("CONTROL3_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("11: Expression")),
+        new juce::AudioParameterChoice("CONTROL3_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("OSC")),
+        new juce::AudioParameterChoice("CONTROL3_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL3_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL3_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL3_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
+        new juce::AudioParameterChoice("CONTROL3_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
+        new juce::AudioParameterChoice("CONTROL3_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
+    },
+    ControlItemParams {
+        new juce::AudioParameterChoice("CONTROL4_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("71: Resonance")),
+        new juce::AudioParameterChoice("CONTROL4_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("Filter")),
+        new juce::AudioParameterChoice("CONTROL4_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL4_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL4_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL4_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
+        new juce::AudioParameterChoice("CONTROL4_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Q")),
+        new juce::AudioParameterChoice("CONTROL4_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
+    },
+    ControlItemParams {
+        new juce::AudioParameterChoice("CONTROL5_NUMBER", "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("74: Brightness")),
+        new juce::AudioParameterChoice("CONTROL5_TARGET_TYPE", "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("Filter")),
+        new juce::AudioParameterChoice("CONTROL5_TARGET_OSC", "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL5_TARGET_FILTER", "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL5_TARGET_LFO", "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All")),
+        new juce::AudioParameterChoice("CONTROL5_TARGET_OSC_PARAM", "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain")),
+        new juce::AudioParameterChoice("CONTROL5_TARGET_FILTER_PARAM", "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq")),
+        new juce::AudioParameterChoice("CONTROL5_TARGET_LFO_PARAM", "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount")),
     }
 }
 , modifiers(controlItemParams)
@@ -225,21 +275,25 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     }
     synth.addSound (&sound);
     
-    oscParams[0].addAllParameters(*this);
-    oscParams[1].addAllParameters(*this);
-    oscParams[2].addAllParameters(*this);
-    envelopeParams[0].addAllParameters(*this);
-    envelopeParams[1].addAllParameters(*this);
-    filterParams[0].addAllParameters(*this);
-    filterParams[1].addAllParameters(*this);
-    lfoParams[0].addAllParameters(*this);
-    lfoParams[1].addAllParameters(*this);
-    lfoParams[2].addAllParameters(*this);
-    modEnvParams[0].addAllParameters(*this);
-    modEnvParams[1].addAllParameters(*this);
-    modEnvParams[2].addAllParameters(*this);
+    for(auto params : envelopeParams) {
+        params.addAllParameters(*this);
+    }
+    for(auto params : oscParams) {
+        params.addAllParameters(*this);
+    }
+    for(auto params : filterParams) {
+        params.addAllParameters(*this);
+    }
+    for(auto params : lfoParams) {
+        params.addAllParameters(*this);
+    }
+    for(auto params : modEnvParams) {
+        params.addAllParameters(*this);
+    }
     delayParams.addAllParameters(*this);
-    controlItemParams[0].addAllParameters(*this);
+    for(auto params : controlItemParams) {
+        params.addAllParameters(*this);
+    }
 }
 
 GrapeAudioProcessor::~GrapeAudioProcessor()
@@ -422,22 +476,25 @@ void GrapeAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     // TODO: ValueTree でもできるらしいので調べる
     juce::XmlElement xml("GrapeInstrument");
     
-    oscParams[0].saveParameters(xml);
-    oscParams[1].saveParameters(xml);
-    oscParams[2].saveParameters(xml);
-    envelopeParams[0].saveParameters(xml);
-    envelopeParams[1].saveParameters(xml);
-    filterParams[0].saveParameters(xml);
-    filterParams[1].saveParameters(xml);
-    lfoParams[0].saveParameters(xml);
-    lfoParams[1].saveParameters(xml);
-    lfoParams[2].saveParameters(xml);
-    modEnvParams[0].saveParameters(xml);
-    modEnvParams[1].saveParameters(xml);
-    modEnvParams[2].saveParameters(xml);
+    for(auto param : envelopeParams) {
+        param.saveParameters(xml);
+    }
+    for(auto param : oscParams) {
+        param.saveParameters(xml);
+    }
+    for(auto param : filterParams) {
+        param.saveParameters(xml);
+    }
+    for(auto param : lfoParams) {
+        param.saveParameters(xml);
+    }
+    for(auto param : modEnvParams) {
+        param.saveParameters(xml);
+    }
     delayParams.saveParameters(xml);
-    controlItemParams[0].saveParameters(xml);
-    
+    for(auto param : controlItemParams) {
+        param.saveParameters(xml);
+    }
     copyXmlToBinary(xml, destData);
 }
 
@@ -448,21 +505,25 @@ void GrapeAudioProcessor::setStateInformation (const void* data, int sizeInBytes
     {
         if (xml->hasTagName ("GrapeInstrument"))
         {
-            oscParams[0].loadParameters(*xml);
-            oscParams[1].loadParameters(*xml);
-            oscParams[2].loadParameters(*xml);
-            envelopeParams[0].loadParameters(*xml);
-            envelopeParams[1].loadParameters(*xml);
-            filterParams[0].loadParameters(*xml);
-            filterParams[1].loadParameters(*xml);
-            lfoParams[0].loadParameters(*xml);
-            lfoParams[1].loadParameters(*xml);
-            lfoParams[2].loadParameters(*xml);
-            modEnvParams[0].loadParameters(*xml);
-            modEnvParams[1].loadParameters(*xml);
-            modEnvParams[2].loadParameters(*xml);
+            for(auto param : envelopeParams) {
+                param.loadParameters(*xml);
+            }
+            for(auto param : oscParams) {
+                param.loadParameters(*xml);
+            }
+            for(auto param : filterParams) {
+                param.loadParameters(*xml);
+            }
+            for(auto param : lfoParams) {
+                param.loadParameters(*xml);
+            }
+            for(auto param : modEnvParams) {
+                param.loadParameters(*xml);
+            }
             delayParams.loadParameters(*xml);
-            controlItemParams[0].loadParameters(*xml);
+            for(auto param : controlItemParams) {
+                param.loadParameters(*xml);
+            }
         }
     }
 }
