@@ -23,4 +23,12 @@ private:
                            const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider&) override;
     void drawComboBox(juce::Graphics&, int width, int height, bool isButtonDown, int buttonX, int buttonY, int buttonW, int buttonH, juce::ComboBox&) override;
     void positionComboBoxText (juce::ComboBox& box, juce::Label& label) override;
+    void drawPopupMenuBackground (juce::Graphics&, int width, int height) override;
+    void drawPopupMenuItem (juce::Graphics& g, const juce::Rectangle<int>& area,
+                                            const bool isSeparator, const bool isActive,
+                                            const bool isHighlighted, const bool isTicked,
+                                            const bool hasSubMenu, const juce::String& text,
+                                            const juce::String& shortcutKeyText,
+                                              const juce::Drawable* icon, const juce::Colour* const textColourToUse) override;
+    juce::Path getTickShape (float height) override;
 };

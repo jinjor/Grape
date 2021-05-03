@@ -90,7 +90,7 @@ OscComponent::OscComponent(int index, OscParams* params)
     octaveSlider.setRange(_paramsPtr->Octave->getRange().getStart(),
                           _paramsPtr->Octave->getRange().getEnd(), 1);
     octaveSlider.setValue(_paramsPtr->Octave->get(), juce::dontSendNotification);
-    octaveSlider.setPopupDisplayEnabled(true, true, this);
+    octaveSlider.setPopupDisplayEnabled(true, true, nullptr);
     octaveSlider.setPopupMenuEnabled(true);
     octaveSlider.addListener(this);
     body.addAndMakeVisible(octaveSlider);
@@ -99,7 +99,7 @@ OscComponent::OscComponent(int index, OscParams* params)
     coarseSlider.setRange(_paramsPtr->Coarse->getRange().getStart(),
                          _paramsPtr->Coarse->getRange().getEnd(), 1);
     coarseSlider.setValue(_paramsPtr->Coarse->get(), juce::dontSendNotification);
-    coarseSlider.setPopupDisplayEnabled(true, true, this);
+    coarseSlider.setPopupDisplayEnabled(true, true, nullptr);
     coarseSlider.setPopupMenuEnabled(true);
     coarseSlider.addListener(this);
     body.addAndMakeVisible(coarseSlider);
@@ -108,7 +108,7 @@ OscComponent::OscComponent(int index, OscParams* params)
     unisonSlider.setRange(_paramsPtr->Unison->getRange().getStart(),
                          _paramsPtr->Unison->getRange().getEnd(), 1);
     unisonSlider.setValue(_paramsPtr->Unison->get(), juce::dontSendNotification);
-    unisonSlider.setPopupDisplayEnabled(true, true, this);
+    unisonSlider.setPopupDisplayEnabled(true, true, nullptr);
     unisonSlider.setPopupMenuEnabled(true);
     unisonSlider.addListener(this);
     body.addAndMakeVisible(unisonSlider);
@@ -117,7 +117,7 @@ OscComponent::OscComponent(int index, OscParams* params)
     detuneSlider.setRange(_paramsPtr->Detune->range.start,
                          _paramsPtr->Detune->range.end, 0.01);
     detuneSlider.setValue(_paramsPtr->Detune->get(), juce::dontSendNotification);
-    detuneSlider.setPopupDisplayEnabled(true, true, this);
+    detuneSlider.setPopupDisplayEnabled(true, true, nullptr);
     detuneSlider.setPopupMenuEnabled(true);
     detuneSlider.addListener(this);
     body.addAndMakeVisible(detuneSlider);
@@ -126,7 +126,7 @@ OscComponent::OscComponent(int index, OscParams* params)
     spreadSlider.setRange(_paramsPtr->Spread->range.start,
                          _paramsPtr->Spread->range.end, 0.01);
     spreadSlider.setValue(_paramsPtr->Spread->get(), juce::dontSendNotification);
-    spreadSlider.setPopupDisplayEnabled(true, true, this);
+    spreadSlider.setPopupDisplayEnabled(true, true, nullptr);
     spreadSlider.setPopupMenuEnabled(true);
     spreadSlider.addListener(this);
     body.addAndMakeVisible(spreadSlider);
@@ -135,7 +135,7 @@ OscComponent::OscComponent(int index, OscParams* params)
     gainSlider.setRange(_paramsPtr->Gain->range.start,
                          _paramsPtr->Gain->range.end, 0.01);
     gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
-    gainSlider.setPopupDisplayEnabled(true, true, this);
+    gainSlider.setPopupDisplayEnabled(true, true, nullptr);
     gainSlider.setPopupMenuEnabled(true);
     gainSlider.addListener(this);
     body.addAndMakeVisible(gainSlider);
@@ -190,7 +190,7 @@ OscComponent::OscComponent(int index, OscParams* params)
     
     body.setEnabled(_paramsPtr->Enabled->get());
     addAndMakeVisible(body);
-    
+
     startTimerHz(30.0f);
 }
 
@@ -199,11 +199,6 @@ OscComponent::~OscComponent()
 
 void OscComponent::paint(juce::Graphics& g)
 {
-//    juce::Rectangle<int> bounds = getLocalBounds();
-//    juce::Path p;
-//    p.addLineSegment(juce::Line<float>(0, bounds.getHeight() - 0.5, bounds.getWidth(), bounds.getHeight() - 0.5), 1.0);
-//    g.setColour(PANEL_NAME_COLOUR);
-//    g.fillPath(p);
 }
 
 void OscComponent::resized()
@@ -340,9 +335,9 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     attackSlider.setRange(_paramsPtr->Attack->range.start,
                           _paramsPtr->Attack->range.end, 0.001);
     attackSlider.setValue(_paramsPtr->Attack->get(), juce::dontSendNotification);
-    attackSlider.setPopupDisplayEnabled(true, true, this);
+    attackSlider.setPopupDisplayEnabled(true, true, nullptr);
     attackSlider.setPopupMenuEnabled(true);
-    attackSlider.setTextValueSuffix(" seconds");
+    attackSlider.setTextValueSuffix(" sec");
     attackSlider.addListener(this);
     addAndMakeVisible(attackSlider);
     
@@ -350,9 +345,9 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     decaySlider.setRange(_paramsPtr->Decay->range.start,
                          _paramsPtr->Decay->range.end, 0.01);
     decaySlider.setValue(_paramsPtr->Decay->get(), juce::dontSendNotification);
-    decaySlider.setPopupDisplayEnabled(true, true, this);
+    decaySlider.setPopupDisplayEnabled(true, true, nullptr);
     decaySlider.setPopupMenuEnabled(true);
-    decaySlider.setTextValueSuffix(" seconds");
+    decaySlider.setTextValueSuffix(" sec");
     decaySlider.addListener(this);
     addAndMakeVisible(decaySlider);
     
@@ -360,7 +355,7 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     sustainSlider.setRange(_paramsPtr->Sustain->range.start,
                            _paramsPtr->Sustain->range.end, 0.01);
     sustainSlider.setValue(_paramsPtr->Sustain->get(), juce::dontSendNotification);
-    sustainSlider.setPopupDisplayEnabled(true, true, this);
+    sustainSlider.setPopupDisplayEnabled(true, true, nullptr);
     sustainSlider.setPopupMenuEnabled(true);
     sustainSlider.addListener(this);
     addAndMakeVisible(sustainSlider);
@@ -369,9 +364,9 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     releaseSlider.setRange(_paramsPtr->Release->range.start,
                            _paramsPtr->Release->range.end, 0.01);
     releaseSlider.setValue(_paramsPtr->Release->get(), juce::dontSendNotification);
-    releaseSlider.setPopupDisplayEnabled(true, true, this);
+    releaseSlider.setPopupDisplayEnabled(true, true, nullptr);
     releaseSlider.setPopupMenuEnabled(true);
-    releaseSlider.setTextValueSuffix(" seconds");
+    releaseSlider.setTextValueSuffix(" sec");
     releaseSlider.addListener(this);
     addAndMakeVisible(releaseSlider);
     
@@ -504,7 +499,7 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     octaveSlider.setRange(_paramsPtr->Octave->range.start,
                          _paramsPtr->Octave->range.end, 1.0/12);
     octaveSlider.setValue(_paramsPtr->Octave->get(), juce::dontSendNotification);
-    octaveSlider.setPopupDisplayEnabled(true, true, this);
+    octaveSlider.setPopupDisplayEnabled(true, true, nullptr);
     octaveSlider.setPopupMenuEnabled(true);
     octaveSlider.setTextValueSuffix(" octave");
     octaveSlider.addListener(this);
@@ -514,7 +509,7 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     qSlider.setRange(_paramsPtr->Q->range.start,
                            _paramsPtr->Q->range.end, 0.01);
     qSlider.setValue(_paramsPtr->Q->get(), juce::dontSendNotification);
-    qSlider.setPopupDisplayEnabled(true, true, this);
+    qSlider.setPopupDisplayEnabled(true, true, nullptr);
     qSlider.setPopupMenuEnabled(true);
     qSlider.addListener(this);
     body.addAndMakeVisible(qSlider);
@@ -699,7 +694,7 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
     slowFreqSlider.setRange(_paramsPtr->SlowFreq->range.start,
                            _paramsPtr->SlowFreq->range.end, 0.01);
     slowFreqSlider.setValue(_paramsPtr->SlowFreq->get(), juce::dontSendNotification);
-    slowFreqSlider.setPopupDisplayEnabled(true, true, this);
+    slowFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     slowFreqSlider.setPopupMenuEnabled(true);
     slowFreqSlider.setTextValueSuffix("Hz");
     slowFreqSlider.addListener(this);
@@ -710,7 +705,7 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
                            _paramsPtr->FastFreq->range.end, 0.01);
     fastFreqSlider.setValue(_paramsPtr->FastFreq->get(), juce::dontSendNotification);
     fastFreqSlider.setSkewFactorFromMidPoint(1.0);
-    fastFreqSlider.setPopupDisplayEnabled(true, true, this);
+    fastFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     fastFreqSlider.setPopupMenuEnabled(true);
     fastFreqSlider.setTextValueSuffix("x");
     fastFreqSlider.addListener(this);
@@ -720,7 +715,7 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
     amountSlider.setRange(_paramsPtr->Amount->range.start,
                            _paramsPtr->Amount->range.end, 0.01);
     amountSlider.setValue(_paramsPtr->Amount->get(), juce::dontSendNotification);
-    amountSlider.setPopupDisplayEnabled(true, true, this);
+    amountSlider.setPopupDisplayEnabled(true, true, nullptr);
     amountSlider.setPopupMenuEnabled(true);
     amountSlider.addListener(this);
     body.addAndMakeVisible(amountSlider);
@@ -987,7 +982,7 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     peakFreqSlider.setRange(_paramsPtr->PeakFreq->range.start,
                            _paramsPtr->PeakFreq->range.end, 0.01);
     peakFreqSlider.setValue(_paramsPtr->PeakFreq->get(), juce::dontSendNotification);
-    peakFreqSlider.setPopupDisplayEnabled(true, true, this);
+    peakFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     peakFreqSlider.setPopupMenuEnabled(true);
     peakFreqSlider.setTextValueSuffix("x");
     peakFreqSlider.addListener(this);
@@ -997,7 +992,7 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     waitSlider.setRange(_paramsPtr->Wait->range.start,
                            _paramsPtr->Wait->range.end, 0.01);
     waitSlider.setValue(_paramsPtr->Wait->get(), juce::dontSendNotification);
-    waitSlider.setPopupDisplayEnabled(true, true, this);
+    waitSlider.setPopupDisplayEnabled(true, true, nullptr);
     waitSlider.setPopupMenuEnabled(true);
     waitSlider.addListener(this);
     body.addAndMakeVisible(waitSlider);
@@ -1006,7 +1001,7 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     attackSlider.setRange(_paramsPtr->Attack->range.start,
                            _paramsPtr->Attack->range.end, 0.01);
     attackSlider.setValue(_paramsPtr->Attack->get(), juce::dontSendNotification);
-    attackSlider.setPopupDisplayEnabled(true, true, this);
+    attackSlider.setPopupDisplayEnabled(true, true, nullptr);
     attackSlider.setPopupMenuEnabled(true);
     attackSlider.addListener(this);
     body.addAndMakeVisible(attackSlider);
@@ -1015,7 +1010,7 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     decaySlider.setRange(_paramsPtr->Decay->range.start,
                            _paramsPtr->Decay->range.end, 0.01);
     decaySlider.setValue(_paramsPtr->Decay->get(), juce::dontSendNotification);
-    decaySlider.setPopupDisplayEnabled(true, true, this);
+    decaySlider.setPopupDisplayEnabled(true, true, nullptr);
     decaySlider.setPopupMenuEnabled(true);
     decaySlider.addListener(this);
     body.addAndMakeVisible(decaySlider);
@@ -1306,7 +1301,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     timeLSlider.setRange(_paramsPtr->TimeL->range.start,
                           _paramsPtr->TimeL->range.end, 0.01);
     timeLSlider.setValue(_paramsPtr->TimeL->get(), juce::dontSendNotification);
-    timeLSlider.setPopupDisplayEnabled(true, true, this);
+    timeLSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeLSlider.setPopupMenuEnabled(true);
     timeLSlider.addListener(this);
     body.addAndMakeVisible(timeLSlider);
@@ -1315,7 +1310,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     timeRSlider.setRange(_paramsPtr->TimeR->range.start,
                           _paramsPtr->TimeR->range.end, 0.01);
     timeRSlider.setValue(_paramsPtr->TimeR->get(), juce::dontSendNotification);
-    timeRSlider.setPopupDisplayEnabled(true, true, this);
+    timeRSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeRSlider.setPopupMenuEnabled(true);
     timeRSlider.addListener(this);
     body.addAndMakeVisible(timeRSlider);
@@ -1323,7 +1318,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     timeSyncLSlider.setLookAndFeel(&grapeLookAndFeel);
     timeSyncLSlider.setRange(0, sizeof DELAY_TIME_SYNC_NAMES - 1, 1);
     timeSyncLSlider.setValue(_paramsPtr->TimeSyncL->getIndex(), juce::dontSendNotification);
-    timeSyncLSlider.setPopupDisplayEnabled(true, true, this);
+    timeSyncLSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeSyncLSlider.setPopupMenuEnabled(true);
     timeSyncLSlider.textFromValueFunction = [](double index){ return DELAY_TIME_SYNC_NAMES[index]; };
     timeSyncLSlider.addListener(this);
@@ -1332,7 +1327,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     timeSyncRSlider.setLookAndFeel(&grapeLookAndFeel);
     timeSyncRSlider.setRange(0, sizeof DELAY_TIME_SYNC_NAMES - 1, 1);
     timeSyncRSlider.setValue(_paramsPtr->TimeSyncR->getIndex(), juce::dontSendNotification);
-    timeSyncRSlider.setPopupDisplayEnabled(true, true, this);
+    timeSyncRSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeSyncRSlider.setPopupMenuEnabled(true);
     timeSyncRSlider.textFromValueFunction = [](double index){ return DELAY_TIME_SYNC_NAMES[index]; };
     timeSyncRSlider.addListener(this);
@@ -1342,7 +1337,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     lowFreqSlider.setRange(_paramsPtr->LowFreq->range.start,
                           _paramsPtr->LowFreq->range.end, 1.0);
     lowFreqSlider.setValue(_paramsPtr->LowFreq->get(), juce::dontSendNotification);
-    lowFreqSlider.setPopupDisplayEnabled(true, true, this);
+    lowFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     lowFreqSlider.setPopupMenuEnabled(true);
     lowFreqSlider.addListener(this);
     body.addAndMakeVisible(lowFreqSlider);
@@ -1351,7 +1346,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     highFreqSlider.setRange(_paramsPtr->HighFreq->range.start,
                           _paramsPtr->HighFreq->range.end, 1.0);
     highFreqSlider.setValue(_paramsPtr->HighFreq->get(), juce::dontSendNotification);
-    highFreqSlider.setPopupDisplayEnabled(true, true, this);
+    highFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     highFreqSlider.setPopupMenuEnabled(true);
     highFreqSlider.addListener(this);
     body.addAndMakeVisible(highFreqSlider);
@@ -1360,7 +1355,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     feedbackSlider.setRange(_paramsPtr->Feedback->range.start,
                           _paramsPtr->Feedback->range.end, 0.01);
     feedbackSlider.setValue(_paramsPtr->Feedback->get(), juce::dontSendNotification);
-    feedbackSlider.setPopupDisplayEnabled(true, true, this);
+    feedbackSlider.setPopupDisplayEnabled(true, true, nullptr);
     feedbackSlider.setPopupMenuEnabled(true);
     feedbackSlider.addListener(this);
     body.addAndMakeVisible(feedbackSlider);
@@ -1369,7 +1364,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     mixSlider.setRange(_paramsPtr->Mix->range.start,
                           _paramsPtr->Mix->range.end, 0.01);
     mixSlider.setValue(_paramsPtr->Mix->get(), juce::dontSendNotification);
-    mixSlider.setPopupDisplayEnabled(true, true, this);
+    mixSlider.setPopupDisplayEnabled(true, true, nullptr);
     mixSlider.setPopupMenuEnabled(true);
     mixSlider.addListener(this);
     body.addAndMakeVisible(mixSlider);

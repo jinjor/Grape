@@ -4,6 +4,7 @@ namespace {
 const juce::Colour COLOUR_SELECT = juce::Colour(170,100,210);
 const juce::Colour COLOUR_PIT = juce::Colour(0,0,0);
 const juce::Colour COLOUR_BORDER = juce::Colour(30,30,30);
+const juce::Colour COLOUR_BACKGROUND = juce::Colour(30,30,30);
 const juce::Colour COLOUR_TEXT = juce::Colour(200,200,200);
 const int KNOB_WIDTH = 40;
 const float SLIT_WIDTH = 2.0f;
@@ -17,6 +18,14 @@ GrapeLookAndFeel::GrapeLookAndFeel()
     setColour (juce::ComboBox::textColourId, COLOUR_TEXT);
     setColour (juce::ComboBox::arrowColourId, COLOUR_TEXT);
     setColour (juce::ComboBox::outlineColourId, COLOUR_BORDER);
+    setColour (juce::PopupMenu::backgroundColourId, COLOUR_BACKGROUND);
+    setColour (juce::PopupMenu::highlightedBackgroundColourId, COLOUR_SELECT.withBrightness(0.4));
+//    setColour (juce::TooltipWindow::outlineColourId, COLOUR_BORDER);
+//    setColour (juce::TooltipWindow::backgroundColourId, COLOUR_BACKGROUND);
+//    setColour (juce::Slider::textBoxOutlineColourId, COLOUR_BORDER);
+//    setColour (juce::Slider::textBoxBackgroundColourId, COLOUR_BACKGROUND);
+    setColour (juce::BubbleComponent::outlineColourId, COLOUR_BORDER);
+    setColour (juce::BubbleComponent::backgroundColourId, COLOUR_PIT);
 }
 GrapeLookAndFeel::~GrapeLookAndFeel()
 {}
@@ -146,4 +155,119 @@ void GrapeLookAndFeel::positionComboBoxText (juce::ComboBox& box, juce::Label& l
 {
     label.setBounds (1, 1, box.getWidth() - ARROW_ZONE_WIDTH, box.getHeight() - 2);
     label.setFont (getComboBoxFont (box));
+}
+void GrapeLookAndFeel::drawPopupMenuBackground (juce::Graphics& g, int width, int height)
+{
+    auto background = findColour (juce::PopupMenu::backgroundColourId);
+
+    g.fillAll (background);
+    g.setColour (background.overlaidWith (juce::Colour (0x2badd8e6)));
+
+//    for (int i = 0; i < height; i += 3)
+//        g.fillRect (0, i, width, 1);
+
+   #if ! JUCE_MAC
+    g.setColour (findColour (PopupMenu::textColourId).withAlpha (0.6f));
+    g.drawRect (0, 0, width, height);
+   #endif
+}
+void GrapeLookAndFeel::drawPopupMenuItem (juce::Graphics& g, const juce::Rectangle<int>& area,
+                                        const bool isSeparator, const bool isActive,
+                                        const bool isHighlighted, const bool isTicked,
+                                        const bool hasSubMenu, const juce::String& text,
+                                        const juce::String& shortcutKeyText,
+                                        const juce::Drawable* icon, const juce::Colour* const textColourToUse)
+{
+    if (isSeparator)
+    {
+        auto r  = area.reduced (5, 0);
+        r.removeFromTop (juce::roundToInt (((float) r.getHeight() * 0.5f) - 0.5f));
+
+        g.setColour (findColour (juce::PopupMenu::textColourId).withAlpha (0.3f));
+        g.fillRect (r.removeFromTop (1));
+    }
+    else
+    {
+        auto textColour = (textColourToUse == nullptr ? findColour (juce::PopupMenu::textColourId)
+                                                      : *textColourToUse);
+
+        auto r  = area.reduced (1);
+
+        if (isHighlighted && isActive)
+        {
+            g.setColour (findColour (juce::PopupMenu::highlightedBackgroundColourId));
+            g.fillRect (r);
+
+            g.setColour (findColour (juce::PopupMenu::highlightedTextColourId));
+        }
+        else
+        {
+            g.setColour (textColour.withMultipliedAlpha (isActive ? 1.0f : 0.5f));
+        }
+
+        r.reduce (juce::jmin (5, area.getWidth() / 20), 0);
+
+        auto font = getPopupMenuFont();
+
+        auto maxFontHeight = (float) r.getHeight() / 1.3f;
+
+        if (font.getHeight() > maxFontHeight)
+            font.setHeight (maxFontHeight);
+
+        g.setFont (font);
+
+        auto iconArea = r.removeFromLeft (juce::roundToInt (maxFontHeight)).toFloat();
+
+        if (icon != nullptr)
+        {
+            icon->drawWithin (g, iconArea, juce::RectanglePlacement::centred | juce::RectanglePlacement::onlyReduceInSize, 1.0f);
+            r.removeFromLeft (juce::roundToInt (maxFontHeight * 0.5f));
+        }
+        else if (isTicked)
+        {
+            auto tick = getTickShape (1.0f);
+//            g.fillPath (tick, tick.getTransformToScaleToFit (iconArea.reduced (iconArea.getWidth() / 5, 0).toFloat(), true));
+            g.fillPath (tick, tick.getTransformToScaleToFit (iconArea.reduced (iconArea.getWidth() / 3, 0).toFloat(), true));
+        }
+
+        if (hasSubMenu)
+        {
+            auto arrowH = 0.6f * getPopupMenuFont().getAscent();
+
+            auto x = static_cast<float> (r.removeFromRight ((int) arrowH).getX());
+            auto halfH = static_cast<float> (r.getCentreY());
+
+            juce::Path path;
+            path.startNewSubPath (x, halfH - arrowH * 0.5f);
+            path.lineTo (x + arrowH * 0.6f, halfH);
+            path.lineTo (x, halfH + arrowH * 0.5f);
+
+            g.strokePath (path, juce::PathStrokeType (2.0f));
+        }
+
+        r.removeFromRight (3);
+        g.drawFittedText (text, r, juce::Justification::centredLeft, 1);
+
+        if (shortcutKeyText.isNotEmpty())
+        {
+            auto f2 = font;
+            f2.setHeight (f2.getHeight() * 0.75f);
+            f2.setHorizontalScale (0.95f);
+            g.setFont (f2);
+
+            g.drawText (shortcutKeyText, r, juce::Justification::centredRight, true);
+        }
+    }
+}
+juce::Path GrapeLookAndFeel::getTickShape (float height)
+{
+    auto w = height / 4;
+    auto h = height / 4;
+    auto x = height / 2 - w / 2;
+    auto y = height / 2 - h / 2;
+
+    juce::Path path;
+    path.addEllipse(x, y, w, h);
+
+    return path;
 }
