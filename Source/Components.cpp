@@ -1479,7 +1479,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     body.addAndMakeVisible(timeRSlider);
     
     timeSyncLSlider.setLookAndFeel(&grapeLookAndFeel);
-    timeSyncLSlider.setRange(0, sizeof DELAY_TIME_SYNC_NAMES - 1, 1);
+    timeSyncLSlider.setRange(0, DELAY_TIME_SYNC_NAMES.size() - 1, 1);
     timeSyncLSlider.setValue(_paramsPtr->TimeSyncL->getIndex(), juce::dontSendNotification);
     timeSyncLSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeSyncLSlider.setPopupMenuEnabled(true);
@@ -1488,7 +1488,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     body.addAndMakeVisible(timeSyncLSlider);
     
     timeSyncRSlider.setLookAndFeel(&grapeLookAndFeel);
-    timeSyncRSlider.setRange(0, sizeof DELAY_TIME_SYNC_NAMES - 1, 1);
+    timeSyncRSlider.setRange(0, DELAY_TIME_SYNC_NAMES.size() - 1, 1);
     timeSyncRSlider.setValue(_paramsPtr->TimeSyncR->getIndex(), juce::dontSendNotification);
     timeSyncRSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeSyncRSlider.setPopupMenuEnabled(true);

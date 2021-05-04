@@ -9,7 +9,7 @@ const juce::StringArray VOICE_MODE_NAMES = juce::StringArray("Mono", "Poly");
 
 enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Pulse, Random, Pink, White };
 const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Square", "Pulse", "Pink", "White");
-const WAVEFORM OSC_WAVEFORM_VALUES[sizeof OSC_WAVEFORM_NAMES] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Pink, WAVEFORM::White };
+const WAVEFORM OSC_WAVEFORM_VALUES[7] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Pink, WAVEFORM::White };
 
 const juce::StringArray OSC_ENV_NAMES = juce::StringArray("1", "2");
 
@@ -34,7 +34,7 @@ enum class LFO_TARGET_FILTER_PARAM { Freq, Q };
 const juce::StringArray LFO_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
 
 const juce::StringArray LFO_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw-Up", "Saw-Down", "Square", "Pulse", "Random");
-const WAVEFORM LFO_WAVEFORM_VALUES[sizeof LFO_WAVEFORM_NAMES] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Random };
+const WAVEFORM LFO_WAVEFORM_VALUES[7] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Random };
 
 enum class MODENV_TARGET_TYPE { OSC, Filter, LFO };
 const juce::StringArray MODENV_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO");
@@ -62,13 +62,13 @@ const juce::StringArray DELAY_TIME_SYNC_NAMES = juce::StringArray(
     "1/1",   "1/2",   "1/4",   "1/8",   "1/16",   "1/32",
     "1/1 T", "1/2 T", "1/4 T", "1/8 T", "1/16 T", "1/32 T",
     "1/1 D", "1/2 D", "1/4 D", "1/8 D", "1/16 D", "1/32 D");
-const double DELAY_TIME_SYNC_VALUES[sizeof DELAY_TIME_SYNC_NAMES] = {
+const double DELAY_TIME_SYNC_VALUES[18] = {
     1.0,       0.5,       0.25,       0.125,       0.0625,       0.03125,
     1.0 * 2/3, 0.5 * 2/3, 0.25 * 2/3, 0.125 * 2/3, 0.0625 * 2/3, 0.03125 * 2/3,
     1.0 * 3/2, 0.5 * 3/2, 0.25 * 3/2, 0.125 * 3/2, 0.0625 * 3/2, 0.03125 * 3/2 };
 
 const juce::StringArray CONTROL_NUMBER_NAMES = juce::StringArray("None", "1: Modulation", "2: Breath", "4: Foot", "5: Portamento Time", "7: Main Volume", "10: Pan", "11: Expression", "71: Resonance", "74: Brightness", "75: Sound Control", "76: Sound Control", "77: Sound Control", "78: Sound Control", "79: Sound Control", "91: Reverb", "92: Tremolo", "93: Chorus", "94: Detune", "95: Phaser");
-const int CONTROL_NUMBER_VALUES[sizeof CONTROL_NUMBER_NAMES] { -1, 1, 2, 4, 5, 7, 10, 11, 71, 74, 75, 76, 77, 78, 79, 91, 92, 93, 94, 95 };
+const int CONTROL_NUMBER_VALUES[20] { -1, 1, 2, 4, 5, 7, 10, 11, 71, 74, 75, 76, 77, 78, 79, 91, 92, 93, 94, 95 };
 
 enum class CONTROL_TARGET_TYPE { OSC, Filter, LFO, Master };
 const juce::StringArray CONTROL_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO", "Misc");
