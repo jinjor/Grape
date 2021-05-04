@@ -2,6 +2,33 @@
 #include "Voice.h"
 
 //==============================================================================
+VoiceParams::VoiceParams(juce::AudioParameterChoice* mode,
+                         juce::AudioParameterFloat* portamentoTime,
+                         juce::AudioParameterInt* pitchBendRange)
+: Mode(mode)
+, PortamentoTime(portamentoTime)
+, PitchBendRange(pitchBendRange)
+{}
+void VoiceParams::addAllParameters(juce::AudioProcessor& processor)
+{
+    processor.addParameter(Mode);
+    processor.addParameter(PortamentoTime);
+    processor.addParameter(PitchBendRange);
+}
+void VoiceParams::saveParameters(juce::XmlElement& xml)
+{
+    xml.setAttribute(Mode->paramID, Mode->getIndex());
+    xml.setAttribute(PortamentoTime->paramID, PortamentoTime->get());
+    xml.setAttribute(PitchBendRange->paramID, PitchBendRange->get());
+}
+void VoiceParams::loadParameters(juce::XmlElement& xml)
+{
+    *Mode = xml.getIntAttribute(Mode->paramID, 0);
+    *PortamentoTime = xml.getIntAttribute(PortamentoTime->paramID, 0.001);
+    *PitchBendRange = xml.getIntAttribute(PitchBendRange->paramID, 2);
+}
+
+//==============================================================================
 OscParams::OscParams(juce::AudioParameterBool* enabled,
                      juce::AudioParameterChoice* waveform,
                      juce::AudioParameterInt* octave,

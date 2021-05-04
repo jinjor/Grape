@@ -3,6 +3,10 @@
 #include <JuceHeader.h>
 
 namespace {
+
+enum class VOICE_MODE { Mono, Poly };
+const juce::StringArray VOICE_MODE_NAMES = juce::StringArray("Mono", "Poly");
+
 enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Pulse, Random, Pink, White };
 const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Square", "Pulse", "Pink", "White");
 const WAVEFORM OSC_WAVEFORM_VALUES[sizeof OSC_WAVEFORM_NAMES] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Pink, WAVEFORM::White };
@@ -95,6 +99,26 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) = 0;
     virtual void saveParameters(juce::XmlElement& xml) = 0;
     virtual void loadParameters(juce::XmlElement& xml) = 0;
+};
+
+//==============================================================================
+class VoiceParams : public SynthParametersBase
+{
+public:
+
+    juce::AudioParameterChoice* Mode;
+    juce::AudioParameterFloat* PortamentoTime;
+    juce::AudioParameterInt* PitchBendRange;
+    
+    VoiceParams(juce::AudioParameterChoice* mode,
+                juce::AudioParameterFloat* portamentoTime,
+                juce::AudioParameterInt* pitchBendRange);
+    
+    virtual void addAllParameters(juce::AudioProcessor& processor) override;
+    virtual void saveParameters(juce::XmlElement& xml) override;
+    virtual void loadParameters(juce::XmlElement& xml) override;
+    
+private:
 };
 
 //==============================================================================

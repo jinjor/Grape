@@ -8,7 +8,10 @@ bool GrapeSound::appliesToNote(int) { return true; }
 bool GrapeSound::appliesToChannel(int) { return true; }
 
 //==============================================================================
-Modifiers::Modifiers(ControlItemParams* controlItemParams) : controlItemParams(controlItemParams) {
+Modifiers::Modifiers(VoiceParams* voiceParams, ControlItemParams* controlItemParams)
+: voiceParams(voiceParams)
+, controlItemParams(controlItemParams)
+{
     std::fill_n(angleShift, NUM_OSC, 0);
     std::fill_n(octShift, NUM_OSC, 0);
     std::fill_n(detuneRatio, NUM_OSC, 1.0);
@@ -31,7 +34,7 @@ void Modifiers::pitchWheelMoved(int value) {
     }
     pitch = value;
     for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-        octShift[oscIndex] = (value == 0 ? -8192.0 : value - 8192.0) / 8191.0;// TODO: sensibility
+        octShift[oscIndex] = (value == 0 ? -8192.0 : value - 8192.0) / 8191.0 * (voiceParams->PitchBendRange->get() / 12.0);
     }
 }
 void Modifiers::controllerMoved(int number, int value) {
@@ -142,6 +145,7 @@ void Modifiers::controllerMoved(int number, int value) {
 
 //==============================================================================
 GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo,
+                       VoiceParams* voiceParams,
                        OscParams* oscParams,
                        EnvelopeParams* envelopeParams,
                        FilterParams* filterParams,
@@ -150,6 +154,7 @@ GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPosition
                        Modifiers* modifiers)
 : perf(juce::PerformanceCounter("voice cycle", 100000))
 , currentPositionInfo(currentPositionInfo)
+, voiceParams(voiceParams)
 , oscParams(oscParams)
 , envelopeParams(envelopeParams)
 , filterParams(filterParams)
@@ -161,15 +166,7 @@ GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPosition
 , filters { Filter(), Filter() }
 , lfos { Osc(), Osc(), Osc() }
 , modEnvs { Adsr(), Adsr(), Adsr() }
-{
-//    for(int i = 0; i < NUM_ENVELOPE; ++i) {
-//        adsr[i].setParams(envelopeParams[i].Attack->get(),
-//                          0.0,
-//                          envelopeParams[i].Decay->get(),
-//                          envelopeParams[i].Sustain->get(),
-//                          envelopeParams[i].Release->get());
-//    }
-}
+{}
 GrapeVoice::~GrapeVoice() {
     DBG("GrapeVoice's destructor called.");
 }
@@ -186,8 +183,8 @@ void GrapeVoice::startNote (int midiNoteNumber, float velocity,
     DBG("startNote() midiNoteNumber:" << midiNoteNumber);
     if(GrapeSound* playingSound = dynamic_cast<GrapeSound*>(getCurrentlyPlayingSound().get()))
     {
-        this->midiNoteNumber = midiNoteNumber;
         auto sampleRate = getSampleRate();
+        smoothNote.init(midiNoteNumber);
         if(stolen) {
             smoothVelocity.exponential(0.01, velocity, sampleRate);
         } else {
@@ -250,25 +247,27 @@ void GrapeVoice::stopNote (float velocity, bool allowTailOff)
             for(int i = 0; i < NUM_ENVELOPE; ++i) {
                 adsr[i].forceStop();
             }
-            midiNoteNumber = 0;
             clearCurrentNote();
         }
     }
+}
+void GrapeVoice::glide(int midiNoteNumber, float velocity)
+{
+    auto sampleRate = getSampleRate();
+    auto portamentTime = voiceParams->PortamentoTime->get();
+    smoothNote.exponential(portamentTime, midiNoteNumber, sampleRate);
+    smoothVelocity.exponential(portamentTime, velocity, sampleRate);
 }
 void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples)
 {
     if(GrapeSound* playingSound = dynamic_cast<GrapeSound*>(getCurrentlyPlayingSound().get()))
     {
-        if(midiNoteNumber == 0) {
+        auto midiNoteNumber = getCurrentlyPlayingNote();// TODO: まだ必要？
+        if(getCurrentlyPlayingNote() == 0) {
             return;
         }
         auto sampleRate = getSampleRate();
         
-        int shiftedNoteNumbers[NUM_OSC] {midiNoteNumber, midiNoteNumber, midiNoteNumber};
-        for(int i = 0; i < NUM_OSC; ++i) {
-            shiftedNoteNumbers[i] += oscParams[i].Octave->get() * 12;
-            shiftedNoteNumbers[i] += oscParams[i].Coarse->get();
-        }
         for(int i = 0; i < NUM_OSC; ++i) {
             oscs[i].setSampleRate(sampleRate);
             oscs[i].setWaveform(OSC_WAVEFORM_VALUES[oscParams[i].Waveform->getIndex()]);
@@ -311,7 +310,14 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
 #if JUCE_DEBUG
 //            perf.start();
 #endif
+            smoothNote.step();
             smoothVelocity.step();
+            
+            double shiftedNoteNumbers[NUM_OSC] {smoothNote.value, smoothNote.value, smoothNote.value};
+            for(int i = 0; i < NUM_OSC; ++i) {
+                shiftedNoteNumbers[i] += oscParams[i].Octave->get() * 12;
+                shiftedNoteNumbers[i] += oscParams[i].Coarse->get();
+            }
             
             auto modifiers = *(this->modifiers);// clone -- includes controled values
             
@@ -562,7 +568,6 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
             }
             ++startSample;
             if(!active) {
-                midiNoteNumber = 0;
                 clearCurrentNote();
                 break;
             }

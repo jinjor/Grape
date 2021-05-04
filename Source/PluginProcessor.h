@@ -68,6 +68,7 @@ public:
     AnalyserState analyserState;
     juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo;
     
+    VoiceParams voiceParams;
     OscParams oscParams[NUM_OSC];
     EnvelopeParams envelopeParams[NUM_ENVELOPE];
     FilterParams filterParams[NUM_FILTER];
@@ -76,6 +77,7 @@ public:
     DelayParams delayParams;
     ControlItemParams controlItemParams[NUM_CONTROL];
     
+    MonoStack monoStack;
     Modifiers modifiers;
     GrapeSound sound;
     GrapeSynthesiser synth;

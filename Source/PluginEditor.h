@@ -21,6 +21,8 @@ public:
 private:
     GrapeAudioProcessor& audioProcessor;
     juce::MidiKeyboardComponent keyboardComponent;
+    
+    VoiceComponent voiceComponent;
     OscComponent oscComponents[NUM_OSC];
     EnvelopeComponent envelopeComponents[NUM_ENVELOPE];
     FilterComponent filterComponents[NUM_FILTER];

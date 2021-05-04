@@ -52,12 +52,71 @@ public:
 };
 
 //==============================================================================
+class MonoStack {
+public:
+    int latestNoteNumber = 0;
+    int firstNoteNumber = 0;
+    MonoStack(){};
+    ~MonoStack(){};
+    bool push(int noteNumber, float velocity) {
+        if(noteNumber == 0 || velocity == 0.0f) {
+            return false;
+        }
+        if(firstNoteNumber == 0) {
+            firstNoteNumber = noteNumber;
+        }
+        remove(noteNumber);
+        notes[noteNumber].velocity = velocity;
+        notes[noteNumber].next = latestNoteNumber;
+        latestNoteNumber = noteNumber;
+        return true;
+    }
+    bool remove(int noteNumber) {
+        if(latestNoteNumber == 0) {
+            return false;
+        }
+        auto next = notes[noteNumber].next;
+        notes[noteNumber].velocity = 0.0f;
+        notes[noteNumber].next = 0;
+        if(latestNoteNumber == noteNumber) {
+            latestNoteNumber = next;
+            if(latestNoteNumber == 0) {
+                firstNoteNumber = 0;
+            }
+            return true;
+        }
+        auto currentNoteNumber = latestNoteNumber;
+        while(notes[currentNoteNumber].next != 0) {
+            if(notes[currentNoteNumber].next == noteNumber) {
+                notes[currentNoteNumber].next = next;
+                return true;
+            }
+            currentNoteNumber = notes[currentNoteNumber].next;
+        }
+        return false;
+    }
+    float getVelocity(int noteNumber) {
+        return notes[noteNumber].velocity;
+    }
+    void reset() {
+        std::fill_n(notes, 128, NoteInfo{});
+    }
+private:
+    struct NoteInfo {
+        float velocity = 0.0f;
+        int next = 0;
+    };
+    NoteInfo notes[128]{};
+};
+
+//==============================================================================
 // TODO: consider resetting
 // TODO: multi channel
 class Modifiers {
 public:
-    Modifiers(ControlItemParams* controlItemParams);
+    Modifiers(VoiceParams* voiceParams, ControlItemParams* controlItemParams);
     ~Modifiers() {};
+    VoiceParams* voiceParams;
     ControlItemParams* controlItemParams;
     double angleShift[NUM_OSC] {};
     double octShift[NUM_OSC] {};
@@ -83,6 +142,7 @@ class GrapeVoice   : public juce::SynthesiserVoice
 {
 public:
     GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo,
+               VoiceParams* voiceParams,
                OscParams* oscParams,
                EnvelopeParams* envelopeParams,
                FilterParams* filterParams,
@@ -94,6 +154,7 @@ public:
     void startNote (int midiNoteNumber, float velocity,
                     juce::SynthesiserSound*, int currentPitchWheelPosition) override;
     void stopNote (float velocity, bool allowTailOff) override;
+    void glide(int midiNoteNumber, float velocity);
     virtual void pitchWheelMoved (int) override {};
     virtual void controllerMoved (int, int) override {};
     void renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int startSample, int numSamples) override;
@@ -101,6 +162,7 @@ private:
     juce::PerformanceCounter perf;
     juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo;
     
+    VoiceParams* voiceParams;
     OscParams* oscParams;
     EnvelopeParams* envelopeParams;
     FilterParams* filterParams;
@@ -114,7 +176,7 @@ private:
     Osc lfos[NUM_LFO];
     Adsr modEnvs[NUM_MODENV];
     
-    int midiNoteNumber = 0;
+    TransitiveValue smoothNote;
     TransitiveValue smoothVelocity;
     bool stolen = false;
     bool isActive();
@@ -130,11 +192,72 @@ private:
 class GrapeSynthesiser   : public juce::Synthesiser
 {
 public:
-    GrapeSynthesiser(GrapeSound* sound, juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, Modifiers* modifiers, DelayParams* delayParams) : sound(sound), currentPositionInfo(currentPositionInfo), modifiers(modifiers), delayParams(delayParams) {}
+    GrapeSynthesiser(GrapeSound* sound, juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, MonoStack* monoStack, Modifiers* modifiers, VoiceParams* voiceParams, DelayParams* delayParams) : sound(sound), currentPositionInfo(currentPositionInfo), monoStack(monoStack), modifiers(modifiers), voiceParams(voiceParams), delayParams(delayParams) {}
     ~GrapeSynthesiser() {}
+    virtual void handleMidiEvent (const juce::MidiMessage& m) override {
+        const int channel = m.getChannel();
+        if(static_cast<VOICE_MODE>(voiceParams->Mode->getIndex()) == VOICE_MODE::Mono) {
+            jassert(getNumVoices() == 1);
+            if (m.isNoteOn())
+            {
+                auto midiNoteNumber = m.getNoteNumber();
+                auto velocity = m.getFloatVelocity();
+                for (auto* sound : sounds)
+                {
+                    if (sound->appliesToNote (midiNoteNumber) && sound->appliesToChannel (channel))
+                    {
+                        if(GrapeVoice* voice = dynamic_cast<GrapeVoice*>(voices[0]) ) {
+                            bool shouldGlide = monoStack->latestNoteNumber != 0;
+                            monoStack->push(midiNoteNumber, velocity);
+                            if(shouldGlide) {
+                                jassert(voices[0]->isPlayingChannel (channel));
+                                voice->glide(midiNoteNumber, velocity);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (m.isNoteOff())
+            {
+                auto midiNoteNumber = m.getNoteNumber();
+                for (auto* sound : sounds)
+                {
+                    if (sound->appliesToNote (midiNoteNumber) && sound->appliesToChannel (channel))
+                    {
+                        if(GrapeVoice* voice = dynamic_cast<GrapeVoice*>(voices[0]) ) {
+                            int firstNoteNumber = monoStack->firstNoteNumber;
+                            bool removed = monoStack->remove(midiNoteNumber);
+                            jassert(removed);
+                            bool shouldGlide = monoStack->latestNoteNumber != 0;
+                            if(shouldGlide) {
+                                jassert(voices[0]->isPlayingChannel (channel));
+                                auto velocity = monoStack->getVelocity(monoStack->latestNoteNumber);
+                                jassert(velocity != 0);
+                                voice->glide(monoStack->latestNoteNumber, velocity);
+                                return;
+                            }
+                            noteOff(channel, firstNoteNumber, m.getFloatVelocity(), true);
+                            return;
+                        }
+                    }
+                }
+            }
+            else if (m.isAllNotesOff())
+            {
+                monoStack->reset();
+            }
+            else if (m.isAllSoundOff())
+            {
+                monoStack->reset();
+            }
+        }
+        Synthesiser::handleMidiEvent(m);
+        
+    }
     void handleController (const int midiChannel,
-                                        const int controllerNumber,
-                                        const int controllerValue) override
+                           const int controllerNumber,
+                           const int controllerValue) override
     {
         DBG("handleController: " << midiChannel << ", " << controllerNumber << ", " << controllerValue);
         juce::Synthesiser::handleController(midiChannel, controllerNumber, controllerValue);
@@ -196,7 +319,11 @@ public:
 private:
     GrapeSound* sound;
     juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo;
+    
+    MonoStack* monoStack;
     Modifiers* modifiers;
+    
+    VoiceParams* voiceParams;
     DelayParams* delayParams;
     
     StereoDelay stereoDelay;

@@ -21,6 +21,34 @@ private:
 };
 
 //==============================================================================
+class VoiceComponent : public juce::Component, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
+{
+public:
+    VoiceComponent(VoiceParams* params);
+    virtual ~VoiceComponent();
+    
+    virtual void paint(juce::Graphics& g) override;
+    virtual void resized() override;
+    
+private:
+    virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
+    virtual void sliderValueChanged(juce::Slider* slider) override;
+    virtual void timerCallback() override;
+    GrapeLookAndFeel grapeLookAndFeel;
+    VoiceParams* _paramsPtr;
+   
+    HeaderComponent header;
+    
+    juce::ComboBox modeSelector;
+    juce::Slider portamentoTimeSlider;
+    juce::Slider pitchBendRangeSlider;
+
+    juce::Label modeLabel;
+    juce::Label portamentoTimeLabel;
+    juce::Label pitchBendRangeLabel;
+};
+
+//==============================================================================
 class OscComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:

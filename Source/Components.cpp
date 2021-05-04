@@ -52,6 +52,123 @@ void HeaderComponent::resized()
 }
 
 //==============================================================================
+VoiceComponent::VoiceComponent(VoiceParams* params)
+: _paramsPtr(params)
+, header("VOICE", false)
+, modeSelector("Mode")
+, portamentoTimeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+, pitchBendRangeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+{
+    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
+    
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    addAndMakeVisible(header);
+
+    modeSelector.setLookAndFeel(&grapeLookAndFeel);
+    modeSelector.addItemList(_paramsPtr->Mode->getAllValueStrings(), 1);
+    modeSelector.setSelectedItemIndex(_paramsPtr->Mode->getIndex(), juce::dontSendNotification);
+    modeSelector.setJustificationType(juce::Justification::centred);
+    modeSelector.addListener(this);
+    addAndMakeVisible(modeSelector);
+    
+    portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
+    portamentoTimeSlider.setRange(_paramsPtr->PortamentoTime->range.start,
+                          _paramsPtr->PortamentoTime->range.end, 0.001);
+    portamentoTimeSlider.setValue(_paramsPtr->PortamentoTime->get(), juce::dontSendNotification);
+    portamentoTimeSlider.setPopupDisplayEnabled(true, true, nullptr);
+    portamentoTimeSlider.setPopupMenuEnabled(true);
+    portamentoTimeSlider.addListener(this);
+    addAndMakeVisible(portamentoTimeSlider);
+    
+    pitchBendRangeSlider.setLookAndFeel(&grapeLookAndFeel);
+    pitchBendRangeSlider.setRange(_paramsPtr->PitchBendRange->getRange().getStart(),
+                                  _paramsPtr->PitchBendRange->getRange().getEnd(), 1);
+    pitchBendRangeSlider.setValue(_paramsPtr->PitchBendRange->get(), juce::dontSendNotification);
+    pitchBendRangeSlider.setPopupDisplayEnabled(true, true, nullptr);
+    pitchBendRangeSlider.setPopupMenuEnabled(true);
+    pitchBendRangeSlider.addListener(this);
+    addAndMakeVisible(pitchBendRangeSlider);
+    
+    modeLabel.setFont(paramLabelFont);
+    modeLabel.setText("Mode", juce::dontSendNotification);
+    modeLabel.setJustificationType(juce::Justification::centred);
+    modeLabel.setEditable(false, false, false);
+    addAndMakeVisible(modeLabel);
+    
+    portamentoTimeLabel.setFont(paramLabelFont);
+    portamentoTimeLabel.setText("Portamento Time", juce::dontSendNotification);
+    portamentoTimeLabel.setJustificationType(juce::Justification::centred);
+    portamentoTimeLabel.setEditable(false, false, false);
+    addAndMakeVisible(portamentoTimeLabel);
+    
+    pitchBendRangeLabel.setFont(paramLabelFont);
+    pitchBendRangeLabel.setText("PitchBend Range", juce::dontSendNotification);
+    pitchBendRangeLabel.setJustificationType(juce::Justification::centred);
+    pitchBendRangeLabel.setEditable(false, false, false);
+    addAndMakeVisible(pitchBendRangeLabel);
+    
+    startTimerHz(30.0f);
+}
+
+VoiceComponent::~VoiceComponent()
+{}
+
+void VoiceComponent::paint(juce::Graphics& g)
+{
+}
+
+void VoiceComponent::resized()
+{
+    int width = 60;
+    int height = 60;
+    
+    juce::Rectangle<int> bounds = getLocalBounds();
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+    
+    bounds.reduce(0, 10);
+    auto boundsWidth = bounds.getWidth();
+    {
+//        float selectorWidth = 80.0f;
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.24).removeFromTop(height);
+        modeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        modeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
+    }
+    {
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.38).removeFromTop(height);
+        portamentoTimeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        portamentoTimeSlider.setBounds(area.reduced(LOCAL_MARGIN));
+    }
+    {
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.38).removeFromTop(height);
+        pitchBendRangeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        pitchBendRangeSlider.setBounds(area.reduced(LOCAL_MARGIN));
+    }
+}
+void VoiceComponent::comboBoxChanged(juce::ComboBox* comboBox) {
+    if(comboBox == &modeSelector)
+    {
+        *_paramsPtr->Mode = modeSelector.getSelectedItemIndex();
+    }
+}
+void VoiceComponent::sliderValueChanged(juce::Slider *slider)
+{
+    if(slider == &portamentoTimeSlider)
+    {
+        *_paramsPtr->PortamentoTime = portamentoTimeSlider.getValue();
+    }
+    else if(slider == &pitchBendRangeSlider)
+    {
+        *_paramsPtr->PitchBendRange = pitchBendRangeSlider.getValue();
+    }
+}
+void VoiceComponent::timerCallback()
+{
+    portamentoTimeSlider.setValue(_paramsPtr->PortamentoTime->get(), juce::dontSendNotification);
+    pitchBendRangeSlider.setValue(_paramsPtr->PitchBendRange->get(), juce::dontSendNotification);
+}
+
+//==============================================================================
 OscComponent::OscComponent(int index, OscParams* params)
 : index(index)
 , _paramsPtr(params)

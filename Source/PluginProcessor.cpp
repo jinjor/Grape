@@ -41,6 +41,11 @@ GrapeAudioProcessor::GrapeAudioProcessor()
                      #endif
                        )
 #endif
+, voiceParams {
+    new juce::AudioParameterChoice("VOICE_MODE", "Mode", VOICE_MODE_NAMES, VOICE_MODE_NAMES.indexOf("Poly")),
+    new juce::AudioParameterFloat("VOICE_PORTAMENTO_TIME", "PortamentoTime", 0.0001f, 1.0f, 0.10f),
+    new juce::AudioParameterInt("VOICE_PITCH_BEND_RANGE", "PitchBendRange", 1, 12, 2),
+}
 , oscParams {
     OscParams {
         new juce::AudioParameterBool("OSC0_ENABLED", "Enabled", true),
@@ -276,13 +281,9 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("CONTROL5_TARGET_MISC_PARAM", "TargetMiscParam", CONTROL_TARGET_MISC_PARAM_NAMES, CONTROL_TARGET_MISC_PARAM_NAMES.indexOf("Master Volume")),
     }
 }
-, modifiers(controlItemParams)
-, synth(&sound, &currentPositionInfo, &modifiers, &delayParams)
+, modifiers(&voiceParams, controlItemParams)
+, synth(&sound, &currentPositionInfo, &monoStack, &modifiers, &voiceParams, &delayParams)
 {
-    int numVoices = 64;
-    for (auto i = 0; i < numVoices; ++i) {
-        synth.addVoice (new GrapeVoice(&currentPositionInfo, oscParams, envelopeParams, filterParams, lfoParams, modEnvParams, &modifiers));
-    }
     synth.addSound (&sound);
     
     for(auto params : envelopeParams) {
@@ -428,6 +429,32 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     {
         playHead->getCurrentPosition(currentPositionInfo);
     }
+    auto voiceMode = static_cast<VOICE_MODE>(voiceParams.Mode->getIndex());
+    int numVoices = 64;
+    if(voiceMode == VOICE_MODE::Mono && synth.getNumVoices() != 1) {
+        this->monoStack.reset();
+        synth.clearVoices();
+        synth.addVoice (new GrapeVoice(&currentPositionInfo,
+                                       &voiceParams,
+                                       oscParams,
+                                       envelopeParams,
+                                       filterParams,
+                                       lfoParams,
+                                       modEnvParams,
+                                       &modifiers));
+    } else if (voiceMode == VOICE_MODE::Poly && synth.getNumVoices() != numVoices) {
+        synth.clearVoices();
+        for (auto i = 0; i < numVoices; ++i) {
+            synth.addVoice (new GrapeVoice(&currentPositionInfo,
+                                           &voiceParams,
+                                           oscParams,
+                                           envelopeParams,
+                                           filterParams,
+                                           lfoParams,
+                                           modEnvParams,
+                                           &modifiers));
+        }
+    }
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
     synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
     midiMessages.clear();
@@ -463,6 +490,7 @@ void GrapeAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     // TODO: ValueTree でもできるらしいので調べる
     juce::XmlElement xml("GrapeInstrument");
     
+    voiceParams.saveParameters(xml);
     for(auto param : envelopeParams) {
         param.saveParameters(xml);
     }
@@ -492,6 +520,7 @@ void GrapeAudioProcessor::setStateInformation (const void* data, int sizeInBytes
     {
         if (xml->hasTagName ("GrapeInstrument"))
         {
+            voiceParams.loadParameters(*xml);
             for(auto param : envelopeParams) {
                 param.loadParameters(*xml);
             }
