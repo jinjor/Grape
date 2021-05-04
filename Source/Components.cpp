@@ -172,7 +172,6 @@ void VoiceComponent::timerCallback()
 OscComponent::OscComponent(int index, OscParams* params)
 : index(index)
 , _paramsPtr(params)
-//, enabledButton("Enabled")
 , header("OSC " + std::to_string(index+1), true)
 , envelopeSelector("Envelope")
 , waveformSelector("Waveform")
@@ -1986,9 +1985,6 @@ void ControlComponent::paint(juce::Graphics& g)
 
 void ControlComponent::resized()
 {
-//    int width = 60;
-//    int height = 60;
-
     juce::Rectangle<int> bounds = getLocalBounds();
     auto width = bounds.getWidth();
 

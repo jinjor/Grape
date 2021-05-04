@@ -156,6 +156,39 @@ void GrapeLookAndFeel::positionComboBoxText (juce::ComboBox& box, juce::Label& l
     label.setBounds (1, 1, box.getWidth() - ARROW_ZONE_WIDTH, box.getHeight() - 2);
     label.setFont (getComboBoxFont (box));
 }
+void GrapeLookAndFeel::drawLabel (juce::Graphics& g, juce::Label& label)
+{
+    g.fillAll (label.findColour (juce::Label::backgroundColourId));
+
+    if (! label.isBeingEdited())
+    {
+        auto alpha = label.isEnabled() ? 1.0f : 0.5f;
+        const juce::Font font (getLabelFont (label));
+
+        g.setColour (label.findColour (juce::Label::textColourId).withMultipliedAlpha (alpha));
+        g.setFont (font);
+
+        auto textArea = getLabelBorderSize (label).subtractedFrom (label.getLocalBounds());
+        
+        // MIDI CC の番号のみを表示するために...
+        auto text = label.getText();
+        auto idx = text.indexOfChar(':');
+        if(idx >= 0) {
+            text = text.substring(0, idx);
+        }
+        g.drawFittedText (text, textArea, label.getJustificationType(),
+                          juce::jmax (1, (int) ((float) textArea.getHeight() / font.getHeight())),
+                          label.getMinimumHorizontalScale());
+
+        g.setColour (label.findColour (juce::Label::outlineColourId).withMultipliedAlpha (alpha));
+    }
+    else if (label.isEnabled())
+    {
+        g.setColour (label.findColour (juce::Label::outlineColourId));
+    }
+
+    g.drawRect (label.getLocalBounds());
+}
 void GrapeLookAndFeel::drawPopupMenuBackground (juce::Graphics& g, int width, int height)
 {
     auto background = findColour (juce::PopupMenu::backgroundColourId);
@@ -259,6 +292,7 @@ void GrapeLookAndFeel::drawPopupMenuItem (juce::Graphics& g, const juce::Rectang
         }
     }
 }
+
 juce::Path GrapeLookAndFeel::getTickShape (float height)
 {
     auto w = height / 4;

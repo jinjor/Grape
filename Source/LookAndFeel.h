@@ -23,6 +23,7 @@ private:
                            const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider&) override;
     void drawComboBox(juce::Graphics&, int width, int height, bool isButtonDown, int buttonX, int buttonY, int buttonW, int buttonH, juce::ComboBox&) override;
     void positionComboBoxText (juce::ComboBox& box, juce::Label& label) override;
+    void drawLabel (juce::Graphics& g, juce::Label& label) override;
     void drawPopupMenuBackground (juce::Graphics&, int width, int height) override;
     void drawPopupMenuItem (juce::Graphics& g, const juce::Rectangle<int>& area,
                                             const bool isSeparator, const bool isActive,
