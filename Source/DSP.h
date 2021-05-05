@@ -3,6 +3,37 @@
 #include <JuceHeader.h>
 
 //==============================================================================
+class Wavetable {
+public:
+    const int* lookup = reinterpret_cast<const int*>(BinaryData::lookup);
+    const float* saw = reinterpret_cast<const float*>(BinaryData::saw);
+    Wavetable() {};
+    ~Wavetable() {};
+    double getSawDownValue(double freq, double angle) {
+        angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
+        float indexFloat = 4095 * angle / juce::MathConstants<double>::twoPi;
+        const float* partial = getPartial(freq);
+        return _getSawDownValue(partial, indexFloat);
+    }
+    // TODO: SawUp, Pulse, Square
+private:
+    double _getSawDownValue(const float* partial, float indexFloat) {
+        int index = indexFloat;
+        float fragment = indexFloat - index;
+        return partial[index] * (1-fragment) + partial[index+1] * fragment;
+    }
+    double _getSawUpValue(const float* partial, float indexFloat) {
+        int index = indexFloat;
+        float fragment = indexFloat - index;
+        return partial[4095-index] * (1-fragment) + partial[4095-index-1] * fragment;
+    }
+    const float* getPartial(double freq) {
+        int partialIndex = lookup[(int)freq];
+        return &saw[partialIndex * 4096];
+    }
+};
+
+//==============================================================================
 enum class TRANSITION_TYPE
 {
     NONE = 0,
@@ -338,7 +369,8 @@ public:
             case WAVEFORM::SawUp:
                 return angle / juce::MathConstants<double>::twoPi * 2.0 - 1.0;
             case WAVEFORM::SawDown:
-                return angle / juce::MathConstants<double>::twoPi * -2.0 + 1.0;
+//                return angle / juce::MathConstants<double>::twoPi * -2.0 + 1.0;
+                return wavetable.getSawDownValue(freq, angle);
             case WAVEFORM::Square:
                 return angle < juce::MathConstants<double>::pi ? 1.0 : -1.0;
             case WAVEFORM::Pulse:
@@ -374,6 +406,7 @@ public:
         }
     }
 private:
+    Wavetable wavetable;
     double currentAngle = 0.0;
     double currentRandomValue = 0.0;
     double pink[7]{};

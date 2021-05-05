@@ -9,7 +9,7 @@ const juce::StringArray VOICE_MODE_NAMES = juce::StringArray("Mono", "Poly");
 
 enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Pulse, Random, Pink, White };
 const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Square", "Pulse", "Pink", "White");
-const WAVEFORM OSC_WAVEFORM_VALUES[7] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Pink, WAVEFORM::White };
+const WAVEFORM OSC_WAVEFORM_VALUES[7] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Pink, WAVEFORM::White };
 
 const juce::StringArray OSC_ENV_NAMES = juce::StringArray("1", "2");
 

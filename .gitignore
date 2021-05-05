@@ -1,3 +1,6 @@
 Builds
 JuceLibraryCode
+data
+tmp
 *.jucer
+*.out
