@@ -11,13 +11,27 @@ public:
     ~Wavetable() {};
     double getSawDownValue(double freq, double angle) {
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
-        float indexFloat = 4095 * angle / juce::MathConstants<double>::twoPi;
+        float pos = angle / juce::MathConstants<double>::twoPi;
         const float* partial = getPartial(freq);
-        return _getSawDownValue(partial, indexFloat);
+        return _getSawDownValue(partial, pos);
     }
-    // TODO: SawUp, Pulse, Square
+    double getSawUpValue(double freq, double angle) {
+        angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
+        float pos = angle / juce::MathConstants<double>::twoPi;
+        const float* partial = getPartial(freq);
+        return _getSawUpValue(partial, pos);
+    }
+    double getSquareValue(double freq, double angle) {
+        angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
+        float pos1 = angle / juce::MathConstants<double>::twoPi;
+        float pos2 = std::fmod(pos1 + 0.5f, 1.0f);
+        const float* partial = getPartial(freq);
+        return _getSawDownValue(partial, pos1) + _getSawUpValue(partial, pos2);
+    }
+    // TODO: Pulse
 private:
-    double _getSawDownValue(const float* partial, float indexFloat) {
+    double _getSawDownValue(const float* partial, float normalizedAngle) {
+        float indexFloat = normalizedAngle * 4095;
         int index = indexFloat;
         float fragment = indexFloat - index;
         return partial[index] * (1-fragment) + partial[index+1] * fragment;
@@ -367,12 +381,14 @@ public:
                     angle / juce::MathConstants<double>::twoPi * 4.0 - 1.0 :
                     angle / juce::MathConstants<double>::twoPi - 4.0 + 3.0;
             case WAVEFORM::SawUp:
-                return angle / juce::MathConstants<double>::twoPi * 2.0 - 1.0;
+//                return angle / juce::MathConstants<double>::twoPi * 2.0 - 1.0;
+                return wavetable.getSawUpValue(freq, angle);
             case WAVEFORM::SawDown:
 //                return angle / juce::MathConstants<double>::twoPi * -2.0 + 1.0;
                 return wavetable.getSawDownValue(freq, angle);
             case WAVEFORM::Square:
-                return angle < juce::MathConstants<double>::pi ? 1.0 : -1.0;
+//                return angle < juce::MathConstants<double>::pi ? 1.0 : -1.0;
+                return wavetable.getSquareValue(freq, angle);
             case WAVEFORM::Pulse:
                 return angle < juce::MathConstants<double>::halfPi ? 1.0 : -1.0;
             case WAVEFORM::Random:
