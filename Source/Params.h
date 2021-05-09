@@ -8,8 +8,8 @@ enum class VOICE_MODE { Mono, Poly };
 const juce::StringArray VOICE_MODE_NAMES = juce::StringArray("Mono", "Poly");
 
 enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Pulse, Random, Pink, White };
-const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Square", "Pulse", "Pink", "White");
-const WAVEFORM OSC_WAVEFORM_VALUES[7] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Pink, WAVEFORM::White };
+const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Pulse", "Pink", "White");
+const WAVEFORM OSC_WAVEFORM_VALUES[6] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawDown, WAVEFORM::Pulse, WAVEFORM::Pink, WAVEFORM::White };
 
 const juce::StringArray OSC_ENV_NAMES = juce::StringArray("1", "2");
 
@@ -127,6 +127,7 @@ class OscParams : public SynthParametersBase
 public:
     juce::AudioParameterBool* Enabled;
     juce::AudioParameterChoice* Waveform;
+    juce::AudioParameterFloat* Duty;
     juce::AudioParameterInt* Octave;
     juce::AudioParameterInt* Coarse;
     juce::AudioParameterInt* Unison;
@@ -137,6 +138,7 @@ public:
     
     OscParams(juce::AudioParameterBool* enabled,
               juce::AudioParameterChoice* waveform,
+              juce::AudioParameterFloat* duty,
               juce::AudioParameterInt* octave,
               juce::AudioParameterInt* coarse,
               juce::AudioParameterInt* unison,

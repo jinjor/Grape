@@ -12,23 +12,27 @@ public:
     double getSawDownValue(double freq, double angle) {
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
         float pos = angle / juce::MathConstants<double>::twoPi;
-        const float* partial = getPartial(freq);
+        const float* partial = getPartialSaw(freq);
         return _getSawDownValue(partial, pos);
     }
     double getSawUpValue(double freq, double angle) {
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
         float pos = angle / juce::MathConstants<double>::twoPi;
-        const float* partial = getPartial(freq);
+        const float* partial = getPartialSaw(freq);
         return _getSawUpValue(partial, pos);
     }
     double getSquareValue(double freq, double angle) {
+        return getPulseValue(freq, angle, 0.5);
+    }
+    double getPulseValue(double freq, double angle, double duty) {
+        jassert(duty > 0.0);
+        jassert(duty <= 0.5);
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
         float pos1 = angle / juce::MathConstants<double>::twoPi;
-        float pos2 = std::fmod(pos1 + 0.5f, 1.0f);
-        const float* partial = getPartial(freq);
-        return _getSawDownValue(partial, pos1) + _getSawUpValue(partial, pos2);
+        float pos2 = std::fmod(pos1 + duty, 1.0f);
+        const float* partial = getPartialSaw(freq);
+        return _getSawDownValue(partial, pos1) + _getSawUpValue(partial, pos2) + (1.0 - 2 * duty);
     }
-    // TODO: Pulse
 private:
     double _getSawDownValue(const float* partial, float normalizedAngle) {
         float indexFloat = normalizedAngle * 4095;
@@ -36,13 +40,14 @@ private:
         float fragment = indexFloat - index;
         return partial[index] * (1-fragment) + partial[index+1] * fragment;
     }
-    double _getSawUpValue(const float* partial, float indexFloat) {
+    double _getSawUpValue(const float* partial, float normalizedAngle) {
+        float indexFloat = normalizedAngle * 4095;
         int index = indexFloat;
         float fragment = indexFloat - index;
         return partial[4095-index] * (1-fragment) + partial[4095-index-1] * fragment;
     }
-    const float* getPartial(double freq) {
-        int partialIndex = lookup[(int)freq];
+    const float* getPartialSaw(double freq) {
+        int partialIndex = lookup[freq >= 22000 ? 21999 : (int)freq];
         return &saw[partialIndex * 4096];
     }
 };
@@ -352,8 +357,9 @@ public:
     ~Osc() {
         DBG("Osc's destructor called.");
     }
-    void setWaveform (WAVEFORM waveform) {
+    void setWaveform (WAVEFORM waveform, double duty) {
         this->waveform = waveform;
+        this->duty = duty;
     }
     void setSampleRate (double sampleRate) {
         this->sampleRate = sampleRate;
@@ -390,7 +396,8 @@ public:
 //                return angle < juce::MathConstants<double>::pi ? 1.0 : -1.0;
                 return wavetable.getSquareValue(freq, angle);
             case WAVEFORM::Pulse:
-                return angle < juce::MathConstants<double>::halfPi ? 1.0 : -1.0;
+//                return angle < juce::MathConstants<double>::halfPi ? 1.0 : -1.0;
+                return wavetable.getPulseValue(freq, angle, duty);
             case WAVEFORM::Random:
                 if(currentRandomValue == 0.0) {
                     currentRandomValue = whiteNoise.nextDouble() * 2.0 - 1.0;
@@ -428,6 +435,7 @@ private:
     double pink[7]{};
     juce::Random whiteNoise;
     WAVEFORM waveform = WAVEFORM::Sine;
+    double duty = 0.5;
     double sampleRate = 0.0;
 };
 
@@ -443,9 +451,9 @@ public:
     ~MultiOsc() {
         DBG("MultiOsc's destructor called.");
     }
-    void setWaveform (WAVEFORM waveform) {
+    void setWaveform (WAVEFORM waveform, double duty) {
         for(int i = 0; i < MAX_NUM_OSC; ++i) {
-            oscs[i].setWaveform(waveform);
+            oscs[i].setWaveform(waveform, duty);
         }
     }
     void setSampleRate (double sampleRate) {

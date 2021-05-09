@@ -24,7 +24,7 @@ int main() {
                 freqIndex++;
             }
         }
-        int lastFreqIndex = freqIndex;
+        int lastFreqIndex = freqIndex-1;
         while(freqIndex < 22000) {
             lookupTable[freqIndex] = lookupTable[lastFreqIndex];
             freqIndex++;
