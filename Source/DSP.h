@@ -7,19 +7,20 @@ class Wavetable {
 public:
     const int* lookup = reinterpret_cast<const int*>(BinaryData::lookup);
     const float* saw = reinterpret_cast<const float*>(BinaryData::saw);
+    const float* parabola = reinterpret_cast<const float*>(BinaryData::parabola);
     Wavetable() {};
     ~Wavetable() {};
     double getSawDownValue(double freq, double angle) {
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
         float pos = angle / juce::MathConstants<double>::twoPi;
-        const float* partial = getPartialSaw(freq);
-        return _getSawDownValue(partial, pos);
+        const float* partial = getPartial(saw, freq);
+        return getValue(partial, pos);
     }
     double getSawUpValue(double freq, double angle) {
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
         float pos = angle / juce::MathConstants<double>::twoPi;
-        const float* partial = getPartialSaw(freq);
-        return _getSawUpValue(partial, pos);
+        const float* partial = getPartial(saw, freq);
+        return getValueReverse(partial, pos);
     }
     double getSquareValue(double freq, double angle) {
         return getPulseValue(freq, angle, 0.5);
@@ -30,25 +31,38 @@ public:
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
         float pos1 = angle / juce::MathConstants<double>::twoPi;
         float pos2 = std::fmod(pos1 + duty, 1.0f);
-        const float* partial = getPartialSaw(freq);
-        return _getSawDownValue(partial, pos1) + _getSawUpValue(partial, pos2) + (1.0 - 2 * duty);
+        const float* partial = getPartial(saw, freq);
+        return getValue(partial, pos1) + getValueReverse(partial, pos2) + (1.0 - 2 * duty);
+    }
+    double getTriangleValue(double freq, double angle) {
+        return getSlopedVariableTriangleValue(freq, angle, 0.5);
+    }
+    double getSlopedVariableTriangleValue(double freq, double angle, double duty) {
+        jassert(duty > 0.0);
+        jassert(duty <= 0.5);
+        angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
+        float pos1 = angle / juce::MathConstants<double>::twoPi;
+        float pos2 = std::fmod(pos1 + duty, 1.0f);
+        const float* partial = getPartial(parabola, freq);
+//        return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (duty - duty * duty));
+        return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (-0.8*(duty-0.5)*(duty-0.5)+0.25));// TODO: gibbs 試して再考
     }
 private:
-    double _getSawDownValue(const float* partial, float normalizedAngle) {
+    double getValue(const float* partial, float normalizedAngle) {
         float indexFloat = normalizedAngle * 4095;
         int index = indexFloat;
         float fragment = indexFloat - index;
         return partial[index] * (1-fragment) + partial[index+1] * fragment;
     }
-    double _getSawUpValue(const float* partial, float normalizedAngle) {
+    double getValueReverse(const float* partial, float normalizedAngle) {
         float indexFloat = normalizedAngle * 4095;
         int index = indexFloat;
         float fragment = indexFloat - index;
         return partial[4095-index] * (1-fragment) + partial[4095-index-1] * fragment;
     }
-    const float* getPartialSaw(double freq) {
+    const float* getPartial(const float* data, double freq) {
         int partialIndex = lookup[freq >= 22000 ? 21999 : (int)freq];
-        return &saw[partialIndex * 4096];
+        return &data[partialIndex * 4096];
     }
 };
 
@@ -383,9 +397,10 @@ public:
             case WAVEFORM::Sine:
                 return sin(angle);
             case WAVEFORM::Triangle:
-                return angle >= juce::MathConstants<double>::pi ?
-                    angle / juce::MathConstants<double>::twoPi * 4.0 - 1.0 :
-                    angle / juce::MathConstants<double>::twoPi - 4.0 + 3.0;
+//                return angle >= juce::MathConstants<double>::pi ?
+//                    angle / juce::MathConstants<double>::twoPi * 4.0 - 1.0 :
+//                    angle / juce::MathConstants<double>::twoPi - 4.0 + 3.0;
+                return wavetable.getSlopedVariableTriangleValue(freq, angle, duty);
             case WAVEFORM::SawUp:
 //                return angle / juce::MathConstants<double>::twoPi * 2.0 - 1.0;
                 return wavetable.getSawUpValue(freq, angle);

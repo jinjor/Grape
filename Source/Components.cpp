@@ -278,6 +278,12 @@ OscComponent::OscComponent(int index, OscParams* params)
     waveformLabel.setEditable(false, false, false);
     body.addAndMakeVisible(waveformLabel);
     
+    dutyLabel.setFont(paramLabelFont);
+    dutyLabel.setText("Duty", juce::dontSendNotification);
+    dutyLabel.setJustificationType(juce::Justification::centred);
+    dutyLabel.setEditable(false, false, false);
+    body.addAndMakeVisible(dutyLabel);
+    
     octaveLabel.setFont(paramLabelFont);
     octaveLabel.setText("Octave", juce::dontSendNotification);
     octaveLabel.setJustificationType(juce::Justification::centred);
@@ -449,7 +455,8 @@ void OscComponent::timerCallback()
     detuneSlider.setValue(_paramsPtr->Detune->get(), juce::dontSendNotification);
     spreadSlider.setValue(_paramsPtr->Spread->get(), juce::dontSendNotification);
     gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
-    dutySlider.setEnabled(OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Pulse);
+    dutySlider.setEnabled(OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Pulse ||
+                          OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Triangle);
 }
 
 //==============================================================================
