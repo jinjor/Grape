@@ -16,13 +16,18 @@ int main() {
     {
         std::cout << "generating lookup table..." << std::endl;
         int* lookupTable = new int[22000]();
-        int freqIndex = 22000-1;
-        for(int noteNum = 127; noteNum >= 0; noteNum--) {
+        int freqIndex = 0;
+        for(int noteNum = 0; noteNum < 128; noteNum++) {
             float freq = BASE_FREQ * std::pow(2.0, ((float)noteNum-69)/12);
-            while(freqIndex > freq) {
+            while(freqIndex < freq) {
                 lookupTable[freqIndex] = noteNum;
-                freqIndex--;
+                freqIndex++;
             }
+        }
+        int lastFreqIndex = freqIndex;
+        while(freqIndex < 22000) {
+            lookupTable[freqIndex] = lookupTable[lastFreqIndex];
+            freqIndex++;
         }
         std::ofstream ofs(LOOKUP_FILE, std::ios::out | std::ios::binary);
         ofs.write(reinterpret_cast<const char*>(lookupTable), 22000 * sizeof(int));
