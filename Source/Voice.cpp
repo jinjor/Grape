@@ -14,6 +14,7 @@ Modifiers::Modifiers(VoiceParams* voiceParams, ControlItemParams* controlItemPar
 {
     std::fill_n(angleShift, NUM_OSC, 0);
     std::fill_n(octShift, NUM_OSC, 0);
+    std::fill_n(edgeRatio, NUM_OSC, 1.0);
     std::fill_n(detuneRatio, NUM_OSC, 1.0);
     std::fill_n(spreadRatio, NUM_OSC, 1.0);
     std::fill_n(gain, NUM_OSC, 1.0);
@@ -60,6 +61,10 @@ void Modifiers::controllerMoved(int number, int value) {
                         switch(targetParam) {
                             case CONTROL_TARGET_OSC_PARAM::Freq: {
                                 octShift[oscIndex] = 4.0 * normalizedValue;
+                                break;
+                            }
+                            case CONTROL_TARGET_OSC_PARAM::Edge: {
+                                edgeRatio[oscIndex] = normalizedValue;
                                 break;
                             }
                             case CONTROL_TARGET_OSC_PARAM::Detune: {
@@ -270,7 +275,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
         
         for(int i = 0; i < NUM_OSC; ++i) {
             oscs[i].setSampleRate(sampleRate);
-            oscs[i].setWaveform(OSC_WAVEFORM_VALUES[oscParams[i].Waveform->getIndex()], oscParams[i].Edge->get());
+            oscs[i].setWaveform(OSC_WAVEFORM_VALUES[oscParams[i].Waveform->getIndex()]);
         }
         for(int i = 0; i < NUM_ENVELOPE; ++i) {
             adsr[i].setParams(envelopeParams[i].Attack->get(),
@@ -284,7 +289,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
         }
         for(int i = 0; i < NUM_LFO; ++i) {
             lfos[i].setSampleRate(sampleRate);
-            lfos[i].setWaveform(LFO_WAVEFORM_VALUES[lfoParams[i].Waveform->getIndex()], 0.5);// TODO: ?
+            lfos[i].setWaveform(LFO_WAVEFORM_VALUES[lfoParams[i].Waveform->getIndex()]);
         }
         for(int i = 0; i < NUM_MODENV; ++i) {
             if(modEnvParams[i].shouldUseHold()) {
@@ -343,6 +348,10 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                                 switch(targetParam) {
                                     case MODENV_TARGET_OSC_PARAM::Freq: {
                                         modifiers.octShift[oscIndex] += params->PeakFreq->get() * modEnvValue;
+                                        break;
+                                    }
+                                    case MODENV_TARGET_OSC_PARAM::Edge: {
+                                        modifiers.edgeRatio[oscIndex] *= modEnvValue;
                                         break;
                                     }
                                     case MODENV_TARGET_OSC_PARAM::Detune: {
@@ -430,7 +439,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                         freq *= std::pow(2.0, modifiers.lfoOctShift[i]);
                     }
                 }
-                lfoValue = lfos[i].step(freq, 0.0);
+                lfoValue = lfos[i].step(freq, 0.0, 0.0);
                 auto lfoAmount = params->Amount->get() * modifiers.lfoAmountGain[i];
                 auto targetType = static_cast<LFO_TARGET_TYPE>(params->TargetType->getIndex());
                 switch(targetType) {
@@ -446,6 +455,10 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                                     }
                                     case LFO_TARGET_OSC_PARAM::Tremolo: {
                                         modifiers.gain[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                                        break;
+                                    }
+                                    case LFO_TARGET_OSC_PARAM::Edge: {
+                                        modifiers.edgeRatio[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
                                         break;
                                     }
                                     case LFO_TARGET_OSC_PARAM::FM: {
@@ -490,6 +503,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                     continue;
                 }
                 auto freq = getMidiNoteInHertzDouble(shiftedNoteNumbers[oscIndex] + modifiers.octShift[oscIndex] * 12);
+                auto edge = oscParams[oscIndex].Edge->get() * modifiers.edgeRatio[oscIndex];
                 auto detune = oscParams[oscIndex].Detune->get() * modifiers.detuneRatio[oscIndex];
                 auto spread = oscParams[oscIndex].Spread->get() * modifiers.spreadRatio[oscIndex];
                 double o[2] {0, 0};
@@ -498,6 +512,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                                     spread,
                                     freq,
                                     modifiers.angleShift[oscIndex],
+                                    edge,
                                     o);
                 int envelopeIndex = oscParams[oscIndex].Envelope->getIndex();
                 if(adsr[envelopeIndex].isActive()) {

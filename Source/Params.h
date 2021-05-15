@@ -27,8 +27,8 @@ const juce::StringArray LFO_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter
 const juce::StringArray LFO_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3", "All");
 const juce::StringArray LFO_TARGET_FILTER_NAMES = juce::StringArray("1", "2", "All");
 
-enum class LFO_TARGET_OSC_PARAM { Vibrato, Tremolo, FM, AM };
-const juce::StringArray LFO_TARGET_OSC_PARAM_NAMES = juce::StringArray("Vibrato", "Tremolo", "FM", "AM");
+enum class LFO_TARGET_OSC_PARAM { Vibrato, Tremolo, Edge, FM, AM };
+const juce::StringArray LFO_TARGET_OSC_PARAM_NAMES = juce::StringArray("Vibrato", "Tremolo", "Edge", "FM", "AM");
 
 enum class LFO_TARGET_FILTER_PARAM { Freq, Q };
 const juce::StringArray LFO_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
@@ -43,8 +43,8 @@ const juce::StringArray MODENV_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3
 const juce::StringArray MODENV_TARGET_FILTER_NAMES = juce::StringArray("1", "2", "All");
 const juce::StringArray MODENV_TARGET_LFO_NAMES = juce::StringArray("1", "2", "3", "All");
 
-enum class MODENV_TARGET_OSC_PARAM { Freq, Detune, Spread };
-const juce::StringArray MODENV_TARGET_OSC_PARAM_NAMES = juce::StringArray("Freq", "Detune", "Spread");
+enum class MODENV_TARGET_OSC_PARAM { Freq, Edge, Detune, Spread };
+const juce::StringArray MODENV_TARGET_OSC_PARAM_NAMES = juce::StringArray("Freq", "Edge", "Detune", "Spread");
 
 enum class MODENV_TARGET_FILTER_PARAM { Freq, Q };
 const juce::StringArray MODENV_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
@@ -78,8 +78,8 @@ const juce::StringArray CONTROL_TARGET_FILTER_NAMES = juce::StringArray("1", "2"
 const juce::StringArray CONTROL_TARGET_LFO_NAMES = juce::StringArray("1", "2", "3", "All");
 const juce::StringArray CONTROL_TARGET_MODENV_NAMES = juce::StringArray("1", "2", "3", "All");
 
-enum class CONTROL_TARGET_OSC_PARAM { Freq, Detune, Spread, Pan, Gain };
-const juce::StringArray CONTROL_TARGET_OSC_PARAM_NAMES = juce::StringArray("Freq", "Detune", "Spread", "Pan", "Gain");
+enum class CONTROL_TARGET_OSC_PARAM { Freq, Edge, Detune, Spread, Pan, Gain };
+const juce::StringArray CONTROL_TARGET_OSC_PARAM_NAMES = juce::StringArray("Freq", "Edge", "Detune", "Spread", "Pan", "Gain");
 
 enum class CONTROL_TARGET_FILTER_PARAM { Freq, Q };
 const juce::StringArray CONTROL_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");

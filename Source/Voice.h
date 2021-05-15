@@ -120,6 +120,7 @@ public:
     ControlItemParams* controlItemParams;
     double angleShift[NUM_OSC] {};
     double octShift[NUM_OSC] {};
+    double edgeRatio[NUM_OSC] {};
     double detuneRatio[NUM_OSC] {};
     double spreadRatio[NUM_OSC] {};
     double gain[NUM_OSC] {};

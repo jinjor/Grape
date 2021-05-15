@@ -373,9 +373,8 @@ public:
     ~Osc() {
         DBG("Osc's destructor called.");
     }
-    void setWaveform (WAVEFORM waveform, double edge) {
+    void setWaveform (WAVEFORM waveform) {
         this->waveform = waveform;
-        this->edge = edge;
     }
     void setSampleRate (double sampleRate) {
         this->sampleRate = sampleRate;
@@ -383,7 +382,7 @@ public:
     void setAngle(double angle) {
         this->currentAngle = angle;
     }
-    double step (double freq, double angleShift) {
+    double step (double freq, double angleShift, double edge) {
         if (sampleRate == 0.0)
         {
             return 0.0;
@@ -449,7 +448,6 @@ private:
     double pink[7]{};
     juce::Random whiteNoise;
     WAVEFORM waveform = WAVEFORM::Sine;
-    double edge = 0.0;
     double sampleRate = 0.0;
 };
 
@@ -465,9 +463,9 @@ public:
     ~MultiOsc() {
         DBG("MultiOsc's destructor called.");
     }
-    void setWaveform (WAVEFORM waveform, double edge) {
+    void setWaveform (WAVEFORM waveform) {
         for(int i = 0; i < MAX_NUM_OSC; ++i) {
-            oscs[i].setWaveform(waveform, edge);
+            oscs[i].setWaveform(waveform);
         }
     }
     void setSampleRate (double sampleRate) {
@@ -475,15 +473,15 @@ public:
             oscs[i].setSampleRate(sampleRate);
         }
     }
-    void step(double numOsc, double detune, double spread, double freq, double angleShift, double* outout) {
+    void step(double numOsc, double detune, double spread, double freq, double angleShift, double edge, double* outout) {
         if(numOsc == 1) {
-            outout[0] = outout[1] = oscs[0].step(freq, angleShift) * GAIN_AT_CENTER;
+            outout[0] = outout[1] = oscs[0].step(freq, angleShift, edge) * GAIN_AT_CENTER;
         } else {
             setUnison(numOsc, detune, spread);
             outout[0] = 0;
             outout[1] = 0;
             for(int i = 0; i < currentNumOsc; ++i) {
-                auto value = oscs[i].step(freq * detunes[i], angleShifts[i] + angleShift);
+                auto value = oscs[i].step(freq * detunes[i], angleShifts[i] + angleShift, edge);
                 outout[0] += value * pans[i][0];
                 outout[1] += value * pans[i][1];
             }
