@@ -49,6 +49,32 @@ private:
 };
 
 //==============================================================================
+class StatusComponent : public juce::Component, private juce::Timer
+{
+public:
+    StatusComponent(int* polyphony, TimeConsumptionState* timeConsumptionState);
+    virtual ~StatusComponent();
+    
+    virtual void paint(juce::Graphics& g) override;
+    virtual void resized() override;
+    
+private:
+    virtual void timerCallback() override;
+    GrapeLookAndFeel grapeLookAndFeel;
+    int* polyphony;
+    TimeConsumptionState* timeConsumptionState;
+   
+    HeaderComponent header;
+    
+    juce::Label polyphonyValueLabel;
+    juce::Label timeConsumptionValueLabel;
+
+    juce::Label polyphonyLabel;
+    juce::Label timeConsumptionLabel;
+};
+
+
+//==============================================================================
 class OscComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:

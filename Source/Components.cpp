@@ -5,6 +5,7 @@
 namespace {
 const float PANEL_NAME_FONT_SIZE = 15.0f;
 const float PARAM_LABEL_FONT_SIZE = 14.0f;
+const float PARAM_VALUE_LABEL_FONT_SIZE = 16.0f;
 const float PANEL_NAME_HEIGHT = 26.0;
 const float LOCAL_MARGIN = 2.0;
 const float LABEL_HEIGHT = 20.0;
@@ -166,6 +167,79 @@ void VoiceComponent::timerCallback()
 {
     portamentoTimeSlider.setValue(_paramsPtr->PortamentoTime->get(), juce::dontSendNotification);
     pitchBendRangeSlider.setValue(_paramsPtr->PitchBendRange->get(), juce::dontSendNotification);
+}
+
+//==============================================================================
+StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsumptionState)
+: polyphony(polyphony)
+, timeConsumptionState(timeConsumptionState)
+, header("STATUS", false)
+{
+    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
+    juce::Font paramValueLabelFont = juce::Font(PARAM_VALUE_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
+    
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    addAndMakeVisible(header);
+    
+    polyphonyValueLabel.setFont(paramValueLabelFont);
+    polyphonyValueLabel.setText(juce::String(*polyphony), juce::dontSendNotification);
+    polyphonyValueLabel.setJustificationType(juce::Justification::centred);
+    polyphonyValueLabel.setEditable(false, false, false);
+    addAndMakeVisible(polyphonyValueLabel);
+    
+    timeConsumptionValueLabel.setFont(paramValueLabelFont);
+    timeConsumptionValueLabel.setText(juce::String(juce::roundToInt(timeConsumptionState->currentTimeConsumptionRate * 100)) + "%", juce::dontSendNotification);
+    timeConsumptionValueLabel.setJustificationType(juce::Justification::centred);
+    timeConsumptionValueLabel.setEditable(false, false, false);
+    addAndMakeVisible(timeConsumptionValueLabel);
+    
+    polyphonyLabel.setFont(paramLabelFont);
+    polyphonyLabel.setText("Polyphony", juce::dontSendNotification);
+    polyphonyLabel.setJustificationType(juce::Justification::centred);
+    polyphonyLabel.setEditable(false, false, false);
+    addAndMakeVisible(polyphonyLabel);
+    
+    timeConsumptionLabel.setFont(paramLabelFont);
+    timeConsumptionLabel.setText("Time Consumption", juce::dontSendNotification);
+    timeConsumptionLabel.setJustificationType(juce::Justification::centred);
+    timeConsumptionLabel.setEditable(false, false, false);
+    addAndMakeVisible(timeConsumptionLabel);
+    
+    startTimerHz(30.0f);
+}
+
+StatusComponent::~StatusComponent()
+{}
+
+void StatusComponent::paint(juce::Graphics& g)
+{
+}
+
+void StatusComponent::resized()
+{
+    int height = 60;
+    
+    juce::Rectangle<int> bounds = getLocalBounds();
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+    
+    bounds.reduce(0, 10);
+    auto boundsWidth = bounds.getWidth();
+    {
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.5).removeFromTop(height);
+        polyphonyLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        polyphonyValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
+    }
+    {
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.5).removeFromTop(height);
+        timeConsumptionLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        timeConsumptionValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
+    }
+}
+void StatusComponent::timerCallback()
+{
+    polyphonyValueLabel.setText(juce::String(*polyphony), juce::dontSendNotification);
+    timeConsumptionValueLabel.setText(juce::String(juce::roundToInt(timeConsumptionState->currentTimeConsumptionRate * 100)) + "%", juce::dontSendNotification);
 }
 
 //==============================================================================

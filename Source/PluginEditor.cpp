@@ -14,6 +14,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 , audioProcessor (p)
 , keyboardComponent (p.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 , voiceComponent (&p.voiceParams)
+, statusComponent (&p.polyphony, &p.timeConsumptionState)
 , oscComponents { OscComponent(0, p.oscParams), OscComponent(1, p.oscParams+1), OscComponent(2, p.oscParams+2) }
 , envelopeComponents { EnvelopeComponent(0, p.envelopeParams), EnvelopeComponent(1, p.envelopeParams+1) }
 , filterComponents { FilterComponent(0, p.filterParams), FilterComponent(1, p.filterParams+1) }
@@ -27,6 +28,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
     
     addAndMakeVisible (keyboardComponent);
     addAndMakeVisible (voiceComponent);
+    addAndMakeVisible (statusComponent);
     addAndMakeVisible (oscComponents[0]);
     addAndMakeVisible (oscComponents[1]);
     addAndMakeVisible (oscComponents[2]);
@@ -86,7 +88,7 @@ void GrapeAudioProcessorEditor::resized()
     }
     {
         juce::Rectangle<int> area = upperArea;
-//        keyboardComponent.setBounds(area.reduced(PANEL_MARGIN));
+        statusComponent.setBounds(area.reduced(PANEL_MARGIN));
     }
     
     auto middleArea = bounds.removeFromTop(bounds.getHeight() * 2 / 5).reduced(6, 2);

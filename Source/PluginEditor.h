@@ -23,6 +23,7 @@ private:
     juce::MidiKeyboardComponent keyboardComponent;
     
     VoiceComponent voiceComponent;
+    StatusComponent statusComponent;
     OscComponent oscComponents[NUM_OSC];
     EnvelopeComponent envelopeComponents[NUM_ENVELOPE];
     FilterComponent filterComponents[NUM_FILTER];

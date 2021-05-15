@@ -14,12 +14,63 @@ public:
     };
     bool nextFFTBlockReady = false;
     float fftData [2 * fftSize];
-    AnalyserState();
-    ~AnalyserState();
-    void pushFFTData(juce::AudioBuffer<float>&);
+    AnalyserState() {};
+    ~AnalyserState() {};
     float fifo [fftSize];
     int fifoIndex = 0;
-    void pushNextSampleIntoFifo (float sample) noexcept;
+    void pushFFTData(juce::AudioBuffer<float>& buffer) {
+        if (buffer.getNumChannels() > 0)
+        {
+            auto* channelData = buffer.getReadPointer(0);
+            for (auto i = 0; i < buffer.getNumSamples(); ++i) {
+                pushNextSampleIntoFifo(channelData[i]);
+            }
+        }
+    }
+    void pushNextSampleIntoFifo (float sample) noexcept
+    {
+        if (fifoIndex == fftSize)
+        {
+            if (!nextFFTBlockReady)
+            {
+                juce::zeromem (fftData, sizeof (fftData));
+                memcpy (fftData, fifo, sizeof (fifo));
+                nextFFTBlockReady = true;
+            }
+            fifoIndex = 0;
+        }
+        fifo[fifoIndex++] = sample;
+    }
+};
+//==============================================================================
+class TimeConsumptionState
+{
+public:
+    float currentTimeConsumptionRate = 0.0f;
+    
+    TimeConsumptionState() {};
+    ~TimeConsumptionState() {};
+    void push(double sampleRate, int numSamples, double seconds) {
+//        DBG("push: " << sampleRate << ", " << numSamples << ", " << seconds);
+        if(currentSampleRate != sampleRate) {
+//            DBG("reset sample rate");
+            totalNumSamples = 0;
+            totalSeconds = 0.0f;
+        }
+        currentSampleRate = sampleRate;
+        totalNumSamples += numSamples;
+        totalSeconds += seconds;
+        if(totalNumSamples > currentSampleRate) {
+            auto timeLimitPerSample = 1.0 / currentSampleRate;
+            currentTimeConsumptionRate = totalSeconds / totalNumSamples / timeLimitPerSample;
+            totalNumSamples = 0;
+            totalSeconds = 0.0f;
+        }
+    }
+private:
+    double currentSampleRate = 0.0;
+    int totalNumSamples = 0;
+    double totalSeconds = 0.0;
 };
 //==============================================================================
 class GrapeAudioProcessor  : public juce::AudioProcessor
@@ -66,6 +117,8 @@ public:
     int currentProgram = 0;
     juce::MidiKeyboardState keyboardState;
     AnalyserState analyserState;
+    int polyphony = 0;
+    TimeConsumptionState timeConsumptionState;
     juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo;
     
     VoiceParams voiceParams;

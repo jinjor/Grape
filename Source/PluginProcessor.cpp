@@ -3,32 +3,6 @@
 #include "Voice.h"
 #include "Params.h"
 
-AnalyserState::AnalyserState() {}
-AnalyserState::~AnalyserState() {}
-void AnalyserState::pushFFTData(juce::AudioBuffer<float>& buffer) {
-    if (buffer.getNumChannels() > 0)
-    {
-        auto* channelData = buffer.getReadPointer(0);
-        for (auto i = 0; i < buffer.getNumSamples(); ++i) {
-            pushNextSampleIntoFifo(channelData[i]);
-        }
-    }
-}
-void AnalyserState::pushNextSampleIntoFifo (float sample) noexcept
-{
-    if (fifoIndex == fftSize)
-    {
-        if (!nextFFTBlockReady)
-        {
-            juce::zeromem (fftData, sizeof (fftData));
-            memcpy (fftData, fifo, sizeof (fifo));
-            nextFFTBlockReady = true;
-        }
-        fifoIndex = 0;
-    }
-    fifo[fifoIndex++] = sample;
-}
-
 //==============================================================================
 GrapeAudioProcessor::GrapeAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -459,7 +433,17 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
         }
     }
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
+    double startMillis = juce::Time::getMillisecondCounterHiRes();
     synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+    double endMillis = juce::Time::getMillisecondCounterHiRes();
+    timeConsumptionState.push(getSampleRate(), buffer.getNumSamples(), (endMillis - startMillis) / 1000);
+    
+    polyphony = 0;
+    for (auto i = 0; i < synth.getNumVoices(); ++i) {
+        if(synth.getVoice(i)->isVoiceActive()) {
+            polyphony++;
+        }
+    }
     midiMessages.clear();
     
 #if JUCE_DEBUG
