@@ -75,6 +75,7 @@ VoiceComponent::VoiceComponent(VoiceParams* params)
     portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
     portamentoTimeSlider.setRange(_paramsPtr->PortamentoTime->range.start,
                           _paramsPtr->PortamentoTime->range.end, 0.001);
+    portamentoTimeSlider.setSkewFactorFromMidPoint(0.4);
     portamentoTimeSlider.setValue(_paramsPtr->PortamentoTime->get(), juce::dontSendNotification);
     portamentoTimeSlider.setPopupDisplayEnabled(true, true, nullptr);
     portamentoTimeSlider.setPopupMenuEnabled(true);
@@ -552,6 +553,7 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     attackSlider.setLookAndFeel(&grapeLookAndFeel);
     attackSlider.setRange(_paramsPtr->Attack->range.start,
                           _paramsPtr->Attack->range.end, 0.001);
+    attackSlider.setSkewFactorFromMidPoint(0.2);
     attackSlider.setValue(_paramsPtr->Attack->get(), juce::dontSendNotification);
     attackSlider.setPopupDisplayEnabled(true, true, nullptr);
     attackSlider.setPopupMenuEnabled(true);
@@ -562,6 +564,7 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     decaySlider.setLookAndFeel(&grapeLookAndFeel);
     decaySlider.setRange(_paramsPtr->Decay->range.start,
                          _paramsPtr->Decay->range.end, 0.01);
+    decaySlider.setSkewFactorFromMidPoint(0.4);
     decaySlider.setValue(_paramsPtr->Decay->get(), juce::dontSendNotification);
     decaySlider.setPopupDisplayEnabled(true, true, nullptr);
     decaySlider.setPopupMenuEnabled(true);
@@ -581,6 +584,7 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     releaseSlider.setLookAndFeel(&grapeLookAndFeel);
     releaseSlider.setRange(_paramsPtr->Release->range.start,
                            _paramsPtr->Release->range.end, 0.01);
+    releaseSlider.setSkewFactorFromMidPoint(0.4);
     releaseSlider.setValue(_paramsPtr->Release->get(), juce::dontSendNotification);
     releaseSlider.setPopupDisplayEnabled(true, true, nullptr);
     releaseSlider.setPopupMenuEnabled(true);
@@ -725,6 +729,7 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     hzSlider.setLookAndFeel(&grapeLookAndFeel);
     hzSlider.setRange(_paramsPtr->Hz->range.start,
                          _paramsPtr->Hz->range.end, 1.0);
+    hzSlider.setSkewFactorFromMidPoint(2000.0f);
     hzSlider.setValue(_paramsPtr->Hz->get(), juce::dontSendNotification);
     hzSlider.setPopupDisplayEnabled(true, true, nullptr);
     hzSlider.setPopupMenuEnabled(true);
@@ -745,6 +750,7 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     qSlider.setLookAndFeel(&grapeLookAndFeel);
     qSlider.setRange(_paramsPtr->Q->range.start,
                            _paramsPtr->Q->range.end, 0.01);
+    qSlider.setSkewFactorFromMidPoint(1.0f);
     qSlider.setValue(_paramsPtr->Q->get(), juce::dontSendNotification);
     qSlider.setPopupDisplayEnabled(true, true, nullptr);
     qSlider.setPopupMenuEnabled(true);
@@ -957,6 +963,7 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
     slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     slowFreqSlider.setRange(_paramsPtr->SlowFreq->range.start,
                            _paramsPtr->SlowFreq->range.end, 0.01);
+    slowFreqSlider.setSkewFactorFromMidPoint(2.0f);
     slowFreqSlider.setValue(_paramsPtr->SlowFreq->get(), juce::dontSendNotification);
     slowFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     slowFreqSlider.setPopupMenuEnabled(true);
@@ -967,6 +974,7 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
     fastFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     fastFreqSlider.setRange(_paramsPtr->FastFreq->range.start,
                            _paramsPtr->FastFreq->range.end, 0.01);
+    fastFreqSlider.setSkewFactorFromMidPoint(1.0f);
     fastFreqSlider.setValue(_paramsPtr->FastFreq->get(), juce::dontSendNotification);
     fastFreqSlider.setSkewFactorFromMidPoint(1.0);
     fastFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
@@ -1255,6 +1263,7 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     waitSlider.setLookAndFeel(&grapeLookAndFeel);
     waitSlider.setRange(_paramsPtr->Wait->range.start,
                            _paramsPtr->Wait->range.end, 0.01);
+    waitSlider.setSkewFactorFromMidPoint(0.2f);
     waitSlider.setValue(_paramsPtr->Wait->get(), juce::dontSendNotification);
     waitSlider.setPopupDisplayEnabled(true, true, nullptr);
     waitSlider.setPopupMenuEnabled(true);
@@ -1264,6 +1273,7 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     attackSlider.setLookAndFeel(&grapeLookAndFeel);
     attackSlider.setRange(_paramsPtr->Attack->range.start,
                            _paramsPtr->Attack->range.end, 0.01);
+    attackSlider.setSkewFactorFromMidPoint(0.2f);
     attackSlider.setValue(_paramsPtr->Attack->get(), juce::dontSendNotification);
     attackSlider.setPopupDisplayEnabled(true, true, nullptr);
     attackSlider.setPopupMenuEnabled(true);
@@ -1273,6 +1283,7 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     decaySlider.setLookAndFeel(&grapeLookAndFeel);
     decaySlider.setRange(_paramsPtr->Decay->range.start,
                            _paramsPtr->Decay->range.end, 0.01);
+    decaySlider.setSkewFactorFromMidPoint(0.4f);
     decaySlider.setValue(_paramsPtr->Decay->get(), juce::dontSendNotification);
     decaySlider.setPopupDisplayEnabled(true, true, nullptr);
     decaySlider.setPopupMenuEnabled(true);
@@ -1564,6 +1575,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     timeLSlider.setLookAndFeel(&grapeLookAndFeel);
     timeLSlider.setRange(_paramsPtr->TimeL->range.start,
                           _paramsPtr->TimeL->range.end, 0.01);
+    timeLSlider.setSkewFactorFromMidPoint(0.4f);
     timeLSlider.setValue(_paramsPtr->TimeL->get(), juce::dontSendNotification);
     timeLSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeLSlider.setPopupMenuEnabled(true);
@@ -1573,6 +1585,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     timeRSlider.setLookAndFeel(&grapeLookAndFeel);
     timeRSlider.setRange(_paramsPtr->TimeR->range.start,
                           _paramsPtr->TimeR->range.end, 0.01);
+    timeRSlider.setSkewFactorFromMidPoint(0.4f);
     timeRSlider.setValue(_paramsPtr->TimeR->get(), juce::dontSendNotification);
     timeRSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeRSlider.setPopupMenuEnabled(true);
@@ -1600,6 +1613,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     lowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     lowFreqSlider.setRange(_paramsPtr->LowFreq->range.start,
                           _paramsPtr->LowFreq->range.end, 1.0);
+    lowFreqSlider.setSkewFactorFromMidPoint(2000.0f);
     lowFreqSlider.setValue(_paramsPtr->LowFreq->get(), juce::dontSendNotification);
     lowFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     lowFreqSlider.setPopupMenuEnabled(true);
@@ -1609,6 +1623,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     highFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     highFreqSlider.setRange(_paramsPtr->HighFreq->range.start,
                           _paramsPtr->HighFreq->range.end, 1.0);
+    highFreqSlider.setSkewFactorFromMidPoint(2000.0f);
     highFreqSlider.setValue(_paramsPtr->HighFreq->get(), juce::dontSendNotification);
     highFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     highFreqSlider.setPopupMenuEnabled(true);
@@ -1618,6 +1633,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     feedbackSlider.setLookAndFeel(&grapeLookAndFeel);
     feedbackSlider.setRange(_paramsPtr->Feedback->range.start,
                           _paramsPtr->Feedback->range.end, 0.01);
+    feedbackSlider.setSkewFactorFromMidPoint(0.4f);
     feedbackSlider.setValue(_paramsPtr->Feedback->get(), juce::dontSendNotification);
     feedbackSlider.setPopupDisplayEnabled(true, true, nullptr);
     feedbackSlider.setPopupMenuEnabled(true);
