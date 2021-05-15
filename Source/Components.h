@@ -73,7 +73,7 @@ private:
     
     juce::ComboBox envelopeSelector;
     juce::ComboBox waveformSelector;
-    juce::Slider dutySlider;
+    juce::Slider edgeSlider;
     juce::Slider octaveSlider;
     juce::Slider coarseSlider;
     juce::Slider unisonSlider;
@@ -83,7 +83,7 @@ private:
 
     juce::Label envelopeLabel;
     juce::Label waveformLabel;
-    juce::Label dutyLabel;
+    juce::Label edgeLabel;
     juce::Label octaveLabel;
     juce::Label coarseLabel;
     juce::Label unisonLabel;

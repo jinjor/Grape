@@ -25,27 +25,29 @@ public:
     double getSquareValue(double freq, double angle) {
         return getPulseValue(freq, angle, 0.5);
     }
-    double getPulseValue(double freq, double angle, double duty) {
-        jassert(duty > 0.0);
-        jassert(duty <= 0.5);
+    double getPulseValue(double freq, double angle, double edge) {
+        double phaseShift = (1.0 - edge * 0.99) * 0.5;
+        jassert(phaseShift > 0.0);
+        jassert(phaseShift <= 0.5);
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
         float pos1 = angle / juce::MathConstants<double>::twoPi;
-        float pos2 = std::fmod(pos1 + duty, 1.0f);
+        float pos2 = std::fmod(pos1 + phaseShift, 1.0f);
         const float* partial = getPartial(saw, freq);
-        return getValue(partial, pos1) + getValueReverse(partial, pos2) + (1.0 - 2 * duty);
+        return getValue(partial, pos1) + getValueReverse(partial, pos2) + (1.0 - 2 * phaseShift);
     }
     double getTriangleValue(double freq, double angle) {
         return getSlopedVariableTriangleValue(freq, angle, 0.5);
     }
-    double getSlopedVariableTriangleValue(double freq, double angle, double duty) {
-        jassert(duty > 0.0);
-        jassert(duty <= 0.5);
+    double getSlopedVariableTriangleValue(double freq, double angle, double edge) {
+        double phaseShift = (1.0 - edge * 0.99) * 0.5;
+        jassert(phaseShift > 0.0);
+        jassert(phaseShift <= 0.5);
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
         float pos1 = angle / juce::MathConstants<double>::twoPi;
-        float pos2 = std::fmod(pos1 + duty, 1.0f);
+        float pos2 = std::fmod(pos1 + phaseShift, 1.0f);
         const float* partial = getPartial(parabola, freq);
 //        return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (duty - duty * duty));
-        return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (-0.8*(duty-0.5)*(duty-0.5)+0.25));// TODO: gibbs 試して再考
+        return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (-0.8*(phaseShift-0.5)*(phaseShift-0.5)+0.25));// TODO: gibbs 試して再考
     }
 private:
     double getValue(const float* partial, float normalizedAngle) {
@@ -371,9 +373,9 @@ public:
     ~Osc() {
         DBG("Osc's destructor called.");
     }
-    void setWaveform (WAVEFORM waveform, double duty) {
+    void setWaveform (WAVEFORM waveform, double edge) {
         this->waveform = waveform;
-        this->duty = duty;
+        this->edge = edge;
     }
     void setSampleRate (double sampleRate) {
         this->sampleRate = sampleRate;
@@ -400,7 +402,7 @@ public:
 //                return angle >= juce::MathConstants<double>::pi ?
 //                    angle / juce::MathConstants<double>::twoPi * 4.0 - 1.0 :
 //                    angle / juce::MathConstants<double>::twoPi - 4.0 + 3.0;
-                return wavetable.getSlopedVariableTriangleValue(freq, angle, duty);
+                return wavetable.getSlopedVariableTriangleValue(freq, angle, edge);
             case WAVEFORM::SawUp:
 //                return angle / juce::MathConstants<double>::twoPi * 2.0 - 1.0;
                 return wavetable.getSawUpValue(freq, angle);
@@ -409,10 +411,7 @@ public:
                 return wavetable.getSawDownValue(freq, angle);
             case WAVEFORM::Square:
 //                return angle < juce::MathConstants<double>::pi ? 1.0 : -1.0;
-                return wavetable.getSquareValue(freq, angle);
-            case WAVEFORM::Pulse:
-//                return angle < juce::MathConstants<double>::halfPi ? 1.0 : -1.0;
-                return wavetable.getPulseValue(freq, angle, duty);
+                return wavetable.getPulseValue(freq, angle, edge);
             case WAVEFORM::Random:
                 if(currentRandomValue == 0.0) {
                     currentRandomValue = whiteNoise.nextDouble() * 2.0 - 1.0;
@@ -450,7 +449,7 @@ private:
     double pink[7]{};
     juce::Random whiteNoise;
     WAVEFORM waveform = WAVEFORM::Sine;
-    double duty = 0.5;
+    double edge = 0.0;
     double sampleRate = 0.0;
 };
 
@@ -466,9 +465,9 @@ public:
     ~MultiOsc() {
         DBG("MultiOsc's destructor called.");
     }
-    void setWaveform (WAVEFORM waveform, double duty) {
+    void setWaveform (WAVEFORM waveform, double edge) {
         for(int i = 0; i < MAX_NUM_OSC; ++i) {
-            oscs[i].setWaveform(waveform, duty);
+            oscs[i].setWaveform(waveform, edge);
         }
     }
     void setSampleRate (double sampleRate) {

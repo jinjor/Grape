@@ -270,7 +270,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
         
         for(int i = 0; i < NUM_OSC; ++i) {
             oscs[i].setSampleRate(sampleRate);
-            oscs[i].setWaveform(OSC_WAVEFORM_VALUES[oscParams[i].Waveform->getIndex()], oscParams[i].Duty->get());
+            oscs[i].setWaveform(OSC_WAVEFORM_VALUES[oscParams[i].Waveform->getIndex()], oscParams[i].Edge->get());
         }
         for(int i = 0; i < NUM_ENVELOPE; ++i) {
             adsr[i].setParams(envelopeParams[i].Attack->get(),

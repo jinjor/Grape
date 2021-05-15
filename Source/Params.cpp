@@ -31,7 +31,7 @@ void VoiceParams::loadParameters(juce::XmlElement& xml)
 //==============================================================================
 OscParams::OscParams(juce::AudioParameterBool* enabled,
                      juce::AudioParameterChoice* waveform,
-                     juce::AudioParameterFloat* duty,
+                     juce::AudioParameterFloat* edge,
                      juce::AudioParameterInt* octave,
                      juce::AudioParameterInt* coarse,
                      juce::AudioParameterInt* unison,
@@ -41,7 +41,7 @@ OscParams::OscParams(juce::AudioParameterBool* enabled,
                      juce::AudioParameterChoice* envelope)
 : Enabled(enabled)
 , Waveform(waveform)
-, Duty(duty)
+, Edge(edge)
 , Octave(octave)
 , Coarse(coarse)
 , Unison(unison)
@@ -54,7 +54,7 @@ void OscParams::addAllParameters(juce::AudioProcessor& processor)
 {
     processor.addParameter(Enabled);
     processor.addParameter(Waveform);
-    processor.addParameter(Duty);
+    processor.addParameter(Edge);
     processor.addParameter(Octave);
     processor.addParameter(Coarse);
     processor.addParameter(Unison);
@@ -67,7 +67,7 @@ void OscParams::saveParameters(juce::XmlElement& xml)
 {
     xml.setAttribute(Enabled->paramID, Enabled->get());
     xml.setAttribute(Waveform->paramID, Waveform->getIndex());
-    xml.setAttribute(Duty->paramID, Duty->get());
+    xml.setAttribute(Edge->paramID, Edge->get());
     xml.setAttribute(Octave->paramID, Octave->get());
     xml.setAttribute(Coarse->paramID, Coarse->get());
     xml.setAttribute(Unison->paramID, Unison->get());
@@ -80,7 +80,7 @@ void OscParams::loadParameters(juce::XmlElement& xml)
 {
     *Enabled = xml.getIntAttribute(Enabled->paramID, 0);
     *Waveform = xml.getIntAttribute(Waveform->paramID, 0);
-    *Duty = xml.getIntAttribute(Duty->paramID, 0.5);
+    *Edge = xml.getIntAttribute(Edge->paramID, 0.0);
     *Octave = xml.getIntAttribute(Octave->paramID, 0);
     *Coarse = xml.getIntAttribute(Coarse->paramID, 0);
     *Unison = xml.getIntAttribute(Unison->paramID, 1);

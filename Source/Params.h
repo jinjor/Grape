@@ -7,9 +7,9 @@ namespace {
 enum class VOICE_MODE { Mono, Poly };
 const juce::StringArray VOICE_MODE_NAMES = juce::StringArray("Mono", "Poly");
 
-enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Pulse, Random, Pink, White };
-const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Pulse", "Pink", "White");
-const WAVEFORM OSC_WAVEFORM_VALUES[6] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawDown, WAVEFORM::Pulse, WAVEFORM::Pink, WAVEFORM::White };
+enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Random, Pink, White };
+const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Square", "Pink", "White");
+const WAVEFORM OSC_WAVEFORM_VALUES[6] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Pink, WAVEFORM::White };
 
 const juce::StringArray OSC_ENV_NAMES = juce::StringArray("1", "2");
 
@@ -33,8 +33,8 @@ const juce::StringArray LFO_TARGET_OSC_PARAM_NAMES = juce::StringArray("Vibrato"
 enum class LFO_TARGET_FILTER_PARAM { Freq, Q };
 const juce::StringArray LFO_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
 
-const juce::StringArray LFO_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw-Up", "Saw-Down", "Square", "Pulse", "Random");
-const WAVEFORM LFO_WAVEFORM_VALUES[7] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Pulse, WAVEFORM::Random };
+const juce::StringArray LFO_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw-Up", "Saw-Down", "Square", "Random");
+const WAVEFORM LFO_WAVEFORM_VALUES[7] = { WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Random };
 
 enum class MODENV_TARGET_TYPE { OSC, Filter, LFO };
 const juce::StringArray MODENV_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO");
@@ -127,7 +127,7 @@ class OscParams : public SynthParametersBase
 public:
     juce::AudioParameterBool* Enabled;
     juce::AudioParameterChoice* Waveform;
-    juce::AudioParameterFloat* Duty;
+    juce::AudioParameterFloat* Edge;
     juce::AudioParameterInt* Octave;
     juce::AudioParameterInt* Coarse;
     juce::AudioParameterInt* Unison;
@@ -138,7 +138,7 @@ public:
     
     OscParams(juce::AudioParameterBool* enabled,
               juce::AudioParameterChoice* waveform,
-              juce::AudioParameterFloat* duty,
+              juce::AudioParameterFloat* edge,
               juce::AudioParameterInt* octave,
               juce::AudioParameterInt* coarse,
               juce::AudioParameterInt* unison,

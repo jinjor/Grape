@@ -50,7 +50,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     OscParams {
         new juce::AudioParameterBool("OSC0_ENABLED", "Enabled", true),
         new juce::AudioParameterChoice("OSC0_WAVEFORM", "Waveform", OSC_WAVEFORM_NAMES, OSC_WAVEFORM_NAMES.indexOf("Sine")),
-        new juce::AudioParameterFloat("OSC0_DUTY", "Duty", 0.01f, 0.5f, 0.5f),
+        new juce::AudioParameterFloat("OSC0_EDGE", "Edge", 0.0f, 1.0f, 0.0f),
         new juce::AudioParameterInt("OSC0_OCTAVE", "Octave", -2, 2, 0),
         new juce::AudioParameterInt("OSC0_COARSE", "Coarse", -12, 12, 0),
         new juce::AudioParameterInt("OSC0_UNISON", "Unison", 1, 4, 1),
@@ -62,7 +62,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     OscParams {
         new juce::AudioParameterBool("OSC1_ENABLED", "Enabled", false),
         new juce::AudioParameterChoice("OSC1_WAVEFORM", "Waveform", OSC_WAVEFORM_NAMES, OSC_WAVEFORM_NAMES.indexOf("Sine")),
-        new juce::AudioParameterFloat("OSC1_DUTY", "Duty", 0.01f, 0.5f, 0.5f),
+        new juce::AudioParameterFloat("OSC1_EDGE", "Edge", 0.0f, 1.0f, 0.0f),
         new juce::AudioParameterInt("OSC1_OCTAVE", "Octave", -2, 2, 0),
         new juce::AudioParameterInt("OSC1_COARSE", "Coarse",  -12, 12, 0),
         new juce::AudioParameterInt("OSC1_UNISON", "Unison", 1, 4, 1),
@@ -74,7 +74,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     OscParams {
         new juce::AudioParameterBool("OSC2_ENABLED", "Enabled", false),
         new juce::AudioParameterChoice("OSC2_WAVEFORM", "Waveform", OSC_WAVEFORM_NAMES, OSC_WAVEFORM_NAMES.indexOf("White")),
-        new juce::AudioParameterFloat("OSC2_DUTY", "Duty", 0.01f, 0.5f, 0.5f),
+        new juce::AudioParameterFloat("OSC2_EDGE", "Edge", 0.0f, 1.0f, 0.0f),
         new juce::AudioParameterInt("OSC2_OCTAVE", "Octave", -2, 2, 0),
         new juce::AudioParameterInt("OSC2_COARSE", "Coarse",  -12, 12, 0),
         new juce::AudioParameterInt("OSC2_UNISON", "Unison", 1, 4, 1),

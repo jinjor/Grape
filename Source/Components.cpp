@@ -175,7 +175,7 @@ OscComponent::OscComponent(int index, OscParams* params)
 , header("OSC " + std::to_string(index+1), true)
 , envelopeSelector("Envelope")
 , waveformSelector("Waveform")
-, dutySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+, edgeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , octaveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , coarseSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , unisonSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -203,14 +203,14 @@ OscComponent::OscComponent(int index, OscParams* params)
     waveformSelector.addListener(this);
     body.addAndMakeVisible(waveformSelector);
     
-    dutySlider.setLookAndFeel(&grapeLookAndFeel);
-    dutySlider.setRange(_paramsPtr->Duty->range.start,
-                         _paramsPtr->Duty->range.end, 0.01);
-    dutySlider.setValue(_paramsPtr->Duty->get(), juce::dontSendNotification);
-    dutySlider.setPopupDisplayEnabled(true, true, nullptr);
-    dutySlider.setPopupMenuEnabled(true);
-    dutySlider.addListener(this);
-    body.addAndMakeVisible(dutySlider);
+    edgeSlider.setLookAndFeel(&grapeLookAndFeel);
+    edgeSlider.setRange(_paramsPtr->Edge->range.start,
+                         _paramsPtr->Edge->range.end, 0.01);
+    edgeSlider.setValue(_paramsPtr->Edge->get(), juce::dontSendNotification);
+    edgeSlider.setPopupDisplayEnabled(true, true, nullptr);
+    edgeSlider.setPopupMenuEnabled(true);
+    edgeSlider.addListener(this);
+    body.addAndMakeVisible(edgeSlider);
     
     octaveSlider.setLookAndFeel(&grapeLookAndFeel);
     octaveSlider.setRange(_paramsPtr->Octave->getRange().getStart(),
@@ -278,11 +278,11 @@ OscComponent::OscComponent(int index, OscParams* params)
     waveformLabel.setEditable(false, false, false);
     body.addAndMakeVisible(waveformLabel);
     
-    dutyLabel.setFont(paramLabelFont);
-    dutyLabel.setText("Duty", juce::dontSendNotification);
-    dutyLabel.setJustificationType(juce::Justification::centred);
-    dutyLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(dutyLabel);
+    edgeLabel.setFont(paramLabelFont);
+    edgeLabel.setText("Edge", juce::dontSendNotification);
+    edgeLabel.setJustificationType(juce::Justification::centred);
+    edgeLabel.setEditable(false, false, false);
+    body.addAndMakeVisible(edgeLabel);
     
     octaveLabel.setFont(paramLabelFont);
     octaveLabel.setText("Octave", juce::dontSendNotification);
@@ -361,8 +361,8 @@ void OscComponent::resized()
     }
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
-        dutyLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
-        dutySlider.setBounds(area.reduced(LOCAL_MARGIN));
+        edgeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        edgeSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
@@ -413,9 +413,9 @@ void OscComponent::comboBoxChanged(juce::ComboBox* comboBox) {
 }
 void OscComponent::sliderValueChanged(juce::Slider *slider)
 {
-    if(slider == &dutySlider)
+    if(slider == &edgeSlider)
     {
-        *_paramsPtr->Duty = dutySlider.getValue();
+        *_paramsPtr->Edge = edgeSlider.getValue();
     }
     else if(slider == &octaveSlider)
     {
@@ -448,14 +448,14 @@ void OscComponent::timerCallback()
     body.setEnabled(_paramsPtr->Enabled->get());
     envelopeSelector.setSelectedItemIndex(_paramsPtr->Envelope->getIndex(), juce::dontSendNotification);
     waveformSelector.setSelectedItemIndex(_paramsPtr->Waveform->getIndex(), juce::dontSendNotification);
-    dutySlider.setValue(_paramsPtr->Duty->get(), juce::dontSendNotification);
+    edgeSlider.setValue(_paramsPtr->Edge->get(), juce::dontSendNotification);
     octaveSlider.setValue(_paramsPtr->Octave->get(), juce::dontSendNotification);
     coarseSlider.setValue(_paramsPtr->Coarse->get(), juce::dontSendNotification);
     unisonSlider.setValue(_paramsPtr->Unison->get(), juce::dontSendNotification);
     detuneSlider.setValue(_paramsPtr->Detune->get(), juce::dontSendNotification);
     spreadSlider.setValue(_paramsPtr->Spread->get(), juce::dontSendNotification);
     gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
-    dutySlider.setEnabled(OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Pulse ||
+    edgeSlider.setEnabled(OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Square ||
                           OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Triangle);
 }
 
