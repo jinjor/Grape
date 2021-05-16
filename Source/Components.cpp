@@ -168,6 +168,10 @@ void VoiceComponent::timerCallback()
 {
     portamentoTimeSlider.setValue(_paramsPtr->PortamentoTime->get(), juce::dontSendNotification);
     pitchBendRangeSlider.setValue(_paramsPtr->PitchBendRange->get(), juce::dontSendNotification);
+    
+    auto isMono = static_cast<VOICE_MODE>(_paramsPtr->Mode->getIndex()) == VOICE_MODE::Mono;
+    portamentoTimeLabel.setEnabled(isMono);
+    portamentoTimeSlider.setEnabled(isMono);
 }
 
 //==============================================================================
@@ -530,8 +534,18 @@ void OscComponent::timerCallback()
     detuneSlider.setValue(_paramsPtr->Detune->get(), juce::dontSendNotification);
     spreadSlider.setValue(_paramsPtr->Spread->get(), juce::dontSendNotification);
     gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
-    edgeSlider.setEnabled(OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Square ||
-                          OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Triangle);
+    auto hasEdge = OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Square ||
+                   OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Triangle;
+    edgeLabel.setEnabled(hasEdge);
+    edgeSlider.setEnabled(hasEdge);
+    auto isNoise = OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::White ||
+                   OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Pink;
+    unisonLabel.setEnabled(!isNoise);
+    unisonSlider.setEnabled(!isNoise);
+    detuneLabel.setEnabled(!isNoise);
+    detuneSlider.setEnabled(!isNoise);
+    spreadLabel.setEnabled(!isNoise);
+    spreadSlider.setEnabled(!isNoise);
 }
 
 //==============================================================================
