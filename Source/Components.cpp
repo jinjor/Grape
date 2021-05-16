@@ -2127,8 +2127,9 @@ void ControlComponent::resized()
 }
 
 //==============================================================================
-AnalyserComponent::AnalyserComponent(AnalyserState* analyserState)
+AnalyserComponent::AnalyserComponent(AnalyserState* analyserState, LevelState* levelState)
 : analyserState(analyserState)
+, levelState(levelState)
 , forwardFFT (analyserState->fftOrder)
 , window (analyserState->fftSize, juce::dsp::WindowingFunction<float>::hann)
 {
@@ -2181,7 +2182,7 @@ void AnalyserComponent::timerCallback()
 }
 void AnalyserComponent::drawFrame(juce::Graphics& g)
 {
-    auto width  = getLocalBounds().getWidth();
+    auto width  = getLocalBounds().getWidth() - 20;
     auto height = getLocalBounds().getHeight();
     for (int i = 1; i < scopeSize; ++i)
     {
@@ -2189,5 +2190,14 @@ void AnalyserComponent::drawFrame(juce::Graphics& g)
                               juce::jmap (scopeData[i - 1], 0.0f, 1.0f, (float) height, 0.0f),
                       (float) juce::jmap (i,     0, scopeSize - 1, 0, width),
                               juce::jmap (scopeData[i],     0.0f, 1.0f, (float) height, 0.0f) });
+    }
+    {
+        // TODO: decibel
+        auto barHeight = levelState->currentLevel[0] * height;
+        g.fillRect(width + 1, height - barHeight, 8, barHeight);
+    }
+    {
+        auto barHeight = levelState->currentLevel[1] * height;
+        g.fillRect(width + 10, height - barHeight, 8, barHeight);
     }
 }

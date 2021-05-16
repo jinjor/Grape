@@ -19,12 +19,12 @@ public:
     float fifo [fftSize];
     int fifoIndex = 0;
     void pushFFTData(juce::AudioBuffer<float>& buffer) {
-        if (buffer.getNumChannels() > 0)
-        {
-            auto* channelData = buffer.getReadPointer(0);
-            for (auto i = 0; i < buffer.getNumSamples(); ++i) {
-                pushNextSampleIntoFifo(channelData[i]);
-            }
+        if (buffer.getNumChannels() <= 0) {
+            return;
+        }
+        auto* channelData = buffer.getReadPointer(0);// TODO: R
+        for (auto i = 0; i < buffer.getNumSamples(); ++i) {
+            pushNextSampleIntoFifo(channelData[i]);
         }
     }
     void pushNextSampleIntoFifo (float sample) noexcept
@@ -42,6 +42,7 @@ public:
         fifo[fifoIndex++] = sample;
     }
 };
+
 //==============================================================================
 class TimeConsumptionState
 {
@@ -51,9 +52,7 @@ public:
     TimeConsumptionState() {};
     ~TimeConsumptionState() {};
     void push(double sampleRate, int numSamples, double seconds) {
-//        DBG("push: " << sampleRate << ", " << numSamples << ", " << seconds);
         if(currentSampleRate != sampleRate) {
-//            DBG("reset sample rate");
             totalNumSamples = 0;
             totalSeconds = 0.0f;
         }
@@ -72,6 +71,43 @@ private:
     int totalNumSamples = 0;
     double totalSeconds = 0.0;
 };
+
+//==============================================================================
+class LevelState
+{
+public:
+    double currentLevel[2]{};
+    
+    LevelState() {};
+    ~LevelState() {};
+    void push(juce::AudioBuffer<float>& buffer) {
+        if (buffer.getNumChannels() <= 0) {
+            return;
+        }
+        int index;
+        for(auto ch = 0; ch < 2; ch++) {
+            index = lastValueIndex;
+            auto* data = buffer.getReadPointer(ch);
+            for (auto i = 0; i < buffer.getNumSamples(); ++i) {
+                lastValues[ch][index] = data[i];
+                index++;
+                if(index >= 1024) {
+                    index = 0;
+                }
+            }
+            currentLevel[ch] = 0.0;
+            for(auto i = 0; i < 1024; ++i) {
+                // TODO: how to calc
+                currentLevel[ch] = std::max(currentLevel[ch], std::abs(lastValues[ch][i]));
+            }
+        }
+        lastValueIndex = index;
+    }
+private:
+    double lastValues[2][1024]{};
+    int lastValueIndex = 0;
+};
+
 //==============================================================================
 class GrapeAudioProcessor  : public juce::AudioProcessor
 {
@@ -116,6 +152,7 @@ public:
     //==============================================================================
     int currentProgram = 0;
     juce::MidiKeyboardState keyboardState;
+    LevelState levelState;
     AnalyserState analyserState;
     int polyphony = 0;
     TimeConsumptionState timeConsumptionState;

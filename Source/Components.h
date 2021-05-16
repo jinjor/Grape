@@ -322,7 +322,7 @@ private:
 class AnalyserComponent : public juce::Component, private juce::Timer
 {
 public:
-    AnalyserComponent(AnalyserState* analyserState);
+    AnalyserComponent(AnalyserState* analyserState, LevelState* levelState);
     virtual ~AnalyserComponent();
     
     virtual void paint(juce::Graphics& g) override;
@@ -333,6 +333,7 @@ private:
         scopeSize = 512
     };
     AnalyserState* analyserState;
+    LevelState* levelState;
     juce::dsp::FFT forwardFFT;
     juce::dsp::WindowingFunction<float> window;
     float scopeData[scopeSize];

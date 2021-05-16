@@ -15,6 +15,7 @@ Modifiers::Modifiers(VoiceParams* voiceParams, ControlItemParams* controlItemPar
     std::fill_n(angleShift, NUM_OSC, 0);
     std::fill_n(octShift, NUM_OSC, 0);
     std::fill_n(edgeRatio, NUM_OSC, 1.0);
+    std::fill_n(panBase, NUM_OSC, 0.0);
     std::fill_n(detuneRatio, NUM_OSC, 1.0);
     std::fill_n(spreadRatio, NUM_OSC, 1.0);
     std::fill_n(gain, NUM_OSC, 1.0);
@@ -76,7 +77,7 @@ void Modifiers::controllerMoved(int number, int value) {
                                 break;
                             }
                             case CONTROL_TARGET_OSC_PARAM::Pan: {
-//                                        pan[oscIndex] = normalizedValue * 2 - 1.0;
+                                panBase[oscIndex] = normalizedValue * 2 - 1.0;
                                 break;
                             }
                             case CONTROL_TARGET_OSC_PARAM::Gain: {
@@ -508,6 +509,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                 auto spread = oscParams[oscIndex].Spread->get() * modifiers.spreadRatio[oscIndex];
                 double o[2] {0, 0};
                 oscs[oscIndex].step(oscParams[oscIndex].Unison->get(),
+                                    modifiers.panBase[oscIndex],// TODO: LFO
                                     detune,
                                     spread,
                                     freq,

@@ -473,11 +473,11 @@ public:
             oscs[i].setSampleRate(sampleRate);
         }
     }
-    void step(double numOsc, double detune, double spread, double freq, double angleShift, double edge, double* outout) {
+    void step(double numOsc, double pan, double detune, double spread, double freq, double angleShift, double edge, double* outout) {
         if(numOsc == 1) {
             outout[0] = outout[1] = oscs[0].step(freq, angleShift, edge) * GAIN_AT_CENTER;
         } else {
-            setUnison(numOsc, detune, spread);
+            setUnison(numOsc, pan, detune, spread);
             outout[0] = 0;
             outout[1] = 0;
             for(int i = 0; i < currentNumOsc; ++i) {
@@ -492,20 +492,27 @@ private:
     double pans[MAX_NUM_OSC][2]{};
     double detunes[MAX_NUM_OSC]{};
     double angleShifts[MAX_NUM_OSC]{};
-    double currentNumOsc = 1;
+    int currentNumOsc = 1;
+    double currentPan = 0.0;
     double currentDetune = 1;
     double currentSpread = 1;
-    void setUnison(double numOsc, double detune, double spread) {
+    void setUnison(int numOsc, double pan, double detune, double spread) {
         if(detune != currentDetune || numOsc != currentNumOsc) {
             for(int i = 0; i < numOsc; ++i) {
                 double detuneValue = numOsc == 1 ? 0 : -detune + (detune * 2) / (numOsc - 1) * i;
                 detunes[i] = std::pow(2, detuneValue / 20);
             }
         }
-        if(spread != currentSpread || numOsc != currentNumOsc) {
+        if(pan != currentPan || spread != currentSpread || numOsc != currentNumOsc) {
+            auto panMax = pan + std::min(1.0 - pan, spread);
+            auto panMin = pan - std::min(1.0 + pan, spread);
             for(int i = 0; i < numOsc; ++i) {
-                double pan = numOsc == 1 ? 0 : -spread + (spread * 2) / (numOsc - 1) * i;// [-1;1]
-                double theta = (pan + 1) * 0.5 * juce::MathConstants<double>::halfPi;
+                double p = numOsc == 1
+                    ? ((panMin + panMax) / 2)
+                    : panMin * (numOsc - 1 - i) / (numOsc - 1) + panMax * i / (numOsc - 1);
+                jassert(p >= -1);
+                jassert(p <= 1);
+                double theta = (p + 1) * 0.5 * juce::MathConstants<double>::halfPi;
                 pans[i][0] = std::cos(theta);
                 pans[i][1] = std::sin(theta);
             }
@@ -516,6 +523,7 @@ private:
             }
         }
         currentNumOsc = numOsc;
+        currentPan = pan;
         currentDetune = detune;
         currentSpread = spread;
     }

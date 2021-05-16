@@ -444,8 +444,10 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
             polyphony++;
         }
     }
-    midiMessages.clear();
+    levelState.push(buffer);
+    analyserState.pushFFTData(buffer);
     
+    midiMessages.clear();
 #if JUCE_DEBUG
     auto* leftIn = buffer.getReadPointer(0);
     auto* rightIn = buffer.getReadPointer(1);
@@ -457,7 +459,7 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
         jassert(rightIn[i] <= 1);
     }
 #endif
-    analyserState.pushFFTData(buffer);
+    
 }
 
 //==============================================================================
