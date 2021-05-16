@@ -201,7 +201,7 @@ StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsu
     addAndMakeVisible(polyphonyLabel);
     
     timeConsumptionLabel.setFont(paramLabelFont);
-    timeConsumptionLabel.setText("Time Consumption", juce::dontSendNotification);
+    timeConsumptionLabel.setText("Busyness", juce::dontSendNotification);
     timeConsumptionLabel.setJustificationType(juce::Justification::centred);
     timeConsumptionLabel.setEditable(false, false, false);
     addAndMakeVisible(timeConsumptionLabel);
