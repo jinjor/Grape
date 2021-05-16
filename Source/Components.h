@@ -336,11 +336,13 @@ private:
     LevelState* levelState;
     juce::dsp::FFT forwardFFT;
     juce::dsp::WindowingFunction<float> window;
-    float scopeData[scopeSize];
+    float scopeData[scopeSize]{};
     bool readyToDrawFrame = false;
+    float currentLevel[2]{};
 
     virtual void timerCallback() override;
     void drawNextFrameOfSpectrum();
+    void drawNextFrameOfLevel();
     void drawFrame(juce::Graphics& g);
 };
 

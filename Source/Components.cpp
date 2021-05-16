@@ -2169,7 +2169,23 @@ void AnalyserComponent::drawNextFrameOfSpectrum()
         scopeData[i] = level;
     }
 }
+void AnalyserComponent::drawNextFrameOfLevel()
+{
+    auto mindB = -100.0;
+    auto maxdB =    0.0;
 
+    for(auto ch = 0; ch < 2; ch++) {
+        double maxValue = 0.0;
+        auto* data = levelState->levelData + ch * levelState->numSamples;
+        for (int i = 0; i < levelState->numSamples; ++i)
+        {
+            maxValue = std::max(maxValue, std::abs(data[i]));
+        }
+        auto level = juce::jmap (juce::jlimit (mindB, maxdB, juce::Decibels::gainToDecibels (maxValue)),
+                                 mindB, maxdB, 0.0, 1.0);
+        currentLevel[ch] = level;
+    }
+}
 void AnalyserComponent::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
@@ -2179,18 +2195,28 @@ void AnalyserComponent::paint(juce::Graphics& g)
         drawFrame(g);
     }
 }
-
 void AnalyserComponent::resized()
 {
     // TODO: ?
 }
 void AnalyserComponent::timerCallback()
 {
+    bool shouldRepaint = false;
     if (analyserState->nextFFTBlockReady)
     {
         drawNextFrameOfSpectrum();
         analyserState->nextFFTBlockReady = false;
         readyToDrawFrame = true;
+        shouldRepaint = true;
+    }
+    if (levelState->nextBlockReady)
+    {
+        drawNextFrameOfLevel();
+        levelState->nextBlockReady = false;
+//        readyToDrawFrame = true;
+        shouldRepaint = true;
+    }
+    if(shouldRepaint) {
         repaint();
     }
 }
@@ -2206,12 +2232,11 @@ void AnalyserComponent::drawFrame(juce::Graphics& g)
                               juce::jmap (scopeData[i],     0.0f, 1.0f, (float) height, 0.0f) });
     }
     {
-        // TODO: decibel
-        auto barHeight = levelState->currentLevel[0] * height;
+        int barHeight = currentLevel[0] * height;
         g.fillRect(width + 1, height - barHeight, 8, barHeight);
     }
     {
-        auto barHeight = levelState->currentLevel[1] * height;
+        int barHeight = currentLevel[1] * height;
         g.fillRect(width + 10, height - barHeight, 8, barHeight);
     }
 }

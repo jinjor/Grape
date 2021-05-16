@@ -16,8 +16,6 @@ public:
     float fftData [2 * fftSize];
     AnalyserState() {};
     ~AnalyserState() {};
-    float fifo [fftSize];
-    int fifoIndex = 0;
     void pushFFTData(juce::AudioBuffer<float>& buffer) {
         if (buffer.getNumChannels() <= 0) {
             return;
@@ -27,6 +25,9 @@ public:
             pushNextSampleIntoFifo(channelData[i]);
         }
     }
+private:
+    float fifo [fftSize];
+    int fifoIndex = 0;
     void pushNextSampleIntoFifo (float sample) noexcept
     {
         if (fifoIndex == fftSize)
@@ -76,7 +77,9 @@ private:
 class LevelState
 {
 public:
-    double currentLevel[2]{};
+    enum { numSamples = 4096 };
+    double levelData[2 * numSamples]{};
+    bool nextBlockReady = false;
     
     LevelState() {};
     ~LevelState() {};
@@ -85,27 +88,29 @@ public:
             return;
         }
         int index;
+        bool _nextBlockReady;
         for(auto ch = 0; ch < 2; ch++) {
-            index = lastValueIndex;
+            index = fifoIndex;
+            _nextBlockReady = nextBlockReady;
             auto* data = buffer.getReadPointer(ch);
             for (auto i = 0; i < buffer.getNumSamples(); ++i) {
-                lastValues[ch][index] = data[i];
+                fifo[numSamples * ch + index] = data[i];
                 index++;
-                if(index >= 1024) {
+                if(index >= numSamples) {
+                    if(!nextBlockReady) {
+                        memcpy(levelData + numSamples * ch, fifo + numSamples * ch, (sizeof (fifo)) / 2);
+                        _nextBlockReady = true;
+                    }
                     index = 0;
                 }
             }
-            currentLevel[ch] = 0.0;
-            for(auto i = 0; i < 1024; ++i) {
-                // TODO: how to calc
-                currentLevel[ch] = std::max(currentLevel[ch], std::abs(lastValues[ch][i]));
-            }
         }
-        lastValueIndex = index;
+        fifoIndex = index;
+        nextBlockReady = _nextBlockReady;
     }
 private:
-    double lastValues[2][1024]{};
-    int lastValueIndex = 0;
+    double fifo[2 * numSamples]{};
+    int fifoIndex = 0;
 };
 
 //==============================================================================
