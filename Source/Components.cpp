@@ -977,7 +977,7 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
     slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     slowFreqSlider.setRange(_paramsPtr->SlowFreq->range.start,
                            _paramsPtr->SlowFreq->range.end, 0.01);
-    slowFreqSlider.setSkewFactorFromMidPoint(2.0f);
+    slowFreqSlider.setSkewFactorFromMidPoint(4.0f);
     slowFreqSlider.setValue(_paramsPtr->SlowFreq->get(), juce::dontSendNotification);
     slowFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     slowFreqSlider.setPopupMenuEnabled(true);
