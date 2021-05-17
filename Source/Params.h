@@ -27,8 +27,8 @@ const juce::StringArray LFO_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter
 const juce::StringArray LFO_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3", "All");
 const juce::StringArray LFO_TARGET_FILTER_NAMES = juce::StringArray("1", "2", "All");
 
-enum class LFO_TARGET_OSC_PARAM { Vibrato, Tremolo, Edge, FM, AM };
-const juce::StringArray LFO_TARGET_OSC_PARAM_NAMES = juce::StringArray("Vibrato", "Tremolo", "Edge", "FM", "AM");
+enum class LFO_TARGET_OSC_PARAM { Vibrato, Tremolo, Edge, FM, AM, Pan };
+const juce::StringArray LFO_TARGET_OSC_PARAM_NAMES = juce::StringArray("Vibrato", "Tremolo", "Edge", "FM", "AM", "Pan");
 
 enum class LFO_TARGET_FILTER_PARAM { Freq, Q };
 const juce::StringArray LFO_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");

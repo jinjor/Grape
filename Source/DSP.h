@@ -474,9 +474,9 @@ public:
         }
     }
     void step(double numOsc, double pan, double detune, double spread, double freq, double angleShift, double edge, double* outout) {
-        if(numOsc == 1) {
-            outout[0] = outout[1] = oscs[0].step(freq, angleShift, edge) * GAIN_AT_CENTER;
-        } else {
+//        if(numOsc == 1) {
+//            outout[0] = outout[1] = oscs[0].step(freq, angleShift, edge) * GAIN_AT_CENTER;
+//        } else {
             setUnison(numOsc, pan, detune, spread);
             outout[0] = 0;
             outout[1] = 0;
@@ -485,7 +485,7 @@ public:
                 outout[0] += value * pans[i][0];
                 outout[1] += value * pans[i][1];
             }
-        }
+//        }
     }
 private:
     Osc oscs[MAX_NUM_OSC];
@@ -500,7 +500,7 @@ private:
         if(detune != currentDetune || numOsc != currentNumOsc) {
             for(int i = 0; i < numOsc; ++i) {
                 double detuneValue = numOsc == 1 ? 0 : -detune + (detune * 2) / (numOsc - 1) * i;
-                detunes[i] = std::pow(2, detuneValue / 20);
+                detunes[i] = std::pow(2, detuneValue / 20);// TODO: ?
             }
         }
         if(pan != currentPan || spread != currentSpread || numOsc != currentNumOsc) {
@@ -508,7 +508,7 @@ private:
             auto panMin = pan - std::min(1.0 + pan, spread);
             for(int i = 0; i < numOsc; ++i) {
                 double p = numOsc == 1
-                    ? ((panMin + panMax) / 2)
+                    ? (panMin + panMax) * 0.5
                     : panMin * (numOsc - 1 - i) / (numOsc - 1) + panMax * i / (numOsc - 1);
                 jassert(p >= -1);
                 jassert(p <= 1);

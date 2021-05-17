@@ -16,6 +16,7 @@ Modifiers::Modifiers(VoiceParams* voiceParams, ControlItemParams* controlItemPar
     std::fill_n(octShift, NUM_OSC, 0);
     std::fill_n(edgeRatio, NUM_OSC, 1.0);
     std::fill_n(panBase, NUM_OSC, 0.0);
+    std::fill_n(panMod, NUM_OSC, 0.0);
     std::fill_n(detuneRatio, NUM_OSC, 1.0);
     std::fill_n(spreadRatio, NUM_OSC, 1.0);
     std::fill_n(gain, NUM_OSC, 1.0);
@@ -470,6 +471,10 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                                         modifiers.gain[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
                                         break;
                                     }
+                                    case LFO_TARGET_OSC_PARAM::Pan: {
+                                        modifiers.panMod[oscIndex] += lfoValue * lfoAmount;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -505,11 +510,15 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                 }
                 auto freq = getMidiNoteInHertzDouble(shiftedNoteNumbers[oscIndex] + modifiers.octShift[oscIndex] * 12);
                 auto edge = oscParams[oscIndex].Edge->get() * modifiers.edgeRatio[oscIndex];
+                auto pan = modifiers.panMod[oscIndex] == 0
+                    ? modifiers.panBase[oscIndex]
+                    : juce::jlimit(-1.0, 1.0, modifiers.panBase[oscIndex] + (std::min(1.0 - modifiers.panBase[oscIndex], 1.0 + modifiers.panBase[oscIndex]) * modifiers.panMod[oscIndex]));// TODO: 計算減らす
                 auto detune = oscParams[oscIndex].Detune->get() * modifiers.detuneRatio[oscIndex];
                 auto spread = oscParams[oscIndex].Spread->get() * modifiers.spreadRatio[oscIndex];
+                
                 double o[2] {0, 0};
                 oscs[oscIndex].step(oscParams[oscIndex].Unison->get(),
-                                    modifiers.panBase[oscIndex],// TODO: LFO
+                                    pan,
                                     detune,
                                     spread,
                                     freq,
