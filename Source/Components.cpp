@@ -2188,10 +2188,15 @@ void AnalyserComponent::drawNextFrameOfLevel()
 void AnalyserComponent::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
-    g.setOpacity(1.0f);
-    g.setColour(juce::Colour(100,190,140));
+    
+    juce::Rectangle<int> bounds = getLocalBounds();
+    g.setColour(juce::Colour(30,30,30));
+    g.drawRect(bounds, 2.0f);
+
     if(readyToDrawFrame) {
-        drawFrame(g);
+        g.setOpacity(1.0f);
+        g.setColour(juce::Colour(100,190,140));
+        drawFrame(bounds.reduced(2), g);
     }
 }
 void AnalyserComponent::resized()
@@ -2219,23 +2224,25 @@ void AnalyserComponent::timerCallback()
         repaint();
     }
 }
-void AnalyserComponent::drawFrame(juce::Graphics& g)
+void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g)
 {
-    auto width  = getLocalBounds().getWidth() - 20;
-    auto height = getLocalBounds().getHeight();
+    auto offsetX = 3;
+    auto offsetY = 2;
+    auto width  = bounds.getWidth() - 20;
+    auto height = bounds.getHeight();
     for (int i = 1; i < scopeSize; ++i)
     {
-        g.drawLine ({ (float) juce::jmap (i - 1, 0, scopeSize - 1, 0, width),
-                              juce::jmap (scopeData[i - 1], 0.0f, 1.0f, (float) height, 0.0f),
-                      (float) juce::jmap (i,     0, scopeSize - 1, 0, width),
-                              juce::jmap (scopeData[i],     0.0f, 1.0f, (float) height, 0.0f) });
+        g.drawLine ({ offsetX + (float) juce::jmap (i - 1, 0, scopeSize - 1, 0, width),
+                      offsetY - 0.5f +         juce::jmap (scopeData[i - 1], 0.0f, 1.0f, (float) height, 0.0f),
+                      offsetX + (float) juce::jmap (i,     0, scopeSize - 1, 0, width),
+                      offsetY - 0.5f +         juce::jmap (scopeData[i],     0.0f, 1.0f, (float) height, 0.0f) });
     }
     {
-        int barHeight = currentLevel[0] * height;
-        g.fillRect(width + 1, height - barHeight, 8, barHeight);
+        int barHeight = juce::jmax(1.0f, currentLevel[0] * height);
+        g.fillRect(offsetX + width + 1, offsetY + height - barHeight, 8, barHeight);
     }
     {
-        int barHeight = currentLevel[1] * height;
-        g.fillRect(width + 10, height - barHeight, 8, barHeight);
+        int barHeight = juce::jmax(1.0f, currentLevel[1] * height);
+        g.fillRect(offsetX + width + 10, offsetY + height - barHeight, 8, barHeight);
     }
 }

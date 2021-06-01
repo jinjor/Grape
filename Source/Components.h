@@ -343,7 +343,7 @@ private:
     virtual void timerCallback() override;
     void drawNextFrameOfSpectrum();
     void drawNextFrameOfLevel();
-    void drawFrame(juce::Graphics& g);
+    void drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g);
 };
 
 //==============================================================================
