@@ -563,16 +563,15 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                 if(filterParams[filterIndex].Target->getIndex() == NUM_OSC) {// All
                     auto filterType = static_cast<FILTER_TYPE>(filterParams[filterIndex].Type->getIndex());
                     double freq;
+                    double noteShift = filterParams[filterIndex].Octave->get() * 12;
+                    noteShift += modifiers.filterOctShift[filterIndex] * 12;
                     switch(static_cast<FILTER_FREQ_TYPE>(filterParams[filterIndex].FreqType->getIndex())) {
                         case FILTER_FREQ_TYPE::Absolute: {
-                            freq = filterParams[filterIndex].Hz->get();
+                            freq = shiftHertsByNotes(filterParams[filterIndex].Hz->get(), noteShift);
                             break;
                         }
                         case FILTER_FREQ_TYPE::Relative: {
-                            double shiftedNoteNumber = midiNoteNumber;
-                            shiftedNoteNumber += filterParams[filterIndex].Octave->get() * 12;
-                            shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
-                            freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
+                            freq = getMidiNoteInHertzDouble(midiNoteNumber + noteShift);
                             break;
                         }
                     }

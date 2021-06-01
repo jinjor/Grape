@@ -189,6 +189,10 @@ private:
         return 440.0 * std::pow (2.0, (noteNumber - 69) * A);
 //        return Y * std::pow(X, noteNumber);// こっちの方がパフォーマンス悪かった
     }
+    double shiftHertsByNotes (double herts, double notes)
+    {
+        return herts * std::pow (2.0, notes * A);
+    }
 };
 
 //==============================================================================
