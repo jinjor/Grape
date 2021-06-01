@@ -341,6 +341,7 @@ OscComponent::OscComponent(int index, OscParams* params)
     gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
     gainSlider.setPopupDisplayEnabled(true, true, nullptr);
     gainSlider.setPopupMenuEnabled(true);
+    gainSlider.textFromValueFunction = [](double gain){ return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
     gainSlider.addListener(this);
     body.addAndMakeVisible(gainSlider);
     
@@ -591,6 +592,7 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     sustainSlider.setValue(_paramsPtr->Sustain->get(), juce::dontSendNotification);
     sustainSlider.setPopupDisplayEnabled(true, true, nullptr);
     sustainSlider.setPopupMenuEnabled(true);
+    sustainSlider.textFromValueFunction = [](double gain){ return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
     sustainSlider.addListener(this);
     addAndMakeVisible(sustainSlider);
     
