@@ -20,9 +20,8 @@ HeaderComponent::HeaderComponent(std::string name, bool hasEnableButton)
 , name(name)
 , hasEnableButton (hasEnableButton)
 {
-    if(hasEnableButton) {
-        addAndMakeVisible(enabledButton);
-    }
+    addAndMakeVisible(enabledButton);
+    enabledButton.setEnabled(hasEnableButton);
 }
 HeaderComponent::~HeaderComponent(){}
 void HeaderComponent::paint(juce::Graphics& g)
@@ -40,7 +39,7 @@ void HeaderComponent::paint(juce::Graphics& g)
     p.applyTransform(juce::AffineTransform()
                          .rotated(-juce::MathConstants<float>::halfPi, 0, 0)
                          .translated(pathBounds.getHeight()/2 + bounds.getWidth()/2,
-                                     pathBounds.getWidth() + PANEL_NAME_HEIGHT + 4.0)
+                                     pathBounds.getWidth() + PANEL_NAME_HEIGHT + 2.0)
                          );
     g.setColour(TEXT_COLOUR);
     g.fillPath(p);

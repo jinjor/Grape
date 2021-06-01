@@ -41,9 +41,11 @@ void GrapeLookAndFeel::drawTickBox (juce::Graphics& g, juce::Component& componen
     tickBounds = tickBounds.reduced(1);
     auto reduced = tickBounds.reduced(0.5);
     
-    g.setColour (COLOUR_PIT);
-    g.fillRect(tickBounds);
-    g.setColour (COLOUR_BORDER.withBrightness(0.1));
+    if(isEnabled) {
+        g.setColour (COLOUR_PIT);
+        g.fillRect(tickBounds);
+    }
+    g.setColour (COLOUR_BORDER.withBrightness(isEnabled ? 0.1 : 0.14));
     g.drawRect(reduced, 1.0f);
     if (ticked)
     {
