@@ -6,7 +6,7 @@ const juce::Colour COLOUR_PIT = juce::Colour(0,0,0);
 const juce::Colour COLOUR_BORDER = juce::Colour(30,30,30);
 const juce::Colour COLOUR_BACKGROUND = juce::Colour(30,30,30);
 const juce::Colour COLOUR_TEXT = juce::Colour(200,200,200);
-const int KNOB_WIDTH = 40;
+const int MAX_KNOB_WIDTH = 40;
 const float SLIT_WIDTH = 2.0f;
 const float POINTER_RADIUS = 4.0f;
 const float BORDER_WIDTH = 1.0f;
@@ -55,8 +55,9 @@ void GrapeLookAndFeel::drawTickBox (juce::Graphics& g, juce::Component& componen
 void GrapeLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
 const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider& slider)
 {
+    auto knobWidth = juce::jmin(MAX_KNOB_WIDTH, juce::jmin(width, height));
     auto fromCentre = dynamic_cast<CentredSlider*> (&slider) != nullptr;
-    auto radius = KNOB_WIDTH / 2 - 4.0f;
+    auto radius = knobWidth / 2 - 4.0f;
     auto centreX = (float) x + (float) width  * 0.5f;
     auto centreY = (float) y + (float) height * 0.5f;
     auto rx = centreX - radius;
