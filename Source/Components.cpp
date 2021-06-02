@@ -6,10 +6,11 @@ namespace {
 const float PANEL_NAME_FONT_SIZE = 15.0f;
 const float PARAM_LABEL_FONT_SIZE = 14.0f;
 const float PARAM_VALUE_LABEL_FONT_SIZE = 16.0f;
-const float PANEL_NAME_HEIGHT = 26.0;
-const float LOCAL_MARGIN = 2.0;
-const float LABEL_HEIGHT = 20.0;
-const float COMBO_BOX_HEIGHT = 28.0;
+const float PANEL_NAME_HEIGHT = 26.0f;
+const float LOCAL_MARGIN = 2.0f;
+const float LABEL_HEIGHT = 20.0f;
+const float COMBO_BOX_HEIGHT = 28.0f;
+const float SLIDER_WIDTH = 60.0f;
 const juce::Colour TEXT_COLOUR = juce::Colour(200,200,200);
 const juce::Colour PANEL_NAME_COLOUR = juce::Colour(50,50,50);
 }
@@ -405,7 +406,6 @@ void OscComponent::paint(juce::Graphics& g)
 
 void OscComponent::resized()
 {
-    int width = 60;
     int height = 60;
     
     juce::Rectangle<int> bounds = getLocalBounds();
@@ -430,37 +430,37 @@ void OscComponent::resized()
         waveformSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         edgeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         edgeSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         gainLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         gainSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         octaveLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         octaveSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         coarseLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         coarseSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         unisonLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         unisonSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         detuneLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         detuneSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         spreadLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         spreadSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -630,7 +630,6 @@ void EnvelopeComponent::paint(juce::Graphics& g)
 
 void EnvelopeComponent::resized()
 {
-    int width = 60;
     int height = 60;
     
     juce::Rectangle<int> bounds = getLocalBounds();
@@ -641,22 +640,22 @@ void EnvelopeComponent::resized()
     auto upperArea = bounds.removeFromTop(bodyHeight/2);
     auto lowerArea = bounds;
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         attackLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         attackSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         decayLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         decaySlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         sustainLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         sustainSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         releaseLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         releaseSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -800,7 +799,6 @@ void FilterComponent::paint(juce::Graphics& g)
 
 void FilterComponent::resized()
 {
-    int width = 60;
     int height = 60;
     
     juce::Rectangle<int> bounds = getLocalBounds();
@@ -831,13 +829,13 @@ void FilterComponent::resized()
         freqTypeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         freqLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         hzSlider.setBounds(area.reduced(LOCAL_MARGIN));
         octaveSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         qLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         qSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -1032,7 +1030,6 @@ void LfoComponent::paint(juce::Graphics& g)
 
 void LfoComponent::resized()
 {
-    int width = 60;
     int height = 60;
 
     juce::Rectangle<int> bounds = getLocalBounds();
@@ -1064,13 +1061,13 @@ void LfoComponent::resized()
         waveformSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         freqLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         fastFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
         slowFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         amountLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         amountSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -1341,7 +1338,6 @@ void ModEnvComponent::paint(juce::Graphics& g)
 
 void ModEnvComponent::resized()
 {
-    int width = 60;
     int height = 60;
 
     juce::Rectangle<int> bounds = getLocalBounds();
@@ -1371,7 +1367,7 @@ void ModEnvComponent::resized()
         targetLfoParamSelector.setBounds(paramArea);
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         auto lebelArea = area.removeFromTop(LABEL_HEIGHT);
         peakFreqLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
         fadeLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
@@ -1379,7 +1375,7 @@ void ModEnvComponent::resized()
         fadeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         auto lebelArea = area.removeFromTop(LABEL_HEIGHT);
         waitLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
         attackLabel.setBounds(lebelArea.reduced(LOCAL_MARGIN));
@@ -1387,7 +1383,7 @@ void ModEnvComponent::resized()
         attackSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         decayLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         decaySlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -1703,7 +1699,6 @@ void DelayComponent::paint(juce::Graphics& g)
 
 void DelayComponent::resized()
 {
-    int width = 60;
     int height = 60;
     
     juce::Rectangle<int> bounds = getLocalBounds();
@@ -1727,24 +1722,24 @@ void DelayComponent::resized()
         syncSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         lowFreqLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         lowFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         highFreqLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         highFreqSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         timeLLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         auto sliderBounds = area.reduced(LOCAL_MARGIN);
         timeLSlider.setBounds(sliderBounds);
         timeSyncLSlider.setBounds(sliderBounds);
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         timeRLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         auto sliderBounds = area.reduced(LOCAL_MARGIN);
         timeRSlider.setBounds(sliderBounds);
@@ -1752,12 +1747,12 @@ void DelayComponent::resized()
     }
 
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         feedbackLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         feedbackSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = lowerArea.removeFromLeft(width).removeFromTop(height);
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH).removeFromTop(height);
         mixLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         mixSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
