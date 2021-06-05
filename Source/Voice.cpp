@@ -540,10 +540,21 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                     }
                     if(filterParams[filterIndex].Target->getIndex() == oscIndex) {
                         auto filterType = static_cast<FILTER_TYPE>(filterParams[filterIndex].Type->getIndex());
-                        double shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
-                        shiftedNoteNumber += filterParams[filterIndex].Octave->get() * 12;
-                        shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
-                        auto freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
+                        double freq;
+                        switch(static_cast<FILTER_FREQ_TYPE>(filterParams[filterIndex].FreqType->getIndex())) {
+                            case FILTER_FREQ_TYPE::Absolute: {
+                                double noteShift = modifiers.filterOctShift[filterIndex] * 12;
+                                freq = shiftHertsByNotes(filterParams[filterIndex].Hz->get(), noteShift);
+                                break;
+                            }
+                            case FILTER_FREQ_TYPE::Relative: {
+                                double shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
+                                shiftedNoteNumber += filterParams[filterIndex].Octave->get() * 12;
+                                shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
+                                freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
+                                break;
+                            }
+                        }
                         auto q = filterParams[filterIndex].Q->get();
                         if(modifiers.filterQExp[filterIndex] != 1.0) {
                             q = std::pow(q, modifiers.filterQExp[filterIndex]);
@@ -563,15 +574,17 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                 if(filterParams[filterIndex].Target->getIndex() == NUM_OSC) {// All
                     auto filterType = static_cast<FILTER_TYPE>(filterParams[filterIndex].Type->getIndex());
                     double freq;
-                    double noteShift = filterParams[filterIndex].Octave->get() * 12;
-                    noteShift += modifiers.filterOctShift[filterIndex] * 12;
                     switch(static_cast<FILTER_FREQ_TYPE>(filterParams[filterIndex].FreqType->getIndex())) {
                         case FILTER_FREQ_TYPE::Absolute: {
+                            double noteShift = modifiers.filterOctShift[filterIndex] * 12;
                             freq = shiftHertsByNotes(filterParams[filterIndex].Hz->get(), noteShift);
                             break;
                         }
                         case FILTER_FREQ_TYPE::Relative: {
-                            freq = getMidiNoteInHertzDouble(midiNoteNumber + noteShift);
+                            double shiftedNoteNumber = midiNoteNumber;
+                            shiftedNoteNumber += filterParams[filterIndex].Octave->get() * 12;
+                            shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
+                            freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
                             break;
                         }
                     }
