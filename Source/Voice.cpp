@@ -559,8 +559,9 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                         if(modifiers.filterQExp[filterIndex] != 1.0) {
                             q = std::pow(q, modifiers.filterQExp[filterIndex]);
                         }
+                        auto gain = filterParams[filterIndex].Gain->get();
                         for (auto ch = 0; ch < numChannels; ++ch) {
-                            o[ch] = filters[filterIndex].step(filterType, freq, q, ch, o[ch]);
+                            o[ch] = filters[filterIndex].step(filterType, freq, q, gain, ch, o[ch]);
                         }
                     }
                 }
@@ -592,8 +593,9 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                     if(modifiers.filterQExp[filterIndex] != 1.0) {
                         q = std::pow(q, modifiers.filterQExp[filterIndex]);
                     }
+                    auto gain = filterParams[filterIndex].Gain->get();
                     for (auto ch = 0; ch < numChannels; ++ch) {
-                        out[ch] = filters[filterIndex].step(filterType, freq, q, ch, out[ch]);
+                        out[ch] = filters[filterIndex].step(filterType, freq, q, gain, ch, out[ch]);
                     }
                 }
             }

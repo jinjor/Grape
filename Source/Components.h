@@ -179,12 +179,14 @@ private:
     juce::Slider hzSlider;
     juce::Slider octaveSlider;
     juce::Slider qSlider;
+    juce::Slider gainSlider;
     
     juce::Label targetLabel;
     juce::Label typeLabel;
     juce::Label freqTypeLabel;
     juce::Label freqLabel;
     juce::Label qLabel;
+    juce::Label gainLabel;
 };
 
 //==============================================================================

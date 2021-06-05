@@ -690,6 +690,7 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
 , hzSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , octaveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , qSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+, gainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
 
@@ -746,6 +747,14 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     qSlider.setPopupDisplayEnabled(true, true, nullptr);
     qSlider.addListener(this);
     body.addAndMakeVisible(qSlider);
+    
+    gainSlider.setLookAndFeel(&grapeLookAndFeel);
+    gainSlider.setRange(_paramsPtr->Gain->range.start,
+                           _paramsPtr->Gain->range.end, 0.01);
+    gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
+    gainSlider.setPopupDisplayEnabled(true, true, nullptr);
+    gainSlider.addListener(this);
+    body.addAndMakeVisible(gainSlider);
 
     targetLabel.setFont(paramLabelFont);
     targetLabel.setText("OSC", juce::dontSendNotification);
@@ -776,6 +785,12 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     qLabel.setJustificationType(juce::Justification::centred);
     qLabel.setEditable(false, false, false);
     body.addAndMakeVisible(qLabel);
+    
+    gainLabel.setFont(paramLabelFont);
+    gainLabel.setText("Gain", juce::dontSendNotification);
+    gainLabel.setJustificationType(juce::Justification::centred);
+    gainLabel.setEditable(false, false, false);
+    body.addAndMakeVisible(gainLabel);
     
     addAndMakeVisible(body);
     
@@ -813,7 +828,7 @@ void FilterComponent::resized()
         typeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
-        float selectorWidth = 120.0f;
+        float selectorWidth = 70.0f;
         juce::Rectangle<int> area = lowerArea.removeFromLeft(selectorWidth);
         freqTypeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         freqTypeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
@@ -828,6 +843,11 @@ void FilterComponent::resized()
         juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH);
         qLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         qSlider.setBounds(area.reduced(LOCAL_MARGIN));
+    }
+    {
+        juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH);
+        gainLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        gainSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
 void FilterComponent::buttonClicked(juce::Button* button) {
@@ -865,6 +885,10 @@ void FilterComponent::sliderValueChanged(juce::Slider *slider)
     {
         *_paramsPtr->Q = (float)qSlider.getValue();
     }
+    else if(slider == &gainSlider)
+    {
+        *_paramsPtr->Gain = (float)gainSlider.getValue();
+    }
 }
 void FilterComponent::timerCallback()
 {
@@ -881,6 +905,10 @@ void FilterComponent::timerCallback()
     auto freqType = static_cast<FILTER_FREQ_TYPE>(_paramsPtr->FreqType->getIndex());
     hzSlider.setVisible(freqType == FILTER_FREQ_TYPE::Absolute);
     octaveSlider.setVisible(freqType == FILTER_FREQ_TYPE::Relative);
+    
+    auto hasGain = _paramsPtr->hasGain();
+    gainLabel.setEnabled(hasGain);
+    gainSlider.setEnabled(hasGain);
 }
 
 //==============================================================================

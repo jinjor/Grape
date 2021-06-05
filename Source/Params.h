@@ -15,11 +15,11 @@ const juce::StringArray OSC_ENV_NAMES = juce::StringArray("1", "2");
 
 const juce::StringArray FILTER_TARGET_NAMES = juce::StringArray("1", "2", "3", "All");
 
-enum class FILTER_TYPE { Lowpass, Highpass };
-const juce::StringArray FILTER_TYPE_NAMES = juce::StringArray("Lowpass", "Highpass");
+enum class FILTER_TYPE { Lowpass, Highpass, Bandpass1, Bandpass2, Notch, Peaking, LowShelf, HighShelf };
+const juce::StringArray FILTER_TYPE_NAMES = juce::StringArray("Lowpass", "Highpass", "Bandpass1", "Bandpass2", "Notch", "Peaking", "LowShelf", "HighShelf" );
 
 enum class FILTER_FREQ_TYPE { Absolute, Relative };
-const juce::StringArray FILTER_FREQ_TYPE_NAMES = juce::StringArray("Absolute", "Relative");
+const juce::StringArray FILTER_FREQ_TYPE_NAMES = juce::StringArray("Abs", "Rel");
 
 enum class LFO_TARGET_TYPE { OSC, Filter };
 const juce::StringArray LFO_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter");
@@ -186,17 +186,29 @@ public:
     juce::AudioParameterFloat* Hz;
     juce::AudioParameterFloat* Octave;
     juce::AudioParameterFloat* Q;
+    juce::AudioParameterFloat* Gain;
     FilterParams(juce::AudioParameterBool* enabled,
                  juce::AudioParameterChoice* target,
                  juce::AudioParameterChoice* type,
                  juce::AudioParameterChoice* freqType,
                  juce::AudioParameterFloat* hz,
                  juce::AudioParameterFloat* octave,
-                 juce::AudioParameterFloat* q);
+                 juce::AudioParameterFloat* q,
+                 juce::AudioParameterFloat* gain);
     
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
+    bool hasGain() {
+        switch(static_cast<FILTER_TYPE>(Type->getIndex())) {
+            case FILTER_TYPE::Peaking:
+            case FILTER_TYPE::LowShelf:
+            case FILTER_TYPE::HighShelf:
+                return true;
+            default:
+                return false;
+        }
+    }
     
 private:
 };

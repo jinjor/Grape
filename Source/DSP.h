@@ -276,10 +276,10 @@ public:
     void setSampleRate(double sampleRate) {
         this->sampleRate = sampleRate;
     }
-    double step (FILTER_TYPE filterType, double freq, double q, int ch, double input) {
+    double step (FILTER_TYPE filterType, double freq, double q, double dbGain, int ch, double input) {
         jassert(ch < 2);
         jassert(sampleRate != 0.0);
-        setParams(filterType, freq, q);
+        setParams(filterType, freq, q, dbGain);
         
         double* p = past[ch];
         // apply b
@@ -306,9 +306,10 @@ private:
     FILTER_TYPE currentFilterType = FILTER_TYPE::Lowpass;
     double currentFreq = 0.0;
     double currentQ = 0.0;
-    void setParams (FILTER_TYPE filterType, double freq, double q) {
+    double currentDbGain = 0.0;
+    void setParams (FILTER_TYPE filterType, double freq, double q, double dbGain) {
         freq = std::min(sampleRate * 0.5 - 10, freq);
-        if(filterType == currentFilterType && freq == currentFreq && q == currentQ) {
+        if(filterType == currentFilterType && freq == currentFreq && q == currentQ && dbGain == currentDbGain) {
             return;
         }
         switch(filterType) {
@@ -322,10 +323,41 @@ private:
                 setHighpassParams(sampleRate, freq, q);
                 break;
             }
+            case FILTER_TYPE::Bandpass1:
+            {
+                setBandpass1Params(sampleRate, freq, q);
+                break;
+            }
+            case FILTER_TYPE::Bandpass2:
+            {
+                setBandpass2Params(sampleRate, freq, q);
+                break;
+            }
+            case FILTER_TYPE::Notch:
+            {
+                setNotchParams(sampleRate, freq, q);
+                break;
+            }
+            case FILTER_TYPE::Peaking:
+            {
+                setPeakingParams(sampleRate, freq, q, dbGain);
+                break;
+            }
+            case FILTER_TYPE::LowShelf:
+            {
+                setLowShelfParams(sampleRate, freq, q, dbGain);
+                break;
+            }
+            case FILTER_TYPE::HighShelf:
+            {
+                setHighShelfParams(sampleRate, freq, q, dbGain);
+                break;
+            }
         }
         currentFilterType = filterType;
         currentFreq = freq;
         currentQ = q;
+        currentDbGain = dbGain;
     }
     void setLowpassParams (double sampleRate, double freq, double q) {
         // from RBJ's cookbook
@@ -355,6 +387,128 @@ private:
         auto a0 = 1 + alpha;
         auto a1 = -2 * std::cos(w0);
         auto a2 = 1 - alpha;
+        feedforward[0] = b0/a0;
+        feedforward[1] = b1/a0;
+        feedforward[2] = b2/a0;
+        feedback[0] = a1/a0;
+        feedback[1] = a2/a0;
+    }
+    void setBandpass1Params (double sampleRate, double freq, double q) {
+        // from RBJ's cookbook
+        auto fc = freq / sampleRate;
+        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto alpha = std::sin(w0) / (2 * q);
+        auto b0 = std::sin(w0) * 0.5;
+        auto b1 = 0.0;
+        auto b2 = -std::sin(w0) * 0.5;
+        auto a0 = 1 + alpha;
+        auto a1 = -2 * std::cos(w0);
+        auto a2 = 1 - alpha;
+        feedforward[0] = b0/a0;
+        feedforward[1] = b1/a0;
+        feedforward[2] = b2/a0;
+        feedback[0] = a1/a0;
+        feedback[1] = a2/a0;
+    }
+    void setBandpass2Params (double sampleRate, double freq, double q) {
+        // from RBJ's cookbook
+        auto fc = freq / sampleRate;
+        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto alpha = std::sin(w0) / (2 * q);
+        auto b0 = alpha;
+        auto b1 = 0.0;
+        auto b2 = -alpha;
+        auto a0 = 1 + alpha;
+        auto a1 = -2 * std::cos(w0);
+        auto a2 = 1 - alpha;
+        feedforward[0] = b0/a0;
+        feedforward[1] = b1/a0;
+        feedforward[2] = b2/a0;
+        feedback[0] = a1/a0;
+        feedback[1] = a2/a0;
+    }
+    void setNotchParams (double sampleRate, double freq, double q) {
+        // from RBJ's cookbook
+        auto fc = freq / sampleRate;
+        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto alpha = std::sin(w0) / (2 * q);
+        auto b0 = 1.0;
+        auto b1 = -2 * std::cos(w0);
+        auto b2 = 1.0;
+        auto a0 = 1 + alpha;
+        auto a1 = -2 * std::cos(w0);
+        auto a2 = 1 - alpha;
+        feedforward[0] = b0/a0;
+        feedforward[1] = b1/a0;
+        feedforward[2] = b2/a0;
+        feedback[0] = a1/a0;
+        feedback[1] = a2/a0;
+    }
+    void setAllPassParams (double sampleRate, double freq, double q) {
+        // from RBJ's cookbook
+        auto fc = freq / sampleRate;
+        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto alpha = std::sin(w0) / (2 * q);
+        auto b0 = 1 - alpha;
+        auto b1 = -2 * std::cos(w0);
+        auto b2 = 1 + alpha;
+        auto a0 = 1 + alpha;
+        auto a1 = -2 * std::cos(w0);
+        auto a2 = 1 - alpha;
+        feedforward[0] = b0/a0;
+        feedforward[1] = b1/a0;
+        feedforward[2] = b2/a0;
+        feedback[0] = a1/a0;
+        feedback[1] = a2/a0;
+    }
+    void setPeakingParams (double sampleRate, double freq, double q, double dbGain) {
+        // from RBJ's cookbook
+        auto fc = freq / sampleRate;
+        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto alpha = std::sin(w0) / (2 * q);
+        auto A = std::pow(10, dbGain/40);
+        auto b0 = 1 + alpha * A;
+        auto b1 = -2 * std::cos(w0);
+        auto b2 = 1 - alpha * A;
+        auto a0 = 1 + alpha / A;
+        auto a1 = -2 * std::cos(w0);
+        auto a2 = 1 - alpha / A;
+        feedforward[0] = b0/a0;
+        feedforward[1] = b1/a0;
+        feedforward[2] = b2/a0;
+        feedback[0] = a1/a0;
+        feedback[1] = a2/a0;
+    }
+    void setLowShelfParams (double sampleRate, double freq, double q, double dbGain) {
+        // from RBJ's cookbook
+        auto fc = freq / sampleRate;
+        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto alpha = std::sin(w0) / (2 * q);
+        auto A = std::pow(10, dbGain/40);
+        auto b0 = A * ((A + 1) - (A - 1) * std::cos(w0) + 2 * std::sqrt(A) * alpha);
+        auto b1 = 2 * A * ((A - 1) - (A + 1) * std::cos(w0));
+        auto b2 = A * ((A + 1) - (A - 1) * std::cos(w0) - 2 * std::sqrt(A) * alpha);
+        auto a0 = (A + 1) + (A - 1) * std::cos(w0) + 2 * std::sqrt(A) * alpha;
+        auto a1 = -2 * ((A - 1) + (A + 1) * std::cos(w0));
+        auto a2 = (A + 1) + (A - 1) * std::cos(w0) - 2 * std::sqrt(A) * alpha;
+        feedforward[0] = b0/a0;
+        feedforward[1] = b1/a0;
+        feedforward[2] = b2/a0;
+        feedback[0] = a1/a0;
+        feedback[1] = a2/a0;
+    }
+    void setHighShelfParams (double sampleRate, double freq, double q, double dbGain) {
+        // from RBJ's cookbook
+        auto fc = freq / sampleRate;
+        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto alpha = std::sin(w0) / (2 * q);
+        auto A = std::pow(10, dbGain/40);
+        auto b0 = A * ((A + 1) + (A - 1) * std::cos(w0) + 2 * std::sqrt(A) * alpha);
+        auto b1 = -2 * A * ((A - 1) - (A + 1) * std::cos(w0));
+        auto b2 = A * ((A + 1) + (A - 1) * std::cos(w0) - 2 * std::sqrt(A) * alpha);
+        auto a0 = (A + 1) - (A - 1) * std::cos(w0) + 2 * std::sqrt(A) * alpha;
+        auto a1 = 2 * ((A - 1) + (A + 1) * std::cos(w0));
+        auto a2 = (A + 1) - (A - 1) * std::cos(w0) - 2 * std::sqrt(A) * alpha;
         feedforward[0] = b0/a0;
         feedforward[1] = b1/a0;
         feedforward[2] = b2/a0;
@@ -573,8 +727,8 @@ public:
             input[ch] = dry * (1-mix) + wet * mix;
             
             auto newWet = dry + tmp[type == DELAY_TYPE::PingPong ? 1 - ch : ch] * feedback;
-            newWet = lowpass.step(FILTER_TYPE::Lowpass, highFreq, 1.0, ch, newWet);
-            newWet = highpass.step(FILTER_TYPE::Highpass, lowFreq, 1.0, ch, newWet);
+            newWet = lowpass.step(FILTER_TYPE::Lowpass, highFreq, 1.0, 0.0, ch, newWet);
+            newWet = highpass.step(FILTER_TYPE::Highpass, lowFreq, 1.0, 0.0, ch, newWet);
             past[ch][cursor[ch]] = newWet;
         }
         for(int ch = 0; ch < 2; ch++) {
