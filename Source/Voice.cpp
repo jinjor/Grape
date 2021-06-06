@@ -452,6 +452,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                             if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
                                 switch(param) {
                                     case LFO_TARGET_OSC_PARAM::Vibrato: {
+                                        jassert(lfoValue <= 1.0);
                                         modifiers.octShift[oscIndex] += lfoValue * lfoAmount * 0.2;
                                         break;
                                     }
