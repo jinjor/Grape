@@ -688,7 +688,7 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
 , typeSelector("Type")
 , freqTypeSelector("Type")
 , hzSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
-, octaveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+, centSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , qSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , gainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
@@ -730,14 +730,20 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     hzSlider.addListener(this);
     body.addAndMakeVisible(hzSlider);
     
-    octaveSlider.setLookAndFeel(&grapeLookAndFeel);
-    octaveSlider.setRange(_paramsPtr->Octave->range.start,
-                         _paramsPtr->Octave->range.end, 1.0/12);
-    octaveSlider.setValue(_paramsPtr->Octave->get(), juce::dontSendNotification);
-    octaveSlider.setPopupDisplayEnabled(true, true, nullptr);
-    octaveSlider.setTextValueSuffix(" oct");
-    octaveSlider.addListener(this);
-    body.addAndMakeVisible(octaveSlider);
+    centSlider.setLookAndFeel(&grapeLookAndFeel);
+    centSlider.setRange(_paramsPtr->Cent->getRange().getStart(),
+                         _paramsPtr->Cent->getRange().getEnd(), 1);
+    centSlider.setValue(_paramsPtr->Cent->get(), juce::dontSendNotification);
+    centSlider.setPopupDisplayEnabled(true, true, nullptr);
+    centSlider.textFromValueFunction = [](double value) -> std::string {
+        int cent = value;
+        if(cent >= 0) {
+            return std::to_string(cent / 12) + ":" + std::to_string(cent % 12) + " oct";
+        }
+        return "-" + std::to_string(-cent / 12) + ":" + std::to_string(-cent % 12) + " oct";
+    };
+    centSlider.addListener(this);
+    body.addAndMakeVisible(centSlider);
     
     qSlider.setLookAndFeel(&grapeLookAndFeel);
     qSlider.setRange(_paramsPtr->Q->range.start,
@@ -837,7 +843,7 @@ void FilterComponent::resized()
         juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH);
         freqLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         hzSlider.setBounds(area.reduced(LOCAL_MARGIN));
-        octaveSlider.setBounds(area.reduced(LOCAL_MARGIN));
+        centSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH);
@@ -877,9 +883,9 @@ void FilterComponent::sliderValueChanged(juce::Slider *slider)
     {
         *_paramsPtr->Hz = (float)hzSlider.getValue();
     }
-    else if(slider == &octaveSlider)
+    else if(slider == &centSlider)
     {
-        *_paramsPtr->Octave = (float)octaveSlider.getValue();
+        *_paramsPtr->Cent = centSlider.getValue();
     }
     else if(slider == &qSlider)
     {
@@ -899,12 +905,12 @@ void FilterComponent::timerCallback()
     typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
     freqTypeSelector.setSelectedItemIndex(_paramsPtr->FreqType->getIndex(), juce::dontSendNotification);
     hzSlider.setValue(_paramsPtr->Hz->get(), juce::dontSendNotification);
-    octaveSlider.setValue(_paramsPtr->Octave->get(), juce::dontSendNotification);
+    centSlider.setValue(_paramsPtr->Cent->get(), juce::dontSendNotification);
     qSlider.setValue(_paramsPtr->Q->get(), juce::dontSendNotification);
     
     auto freqType = static_cast<FILTER_FREQ_TYPE>(_paramsPtr->FreqType->getIndex());
     hzSlider.setVisible(freqType == FILTER_FREQ_TYPE::Absolute);
-    octaveSlider.setVisible(freqType == FILTER_FREQ_TYPE::Relative);
+    centSlider.setVisible(freqType == FILTER_FREQ_TYPE::Relative);
     
     auto hasGain = _paramsPtr->hasGain();
     gainLabel.setEnabled(hasGain);

@@ -177,7 +177,7 @@ private:
     juce::ComboBox typeSelector;
     juce::ComboBox freqTypeSelector;
     juce::Slider hzSlider;
-    juce::Slider octaveSlider;
+    juce::Slider centSlider;
     juce::Slider qSlider;
     juce::Slider gainSlider;
     

@@ -128,7 +128,7 @@ FilterParams::FilterParams(juce::AudioParameterBool* enabled,
                            juce::AudioParameterChoice* type,
                            juce::AudioParameterChoice* freqType,
                            juce::AudioParameterFloat* hz,
-                           juce::AudioParameterFloat* octave,
+                           juce::AudioParameterInt* cent,
                            juce::AudioParameterFloat* q,
                            juce::AudioParameterFloat* gain)
 : Enabled(enabled)
@@ -136,7 +136,7 @@ FilterParams::FilterParams(juce::AudioParameterBool* enabled,
 , Type(type)
 , FreqType(freqType)
 , Hz(hz)
-, Octave(octave)
+, Cent(cent)
 , Q(q)
 , Gain(gain)
 {}
@@ -147,7 +147,7 @@ void FilterParams::addAllParameters(juce::AudioProcessor& processor)
     processor.addParameter(Type);
     processor.addParameter(FreqType);
     processor.addParameter(Hz);
-    processor.addParameter(Octave);
+    processor.addParameter(Cent);
     processor.addParameter(Q);
     processor.addParameter(Gain);
 }
@@ -158,7 +158,7 @@ void FilterParams::saveParameters(juce::XmlElement& xml)
     xml.setAttribute(Type->paramID, Type->getIndex());
     xml.setAttribute(FreqType->paramID, FreqType->getIndex());
     xml.setAttribute(Hz->paramID, (double)Hz->get());
-    xml.setAttribute(Octave->paramID, (double)Octave->get());
+    xml.setAttribute(Cent->paramID, Cent->get());
     xml.setAttribute(Q->paramID, (double)Q->get());
     xml.setAttribute(Gain->paramID, (double)Gain->get());
 }
@@ -169,7 +169,7 @@ void FilterParams::loadParameters(juce::XmlElement& xml)
     *Type = xml.getIntAttribute(Type->paramID, 0);
     *FreqType = xml.getIntAttribute(FreqType->paramID, 0);
     *Hz = (float)xml.getDoubleAttribute(Hz->paramID, 0);
-    *Octave = (float)xml.getDoubleAttribute(Octave->paramID, 0);
+    *Cent = xml.getDoubleAttribute(Cent->paramID, 0);
     *Q = (float)xml.getDoubleAttribute(Q->paramID, 1.0);
     *Gain = (float)xml.getDoubleAttribute(Gain->paramID, 0);
 }

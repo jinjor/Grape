@@ -184,7 +184,7 @@ public:
     juce::AudioParameterChoice* Type;
     juce::AudioParameterChoice* FreqType;
     juce::AudioParameterFloat* Hz;
-    juce::AudioParameterFloat* Octave;
+    juce::AudioParameterInt* Cent;
     juce::AudioParameterFloat* Q;
     juce::AudioParameterFloat* Gain;
     FilterParams(juce::AudioParameterBool* enabled,
@@ -192,7 +192,7 @@ public:
                  juce::AudioParameterChoice* type,
                  juce::AudioParameterChoice* freqType,
                  juce::AudioParameterFloat* hz,
-                 juce::AudioParameterFloat* octave,
+                 juce::AudioParameterInt* cent,
                  juce::AudioParameterFloat* q,
                  juce::AudioParameterFloat* gain);
     

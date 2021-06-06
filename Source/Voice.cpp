@@ -549,7 +549,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                             }
                             case FILTER_FREQ_TYPE::Relative: {
                                 double shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
-                                shiftedNoteNumber += filterParams[filterIndex].Octave->get() * 12;
+                                shiftedNoteNumber += filterParams[filterIndex].Cent->get();
                                 shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
                                 freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
                                 break;
@@ -583,7 +583,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                         }
                         case FILTER_FREQ_TYPE::Relative: {
                             double shiftedNoteNumber = midiNoteNumber;
-                            shiftedNoteNumber += filterParams[filterIndex].Octave->get() * 12;
+                            shiftedNoteNumber += filterParams[filterIndex].Cent->get();
                             shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
                             freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
                             break;
