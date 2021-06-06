@@ -1280,7 +1280,7 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     
     attackSlider.setLookAndFeel(&grapeLookAndFeel);
     attackSlider.setRange(_paramsPtr->Attack->range.start,
-                           _paramsPtr->Attack->range.end, 0.01);
+                           _paramsPtr->Attack->range.end, 0.001);
     attackSlider.setSkewFactorFromMidPoint(0.2f);
     attackSlider.setValue(_paramsPtr->Attack->get(), juce::dontSendNotification);
     attackSlider.setPopupDisplayEnabled(true, true, nullptr);
