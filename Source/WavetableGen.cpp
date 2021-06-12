@@ -42,11 +42,23 @@ int main() {
             for(int i = 0; i < NUM_SAMPLES; i++) {
                 float angle = 2.0 * PI / NUM_DIVISIONS * i;
                 float value = 0.0f;
-                for(int n = 1; freq * n <= MAX_FREQ; n++) {
-                    value += std::sin(n * angle) / n;
+                int numPartials = MAX_FREQ / freq;
+                for(int n = 1; n <= numPartials; n++) {
+                    float k = (PI / 2) / numPartials;
+                    float gibbsFix = std::pow(std::cos((n-1) * k), 2);
+                    value += std::sin(n * angle) / n * gibbsFix;
                 }
                 sawTable[noteNum * NUM_SAMPLES + i] = value;
             }
+        }
+        float max = 0.0f;
+        // normalize to richest waveform(0)
+        for(int i = 0; i < NUM_SAMPLES; i++) {
+            max = std::max(std::abs(sawTable[i]), max);
+        }
+//        std::cout << "max=" << max << std::endl;
+        for(int i = 0; i < 128 * NUM_SAMPLES; i++) {
+            sawTable[i] = sawTable[i] / max;
         }
         std::ofstream ofs(SAW_FILE, std::ios::out | std::ios::binary);
         ofs.write(reinterpret_cast<const char*>(sawTable), 128 * NUM_SAMPLES * sizeof(float));
@@ -61,8 +73,11 @@ int main() {
                 float angle = PI / NUM_DIVISIONS * i;
                 float value = PI * PI / 3;
                 int sign = -1;
-                for(int n = 1; freq * n <= MAX_FREQ; n++) {
-                    value += sign * 4 * std::cos(n * angle) / n / n;
+                int numPartials = MAX_FREQ / freq;
+                for(int n = 1; n <= numPartials; n++) {
+                    float k = (PI / 2) / numPartials;
+                    float gibbsFix = std::pow(std::cos((n-1) * k), 2);
+                    value += sign * 4 * std::cos(n * angle) / n / n * gibbsFix;
                     sign = -sign;
                 }
                 parabolaTable[noteNum * NUM_SAMPLES + i] = value;
@@ -73,6 +88,7 @@ int main() {
         for(int i = 0; i < NUM_SAMPLES; i++) {
             max = std::max(std::abs(parabolaTable[i]), max);
         }
+//        std::cout << "max=" << max << std::endl;
         for(int i = 0; i < 128 * NUM_SAMPLES; i++) {
             parabolaTable[i] = parabolaTable[i] / max * 2.0f - 1.0f;
         }
@@ -82,3 +98,5 @@ int main() {
     }
     return 0;
 }
+
+// ref: https://www.musicdsp.org/en/latest/Synthesis/17-bandlimited-waveform-generation.html
