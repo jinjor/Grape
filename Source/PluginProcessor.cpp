@@ -17,7 +17,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 #endif
 , voiceParams {
     new juce::AudioParameterChoice("VOICE_MODE", "Mode", VOICE_MODE_NAMES, VOICE_MODE_NAMES.indexOf("Poly")),
-    new juce::AudioParameterFloat("VOICE_PORTAMENTO_TIME", "PortamentoTime", { 0.001f, 1.0f, 0.001f } , 0.10f),
+    new juce::AudioParameterFloat("VOICE_PORTAMENTO_TIME", "PortamentoTime", { 0.001f, 1.0f, 0.001f } , 0.1f),
     new juce::AudioParameterInt("VOICE_PITCH_BEND_RANGE", "PitchBendRange", 1, 12, 2),
 }
 , oscParams {
