@@ -60,13 +60,13 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 }
 , envelopeParams {
     EnvelopeParams {
-        new juce::AudioParameterFloat("ENV0_ATTACK", "Attack", 0.001f, 1.0f, 0.1f),
+        new juce::AudioParameterFloat("ENV0_ATTACK", "Attack", { 0.001f, 1.0f, 0.001f }, 0.1f),
         new juce::AudioParameterFloat("ENV0_DECAY", "Decay", 0.01f, 1.0f, 0.2f),
         new juce::AudioParameterFloat("ENV0_SUSTAIN", "Sustain", 0.0f, 1.0f, 0.7f),
         new juce::AudioParameterFloat("ENV0_RELEASE", "Release", 0.01f, 1.0f, 0.1f)
     },
     EnvelopeParams {
-        new juce::AudioParameterFloat("ENV1_ATTACK", "Attack", 0.001f, 1.0f, 0.01f),
+        new juce::AudioParameterFloat("ENV1_ATTACK", "Attack", { 0.001f, 1.0f, 0.001f }, 0.01f),
         new juce::AudioParameterFloat("ENV1_DECAY", "Decay", 0.01f, 1.0f, 0.1f),
         new juce::AudioParameterFloat("ENV1_SUSTAIN", "Sustain", 0.0f, 1.0f, 0.0f),
         new juce::AudioParameterFloat("ENV1_RELEASE", "Release", 0.01f, 1.0f, 0.1f)
@@ -145,7 +145,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("MODENV0_FADE", "Fade", MODENV_FADE_NAMES, MODENV_FADE_NAMES.indexOf("In")),
         new juce::AudioParameterFloat("MODENV0_START_FREQ", "StartFreq", -8.0f, 8.0, 0.0f),
         new juce::AudioParameterFloat("MODENV0_WAIT", "Wait", 0.0f, 1.0f, 0.5f),
-        new juce::AudioParameterFloat("MODENV0_ATTACK", "Attack", 0.0f, 1.0f, 0.01f),
+        new juce::AudioParameterFloat("MODENV0_ATTACK", "Attack", { 0.0f, 1.0f, 0.001f }, 0.01f),
         new juce::AudioParameterFloat("MODENV0_DECAY", "Decay", 0.0f, 1.0f, 0.1f),
     },
     ModEnvParams {
@@ -160,7 +160,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("MODENV1_FADE", "Fade", MODENV_FADE_NAMES, MODENV_FADE_NAMES.indexOf("In")),
         new juce::AudioParameterFloat("MODENV1_START_FREQ", "StartFreq", -8.0f, 8.0, 0.0f),
         new juce::AudioParameterFloat("MODENV1_WAIT", "Wait", 0.0f, 1.0f, 0.5f),
-        new juce::AudioParameterFloat("MODENV1_ATTACK", "Attack", 0.0f, 1.0f, 0.01f),
+        new juce::AudioParameterFloat("MODENV1_ATTACK", "Attack", { 0.0f, 1.0f, 0.001f }, 0.01f),
         new juce::AudioParameterFloat("MODENV1_DECAY", "Decay", 0.0f, 1.0f, 0.1f),
     },
     ModEnvParams {
@@ -175,7 +175,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
         new juce::AudioParameterChoice("MODENV2_FADE", "Fade", MODENV_FADE_NAMES, MODENV_FADE_NAMES.indexOf("In")),
         new juce::AudioParameterFloat("MODENV2_START_FREQ", "StartFreq", -8.0f, 8.0, 0.0f),
         new juce::AudioParameterFloat("MODENV2_WAIT", "Wait", 0.0f, 1.0f, 0.5f),
-        new juce::AudioParameterFloat("MODENV2_ATTACK", "Attack", 0.0f, 1.0f, 0.01f),
+        new juce::AudioParameterFloat("MODENV2_ATTACK", "Attack", { 0.0f, 1.0f, 0.001f }, 0.01f),
         new juce::AudioParameterFloat("MODENV2_DECAY", "Decay", 0.0f, 1.0f, 0.1f),
     },
 }
