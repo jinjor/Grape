@@ -75,7 +75,7 @@ VoiceComponent::VoiceComponent(VoiceParams* params)
     portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
     portamentoTimeSlider.setRange(_paramsPtr->PortamentoTime->range.start,
                           _paramsPtr->PortamentoTime->range.end, 0.001);
-    portamentoTimeSlider.setSkewFactorFromMidPoint(0.4);
+    portamentoTimeSlider.setSkewFactorFromMidPoint(0.1);
     portamentoTimeSlider.setValue(_paramsPtr->PortamentoTime->get(), juce::dontSendNotification);
     portamentoTimeSlider.setPopupDisplayEnabled(true, true, nullptr);
     portamentoTimeSlider.setScrollWheelEnabled(false);
@@ -338,6 +338,7 @@ OscComponent::OscComponent(int index, OscParams* params)
     gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
     gainSlider.setPopupDisplayEnabled(true, true, nullptr);
     gainSlider.setScrollWheelEnabled(false);
+    gainSlider.setSkewFactorFromMidPoint(1.0);
     gainSlider.textFromValueFunction = [](double gain){ return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
     gainSlider.addListener(this);
     body.addAndMakeVisible(gainSlider);
@@ -586,7 +587,8 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     sustainSlider.setValue(_paramsPtr->Sustain->get(), juce::dontSendNotification);
     sustainSlider.setPopupDisplayEnabled(true, true, nullptr);
     sustainSlider.setScrollWheelEnabled(false);
-    sustainSlider.textFromValueFunction = [](double gain){ return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
+//    sustainSlider.textFromValueFunction = [](double gain){ return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
+    sustainSlider.textFromValueFunction = [](double gain){ return juce::String(gain * 100, 0) + " %"; };
     sustainSlider.addListener(this);
     addAndMakeVisible(sustainSlider);
     
@@ -752,10 +754,10 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     centSlider.setScrollWheelEnabled(false);
     centSlider.textFromValueFunction = [](double value) -> std::string {
         int cent = value;
-        if(cent >= 0) {
-            return std::to_string(cent / 12) + ":" + std::to_string(cent % 12) + " oct";
-        }
-        return "-" + std::to_string(-cent / 12) + ":" + std::to_string(-cent % 12) + " oct";
+        int centAbs = std::abs(cent);
+        int oct = centAbs / 12;
+        int octFrac = centAbs % 12;
+        return (cent == 0 ? " " : cent > 0 ? "+" : "-") + std::to_string(oct) + ":" + std::to_string(octFrac) + " oct";
     };
     centSlider.addListener(this);
     body.addAndMakeVisible(centSlider);
@@ -1291,7 +1293,10 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     peakFreqSlider.setValue(_paramsPtr->PeakFreq->get(), juce::dontSendNotification);
     peakFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     peakFreqSlider.setScrollWheelEnabled(false);
-    peakFreqSlider.setTextValueSuffix(" oct");
+//    peakFreqSlider.setTextValueSuffix(" oct");
+    peakFreqSlider.textFromValueFunction = [](double oct) -> juce::String {
+        return (oct == 0 ? " " : oct > 0 ? "+" : "-") + juce::String(std::abs(oct), 2) + " oct";
+    };
     peakFreqSlider.addListener(this);
     body.addAndMakeVisible(peakFreqSlider);
     
@@ -1676,7 +1681,7 @@ DelayComponent::DelayComponent(DelayParams* params)
     feedbackSlider.setValue(_paramsPtr->Feedback->get(), juce::dontSendNotification);
     feedbackSlider.setPopupDisplayEnabled(true, true, nullptr);
     feedbackSlider.setScrollWheelEnabled(false);
-    feedbackSlider.setTextValueSuffix(" sec");
+    feedbackSlider.textFromValueFunction = [](double gain){ return juce::String(gain * 100, 0) + " %"; };
     feedbackSlider.addListener(this);
     body.addAndMakeVisible(feedbackSlider);
     

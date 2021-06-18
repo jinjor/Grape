@@ -600,7 +600,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                     }
                 }
             }
-            auto finalGain = 0.30 * smoothVelocity.value;
+            auto finalGain = 0.15 * smoothVelocity.value;
             for (auto ch = 0; ch < numChannels; ++ch) {
                 out[ch] *= finalGain;
             }

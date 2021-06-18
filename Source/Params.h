@@ -105,14 +105,11 @@ public:
 class VoiceParams : public SynthParametersBase
 {
 public:
-
     juce::AudioParameterChoice* Mode;
     juce::AudioParameterFloat* PortamentoTime;
     juce::AudioParameterInt* PitchBendRange;
     
-    VoiceParams(juce::AudioParameterChoice* mode,
-                juce::AudioParameterFloat* portamentoTime,
-                juce::AudioParameterInt* pitchBendRange);
+    VoiceParams();
     
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -136,16 +133,7 @@ public:
     juce::AudioParameterFloat* Gain;
     juce::AudioParameterChoice* Envelope;
     
-    OscParams(juce::AudioParameterBool* enabled,
-              juce::AudioParameterChoice* waveform,
-              juce::AudioParameterFloat* edge,
-              juce::AudioParameterInt* octave,
-              juce::AudioParameterInt* coarse,
-              juce::AudioParameterInt* unison,
-              juce::AudioParameterFloat* detune,
-              juce::AudioParameterFloat* spread,
-              juce::AudioParameterFloat* gain,
-              juce::AudioParameterChoice* envelope);
+    OscParams(int index);
     
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -163,10 +151,7 @@ public:
     juce::AudioParameterFloat* Sustain;
     juce::AudioParameterFloat* Release;
     
-    EnvelopeParams(juce::AudioParameterFloat* attack,
-                  juce::AudioParameterFloat* decay,
-                  juce::AudioParameterFloat* sustain,
-                  juce::AudioParameterFloat* release);
+    EnvelopeParams(int index);
     
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -187,14 +172,8 @@ public:
     juce::AudioParameterInt* Cent;
     juce::AudioParameterFloat* Q;
     juce::AudioParameterFloat* Gain;
-    FilterParams(juce::AudioParameterBool* enabled,
-                 juce::AudioParameterChoice* target,
-                 juce::AudioParameterChoice* type,
-                 juce::AudioParameterChoice* freqType,
-                 juce::AudioParameterFloat* hz,
-                 juce::AudioParameterInt* cent,
-                 juce::AudioParameterFloat* q,
-                 juce::AudioParameterFloat* gain);
+    
+    FilterParams(int index);
     
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -227,16 +206,8 @@ public:
     juce::AudioParameterFloat* SlowFreq;
     juce::AudioParameterFloat* FastFreq;
     juce::AudioParameterFloat* Amount;
-    LfoParams(juce::AudioParameterBool* enabled,
-              juce::AudioParameterChoice* targetType,
-              juce::AudioParameterChoice* targetOsc,
-              juce::AudioParameterChoice* targetFilter,
-              juce::AudioParameterChoice* targetOscParam,
-              juce::AudioParameterChoice* targetFilterParam,
-              juce::AudioParameterChoice* waveform,
-              juce::AudioParameterFloat* slowFreq,
-              juce::AudioParameterFloat* fastFreq,
-              juce::AudioParameterFloat* amount);
+    
+    LfoParams(int index);
     
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -275,19 +246,8 @@ public:
     juce::AudioParameterFloat* Wait;
     juce::AudioParameterFloat* Attack;
     juce::AudioParameterFloat* Decay;
-    ModEnvParams(juce::AudioParameterBool* enabled,
-              juce::AudioParameterChoice* targetType,
-              juce::AudioParameterChoice* targetOsc,
-              juce::AudioParameterChoice* targetFilter,
-              juce::AudioParameterChoice* targetLfo,
-              juce::AudioParameterChoice* targetOscParam,
-              juce::AudioParameterChoice* targetFilterParam,
-              juce::AudioParameterChoice* targetLfoParam,
-              juce::AudioParameterChoice* fade,
-              juce::AudioParameterFloat* peakFreq,
-              juce::AudioParameterFloat* wait,
-              juce::AudioParameterFloat* attack,
-              juce::AudioParameterFloat* decay);
+    
+    ModEnvParams(int index);
     
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -319,17 +279,7 @@ public:
     juce::AudioParameterFloat* HighFreq;
     juce::AudioParameterFloat* Feedback;
     juce::AudioParameterFloat* Mix;
-    DelayParams(juce::AudioParameterBool* enabled,
-                juce::AudioParameterChoice* type,
-                juce::AudioParameterBool* sync,
-                juce::AudioParameterFloat* timeL,
-                juce::AudioParameterFloat* timeR,
-                juce::AudioParameterChoice* timeSyncL,
-                juce::AudioParameterChoice* timeSyncR,
-                juce::AudioParameterFloat* lowFreq,
-                juce::AudioParameterFloat* highFreq,
-                juce::AudioParameterFloat* feedback,
-                juce::AudioParameterFloat* mix);
+    DelayParams();
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
@@ -350,15 +300,7 @@ public:
     juce::AudioParameterChoice* TargetFilterParam;
     juce::AudioParameterChoice* TargetLfoParam;
     juce::AudioParameterChoice* TargetMiscParam;
-    ControlItemParams(juce::AudioParameterChoice* number,
-                      juce::AudioParameterChoice* targetType,
-                      juce::AudioParameterChoice* targetOsc,
-                      juce::AudioParameterChoice* targetFilter,
-                      juce::AudioParameterChoice* targetLfo,
-                      juce::AudioParameterChoice* targetOscParam,
-                      juce::AudioParameterChoice* targetFilterParam,
-                      juce::AudioParameterChoice* targetLfoParam,
-                      juce::AudioParameterChoice* targetMiscParam);
+    ControlItemParams(int index);
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;

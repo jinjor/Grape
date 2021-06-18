@@ -2,13 +2,13 @@
 #include "Voice.h"
 
 //==============================================================================
-VoiceParams::VoiceParams(juce::AudioParameterChoice* mode,
-                         juce::AudioParameterFloat* portamentoTime,
-                         juce::AudioParameterInt* pitchBendRange)
-: Mode(mode)
-, PortamentoTime(portamentoTime)
-, PitchBendRange(pitchBendRange)
-{}
+VoiceParams::VoiceParams() {
+    std::string idPrefix = "VOICE_";
+    std::string namePrefix = "Voice ";
+    Mode = new juce::AudioParameterChoice(idPrefix + "MODE", namePrefix + "Mode", VOICE_MODE_NAMES, VOICE_MODE_NAMES.indexOf("Poly"));
+    PortamentoTime = new juce::AudioParameterFloat(idPrefix + "PORTAMENTO_TIME", namePrefix + "Portamento Time", { 0.001f, 1.0f, 0.001f }, 0.02f);
+    PitchBendRange = new juce::AudioParameterInt(idPrefix + "PITCH_BEND_RANGE", namePrefix + "Pitch-Bend Range", 1, 12, 2);
+}
 void VoiceParams::addAllParameters(juce::AudioProcessor& processor)
 {
     processor.addParameter(Mode);
@@ -29,27 +29,20 @@ void VoiceParams::loadParameters(juce::XmlElement& xml)
 }
 
 //==============================================================================
-OscParams::OscParams(juce::AudioParameterBool* enabled,
-                     juce::AudioParameterChoice* waveform,
-                     juce::AudioParameterFloat* edge,
-                     juce::AudioParameterInt* octave,
-                     juce::AudioParameterInt* coarse,
-                     juce::AudioParameterInt* unison,
-                     juce::AudioParameterFloat* detune,
-                     juce::AudioParameterFloat* spread,
-                     juce::AudioParameterFloat* gain,
-                     juce::AudioParameterChoice* envelope)
-: Enabled(enabled)
-, Waveform(waveform)
-, Edge(edge)
-, Octave(octave)
-, Coarse(coarse)
-, Unison(unison)
-, Detune(detune)
-, Spread(spread)
-, Gain(gain)
-, Envelope(envelope)
-{}
+OscParams::OscParams(int index) {
+    auto idPrefix = "OSC" + std::to_string(index) + "_";
+    auto namePrefix = "OSC" + std::to_string(index) + " ";
+    Enabled = new juce::AudioParameterBool(idPrefix + "ENABLED", namePrefix + "Enabled", false);
+    Waveform = new juce::AudioParameterChoice(idPrefix + "WAVEFORM", namePrefix + "Waveform", OSC_WAVEFORM_NAMES, OSC_WAVEFORM_NAMES.indexOf("Sine"));
+    Edge = new juce::AudioParameterFloat(idPrefix + "EDGE", namePrefix + "Edge", 0.0f, 1.0f, 0.0f);
+    Octave = new juce::AudioParameterInt(idPrefix + "OCTAVE", namePrefix + "Octave", -2, 2, 0);
+    Coarse = new juce::AudioParameterInt(idPrefix + "COARSE", namePrefix + "Coarse", -12, 12, 0);
+    Unison = new juce::AudioParameterInt(idPrefix + "UNISON", namePrefix + "Unison", 1, 4, 1);
+    Detune = new juce::AudioParameterFloat(idPrefix + "DETUNE", namePrefix + "Detune", 0.0f, 1.0f, 0.0f);
+    Spread = new juce::AudioParameterFloat(idPrefix + "SPREAD", namePrefix + "Spread", 0.0f, 1.0f, 0.0f);
+    Gain = new juce::AudioParameterFloat(idPrefix + "GAIN", namePrefix + "Gain", 0.0f, 4.0f, 1.0f);
+    Envelope = new juce::AudioParameterChoice(idPrefix + "ENVELOPE", namePrefix + "Envelope", OSC_ENV_NAMES, OSC_ENV_NAMES.indexOf("1"));
+}
 void OscParams::addAllParameters(juce::AudioProcessor& processor)
 {
     processor.addParameter(Enabled);
@@ -91,15 +84,14 @@ void OscParams::loadParameters(juce::XmlElement& xml)
 }
 
 //==============================================================================
-EnvelopeParams::EnvelopeParams(juce::AudioParameterFloat* attack,
-                               juce::AudioParameterFloat* decay,
-                               juce::AudioParameterFloat* sustain,
-                               juce::AudioParameterFloat* release)
-: Attack(attack)
-, Decay(decay)
-, Sustain(sustain)
-, Release(release)
-{}
+EnvelopeParams::EnvelopeParams(int index) {
+    auto idPrefix = "ENV" + std::to_string(index) + "_";
+    auto namePrefix = "Env" + std::to_string(index) + " ";
+    Attack = new juce::AudioParameterFloat(idPrefix + "ATTACK", "Attack", { 0.001f, 1.0f, 0.001f }, 0.05f);
+    Decay = new juce::AudioParameterFloat(idPrefix + "DECAY", "Decay", 0.01f, 1.0f, 0.1f);
+    Sustain = new juce::AudioParameterFloat(idPrefix + "SUSTAIN", "Sustain", 0.0f, 1.0f, 0.7f);
+    Release = new juce::AudioParameterFloat(idPrefix + "RELEASE", "Release", 0.01f, 1.0f, 0.1f);
+}
 void EnvelopeParams::addAllParameters(juce::AudioProcessor& processor)
 {
     processor.addParameter(Attack);
@@ -123,23 +115,18 @@ void EnvelopeParams::loadParameters(juce::XmlElement& xml)
 }
 
 //==============================================================================
-FilterParams::FilterParams(juce::AudioParameterBool* enabled,
-                           juce::AudioParameterChoice* target,
-                           juce::AudioParameterChoice* type,
-                           juce::AudioParameterChoice* freqType,
-                           juce::AudioParameterFloat* hz,
-                           juce::AudioParameterInt* cent,
-                           juce::AudioParameterFloat* q,
-                           juce::AudioParameterFloat* gain)
-: Enabled(enabled)
-, Target(target)
-, Type(type)
-, FreqType(freqType)
-, Hz(hz)
-, Cent(cent)
-, Q(q)
-, Gain(gain)
-{}
+FilterParams::FilterParams(int index) {
+    auto idPrefix = "FILTER" + std::to_string(index) + "_";
+    auto namePrefix = "Filter" + std::to_string(index) + " ";
+    Enabled = new juce::AudioParameterBool(idPrefix + "ENABLED", namePrefix + "Enabled", false);
+    Target = new juce::AudioParameterChoice(idPrefix + "TARGET", namePrefix + "Target", FILTER_TARGET_NAMES, FILTER_TARGET_NAMES.indexOf("All"));
+    Type = new juce::AudioParameterChoice(idPrefix + "TYPE", namePrefix + "Type", FILTER_TYPE_NAMES, FILTER_TYPE_NAMES.indexOf("Lowpass"));
+    FreqType = new juce::AudioParameterChoice(idPrefix + "FREQ_TYPE", namePrefix + "Freq Type", FILTER_FREQ_TYPE_NAMES, FILTER_FREQ_TYPE_NAMES.indexOf("Abs"));
+    Hz = new juce::AudioParameterFloat(idPrefix + "HZ", namePrefix + "Hz", 30.0f, 20000.0f, 4000.0f);
+    Cent = new juce::AudioParameterInt(idPrefix + "CENT", namePrefix + "Cent", -48, 48, 0);
+    Q = new juce::AudioParameterFloat(idPrefix + "Q", namePrefix + "Q", 0.01f, 100.0f, 1.0f);
+    Gain = new juce::AudioParameterFloat(idPrefix + "GAIN", namePrefix + "Gain", -20.0f, 20.0f, 0.0f);
+}
 void FilterParams::addAllParameters(juce::AudioProcessor& processor)
 {
     processor.addParameter(Enabled);
@@ -175,27 +162,20 @@ void FilterParams::loadParameters(juce::XmlElement& xml)
 }
 
 //==============================================================================
-LfoParams::LfoParams(juce::AudioParameterBool* enabled,
-                     juce::AudioParameterChoice* targetType,
-                     juce::AudioParameterChoice* targetOsc,
-                     juce::AudioParameterChoice* targetFilter,
-                     juce::AudioParameterChoice* targetOscParam,
-                     juce::AudioParameterChoice* targetFilterParam,
-                     juce::AudioParameterChoice* waveform,
-                     juce::AudioParameterFloat* slowFreq,
-                     juce::AudioParameterFloat* fastFreq,
-                     juce::AudioParameterFloat* amount)
-: Enabled(enabled)
-, TargetType(targetType)
-, TargetOsc(targetOsc)
-, TargetFilter(targetFilter)
-, TargetOscParam(targetOscParam)
-, TargetFilterParam(targetFilterParam)
-, Waveform(waveform)
-, SlowFreq(slowFreq)
-, FastFreq(fastFreq)
-, Amount(amount)
-{}
+LfoParams::LfoParams(int index) {
+    auto idPrefix = "LFO" + std::to_string(index) + "_";
+    auto namePrefix = "LFO" + std::to_string(index) + " ";
+    Enabled = new juce::AudioParameterBool(idPrefix + "ENABLED", namePrefix + "Enabled", false);
+    TargetType = new juce::AudioParameterChoice(idPrefix + "TARGET_TYPE", namePrefix + "Target Type", LFO_TARGET_TYPE_NAMES, LFO_TARGET_TYPE_NAMES.indexOf("OSC"));
+    TargetOsc = new juce::AudioParameterChoice(idPrefix + "TARGET_OSC", namePrefix + "Target OSC", LFO_TARGET_OSC_NAMES, LFO_TARGET_OSC_NAMES.indexOf("All"));
+    TargetFilter = new juce::AudioParameterChoice(idPrefix + "TARGET_FILTER", namePrefix + "Target Filter", LFO_TARGET_FILTER_NAMES, LFO_TARGET_FILTER_NAMES.indexOf("All"));
+    TargetOscParam = new juce::AudioParameterChoice(idPrefix + "TARGET_OSC_PARAM", namePrefix + "Target OSC Param", LFO_TARGET_OSC_PARAM_NAMES, LFO_TARGET_OSC_PARAM_NAMES.indexOf("Vibrato"));
+    TargetFilterParam = new juce::AudioParameterChoice(idPrefix + "TARGET_FILTER_PARAM", namePrefix + "Target Filter Param", LFO_TARGET_FILTER_PARAM_NAMES, LFO_TARGET_FILTER_PARAM_NAMES.indexOf("Freq"));
+    Waveform = new juce::AudioParameterChoice(idPrefix + "WAVEFORM", namePrefix + "Waveform", LFO_WAVEFORM_NAMES, LFO_WAVEFORM_NAMES.indexOf("Sine"));
+    SlowFreq = new juce::AudioParameterFloat(idPrefix + "SLOW_FREQ", namePrefix + "Slow Freq", 0.0f, 100.0f, 4.0f);
+    FastFreq = new juce::AudioParameterFloat(idPrefix + "FAST_FREQ", namePrefix + "Fast Freq", 0.01f, 100.0f, 1.0f);
+    Amount = new juce::AudioParameterFloat(idPrefix + "AMOUNT", namePrefix + "Amount", 0.0f, 1.0f, 0.2f);
+}
 void LfoParams::addAllParameters(juce::AudioProcessor& processor)
 {
     processor.addParameter(Enabled);
@@ -234,33 +214,23 @@ void LfoParams::loadParameters(juce::XmlElement& xml)
 }
 
 //==============================================================================
-ModEnvParams::ModEnvParams(juce::AudioParameterBool* enabled,
-                     juce::AudioParameterChoice* targetType,
-                     juce::AudioParameterChoice* targetOsc,
-                     juce::AudioParameterChoice* targetFilter,
-                     juce::AudioParameterChoice* targetLfo,
-                     juce::AudioParameterChoice* targetOscParam,
-                     juce::AudioParameterChoice* targetFilterParam,
-                     juce::AudioParameterChoice* targetLfoParam,
-                     juce::AudioParameterChoice* fade,
-                     juce::AudioParameterFloat* peakFreq,
-                     juce::AudioParameterFloat* wait,
-                     juce::AudioParameterFloat* attack,
-                     juce::AudioParameterFloat* decay)
-: Enabled(enabled)
-, TargetType(targetType)
-, TargetOsc(targetOsc)
-, TargetFilter(targetFilter)
-, TargetLfo(targetLfo)
-, TargetOscParam(targetOscParam)
-, TargetFilterParam(targetFilterParam)
-, TargetLfoParam(targetLfoParam)
-, Fade(fade)
-, PeakFreq(peakFreq)
-, Wait(wait)
-, Attack(attack)
-, Decay(decay)
-{}
+ModEnvParams::ModEnvParams(int index) {
+    auto idPrefix = "MODENV" + std::to_string(index) + "_";
+    auto namePrefix = "ModEnv" + std::to_string(index) + " ";
+    Enabled = new juce::AudioParameterBool(idPrefix + "ENABLED", namePrefix + "Enabled", false);
+    TargetType = new juce::AudioParameterChoice(idPrefix + "TARGET_TYPE", namePrefix + "Target Type", MODENV_TARGET_TYPE_NAMES, MODENV_TARGET_TYPE_NAMES.indexOf("LFO"));
+    TargetOsc = new juce::AudioParameterChoice(idPrefix + "TARGET_OSC", namePrefix + "Target OSC", MODENV_TARGET_OSC_NAMES, MODENV_TARGET_OSC_NAMES.indexOf("All"));
+    TargetFilter = new juce::AudioParameterChoice(idPrefix + "TARGET_FILTER", namePrefix + "Target Filter", MODENV_TARGET_FILTER_NAMES, MODENV_TARGET_FILTER_NAMES.indexOf("All"));
+    TargetLfo = new juce::AudioParameterChoice(idPrefix + "TARGET_LFO", namePrefix + "Target LFO", MODENV_TARGET_LFO_NAMES, MODENV_TARGET_LFO_NAMES.indexOf("All"));
+    TargetOscParam = new juce::AudioParameterChoice(idPrefix + "TARGET_OSC_PARAM", namePrefix + "Target OSC Param", MODENV_TARGET_OSC_PARAM_NAMES, MODENV_TARGET_OSC_PARAM_NAMES.indexOf("Freq"));
+    TargetFilterParam = new juce::AudioParameterChoice(idPrefix + "TARGET_FILTER_PARAM", namePrefix + "Target Filter Param", MODENV_TARGET_FILTER_PARAM_NAMES, MODENV_TARGET_FILTER_PARAM_NAMES.indexOf("Freq"));
+    TargetLfoParam = new juce::AudioParameterChoice(idPrefix + "TARGET_LFO_PARAM", namePrefix + "Target LFO Param", MODENV_TARGET_LFO_PARAM_NAMES, MODENV_TARGET_LFO_PARAM_NAMES.indexOf("Amount"));
+    Fade = new juce::AudioParameterChoice(idPrefix + "FADE", namePrefix + "Fade", MODENV_FADE_NAMES, MODENV_FADE_NAMES.indexOf("In"));
+    PeakFreq = new juce::AudioParameterFloat(idPrefix + "PEAK_FREQ", namePrefix + "Peak Freq", -8.0f, 8.0, 2.0f);
+    Wait = new juce::AudioParameterFloat(idPrefix + "WAIT", namePrefix + "Wait", 0.0f, 1.0f, 0.5f);
+    Attack = new juce::AudioParameterFloat(idPrefix + "ATTACK", namePrefix + "Attack", { 0.0f, 1.0f, 0.001f }, 0.0f);
+    Decay = new juce::AudioParameterFloat(idPrefix + "DECAY", namePrefix + "Decay", 0.0f, 1.0f, 0.2f);
+}
 void ModEnvParams::addAllParameters(juce::AudioProcessor& processor)
 {
     processor.addParameter(Enabled);
@@ -311,29 +281,21 @@ void ModEnvParams::loadParameters(juce::XmlElement& xml)
 }
 
 //==============================================================================
-DelayParams::DelayParams(juce::AudioParameterBool* enabled,
-                         juce::AudioParameterChoice* type,
-                         juce::AudioParameterBool* sync,
-                         juce::AudioParameterFloat* timeL,
-                         juce::AudioParameterFloat* timeR,
-                         juce::AudioParameterChoice* timeSyncL,
-                         juce::AudioParameterChoice* timeSyncR,
-                         juce::AudioParameterFloat* lowFreq,
-                         juce::AudioParameterFloat* highFreq,
-                         juce::AudioParameterFloat* feedback,
-                         juce::AudioParameterFloat* mix)
-: Enabled(enabled)
-, Type(type)
-, Sync(sync)
-, TimeL(timeL)
-, TimeR(timeR)
-, TimeSyncL(timeSyncL)
-, TimeSyncR(timeSyncR)
-, LowFreq(lowFreq)
-, HighFreq(highFreq)
-, Feedback(feedback)
-, Mix(mix)
-{}
+DelayParams::DelayParams() {
+    std::string idPrefix = "DELAY_";
+    std::string namePrefix = "Delay ";
+    Enabled = new juce::AudioParameterBool(idPrefix + "ENABLED", namePrefix + "Enabled", false);
+    Type = new juce::AudioParameterChoice(idPrefix + "TYPE", namePrefix + "Type", DELAY_TYPE_NAMES, DELAY_TYPE_NAMES.indexOf("Parallel"));
+    Sync = new juce::AudioParameterBool(idPrefix + "SYNC", namePrefix + "Sync", false);
+    TimeL = new juce::AudioParameterFloat(idPrefix + "TIME_L", namePrefix + "TimeL", 0.01f, 1.0f, 0.3f);
+    TimeR = new juce::AudioParameterFloat(idPrefix + "TIME_R", namePrefix + "TimeR", 0.01f, 1.0f, 0.4f);
+    TimeSyncL = new juce::AudioParameterChoice(idPrefix + "TIME_SYNC_L", namePrefix + "TimeSyncL", DELAY_TIME_SYNC_NAMES, DELAY_TIME_SYNC_NAMES.indexOf("1/8"));
+    TimeSyncR = new juce::AudioParameterChoice(idPrefix + "TIME_SYNC_R", namePrefix + "TimeSyncR", DELAY_TIME_SYNC_NAMES, DELAY_TIME_SYNC_NAMES.indexOf("1/8"));
+    LowFreq = new juce::AudioParameterFloat(idPrefix + "LOW_FREQ", namePrefix + "LowFfreq", 10.0f, 20000.0f, 10.0f);
+    HighFreq = new juce::AudioParameterFloat(idPrefix + "HIGH_FREQ", namePrefix + "HighFreq", 10.0f, 20000.0f, 20000.0f);
+    Feedback = new juce::AudioParameterFloat(idPrefix + "FEEDBACK", namePrefix + "Feedback", 0.0f, 1.0f, 0.3f);
+    Mix = new juce::AudioParameterFloat(idPrefix + "MIX", namePrefix + "Mix", 0.0f, 1.0f, 0.3f);
+}
 void DelayParams::addAllParameters(juce::AudioProcessor& processor)
 {
     processor.addParameter(Enabled);
@@ -378,25 +340,20 @@ void DelayParams::loadParameters(juce::XmlElement& xml)
 }
 
 //==============================================================================
-ControlItemParams::ControlItemParams(juce::AudioParameterChoice* number,
-                                     juce::AudioParameterChoice* targetType,
-                                     juce::AudioParameterChoice* targetOsc,
-                                     juce::AudioParameterChoice* targetFilter,
-                                     juce::AudioParameterChoice* targetLfo,
-                                     juce::AudioParameterChoice* targetOscParam,
-                                     juce::AudioParameterChoice* targetFilterParam,
-                                     juce::AudioParameterChoice* targetLfoParam,
-                                     juce::AudioParameterChoice* targetMiscParam)
-: Number(number)
-, TargetType(targetType)
-, TargetOsc(targetOsc)
-, TargetFilter(targetFilter)
-, TargetLfo(targetLfo)
-, TargetOscParam(targetOscParam)
-, TargetFilterParam(targetFilterParam)
-, TargetLfoParam(targetLfoParam)
-, TargetMiscParam(targetMiscParam)
-{}
+ControlItemParams::ControlItemParams(int index)
+{
+    auto idPrefix = "CONTROL" + std::to_string(index) + "_";
+    auto namePrefix = "Control" + std::to_string(index) + " ";
+    Number = new juce::AudioParameterChoice(idPrefix + "NUMBER", namePrefix + "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("None"));
+    TargetType = new juce::AudioParameterChoice(idPrefix + "TARGET_TYPE", namePrefix + "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("OSC"));
+    TargetOsc = new juce::AudioParameterChoice(idPrefix + "TARGET_OSC", namePrefix + "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All"));
+    TargetFilter = new juce::AudioParameterChoice(idPrefix + "TARGET_FILTER", namePrefix + "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All"));
+    TargetLfo = new juce::AudioParameterChoice(idPrefix + "TARGET_LFO", namePrefix + "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All"));
+    TargetOscParam = new juce::AudioParameterChoice(idPrefix + "TARGET_OSC_PARAM", namePrefix + "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain"));
+    TargetFilterParam =new juce::AudioParameterChoice(idPrefix + "TARGET_FILTER_PARAM", namePrefix + "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq"));
+    TargetLfoParam = new juce::AudioParameterChoice(idPrefix + "TARGET_LFO_PARAM", namePrefix + "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount"));
+    TargetMiscParam = new juce::AudioParameterChoice(idPrefix + "TARGET_MISC_PARAM", namePrefix + "TargetMiscParam", CONTROL_TARGET_MISC_PARAM_NAMES, CONTROL_TARGET_MISC_PARAM_NAMES.indexOf("Master Volume"));
+}
 void ControlItemParams::addAllParameters(juce::AudioProcessor& processor)
 {
     processor.addParameter(Number);
