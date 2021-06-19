@@ -184,6 +184,7 @@ void LfoParams::addAllParameters(juce::AudioProcessor& processor)
     processor.addParameter(TargetFilter);
     processor.addParameter(TargetOscParam);
     processor.addParameter(TargetFilterParam);
+    processor.addParameter(Waveform);
     processor.addParameter(SlowFreq);
     processor.addParameter(FastFreq);
     processor.addParameter(Amount);
