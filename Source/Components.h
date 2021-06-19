@@ -336,13 +336,8 @@ private:
     enum {
         scopeSize = 512
     };
-//    AnalyserState* analyserState;
-//    LevelState* levelState;
     LatestDataProvider* latestDataProvider;
     
-    
-//    double fftDataL[2048];
-//    double fftDataR[2048];
     static const int fftOrder = 11;
     static const int fftSize = 2048;
     float fftData[fftSize * 2];
@@ -350,10 +345,10 @@ private:
         fftData, fftData + fftSize, fftSize, false
     };
     
-    float levelDataL[4096];
-    float levelDataR[4096];
+    float levelDataL[2048];
+    float levelDataR[2048];
     LatestDataProvider::Consumer levelConsumer {
-        levelDataL, levelDataR, 4096, false
+        levelDataL, levelDataR, 2048, false
     };
     
     juce::dsp::FFT forwardFFT;

@@ -2179,9 +2179,7 @@ void ControlComponent::resized()
 
 //==============================================================================
 AnalyserComponent::AnalyserComponent(LatestDataProvider* latestDataProvider)
-: //analyserState(analyserState)
-//, levelState(levelState)
-latestDataProvider(latestDataProvider)
+: latestDataProvider(latestDataProvider)
 , forwardFFT (fftOrder)
 , window (fftSize, juce::dsp::WindowingFunction<float>::hann)
 {
@@ -2194,7 +2192,7 @@ AnalyserComponent::~AnalyserComponent(){}
 void AnalyserComponent::drawNextFrameOfSpectrum()
 {
     for(int i = 0; i < fftSize; i++) {
-        fftData[i] += fftData[i + fftSize];
+        fftData[i] = (fftData[i] + fftData[i + fftSize]) * 0.5f;
         fftData[i + fftSize] = 0;
     }
     window.multiplyWithWindowingTable(fftData, fftSize);
@@ -2221,7 +2219,6 @@ void AnalyserComponent::drawNextFrameOfLevel()
 
     for(auto ch = 0; ch < 2; ch++) {
         float maxValue = 0.0;
-//        auto* data = levelState->levelData + ch * levelState->numSamples;
         auto* data = ch == 0 ? levelConsumer.destinationL : levelConsumer.destinationR;
         for (int i = 0; i < levelConsumer.numSamples; ++i)
         {
