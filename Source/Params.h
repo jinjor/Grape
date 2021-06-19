@@ -140,6 +140,7 @@ public:
     virtual void loadParameters(juce::XmlElement& xml) override;
     
 private:
+    OscParams() {};
 };
 
 //==============================================================================
@@ -158,6 +159,7 @@ public:
     virtual void loadParameters(juce::XmlElement& xml) override;
     
 private:
+    EnvelopeParams() {};
 };
 
 //==============================================================================
@@ -190,6 +192,7 @@ public:
     }
     
 private:
+    FilterParams() {};
 };
 
 //==============================================================================
@@ -227,6 +230,7 @@ public:
         return false;
     }
 private:
+    LfoParams() {};
 };
 
 //==============================================================================
@@ -262,6 +266,7 @@ public:
         return !isTargetFreq() && static_cast<MODENV_FADE>(Fade->getIndex()) == MODENV_FADE::In;
     }
 private:
+    ModEnvParams() {};
 };
 
 //==============================================================================
@@ -306,4 +311,5 @@ public:
     virtual void loadParameters(juce::XmlElement& xml) override;
     
 private:
+    ControlItemParams() {};
 };
