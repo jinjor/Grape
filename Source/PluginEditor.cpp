@@ -22,7 +22,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 , modEnvComponents { ModEnvComponent(0, p.modEnvParams), ModEnvComponent(1, p.modEnvParams+1), ModEnvComponent(2, p.modEnvParams+2) }
 , delayComponent { DelayComponent(&p.delayParams) }
 , controlComponent { ControlComponent(p.controlItemParams) }
-, analyserComponent (&p.analyserState, &p.levelState)
+, analyserComponent (&p.latestDataProvider)
 {
     getLookAndFeel().setColour(juce::Label::textColourId, TEXT_COLOUR);
     

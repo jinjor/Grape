@@ -326,7 +326,7 @@ private:
 class AnalyserComponent : public juce::Component, private juce::Timer
 {
 public:
-    AnalyserComponent(AnalyserState* analyserState, LevelState* levelState);
+    AnalyserComponent(LatestDataProvider* latestDataProvider);
     virtual ~AnalyserComponent();
     
     virtual void paint(juce::Graphics& g) override;
@@ -336,8 +336,26 @@ private:
     enum {
         scopeSize = 512
     };
-    AnalyserState* analyserState;
-    LevelState* levelState;
+//    AnalyserState* analyserState;
+//    LevelState* levelState;
+    LatestDataProvider* latestDataProvider;
+    
+    
+//    double fftDataL[2048];
+//    double fftDataR[2048];
+    static const int fftOrder = 11;
+    static const int fftSize = 2048;
+    float fftData[fftSize * 2];
+    LatestDataProvider::Consumer fftConsumer {
+        fftData, fftData + fftSize, fftSize, false
+    };
+    
+    float levelDataL[4096];
+    float levelDataR[4096];
+    LatestDataProvider::Consumer levelConsumer {
+        levelDataL, levelDataR, 4096, false
+    };
+    
     juce::dsp::FFT forwardFFT;
     juce::dsp::WindowingFunction<float> window;
     float scopeData[scopeSize]{};

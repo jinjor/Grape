@@ -2178,19 +2178,27 @@ void ControlComponent::resized()
 }
 
 //==============================================================================
-AnalyserComponent::AnalyserComponent(AnalyserState* analyserState, LevelState* levelState)
-: analyserState(analyserState)
-, levelState(levelState)
-, forwardFFT (analyserState->fftOrder)
-, window (analyserState->fftSize, juce::dsp::WindowingFunction<float>::hann)
+AnalyserComponent::AnalyserComponent(LatestDataProvider* latestDataProvider)
+: //analyserState(analyserState)
+//, levelState(levelState)
+latestDataProvider(latestDataProvider)
+, forwardFFT (fftOrder)
+, window (fftSize, juce::dsp::WindowingFunction<float>::hann)
 {
+    latestDataProvider->addConsumer(&fftConsumer);
+    latestDataProvider->addConsumer(&levelConsumer);
+    
     startTimerHz(30.0f);
 }
 AnalyserComponent::~AnalyserComponent(){}
 void AnalyserComponent::drawNextFrameOfSpectrum()
 {
-    window.multiplyWithWindowingTable(analyserState->fftData, analyserState->fftSize);
-    forwardFFT.performFrequencyOnlyForwardTransform (analyserState->fftData);
+    for(int i = 0; i < fftSize; i++) {
+        fftData[i] += fftData[i + fftSize];
+        fftData[i + fftSize] = 0;
+    }
+    window.multiplyWithWindowingTable(fftData, fftSize);
+    forwardFFT.performFrequencyOnlyForwardTransform (fftData);
 
     auto mindB = -100.0f;
     auto maxdB =    0.0f;
@@ -2198,9 +2206,9 @@ void AnalyserComponent::drawNextFrameOfSpectrum()
     for (int i = 0; i < scopeSize; ++i)
     {
         auto skewedProportionX = 1.0f - std::exp (std::log (1.0f - (float) i / (float) scopeSize) * 0.2f);
-        auto fftDataIndex = juce::jlimit (0, analyserState->fftSize / 2, (int) (skewedProportionX * (float) analyserState->fftSize * 0.5f));
-        auto level = juce::jmap (juce::jlimit (mindB, maxdB, juce::Decibels::gainToDecibels (analyserState->fftData[fftDataIndex])
-                                                           - juce::Decibels::gainToDecibels ((float) analyserState->fftSize)),
+        auto fftDataIndex = juce::jlimit (0, fftSize / 2, (int) (skewedProportionX * (float) fftSize * 0.5f));
+        auto level = juce::jmap (juce::jlimit (mindB, maxdB, juce::Decibels::gainToDecibels (fftData[fftDataIndex])
+                                                           - juce::Decibels::gainToDecibels ((float) fftSize)),
                                  mindB, maxdB, 0.0f, 1.0f);
 
         scopeData[i] = level;
@@ -2208,18 +2216,19 @@ void AnalyserComponent::drawNextFrameOfSpectrum()
 }
 void AnalyserComponent::drawNextFrameOfLevel()
 {
-    auto mindB = -100.0;
-    auto maxdB =    0.0;
+    auto mindB = -100.0f;
+    auto maxdB =    0.0f;
 
     for(auto ch = 0; ch < 2; ch++) {
-        double maxValue = 0.0;
-        auto* data = levelState->levelData + ch * levelState->numSamples;
-        for (int i = 0; i < levelState->numSamples; ++i)
+        float maxValue = 0.0;
+//        auto* data = levelState->levelData + ch * levelState->numSamples;
+        auto* data = ch == 0 ? levelConsumer.destinationL : levelConsumer.destinationR;
+        for (int i = 0; i < levelConsumer.numSamples; ++i)
         {
             maxValue = std::max(maxValue, std::abs(data[i]));
         }
         auto level = juce::jmap (juce::jlimit (mindB, maxdB, juce::Decibels::gainToDecibels (maxValue)),
-                                 mindB, maxdB, 0.0, 1.0);
+                                 mindB, maxdB, 0.0f, 1.0f);
         currentLevel[ch] = level;
     }
 }
@@ -2244,17 +2253,17 @@ void AnalyserComponent::resized()
 void AnalyserComponent::timerCallback()
 {
     bool shouldRepaint = false;
-    if (analyserState->nextFFTBlockReady)
+    if (fftConsumer.ready)
     {
         drawNextFrameOfSpectrum();
-        analyserState->nextFFTBlockReady = false;
+        fftConsumer.ready = false;
         readyToDrawFrame = true;
         shouldRepaint = true;
     }
-    if (levelState->nextBlockReady)
+    if (levelConsumer.ready)
     {
         drawNextFrameOfLevel();
-        levelState->nextBlockReady = false;
+        levelConsumer.ready = false;
 //        readyToDrawFrame = true;
         shouldRepaint = true;
     }

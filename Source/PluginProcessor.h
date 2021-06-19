@@ -5,44 +5,44 @@
 #include "Params.h"
 
 //==============================================================================
-class AnalyserState
-{
-public:
-    enum {
-        fftOrder  = 11,
-        fftSize   = 1 << fftOrder
-    };
-    bool nextFFTBlockReady = false;
-    float fftData [2 * fftSize];
-    AnalyserState() {};
-    ~AnalyserState() {};
-    void pushFFTData(juce::AudioBuffer<float>& buffer) {
-        if (buffer.getNumChannels() <= 0) {
-            return;
-        }
-        auto* channelData = buffer.getReadPointer(0);// TODO: R
-        for (auto i = 0; i < buffer.getNumSamples(); ++i) {
-            pushNextSampleIntoFifo(channelData[i]);
-        }
-    }
-private:
-    float fifo [fftSize];
-    int fifoIndex = 0;
-    void pushNextSampleIntoFifo (float sample) noexcept
-    {
-        if (fifoIndex == fftSize)
-        {
-            if (!nextFFTBlockReady)
-            {
-                juce::zeromem (fftData, sizeof (fftData));
-                memcpy (fftData, fifo, sizeof (fifo));
-                nextFFTBlockReady = true;
-            }
-            fifoIndex = 0;
-        }
-        fifo[fifoIndex++] = sample;
-    }
-};
+//class AnalyserState
+//{
+//public:
+//    enum {
+//        fftOrder  = 11,
+//        fftSize   = 1 << fftOrder
+//    };
+//    bool nextFFTBlockReady = false;
+//    float fftData [2 * fftSize];
+//    AnalyserState() {};
+//    ~AnalyserState() {};
+//    void pushFFTData(juce::AudioBuffer<float>& buffer) {
+//        if (buffer.getNumChannels() <= 0) {
+//            return;
+//        }
+//        auto* channelData = buffer.getReadPointer(0);// TODO: R
+//        for (auto i = 0; i < buffer.getNumSamples(); ++i) {
+//            pushNextSampleIntoFifo(channelData[i]);
+//        }
+//    }
+//private:
+//    float fifo [fftSize];
+//    int fifoIndex = 0;
+//    void pushNextSampleIntoFifo (float sample) noexcept
+//    {
+//        if (fifoIndex == fftSize)
+//        {
+//            if (!nextFFTBlockReady)
+//            {
+//                juce::zeromem (fftData, sizeof (fftData));
+//                memcpy (fftData, fifo, sizeof (fifo));
+//                nextFFTBlockReady = true;
+//            }
+//            fifoIndex = 0;
+//        }
+//        fifo[fifoIndex++] = sample;
+//    }
+//};
 
 //==============================================================================
 class TimeConsumptionState
@@ -74,42 +74,89 @@ private:
 };
 
 //==============================================================================
-class LevelState
+//class LevelState
+//{
+//public:
+//    enum { numSamples = 4096 };
+//    double levelData[2 * numSamples]{};
+//    bool nextBlockReady = false;
+//
+//    LevelState() {};
+//    ~LevelState() {};
+//    void push(juce::AudioBuffer<float>& buffer) {
+//        if (buffer.getNumChannels() <= 0) {
+//            return;
+//        }
+//        int index;
+//        bool _nextBlockReady;
+//        for(auto ch = 0; ch < 2; ch++) {
+//            index = fifoIndex;
+//            _nextBlockReady = nextBlockReady;
+//            auto* data = buffer.getReadPointer(ch);
+//            for (auto i = 0; i < buffer.getNumSamples(); ++i) {
+//                fifo[numSamples * ch + index] = data[i];
+//                index++;
+//                if(index >= numSamples) {
+//                    if(!nextBlockReady) {
+//                        memcpy(levelData + numSamples * ch, fifo + numSamples * ch, (sizeof (fifo)) / 2);
+//                        _nextBlockReady = true;
+//                    }
+//                    index = 0;
+//                }
+//            }
+//        }
+//        fifoIndex = index;
+//        nextBlockReady = _nextBlockReady;
+//    }
+//private:
+//    double fifo[2 * numSamples]{};
+//    int fifoIndex = 0;
+//};
+
+//==============================================================================
+class LatestDataProvider
 {
 public:
+    class Consumer {
+    public:
+        float* destinationL;
+        float* destinationR;
+        int numSamples;
+        bool ready;
+    };
     enum { numSamples = 4096 };
-    double levelData[2 * numSamples]{};
-    bool nextBlockReady = false;
+    std::vector<Consumer*> consumers;
     
-    LevelState() {};
-    ~LevelState() {};
+    LatestDataProvider() {};
+    ~LatestDataProvider() {};
+    void addConsumer(Consumer* c) {
+        consumers.push_back(c);
+    }
     void push(juce::AudioBuffer<float>& buffer) {
         if (buffer.getNumChannels() <= 0) {
             return;
         }
-        int index;
-        bool _nextBlockReady;
-        for(auto ch = 0; ch < 2; ch++) {
-            index = fifoIndex;
-            _nextBlockReady = nextBlockReady;
-            auto* data = buffer.getReadPointer(ch);
-            for (auto i = 0; i < buffer.getNumSamples(); ++i) {
-                fifo[numSamples * ch + index] = data[i];
-                index++;
-                if(index >= numSamples) {
-                    if(!nextBlockReady) {
-                        memcpy(levelData + numSamples * ch, fifo + numSamples * ch, (sizeof (fifo)) / 2);
-                        _nextBlockReady = true;
+        auto* dataL = buffer.getReadPointer(0);
+        auto* dataR = buffer.getReadPointer(1);
+        for (auto i = 0; i < buffer.getNumSamples(); ++i) {
+            fifoL[fifoIndex] = dataL[i];
+            fifoR[fifoIndex] = dataR[i];
+            fifoIndex++;
+            if(fifoIndex >= numSamples) {
+                for(auto* consumer : consumers) {
+                    if(!consumer->ready) {
+                        memcpy(consumer->destinationL, fifoL, sizeof(float) * consumer->numSamples);
+                        memcpy(consumer->destinationR, fifoR, sizeof(float) * consumer->numSamples);
+                        consumer->ready = true;
                     }
-                    index = 0;
                 }
+                fifoIndex = 0;
             }
         }
-        fifoIndex = index;
-        nextBlockReady = _nextBlockReady;
     }
 private:
-    double fifo[2 * numSamples]{};
+    float fifoL[numSamples]{};
+    float fifoR[numSamples]{};
     int fifoIndex = 0;
 };
 
@@ -157,8 +204,10 @@ public:
     //==============================================================================
     int currentProgram = 0;
     juce::MidiKeyboardState keyboardState;
-    LevelState levelState;
-    AnalyserState analyserState;
+//    LevelState levelState;
+    LatestDataProvider latestDataProvider;
+    
+//    AnalyserState analyserState;
     int polyphony = 0;
     TimeConsumptionState timeConsumptionState;
     juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo;

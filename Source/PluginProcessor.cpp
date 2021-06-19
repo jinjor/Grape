@@ -234,8 +234,9 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
             polyphony++;
         }
     }
-    levelState.push(buffer);
-    analyserState.pushFFTData(buffer);
+//    levelState.push(buffer);
+    latestDataProvider.push(buffer);
+//    analyserState.pushFFTData(buffer);
     
     midiMessages.clear();
 #if JUCE_DEBUG
