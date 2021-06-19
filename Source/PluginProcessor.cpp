@@ -52,6 +52,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     *controlItemParams[5].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("Filter");
     *controlItemParams[5].TargetFilterParam = CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq");
     
+    voiceParams.addAllParameters(*this);
     for(auto params : envelopeParams) {
         params.addAllParameters(*this);
     }
