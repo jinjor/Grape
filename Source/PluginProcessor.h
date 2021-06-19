@@ -174,7 +174,6 @@ public:
     
     MonoStack monoStack;
     Modifiers modifiers;
-    GrapeSound sound;
     GrapeSynthesiser synth;
 private:
     //==============================================================================

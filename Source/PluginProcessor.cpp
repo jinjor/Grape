@@ -24,7 +24,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 , delayParams()
 , controlItemParams { ControlItemParams(0), ControlItemParams(1), ControlItemParams(2), ControlItemParams(3), ControlItemParams(4), ControlItemParams(5) }
 , modifiers(&voiceParams, controlItemParams)
-, synth(&sound, &currentPositionInfo, &monoStack, &modifiers, &voiceParams, &delayParams)
+, synth(&currentPositionInfo, &monoStack, &modifiers, &voiceParams, &delayParams)
 {
     *oscParams[0].Enabled = true;
     
@@ -51,8 +51,6 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     *controlItemParams[5].Number = CONTROL_NUMBER_NAMES.indexOf("74: Brightness");
     *controlItemParams[5].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("Filter");
     *controlItemParams[5].TargetFilterParam = CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq");
-    
-    synth.addSound (&sound);
     
     for(auto params : envelopeParams) {
         params.addAllParameters(*this);

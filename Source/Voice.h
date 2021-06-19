@@ -199,7 +199,9 @@ private:
 class GrapeSynthesiser   : public juce::Synthesiser
 {
 public:
-    GrapeSynthesiser(GrapeSound* sound, juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, MonoStack* monoStack, Modifiers* modifiers, VoiceParams* voiceParams, DelayParams* delayParams) : sound(sound), currentPositionInfo(currentPositionInfo), monoStack(monoStack), modifiers(modifiers), voiceParams(voiceParams), delayParams(delayParams) {}
+    GrapeSynthesiser(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, MonoStack* monoStack, Modifiers* modifiers, VoiceParams* voiceParams, DelayParams* delayParams) : currentPositionInfo(currentPositionInfo), monoStack(monoStack), modifiers(modifiers), voiceParams(voiceParams), delayParams(delayParams) {
+        addSound(new GrapeSound());
+    }
     ~GrapeSynthesiser() {}
     virtual void handleMidiEvent (const juce::MidiMessage& m) override {
         const int channel = m.getChannel();
@@ -268,7 +270,7 @@ public:
     {
         DBG("handleController: " << midiChannel << ", " << controllerNumber << ", " << controllerValue);
         juce::Synthesiser::handleController(midiChannel, controllerNumber, controllerValue);
-        if(sound->appliesToChannel(midiChannel)) {
+        if(getSound(0)->appliesToChannel(midiChannel)) {
             modifiers->controllerMoved(controllerNumber, controllerValue);
         }
     }
@@ -276,7 +278,7 @@ public:
     {
         DBG("handlePitchWheel: " << midiChannel << ", " << wheelValue);
         juce::Synthesiser::handlePitchWheel(midiChannel, wheelValue);
-        if(sound->appliesToChannel(midiChannel)) {
+        if(getSound(0)->appliesToChannel(midiChannel)) {
             modifiers->pitchWheelMoved(wheelValue);
         }
     }
@@ -324,7 +326,6 @@ public:
 //        juce::Synthesiser::renderVoices(buffer, startSample, numSamples);
 //    }
 private:
-    GrapeSound* sound;
     juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo;
     
     MonoStack* monoStack;
