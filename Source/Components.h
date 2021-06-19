@@ -52,7 +52,7 @@ private:
 class StatusComponent : public juce::Component, private juce::Timer
 {
 public:
-    StatusComponent(int* polyphony, TimeConsumptionState* timeConsumptionState);
+    StatusComponent(int* polyphony, TimeConsumptionState* timeConsumptionState, LatestDataProvider* latestDataProvider);
     virtual ~StatusComponent();
     
     virtual void paint(juce::Graphics& g) override;
@@ -73,6 +73,12 @@ private:
     juce::Label volumeLabel;
     juce::Label polyphonyLabel;
     juce::Label timeConsumptionLabel;
+    
+    float levelDataL[2048];
+    float levelDataR[2048];
+    LatestDataProvider::Consumer levelConsumer {
+        levelDataL, levelDataR, 2048, false
+    };
 };
 
 

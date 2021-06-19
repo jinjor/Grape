@@ -16,6 +16,16 @@ const juce::Colour PANEL_NAME_COLOUR = juce::Colour(50,50,50);
 }
 
 //==============================================================================
+float calcCurrentLevel(int numSamples, float* data) {
+    float maxValue = 0.0;
+    for (int i = 0; i < numSamples; ++i)
+    {
+        maxValue = std::max(maxValue, std::abs(data[i]));
+    }
+    return juce::Decibels::gainToDecibels (maxValue);
+}
+
+//==============================================================================
 HeaderComponent::HeaderComponent(std::string name, bool hasEnableButton)
 : enabledButton("Enabled")
 , name(name)
@@ -173,11 +183,13 @@ void VoiceComponent::timerCallback()
 }
 
 //==============================================================================
-StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsumptionState)
+StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsumptionState, LatestDataProvider* latestDataProvider)
 : polyphony(polyphony)
 , timeConsumptionState(timeConsumptionState)
 , header("STATUS", false)
 {
+    latestDataProvider->addConsumer(&levelConsumer);
+    
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
     juce::Font paramValueLabelFont = juce::Font(PARAM_VALUE_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
     
@@ -220,7 +232,7 @@ StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsu
     timeConsumptionLabel.setEditable(false, false, false);
     addAndMakeVisible(timeConsumptionLabel);
     
-    startTimerHz(30.0f);
+    startTimerHz(4.0f);
 }
 
 StatusComponent::~StatusComponent()
@@ -256,7 +268,15 @@ void StatusComponent::resized()
 }
 void StatusComponent::timerCallback()
 {
-    volumeValueLabel.setText("TODO", juce::dontSendNotification);
+    if(levelConsumer.ready) {
+        for(int i = 0; i < levelConsumer.numSamples; i++) {
+            levelConsumer.destinationL[i] = (levelConsumer.destinationL[i] + levelConsumer.destinationR[i]) * 0.5;
+        }
+        float leveldB = calcCurrentLevel(levelConsumer.numSamples, levelConsumer.destinationL);
+        auto levelStr = (leveldB <= -100 ? "-Inf" : juce::String(leveldB, 1)) + " dB";
+        volumeValueLabel.setText(levelStr, juce::dontSendNotification);
+        levelConsumer.ready = false;
+    }
     polyphonyValueLabel.setText(juce::String(*polyphony), juce::dontSendNotification);
     timeConsumptionValueLabel.setText(juce::String(juce::roundToInt(timeConsumptionState->currentTimeConsumptionRate * 100)) + "%", juce::dontSendNotification);
 }
@@ -2212,21 +2232,15 @@ void AnalyserComponent::drawNextFrameOfSpectrum()
         scopeData[i] = level;
     }
 }
+
 void AnalyserComponent::drawNextFrameOfLevel()
 {
     auto mindB = -100.0f;
     auto maxdB =    0.0f;
-
-    for(auto ch = 0; ch < 2; ch++) {
-        float maxValue = 0.0;
-        auto* data = ch == 0 ? levelConsumer.destinationL : levelConsumer.destinationR;
-        for (int i = 0; i < levelConsumer.numSamples; ++i)
-        {
-            maxValue = std::max(maxValue, std::abs(data[i]));
-        }
-        auto level = juce::jmap (juce::jlimit (mindB, maxdB, juce::Decibels::gainToDecibels (maxValue)),
-                                 mindB, maxdB, 0.0f, 1.0f);
-        currentLevel[ch] = level;
+    for(int i = 0; i < 2; i++) {
+        auto* data = i == 0 ? levelConsumer.destinationL : levelConsumer.destinationR;
+        auto db = calcCurrentLevel(levelConsumer.numSamples, data);
+        currentLevel[i] = juce::jmap(juce::jlimit(mindB, maxdB, db), mindB, maxdB, 0.0f, 1.0f);
     }
 }
 void AnalyserComponent::paint(juce::Graphics& g)

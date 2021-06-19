@@ -41,8 +41,8 @@ public:
     public:
         float* destinationL;
         float* destinationR;
-        int numSamples;
-        bool ready;
+        int numSamples = 0;
+        bool ready = false;
     };
     enum { numSamples = 2048 };
     std::vector<Consumer*> consumers;

@@ -14,7 +14,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 , audioProcessor (p)
 , keyboardComponent (p.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 , voiceComponent (&p.voiceParams)
-, statusComponent (&p.polyphony, &p.timeConsumptionState)
+, statusComponent (&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider)
 , oscComponents { OscComponent(0, p.oscParams), OscComponent(1, p.oscParams+1), OscComponent(2, p.oscParams+2) }
 , envelopeComponents { EnvelopeComponent(0, p.envelopeParams), EnvelopeComponent(1, p.envelopeParams+1) }
 , filterComponents { FilterComponent(0, p.filterParams), FilterComponent(1, p.filterParams+1) }
