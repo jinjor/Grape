@@ -184,6 +184,12 @@ StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsu
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
     
+    volumeValueLabel.setFont(paramValueLabelFont);
+    volumeValueLabel.setText("0.0dB", juce::dontSendNotification);
+    volumeValueLabel.setJustificationType(juce::Justification::centred);
+    volumeValueLabel.setEditable(false, false, false);
+    addAndMakeVisible(volumeValueLabel);
+    
     polyphonyValueLabel.setFont(paramValueLabelFont);
     polyphonyValueLabel.setText(juce::String(*polyphony), juce::dontSendNotification);
     polyphonyValueLabel.setJustificationType(juce::Justification::centred);
@@ -195,6 +201,12 @@ StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsu
     timeConsumptionValueLabel.setJustificationType(juce::Justification::centred);
     timeConsumptionValueLabel.setEditable(false, false, false);
     addAndMakeVisible(timeConsumptionValueLabel);
+    
+    volumeLabel.setFont(paramLabelFont);
+    volumeLabel.setText("Volume", juce::dontSendNotification);
+    volumeLabel.setJustificationType(juce::Justification::centred);
+    volumeLabel.setEditable(false, false, false);
+    addAndMakeVisible(volumeLabel);
     
     polyphonyLabel.setFont(paramLabelFont);
     polyphonyLabel.setText("Polyphony", juce::dontSendNotification);
@@ -227,18 +239,24 @@ void StatusComponent::resized()
     bounds.reduce(0, 10);
     auto boundsWidth = bounds.getWidth();
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.5);
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 3);
+        volumeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        volumeValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
+    }
+    {
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 3);
         polyphonyLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         polyphonyValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.5);
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 3);
         timeConsumptionLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         timeConsumptionValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
 void StatusComponent::timerCallback()
 {
+    volumeValueLabel.setText("TODO", juce::dontSendNotification);
     polyphonyValueLabel.setText(juce::String(*polyphony), juce::dontSendNotification);
     timeConsumptionValueLabel.setText(juce::String(juce::roundToInt(timeConsumptionState->currentTimeConsumptionRate * 100)) + "%", juce::dontSendNotification);
 }
@@ -1293,7 +1311,6 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     peakFreqSlider.setValue(_paramsPtr->PeakFreq->get(), juce::dontSendNotification);
     peakFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     peakFreqSlider.setScrollWheelEnabled(false);
-//    peakFreqSlider.setTextValueSuffix(" oct");
     peakFreqSlider.textFromValueFunction = [](double oct) -> juce::String {
         return (oct == 0 ? " " : oct > 0 ? "+" : "-") + juce::String(std::abs(oct), 2) + " oct";
     };

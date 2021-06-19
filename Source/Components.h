@@ -66,9 +66,11 @@ private:
    
     HeaderComponent header;
     
+    juce::Label volumeValueLabel;
     juce::Label polyphonyValueLabel;
     juce::Label timeConsumptionValueLabel;
 
+    juce::Label volumeLabel;
     juce::Label polyphonyLabel;
     juce::Label timeConsumptionLabel;
 };
