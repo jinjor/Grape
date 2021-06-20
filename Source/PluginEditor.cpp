@@ -14,14 +14,14 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 , audioProcessor (p)
 , keyboardComponent (p.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 , controlComponent { ControlComponent(p.controlItemParams) }
-, voiceComponent (&p.voiceParams)
+, voiceComponent (&p.voiceParams, p.controlItemParams)
 , statusComponent (&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider)
 , oscComponents { OscComponent(0, p.oscParams, p.controlItemParams), OscComponent(1, p.oscParams+1, p.controlItemParams), OscComponent(2, p.oscParams+2, p.controlItemParams) }
 , envelopeComponents { EnvelopeComponent(0, p.envelopeParams), EnvelopeComponent(1, p.envelopeParams+1) }
-, filterComponents { FilterComponent(0, p.filterParams), FilterComponent(1, p.filterParams+1) }
-, lfoComponents { LfoComponent(0, p.lfoParams), LfoComponent(1, p.lfoParams+1), LfoComponent(2, p.lfoParams+2) }
+, filterComponents { FilterComponent(0, p.filterParams, p.controlItemParams), FilterComponent(1, p.filterParams+1, p.controlItemParams) }
+, lfoComponents { LfoComponent(0, p.lfoParams, p.controlItemParams), LfoComponent(1, p.lfoParams+1, p.controlItemParams), LfoComponent(2, p.lfoParams+2, p.controlItemParams) }
 , modEnvComponents { ModEnvComponent(0, p.modEnvParams), ModEnvComponent(1, p.modEnvParams+1), ModEnvComponent(2, p.modEnvParams+2) }
-, delayComponent { DelayComponent(&p.delayParams) }
+, delayComponent { DelayComponent(&p.delayParams, p.controlItemParams) }
 , analyserComponent (&p.latestDataProvider)
 {
     getLookAndFeel().setColour(juce::Label::textColourId, TEXT_COLOUR);

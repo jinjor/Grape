@@ -63,8 +63,9 @@ void HeaderComponent::resized()
 }
 
 //==============================================================================
-VoiceComponent::VoiceComponent(VoiceParams* params)
+VoiceComponent::VoiceComponent(VoiceParams* params, ControlItemParams* controlItemParams)
 : _paramsPtr(params)
+, controlItemParams(controlItemParams)
 , header("VOICE", false)
 , modeSelector("Mode")
 , portamentoTimeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -595,6 +596,9 @@ void OscComponent::timerCallback()
     spreadLabel.setEnabled(!isNoise);
     spreadSlider.setEnabled(!isNoise);
 
+    edgeSlider.setLookAndFeel(&grapeLookAndFeel);
+    detuneSlider.setLookAndFeel(&grapeLookAndFeel);
+    spreadSlider.setLookAndFeel(&grapeLookAndFeel);
     gainSlider.setLookAndFeel(&grapeLookAndFeel);
     for(int i = 0; i < NUM_CONTROL; ++i) {
         auto params = &controlItemParams[i];
@@ -791,9 +795,10 @@ void EnvelopeComponent::timerCallback()
 }
 
 //==============================================================================
-FilterComponent::FilterComponent(int index, FilterParams* params)
+FilterComponent::FilterComponent(int index, FilterParams* params, ControlItemParams* controlItemParams)
 : index(index)
 , _paramsPtr(params)
+, controlItemParams(controlItemParams)
 , header("FILTER " + std::to_string(index+1), true)
 , targetSelector("Target")
 , typeSelector("Type")
@@ -1030,12 +1035,45 @@ void FilterComponent::timerCallback()
     auto hasGain = _paramsPtr->hasGain();
     gainLabel.setEnabled(hasGain);
     gainSlider.setEnabled(hasGain);
+    
+    hzSlider.setLookAndFeel(&grapeLookAndFeel);
+    centSlider.setLookAndFeel(&grapeLookAndFeel);
+    qSlider.setLookAndFeel(&grapeLookAndFeel);
+    for(int i = 0; i < NUM_CONTROL; ++i) {
+        auto params = &controlItemParams[i];
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        switch(targetType) {
+            case CONTROL_TARGET_TYPE::Filter: {
+                int targetIndex = params->TargetFilter->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
+                for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+                    if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
+                        switch (targetParam) {
+                            case CONTROL_TARGET_FILTER_PARAM::Freq: {
+                                hzSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                centSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                break;
+                            }
+                            case CONTROL_TARGET_FILTER_PARAM::Q: {
+                                qSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                break;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
 }
 
 //==============================================================================
-LfoComponent::LfoComponent(int index, LfoParams* params)
+LfoComponent::LfoComponent(int index, LfoParams* params, ControlItemParams* controlItemParams)
 : index(index)
 , _paramsPtr(params)
+, controlItemParams(controlItemParams)
 , header("LFO " + std::to_string(index+1), true)
 , targetTypeSelector("TargetType")
 , targetOscSelector("TargetOsc")
@@ -1302,6 +1340,38 @@ void LfoComponent::timerCallback()
     } else {
         fastFreqSlider.setVisible(false);
         slowFreqSlider.setVisible(true);
+    }
+    
+    fastFreqSlider.setLookAndFeel(&grapeLookAndFeel);
+    slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
+    amountSlider.setLookAndFeel(&grapeLookAndFeel);
+    for(int i = 0; i < NUM_CONTROL; ++i) {
+        auto params = &controlItemParams[i];
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        switch(targetType) {
+            case CONTROL_TARGET_TYPE::LFO: {
+                int targetIndex = params->TargetLfo->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
+                for(int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
+                    if(targetIndex == lfoIndex || targetIndex == NUM_LFO) {
+                        switch(targetParam) {
+                            case CONTROL_TARGET_LFO_PARAM::Freq: {
+                                fastFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                slowFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                break;
+                            }
+                            case CONTROL_TARGET_LFO_PARAM::Amount: {
+                                amountSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                break;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
     }
 }
 
@@ -1673,8 +1743,9 @@ void ModEnvComponent::timerCallback()
 }
 
 //==============================================================================
-DelayComponent::DelayComponent(DelayParams* params)
+DelayComponent::DelayComponent(DelayParams* params, ControlItemParams* controlItemParams)
 : _paramsPtr(params)
+, controlItemParams(controlItemParams)
 , header("DELAY", true)
 , typeSelector("Type")
 , timeLSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -1978,6 +2049,28 @@ void DelayComponent::timerCallback()
     highFreqSlider.setValue(_paramsPtr->HighFreq->get(), juce::dontSendNotification);
     feedbackSlider.setValue(_paramsPtr->Feedback->get(), juce::dontSendNotification);
     mixSlider.setValue(_paramsPtr->Mix->get(), juce::dontSendNotification);
+    
+    mixSlider.setLookAndFeel(&grapeLookAndFeel);
+    for(int i = 0; i < NUM_CONTROL; ++i) {
+        auto params = &controlItemParams[i];
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        switch(targetType) {
+            case CONTROL_TARGET_TYPE::Master: {
+                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(params->TargetMiscParam->getIndex());
+                switch(targetParam) {
+                    case CONTROL_TARGET_MISC_PARAM::DelayAmount: {
+                        mixSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
 }
 
 

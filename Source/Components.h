@@ -24,7 +24,7 @@ private:
 class VoiceComponent : public juce::Component, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
-    VoiceComponent(VoiceParams* params);
+    VoiceComponent(VoiceParams* params, ControlItemParams* controlItemParams);
     virtual ~VoiceComponent();
     
     virtual void paint(juce::Graphics& g) override;
@@ -35,7 +35,10 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     GrapeLookAndFeel grapeLookAndFeel;
+    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
+    
     VoiceParams* _paramsPtr;
+    ControlItemParams* controlItemParams;
    
     HeaderComponent header;
     
@@ -101,8 +104,10 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     int index;
+    
     GrapeLookAndFeel grapeLookAndFeel;
     GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
+    
     OscParams* _paramsPtr;
     ControlItemParams* controlItemParams;
    
@@ -165,7 +170,7 @@ private:
 class FilterComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
-    FilterComponent(int index, FilterParams* params);
+    FilterComponent(int index, FilterParams* params, ControlItemParams* controlItemParams);
     virtual ~FilterComponent();
     
     virtual void paint(juce::Graphics& g) override;
@@ -179,7 +184,10 @@ private:
     virtual void timerCallback() override;
     int index;
     GrapeLookAndFeel grapeLookAndFeel;
+    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
+    
     FilterParams* _paramsPtr;
+    ControlItemParams* controlItemParams;
     
     HeaderComponent header;
     
@@ -205,7 +213,7 @@ private:
 class LfoComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
-    LfoComponent(int index, LfoParams* params);
+    LfoComponent(int index, LfoParams* params, ControlItemParams* controlItemParams);
     virtual ~LfoComponent();
     
     virtual void paint(juce::Graphics& g) override;
@@ -219,7 +227,10 @@ private:
     virtual void timerCallback() override;
     int index;
     GrapeLookAndFeel grapeLookAndFeel;
+    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
+    
     LfoParams* _paramsPtr;
+    ControlItemParams* controlItemParams;
     
     HeaderComponent header;
     
@@ -292,7 +303,7 @@ private:
 class DelayComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
-    DelayComponent(DelayParams* params);
+    DelayComponent(DelayParams* params, ControlItemParams* controlItemParams);
     virtual ~DelayComponent();
     
     virtual void paint(juce::Graphics& g) override;
@@ -304,8 +315,12 @@ private:
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
+    
     GrapeLookAndFeel grapeLookAndFeel;
+    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
+    
     DelayParams* _paramsPtr;
+    ControlItemParams* controlItemParams;
    
     HeaderComponent header;
     
