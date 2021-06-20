@@ -88,7 +88,7 @@ private:
 class OscComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
-    OscComponent(int index, OscParams* params);
+    OscComponent(int index, OscParams* params, ControlItemParams* controlItemParams);
     virtual ~OscComponent();
     
     virtual void paint(juce::Graphics& g) override;
@@ -102,7 +102,9 @@ private:
     virtual void timerCallback() override;
     int index;
     GrapeLookAndFeel grapeLookAndFeel;
+    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
     OscParams* _paramsPtr;
+    ControlItemParams* controlItemParams;
    
     HeaderComponent header;
     juce::Component body;

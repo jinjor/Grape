@@ -1,6 +1,9 @@
 #include "LookAndFeel.h"
 
 namespace {
+//const juce::Colour COLOUR_CONTROLLED = juce::Colour(210,100,170);
+//const juce::Colour COLOUR_CONTROLLED = juce::Colour(100, 190, 140);
+const juce::Colour COLOUR_CONTROLLED = juce::Colour(170,170,170);
 const juce::Colour COLOUR_SELECT = juce::Colour(170,100,210);
 const juce::Colour COLOUR_PIT = juce::Colour(0,0,0);
 const juce::Colour COLOUR_BORDER = juce::Colour(30,30,30);
@@ -13,7 +16,7 @@ const float BORDER_WIDTH = 1.0f;
 const float ARROW_ZONE_WIDTH = 18.0f;
 }
 
-GrapeLookAndFeel::GrapeLookAndFeel()
+GrapeLookAndFeel::GrapeLookAndFeel(bool controlled) : controlled(controlled)
 {
     setColour (juce::ComboBox::textColourId, COLOUR_TEXT);
     setColour (juce::ComboBox::arrowColourId, COLOUR_TEXT);
@@ -76,14 +79,17 @@ const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider& slider)
         juce::Path p;
         p.addArc(rx, ry, rw, rw, fromAngle, angle, true);
         juce::PathStrokeType strokeType(SLIT_WIDTH);
-        g.setColour (COLOUR_SELECT.withAlpha(slider.isEnabled() ? 1.0f : 0.3f));
+        auto color = controlled ? COLOUR_CONTROLLED : COLOUR_SELECT;
+        g.setColour (color.withAlpha(slider.isEnabled() ? 1.0f : 0.3f));
+//        g.setColour (COLOUR_SELECT.withAlpha(slider.isEnabled() ? 1.0f : 0.3f));
         g.strokePath(p, strokeType);
     }
     {
         juce::Path p;
         p.addEllipse(-POINTER_RADIUS/2, -radius*0.8, POINTER_RADIUS, POINTER_RADIUS);
         p.applyTransform (juce::AffineTransform::rotation (angle).translated (centreX, centreY));
-        g.setColour (COLOUR_SELECT.withAlpha(slider.isEnabled() ? 1.0f : 0.3f));
+        auto color = controlled ? COLOUR_CONTROLLED : COLOUR_SELECT;
+        g.setColour (color.withAlpha(slider.isEnabled() ? 1.0f : 0.3f));
         g.fillPath(p);
     }
 }

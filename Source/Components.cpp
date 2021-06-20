@@ -295,9 +295,10 @@ void StatusComponent::timerCallback()
 }
 
 //==============================================================================
-OscComponent::OscComponent(int index, OscParams* params)
+OscComponent::OscComponent(int index, OscParams* params, ControlItemParams* controlItemParams)
 : index(index)
 , _paramsPtr(params)
+, controlItemParams(controlItemParams)
 , header("OSC " + std::to_string(index+1), true)
 , envelopeSelector("Envelope")
 , waveformSelector("Waveform")
@@ -385,7 +386,8 @@ OscComponent::OscComponent(int index, OscParams* params)
     
     gainSlider.setLookAndFeel(&grapeLookAndFeel);
     gainSlider.setRange(_paramsPtr->Gain->range.start,
-                         _paramsPtr->Gain->range.end, 0.01);
+                        _paramsPtr->Gain->range.end,
+                        _paramsPtr->Gain->range.interval);
     gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
     gainSlider.setPopupDisplayEnabled(true, true, nullptr);
     gainSlider.setScrollWheelEnabled(false);
@@ -592,6 +594,49 @@ void OscComponent::timerCallback()
     detuneSlider.setEnabled(!isNoise);
     spreadLabel.setEnabled(!isNoise);
     spreadSlider.setEnabled(!isNoise);
+
+    gainSlider.setLookAndFeel(&grapeLookAndFeel);
+    for(int i = 0; i < NUM_CONTROL; ++i) {
+        auto params = &controlItemParams[i];
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        switch(targetType) {
+            case CONTROL_TARGET_TYPE::OSC: {
+                int targetIndex = params->TargetOsc->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
+                if(targetIndex == index || targetIndex == NUM_OSC) {
+                    switch(targetParam) {
+                        case CONTROL_TARGET_OSC_PARAM::Freq: {
+//                                freqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+                        case CONTROL_TARGET_OSC_PARAM::Edge: {
+                            edgeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+                        case CONTROL_TARGET_OSC_PARAM::Detune: {
+                            detuneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+                        case CONTROL_TARGET_OSC_PARAM::Spread: {
+                            spreadSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+                        case CONTROL_TARGET_OSC_PARAM::Pan: {
+//                                panSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+                        case CONTROL_TARGET_OSC_PARAM::Gain: {
+                            gainSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
 }
 
 //==============================================================================
@@ -2300,7 +2345,7 @@ void AnalyserComponent::timerCallback()
 }
 void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g)
 {
-    g.setColour(juce::Colour(100,190,140));
+    g.setColour(juce::Colour(100, 190, 140));
     auto offsetX = 3;
     auto offsetY = 2;
     auto width  = bounds.getWidth() - 20;
@@ -2312,7 +2357,7 @@ void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g
                       offsetX + (float) juce::jmap (i,     0, scopeSize - 1, 0, width),
                       offsetY - 0.5f +         juce::jmap (scopeData[i],     0.0f, 1.0f, (float) height, 0.0f) });
     }
-    g.setColour(juce::Colour(100,190,140));
+    g.setColour(juce::Colour(100, 190, 140));
     {
         if(overflowWarningL > 0) {
             g.setColour(juce::Colour(190, 40, 80));
@@ -2321,7 +2366,7 @@ void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g
         int barHeight = juce::jmax(1.0f, currentLevel[0] * height);
         g.fillRect(offsetX + width + 1, offsetY + height - barHeight, 8, barHeight);
     }
-    g.setColour(juce::Colour(100,190,140));
+    g.setColour(juce::Colour(100, 190, 140));
     {
         if(overflowWarningR > 0) {
             g.setColour(juce::Colour(190, 40, 80));

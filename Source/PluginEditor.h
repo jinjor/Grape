@@ -22,6 +22,7 @@ private:
     GrapeAudioProcessor& audioProcessor;
     juce::MidiKeyboardComponent keyboardComponent;
     
+    ControlComponent controlComponent;
     VoiceComponent voiceComponent;
     StatusComponent statusComponent;
     OscComponent oscComponents[NUM_OSC];
@@ -30,7 +31,6 @@ private:
     LfoComponent lfoComponents[NUM_LFO];
     ModEnvComponent modEnvComponents[NUM_MODENV];
     DelayComponent delayComponent;
-    ControlComponent controlComponent;
     AnalyserComponent analyserComponent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GrapeAudioProcessorEditor)

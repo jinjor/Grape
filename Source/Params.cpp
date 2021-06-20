@@ -40,7 +40,11 @@ OscParams::OscParams(int index) {
     Unison = new juce::AudioParameterInt(idPrefix + "UNISON", namePrefix + "Unison", 1, 4, 1);
     Detune = new juce::AudioParameterFloat(idPrefix + "DETUNE", namePrefix + "Detune", 0.0f, 1.0f, 0.0f);
     Spread = new juce::AudioParameterFloat(idPrefix + "SPREAD", namePrefix + "Spread", 0.0f, 1.0f, 0.0f);
-    Gain = new juce::AudioParameterFloat(idPrefix + "GAIN", namePrefix + "Gain", 0.0f, 4.0f, 1.0f);
+    {
+        auto range = juce::NormalisableRange(0.0f, 4.0f, 0.01f);
+        range.setSkewForCentre(1.0f);
+        Gain = new juce::AudioParameterFloat(idPrefix + "GAIN", namePrefix + "Gain", range, 1.0f);
+    }
     Envelope = new juce::AudioParameterChoice(idPrefix + "ENVELOPE", namePrefix + "Envelope", OSC_ENV_NAMES, OSC_ENV_NAMES.indexOf("1"));
 }
 void OscParams::addAllParameters(juce::AudioProcessor& processor)

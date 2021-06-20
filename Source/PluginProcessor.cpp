@@ -24,7 +24,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 , delayParams()
 , controlItemParams { ControlItemParams(0), ControlItemParams(1), ControlItemParams(2), ControlItemParams(3), ControlItemParams(4), ControlItemParams(5) }
 , modifiers(&voiceParams, controlItemParams)
-, synth(&currentPositionInfo, &monoStack, &modifiers, &voiceParams, &delayParams)
+, synth(&currentPositionInfo, &monoStack, controlItemParams, &voiceParams, oscParams, &delayParams)
 {
     *oscParams[0].Enabled = true;
     
