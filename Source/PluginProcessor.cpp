@@ -238,15 +238,15 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     
     midiMessages.clear();
 #if JUCE_DEBUG
-    auto* leftIn = buffer.getReadPointer(0);
-    auto* rightIn = buffer.getReadPointer(1);
-    for(int i = 0; i < buffer.getNumSamples(); ++i)
-    {
-        jassert(leftIn[i] >= -1);
-        jassert(leftIn[i] <= 1);
-        jassert(rightIn[i] >= -1);
-        jassert(rightIn[i] <= 1);
-    }
+//    auto* leftIn = buffer.getReadPointer(0);
+//    auto* rightIn = buffer.getReadPointer(1);
+//    for(int i = 0; i < buffer.getNumSamples(); ++i)
+//    {
+//        jassert(leftIn[i] >= -1);
+//        jassert(leftIn[i] <= 1);
+//        jassert(rightIn[i] >= -1);
+//        jassert(rightIn[i] <= 1);
+//    }
 #endif
     
 }

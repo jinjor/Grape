@@ -215,7 +215,7 @@ StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsu
     addAndMakeVisible(timeConsumptionValueLabel);
     
     volumeLabel.setFont(paramLabelFont);
-    volumeLabel.setText("Volume", juce::dontSendNotification);
+    volumeLabel.setText("Peak", juce::dontSendNotification);
     volumeLabel.setJustificationType(juce::Justification::centred);
     volumeLabel.setEditable(false, false, false);
     addAndMakeVisible(volumeLabel);
@@ -268,14 +268,27 @@ void StatusComponent::resized()
 }
 void StatusComponent::timerCallback()
 {
-    if(levelConsumer.ready) {
-        for(int i = 0; i < levelConsumer.numSamples; i++) {
-            levelConsumer.destinationL[i] = (levelConsumer.destinationL[i] + levelConsumer.destinationR[i]) * 0.5;
-        }
-        float leveldB = calcCurrentLevel(levelConsumer.numSamples, levelConsumer.destinationL);
-        auto levelStr = (leveldB <= -100 ? "-Inf" : juce::String(leveldB, 1)) + " dB";
+    if(overflowWarning > 0) {
+        volumeValueLabel.setColour(juce::Label::textColourId, juce::Colour(190, 40, 80));
+        auto levelStr = juce::String(overflowedLevel, 1) + " dB";
         volumeValueLabel.setText(levelStr, juce::dontSendNotification);
-        levelConsumer.ready = false;
+        
+        overflowWarning--;
+    } else {
+        volumeValueLabel.removeColour(juce::Label::textColourId);
+        
+        if(levelConsumer.ready) {
+            float levelLdB = calcCurrentLevel(levelConsumer.numSamples, levelConsumer.destinationL);
+            float levelRdB = calcCurrentLevel(levelConsumer.numSamples, levelConsumer.destinationR);
+            auto leveldB = std::max(levelLdB, levelRdB);
+            auto levelStr = (leveldB <= -100 ? "-Inf" : juce::String(leveldB, 1)) + " dB";
+            volumeValueLabel.setText(levelStr, juce::dontSendNotification);
+            levelConsumer.ready = false;
+            if(leveldB > 0) {
+                overflowedLevel = leveldB;
+                overflowWarning = 4 * 1.2;
+            }
+        }
     }
     polyphonyValueLabel.setText(juce::String(*polyphony), juce::dontSendNotification);
     timeConsumptionValueLabel.setText(juce::String(juce::roundToInt(timeConsumptionState->currentTimeConsumptionRate * 100)) + "%", juce::dontSendNotification);
@@ -2241,6 +2254,10 @@ void AnalyserComponent::drawNextFrameOfLevel()
         auto* data = i == 0 ? levelConsumer.destinationL : levelConsumer.destinationR;
         auto db = calcCurrentLevel(levelConsumer.numSamples, data);
         currentLevel[i] = juce::jmap(juce::jlimit(mindB, maxdB, db), mindB, maxdB, 0.0f, 1.0f);
+        if(db > 0) {
+            (i == 0 ? overflowedLevelL : overflowedLevelR) = db;
+            (i == 0 ? overflowWarningL : overflowWarningR) = 30 * 1.2;
+        }
     }
 }
 void AnalyserComponent::paint(juce::Graphics& g)
@@ -2253,7 +2270,6 @@ void AnalyserComponent::paint(juce::Graphics& g)
 
     if(readyToDrawFrame) {
         g.setOpacity(1.0f);
-        g.setColour(juce::Colour(100,190,140));
         drawFrame(bounds.reduced(2), g);
     }
 }
@@ -2284,6 +2300,7 @@ void AnalyserComponent::timerCallback()
 }
 void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g)
 {
+    g.setColour(juce::Colour(100,190,140));
     auto offsetX = 3;
     auto offsetY = 2;
     auto width  = bounds.getWidth() - 20;
@@ -2295,11 +2312,21 @@ void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g
                       offsetX + (float) juce::jmap (i,     0, scopeSize - 1, 0, width),
                       offsetY - 0.5f +         juce::jmap (scopeData[i],     0.0f, 1.0f, (float) height, 0.0f) });
     }
+    g.setColour(juce::Colour(100,190,140));
     {
+        if(overflowWarningL > 0) {
+            g.setColour(juce::Colour(190, 40, 80));
+            overflowWarningL--;
+        }
         int barHeight = juce::jmax(1.0f, currentLevel[0] * height);
         g.fillRect(offsetX + width + 1, offsetY + height - barHeight, 8, barHeight);
     }
+    g.setColour(juce::Colour(100,190,140));
     {
+        if(overflowWarningR > 0) {
+            g.setColour(juce::Colour(190, 40, 80));
+            overflowWarningR--;
+        }
         int barHeight = juce::jmax(1.0f, currentLevel[1] * height);
         g.fillRect(offsetX + width + 10, offsetY + height - barHeight, 8, barHeight);
     }

@@ -47,7 +47,9 @@ public:
     enum { numSamples = 2048 };
     std::vector<Consumer*> consumers;
     
-    LatestDataProvider() {};
+    LatestDataProvider() {
+        std::cout << "consumers.size(): " << consumers.size() << std::endl;
+    };
     ~LatestDataProvider() {};
     void addConsumer(Consumer* c) {
         jassert(c->numSamples <= numSamples);
@@ -65,6 +67,11 @@ public:
             fifoIndex++;
             for(auto* consumer : consumers) {
                 if(!consumer->ready && fifoIndex >= consumer->numSamples) {
+                    if(consumer->numSamples < 0) {
+                        std::cout << "consumer->numSamples: " << consumer->numSamples << std::endl;
+                        std::cout << "consumer->ready: " << consumer->ready << std::endl;
+                        std::cout << "fifoIndex: " << fifoIndex << std::endl;
+                    }
                     memcpy(consumer->destinationL, fifoL + fifoIndex - consumer->numSamples, sizeof(float) * consumer->numSamples);
                     memcpy(consumer->destinationR, fifoR + fifoIndex - consumer->numSamples, sizeof(float) * consumer->numSamples);
                     consumer->ready = true;

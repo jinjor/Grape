@@ -79,6 +79,8 @@ private:
     LatestDataProvider::Consumer levelConsumer {
         levelDataL, levelDataR, 2048, false
     };
+    float overflowedLevel = 0;
+    int overflowWarning = 0;
 };
 
 
@@ -367,6 +369,11 @@ private:
     void drawNextFrameOfSpectrum();
     void drawNextFrameOfLevel();
     void drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g);
+    
+    float overflowedLevelL = 0;
+    float overflowedLevelR = 0;
+    int overflowWarningL = 0;
+    int overflowWarningR = 0;
 };
 
 //==============================================================================
