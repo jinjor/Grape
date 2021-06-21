@@ -11,9 +11,9 @@ const int NUM_FILTER = 2;
 const int NUM_LFO = 3;
 const int NUM_MODENV = 3;
 const int NUM_CONTROL = 6;
-const double A = 1.0 / 12.0;
-const double X = std::pow(2.0, 1.0/12.0);
-const double Y = 440.0 / std::pow(X, 69);
+const float A = 1.0 / 12.0;
+const float X = std::pow(2.0, 1.0/12.0);
+const float Y = 440.0 / std::pow(X, 69);
 }
 
 //==============================================================================
@@ -33,7 +33,7 @@ public:
             map[key]++;
         }
     }
-    void log(std::string key, double message) {
+    void log(std::string key, float message) {
         log(key, std::to_string(message));
     }
 private:
@@ -117,17 +117,17 @@ public:
     ~Modifiers() {};
     VoiceParams* voiceParams;
     ControlItemParams* controlItemParams;
-    double angleShift[NUM_OSC] {};
-    double octShift[NUM_OSC] {};
-    double edgeRatio[NUM_OSC] {};
-    double panMod[NUM_OSC] {};
-    double detuneRatio[NUM_OSC] {};
-    double spreadRatio[NUM_OSC] {};
-    double gain[NUM_OSC] {};
-    double filterOctShift[NUM_FILTER] {};
-    double filterQExp[NUM_FILTER] {};
-    double lfoOctShift[NUM_LFO] {};
-    double lfoAmountGain[NUM_LFO] {};
+    float angleShift[NUM_OSC] {};
+    float octShift[NUM_OSC] {};
+    float edgeRatio[NUM_OSC] {};
+    float panMod[NUM_OSC] {};
+    float detuneRatio[NUM_OSC] {};
+    float spreadRatio[NUM_OSC] {};
+    float gain[NUM_OSC] {};
+    float filterOctShift[NUM_FILTER] {};
+    float filterQExp[NUM_FILTER] {};
+    float lfoOctShift[NUM_LFO] {};
+    float lfoAmountGain[NUM_LFO] {};
 };
 
 //==============================================================================
@@ -176,12 +176,12 @@ private:
     bool stolen = false;
     bool isActive();
     SparseLog sparseLog = SparseLog(10000);
-    double getMidiNoteInHertzDouble (double noteNumber)
+    float getMidiNoteInHertzFloat (float noteNumber)
     {
         return 440.0 * std::pow (2.0, (noteNumber - 69) * A);
 //        return Y * std::pow(X, noteNumber);// こっちの方がパフォーマンス悪かった
     }
-    double shiftHertsByNotes (double herts, double notes)
+    float shiftHertsByNotes (float herts, float notes)
     {
         return herts * std::pow (2.0, notes * A);
     }
@@ -307,7 +307,7 @@ public:
         
         for(int i = 0; i < numSamples; ++i)
         {
-            double sample[2] { leftIn[i], rightIn[i] };
+            float sample[2] { leftIn[i], rightIn[i] };
             
             // Delay
             if(delayParams->Enabled->get()) {
@@ -322,7 +322,7 @@ public:
             rightOut[i] = sample[1];
         }
     }
-//    void renderVoices (juce::AudioBuffer<double>& buffer, int startSample, int numSamples) override
+//    void renderVoices (juce::AudioBuffer<float>& buffer, int startSample, int numSamples) override
 //    {
 //        juce::Synthesiser::renderVoices(buffer, startSample, numSamples);
 //    }

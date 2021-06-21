@@ -317,7 +317,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
             smoothNote.step();
             smoothVelocity.step();
             
-            double shiftedNoteNumbers[NUM_OSC] {smoothNote.value, smoothNote.value, smoothNote.value};
+            float shiftedNoteNumbers[NUM_OSC] {smoothNote.value, smoothNote.value, smoothNote.value};
             for(int i = 0; i < NUM_OSC; ++i) {
                 shiftedNoteNumbers[i] += oscParams[i].Octave->get() * 12;
                 shiftedNoteNumbers[i] += oscParams[i].Coarse->get();
@@ -430,13 +430,13 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                 if(!params->Enabled->get()) {
                     continue;
                 }
-                double lfoValue;
-                double freq;
+                float lfoValue;
+                float freq;
                 if(lfoParams[i].shouldUseFastFreq()) {
                     int target = lfoParams[i].TargetOsc->getIndex();
                     auto shiftedNoteNumber = target == NUM_OSC ? midiNoteNumber : shiftedNoteNumbers[target];
                     shiftedNoteNumber += modifiers.lfoOctShift[i];
-                    freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
+                    freq = getMidiNoteInHertzFloat(shiftedNoteNumber);
                     freq *= lfoParams[i].FastFreq->get();
                 } else {
                     freq = lfoParams[i].SlowFreq->get();
@@ -468,7 +468,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                                         break;
                                     }
                                     case LFO_TARGET_OSC_PARAM::FM: {
-                                        modifiers.angleShift[oscIndex] += lfoValue * lfoAmount * juce::MathConstants<double>::twoPi;
+                                        modifiers.angleShift[oscIndex] += lfoValue * lfoAmount * juce::MathConstants<float>::twoPi;
                                         break;
                                     }
                                     case LFO_TARGET_OSC_PARAM::AM: {
@@ -506,13 +506,13 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                 }
             }
             bool active = false;
-            double out[2] {0, 0};
+            float out[2] {0, 0};
             // ---------------- OSC with Envelope and Filter ----------------
             for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
                 if(!oscParams[oscIndex].Enabled->get()) {
                     continue;
                 }
-                auto freq = getMidiNoteInHertzDouble(shiftedNoteNumbers[oscIndex] + modifiers.octShift[oscIndex] * 12);
+                auto freq = getMidiNoteInHertzFloat(shiftedNoteNumbers[oscIndex] + modifiers.octShift[oscIndex] * 12);
                 auto edge = oscParams[oscIndex].Edge->get() * modifiers.edgeRatio[oscIndex];
                 auto panBase = globalParams->Pan->get();
                 auto pan = modifiers.panMod[oscIndex] == 0
@@ -521,7 +521,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                 auto detune = oscParams[oscIndex].Detune->get() * modifiers.detuneRatio[oscIndex];
                 auto spread = oscParams[oscIndex].Spread->get() * modifiers.spreadRatio[oscIndex];
                 
-                double o[2] {0, 0};
+                float o[2] {0, 0};
                 oscs[oscIndex].step(oscParams[oscIndex].Unison->get(),
                                     pan,
                                     detune,
@@ -545,18 +545,18 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                     }
                     if(filterParams[filterIndex].Target->getIndex() == oscIndex) {
                         auto filterType = static_cast<FILTER_TYPE>(filterParams[filterIndex].Type->getIndex());
-                        double freq;
+                        float freq;
                         switch(static_cast<FILTER_FREQ_TYPE>(filterParams[filterIndex].FreqType->getIndex())) {
                             case FILTER_FREQ_TYPE::Absolute: {
-                                double noteShift = modifiers.filterOctShift[filterIndex] * 12;
+                                float noteShift = modifiers.filterOctShift[filterIndex] * 12;
                                 freq = shiftHertsByNotes(filterParams[filterIndex].Hz->get(), noteShift);
                                 break;
                             }
                             case FILTER_FREQ_TYPE::Relative: {
-                                double shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
+                                float shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
                                 shiftedNoteNumber += filterParams[filterIndex].Semitone->get();
                                 shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
-                                freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
+                                freq = getMidiNoteInHertzFloat(shiftedNoteNumber);
                                 break;
                             }
                         }
@@ -579,18 +579,18 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                 }
                 if(filterParams[filterIndex].Target->getIndex() == NUM_OSC) {// All
                     auto filterType = static_cast<FILTER_TYPE>(filterParams[filterIndex].Type->getIndex());
-                    double freq;
+                    float freq;
                     switch(static_cast<FILTER_FREQ_TYPE>(filterParams[filterIndex].FreqType->getIndex())) {
                         case FILTER_FREQ_TYPE::Absolute: {
-                            double noteShift = modifiers.filterOctShift[filterIndex] * 12;
+                            float noteShift = modifiers.filterOctShift[filterIndex] * 12;
                             freq = shiftHertsByNotes(filterParams[filterIndex].Hz->get(), noteShift);
                             break;
                         }
                         case FILTER_FREQ_TYPE::Relative: {
-                            double shiftedNoteNumber = midiNoteNumber;
+                            float shiftedNoteNumber = midiNoteNumber;
                             shiftedNoteNumber += filterParams[filterIndex].Semitone->get();
                             shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
-                            freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
+                            freq = getMidiNoteInHertzFloat(shiftedNoteNumber);
                             break;
                         }
                     }
