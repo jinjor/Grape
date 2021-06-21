@@ -11,7 +11,7 @@ bool GrapeSound::appliesToChannel(int) { return true; }
 GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo,
                        GlobalParams* globalParams,
                        VoiceParams* voiceParams,
-                       OscParams* oscParams,
+                       std::array<OscParams, NUM_OSC>& oscParams,
                        EnvelopeParams* envelopeParams,
                        FilterParams* filterParams,
                        LfoParams* lfoParams,

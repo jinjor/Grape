@@ -16,7 +16,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 , controlComponent { ControlComponent(p.controlItemParams) }
 , voiceComponent (&p.voiceParams, p.controlItemParams)
 , statusComponent (&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider)
-, oscComponents { OscComponent(0, p.oscParams, p.controlItemParams), OscComponent(1, p.oscParams+1, p.controlItemParams), OscComponent(2, p.oscParams+2, p.controlItemParams) }
+, oscComponents { OscComponent(0, &p.oscParams[0], p.controlItemParams), OscComponent(1, &p.oscParams[1], p.controlItemParams), OscComponent(2, &p.oscParams[2], p.controlItemParams) }
 , envelopeComponents { EnvelopeComponent(0, p.envelopeParams), EnvelopeComponent(1, p.envelopeParams+1) }
 , filterComponents { FilterComponent(0, p.filterParams, p.controlItemParams), FilterComponent(1, p.filterParams+1, p.controlItemParams) }
 , lfoComponents { LfoComponent(0, p.lfoParams, p.controlItemParams), LfoComponent(1, p.lfoParams+1, p.controlItemParams), LfoComponent(2, p.lfoParams+2, p.controlItemParams) }

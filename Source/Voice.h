@@ -149,7 +149,7 @@ public:
     GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo,
                GlobalParams* globalParams,
                VoiceParams* voiceParams,
-               OscParams* oscParams,
+               std::array<OscParams, NUM_OSC>& oscParams,
                EnvelopeParams* envelopeParams,
                FilterParams* filterParams,
                LfoParams* lfoParams,
@@ -169,7 +169,7 @@ private:
     
     GlobalParams* globalParams;
     VoiceParams* voiceParams;
-    OscParams* oscParams;
+    std::array<OscParams, NUM_OSC>& oscParams;
     EnvelopeParams* envelopeParams;
     FilterParams* filterParams;
     LfoParams* lfoParams;
@@ -201,7 +201,7 @@ private:
 class GrapeSynthesiser   : public juce::Synthesiser
 {
 public:
-    GrapeSynthesiser(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, MonoStack* monoStack, ControlItemParams* controlItemParams, GlobalParams* globalParams, VoiceParams* voiceParams, OscParams* oscParams, FilterParams* filterParams, LfoParams* lfoParams, DelayParams* delayParams)
+    GrapeSynthesiser(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, MonoStack* monoStack, ControlItemParams* controlItemParams, GlobalParams* globalParams, VoiceParams* voiceParams, std::array<OscParams, NUM_OSC>& oscParams, FilterParams* filterParams, LfoParams* lfoParams, DelayParams* delayParams)
     : currentPositionInfo(currentPositionInfo)
     , monoStack(monoStack)
     , controlItemParams(controlItemParams)
@@ -468,7 +468,7 @@ private:
     
     GlobalParams* globalParams;
     VoiceParams* voiceParams;
-    OscParams* oscParams;
+    std::array<OscParams, NUM_OSC>& oscParams;
     FilterParams* filterParams;
     LfoParams* lfoParams;
     DelayParams* delayParams;
