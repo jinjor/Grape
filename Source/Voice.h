@@ -110,13 +110,25 @@ private:
 };
 
 //==============================================================================
-// TODO: multi channel
 class Modifiers {
 public:
-    Modifiers(VoiceParams* voiceParams, ControlItemParams* controlItemParams);
+    Modifiers()
+    {
+        std::fill_n(angleShift, NUM_OSC, 0);
+        std::fill_n(octShift, NUM_OSC, 0);
+        std::fill_n(edgeRatio, NUM_OSC, 1.0);
+        std::fill_n(panMod, NUM_OSC, 0.0);
+        std::fill_n(detuneRatio, NUM_OSC, 1.0);
+        std::fill_n(spreadRatio, NUM_OSC, 1.0);
+        std::fill_n(gain, NUM_OSC, 1.0);
+        
+        std::fill_n(filterOctShift, NUM_FILTER, 0);
+        std::fill_n(filterQExp, NUM_FILTER, 1.0);
+        
+        std::fill_n(lfoOctShift, NUM_LFO, 0);
+        std::fill_n(lfoAmountGain, NUM_LFO, 1.0);
+    }
     ~Modifiers() {};
-    VoiceParams* voiceParams;
-    ControlItemParams* controlItemParams;
     double angleShift[NUM_OSC] {};
     double octShift[NUM_OSC] {};
     double edgeRatio[NUM_OSC] {};
@@ -141,8 +153,7 @@ public:
                EnvelopeParams* envelopeParams,
                FilterParams* filterParams,
                LfoParams* lfoParams,
-               ModEnvParams* modEnvParams,
-               Modifiers* modifiers);
+               ModEnvParams* modEnvParams);
     ~GrapeVoice();
     bool canPlaySound (juce::SynthesiserSound* sound) override;
     void startNote (int midiNoteNumber, float velocity,
@@ -163,7 +174,6 @@ private:
     FilterParams* filterParams;
     LfoParams* lfoParams;
     ModEnvParams* modEnvParams;
-    Modifiers* modifiers;
     
     MultiOsc oscs[NUM_OSC];
     Adsr adsr[NUM_ENVELOPE];

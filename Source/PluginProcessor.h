@@ -148,7 +148,6 @@ public:
     ControlItemParams controlItemParams[NUM_CONTROL];
     
     MonoStack monoStack;
-    Modifiers modifiers;
     GrapeSynthesiser synth;
 private:
     //==============================================================================

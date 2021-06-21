@@ -24,7 +24,6 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 , modEnvParams { ModEnvParams(0), ModEnvParams(1), ModEnvParams(2) }
 , delayParams()
 , controlItemParams { ControlItemParams(0), ControlItemParams(1), ControlItemParams(2), ControlItemParams(3), ControlItemParams(4), ControlItemParams(5) }
-, modifiers(&voiceParams, controlItemParams)
 , synth(&currentPositionInfo, &monoStack, controlItemParams, &globalParams, &voiceParams, oscParams, filterParams, lfoParams, &delayParams)
 {
     *oscParams[0].Enabled = true;
@@ -189,8 +188,7 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
                                        envelopeParams,
                                        filterParams,
                                        lfoParams,
-                                       modEnvParams,
-                                       &modifiers));
+                                       modEnvParams));
     } else if (voiceMode == VOICE_MODE::Poly && synth.getNumVoices() != numVoices) {
         synth.clearVoices();
         for (auto i = 0; i < numVoices; ++i) {
@@ -201,8 +199,7 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
                                            envelopeParams,
                                            filterParams,
                                            lfoParams,
-                                           modEnvParams,
-                                           &modifiers));
+                                           modEnvParams));
         }
     }
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
