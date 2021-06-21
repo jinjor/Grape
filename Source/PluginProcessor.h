@@ -137,6 +137,7 @@ public:
     TimeConsumptionState timeConsumptionState;
     juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo;
     
+    GlobalParams globalParams;
     VoiceParams voiceParams;
     OscParams oscParams[NUM_OSC];
     EnvelopeParams envelopeParams[NUM_ENVELOPE];

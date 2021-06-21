@@ -67,19 +67,19 @@ const double DELAY_TIME_SYNC_VALUES[18] = {
     1.0 * 2/3, 0.5 * 2/3, 0.25 * 2/3, 0.125 * 2/3, 0.0625 * 2/3, 0.03125 * 2/3,
     1.0 * 3/2, 0.5 * 3/2, 0.25 * 3/2, 0.125 * 3/2, 0.0625 * 3/2, 0.03125 * 3/2 };
 
-const juce::StringArray CONTROL_NUMBER_NAMES = juce::StringArray("None", "1: Modulation", "2: Breath", "4: Foot", "5: Portamento Time", "7: Main Volume", "10: Pan", "11: Expression", "71: Resonance", "74: Brightness", "75: Sound Control", "76: Sound Control", "77: Sound Control", "78: Sound Control", "79: Sound Control", "91: Reverb", "92: Tremolo", "93: Chorus", "94: Detune", "95: Phaser");
-const int CONTROL_NUMBER_VALUES[20] { -1, 1, 2, 4, 5, 7, 10, 11, 71, 74, 75, 76, 77, 78, 79, 91, 92, 93, 94, 95 };
+const juce::StringArray CONTROL_NUMBER_NAMES = juce::StringArray("None", "1: Modulation", "2: Breath", "4: Foot", "5: Portamento Time", "71: Resonance", "74: Brightness", "75: Sound Control", "76: Sound Control", "77: Sound Control", "78: Sound Control", "79: Sound Control", "91: Reverb", "92: Tremolo", "93: Chorus", "94: Detune", "95: Phaser");
+const int CONTROL_NUMBER_VALUES[17] { -1, 1, 2, 4, 5, 71, 74, 75, 76, 77, 78, 79, 91, 92, 93, 94, 95 };
 
 enum class CONTROL_TARGET_TYPE { OSC, Filter, LFO, Master };
 const juce::StringArray CONTROL_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO", "Misc");
 
-const juce::StringArray CONTROL_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3", "All");
-const juce::StringArray CONTROL_TARGET_FILTER_NAMES = juce::StringArray("1", "2", "All");
-const juce::StringArray CONTROL_TARGET_LFO_NAMES = juce::StringArray("1", "2", "3", "All");
-const juce::StringArray CONTROL_TARGET_MODENV_NAMES = juce::StringArray("1", "2", "3", "All");
+const juce::StringArray CONTROL_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3");
+const juce::StringArray CONTROL_TARGET_FILTER_NAMES = juce::StringArray("1", "2");
+const juce::StringArray CONTROL_TARGET_LFO_NAMES = juce::StringArray("1", "2", "3");
+const juce::StringArray CONTROL_TARGET_MODENV_NAMES = juce::StringArray("1", "2", "3");
 
-enum class CONTROL_TARGET_OSC_PARAM { Freq, Edge, Detune, Spread, Pan, Gain };
-const juce::StringArray CONTROL_TARGET_OSC_PARAM_NAMES = juce::StringArray("Freq", "Edge", "Detune", "Spread", "Pan", "Gain");
+enum class CONTROL_TARGET_OSC_PARAM { Edge, Detune, Spread, /*Pan,*/ Gain };
+const juce::StringArray CONTROL_TARGET_OSC_PARAM_NAMES = juce::StringArray("Edge", "Detune", "Spread", /*"Pan",*/ "Gain");
 
 enum class CONTROL_TARGET_FILTER_PARAM { Freq, Q };
 const juce::StringArray CONTROL_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
@@ -87,8 +87,8 @@ const juce::StringArray CONTROL_TARGET_FILTER_PARAM_NAMES = juce::StringArray("F
 enum class CONTROL_TARGET_LFO_PARAM { Freq, Amount };
 const juce::StringArray CONTROL_TARGET_LFO_PARAM_NAMES = juce::StringArray("Freq", "Amount");
 
-enum class CONTROL_TARGET_MISC_PARAM { PortamentoAmount, DelayAmount, MasterVolume };
-const juce::StringArray CONTROL_TARGET_MISC_PARAM_NAMES = juce::StringArray("Portamento Amount", "Delay Amount", "Master Volume");
+enum class CONTROL_TARGET_MISC_PARAM { PortamentoTime, DelayMix };
+const juce::StringArray CONTROL_TARGET_MISC_PARAM_NAMES = juce::StringArray("Portamento Time", "Delay Mix");
 
 }
 //==============================================================================
@@ -99,6 +99,26 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) = 0;
     virtual void saveParameters(juce::XmlElement& xml) = 0;
     virtual void loadParameters(juce::XmlElement& xml) = 0;
+};
+
+//==============================================================================
+class GlobalParams : public SynthParametersBase
+{
+public:
+//    TODO: portamento time?, pitch bend range?, velocity sense
+    
+    juce::AudioParameterFloat* Pitch;
+    juce::AudioParameterFloat* Pan;
+    juce::AudioParameterFloat* Expression;
+    juce::AudioParameterFloat* MasterVolume;
+    
+    GlobalParams();
+    
+    virtual void addAllParameters(juce::AudioProcessor& processor) override;
+    virtual void saveParameters(juce::XmlElement& xml) override;
+    virtual void loadParameters(juce::XmlElement& xml) override;
+    
+private:
 };
 
 //==============================================================================
@@ -171,7 +191,7 @@ public:
     juce::AudioParameterChoice* Type;
     juce::AudioParameterChoice* FreqType;
     juce::AudioParameterFloat* Hz;
-    juce::AudioParameterInt* Cent;
+    juce::AudioParameterInt* Semitone;
     juce::AudioParameterFloat* Q;
     juce::AudioParameterFloat* Gain;
     

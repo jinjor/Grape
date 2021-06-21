@@ -110,7 +110,6 @@ private:
 };
 
 //==============================================================================
-// TODO: consider resetting
 // TODO: multi channel
 class Modifiers {
 public:
@@ -121,7 +120,6 @@ public:
     double angleShift[NUM_OSC] {};
     double octShift[NUM_OSC] {};
     double edgeRatio[NUM_OSC] {};
-    double panBase[NUM_OSC] {};
     double panMod[NUM_OSC] {};
     double detuneRatio[NUM_OSC] {};
     double spreadRatio[NUM_OSC] {};
@@ -130,12 +128,6 @@ public:
     double filterQExp[NUM_FILTER] {};
     double lfoOctShift[NUM_LFO] {};
     double lfoAmountGain[NUM_LFO] {};
-    double portamentoAmount = 0.0;
-    double delayAmount = 0.0;
-    double masterVolume = 1.0;
-private:
-    int pitch = 8192;
-    int cc[127] {};
 };
 
 //==============================================================================
@@ -143,6 +135,7 @@ class GrapeVoice   : public juce::SynthesiserVoice
 {
 public:
     GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo,
+               GlobalParams* globalParams,
                VoiceParams* voiceParams,
                OscParams* oscParams,
                EnvelopeParams* envelopeParams,
@@ -163,6 +156,7 @@ private:
     juce::PerformanceCounter perf;
     juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo;
     
+    GlobalParams* globalParams;
     VoiceParams* voiceParams;
     OscParams* oscParams;
     EnvelopeParams* envelopeParams;
@@ -197,7 +191,16 @@ private:
 class GrapeSynthesiser   : public juce::Synthesiser
 {
 public:
-    GrapeSynthesiser(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, MonoStack* monoStack, ControlItemParams* controlItemParams, VoiceParams* voiceParams, OscParams* oscParams, DelayParams* delayParams) : currentPositionInfo(currentPositionInfo), monoStack(monoStack), controlItemParams(controlItemParams), voiceParams(voiceParams), oscParams(oscParams), delayParams(delayParams) {
+    GrapeSynthesiser(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, MonoStack* monoStack, ControlItemParams* controlItemParams, GlobalParams* globalParams, VoiceParams* voiceParams, OscParams* oscParams, FilterParams* filterParams, LfoParams* lfoParams, DelayParams* delayParams)
+    : currentPositionInfo(currentPositionInfo)
+    , monoStack(monoStack)
+    , controlItemParams(controlItemParams)
+    , globalParams(globalParams)
+    , voiceParams(voiceParams)
+    , oscParams(oscParams)
+    , filterParams(filterParams)
+    , lfoParams(lfoParams)
+    , delayParams(delayParams) {
         addSound(new GrapeSound());
     }
     ~GrapeSynthesiser() {}
@@ -235,7 +238,7 @@ public:
                         if(GrapeVoice* voice = dynamic_cast<GrapeVoice*>(voices[0]) ) {
                             int firstNoteNumber = monoStack->firstNoteNumber;
                             bool removed = monoStack->remove(midiNoteNumber);
-                            jassert(removed);
+                            jassert(removed);// TODO: Poly/Mono 切り替え時にここに来ることがある
                             bool shouldGlide = monoStack->latestNoteNumber != 0;
                             if(shouldGlide) {
                                 jassert(voices[0]->isPlayingChannel (channel));
@@ -277,7 +280,7 @@ public:
         DBG("handlePitchWheel: " << midiChannel << ", " << wheelValue);
         juce::Synthesiser::handlePitchWheel(midiChannel, wheelValue);
         if(getSound(0)->appliesToChannel(midiChannel)) {
-//            modifiers->pitchWheelMoved(wheelValue);
+            pitchWheelMoved(wheelValue);
         }
     }
     void renderVoices (juce::AudioBuffer<float>& buffer, int startSample, int numSamples) override
@@ -295,7 +298,7 @@ public:
                               delayParams->LowFreq->get(),
                               delayParams->HighFreq->get(),
                               delayParams->Feedback->get(),
-                              delayParams->Mix->get()/* * modifiers->delayAmount*/);
+                              delayParams->Mix->get());
         
         auto* leftIn = buffer.getReadPointer(0, startSample);
         auto* rightIn = buffer.getReadPointer(1, startSample);
@@ -312,8 +315,8 @@ public:
             }
             
             // Master Volume
-//            sample[0] *= modifiers->masterVolume;
-//            sample[1] *= modifiers->masterVolume;
+            sample[0] *= globalParams->MasterVolume->get();
+            sample[1] *= globalParams->MasterVolume->get();
             
             leftOut[i] = sample[0];
             rightOut[i] = sample[1];
@@ -325,8 +328,21 @@ public:
 //    }
     void controllerMoved(int number, int value) {
         auto normalizedValue = value / 127.0;
+        
+        // predefined
+        switch(number) {
+            case 7:
+                *globalParams->MasterVolume = normalizedValue;
+                return;
+            case 10:
+                *globalParams->Pan = normalizedValue * 2 - 1.0;
+                return;
+            case 11:
+                *globalParams->Expression = normalizedValue;
+                return;
+        }
 
-        // ---------------- CONTROL ----------------
+        // custom
         for(int i = 0; i < NUM_CONTROL; ++i) {
             auto params = &controlItemParams[i];
             if(number != CONTROL_NUMBER_VALUES[params->Number->getIndex()]) {
@@ -338,31 +354,21 @@ public:
                     int targetIndex = params->TargetOsc->getIndex();
                     auto targetParam = static_cast<CONTROL_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
                     for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                        if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
+                        if(targetIndex == oscIndex) {
                             switch(targetParam) {
-                                case CONTROL_TARGET_OSC_PARAM::Freq: {
-//                                    octShift[oscIndex] = 4.0 * normalizedValue;
-                                    break;
-                                }
                                 case CONTROL_TARGET_OSC_PARAM::Edge: {
-//                                    edgeRatio[oscIndex] = normalizedValue;
+                                    *oscParams[oscIndex].Edge = normalizedValue;
                                     break;
                                 }
                                 case CONTROL_TARGET_OSC_PARAM::Detune: {
-//                                    detuneRatio[oscIndex] = normalizedValue;
+                                    *oscParams[oscIndex].Detune = normalizedValue;
                                     break;
                                 }
                                 case CONTROL_TARGET_OSC_PARAM::Spread: {
-//                                    spreadRatio[oscIndex] = normalizedValue;
-                                    break;
-                                }
-                                case CONTROL_TARGET_OSC_PARAM::Pan: {
-//                                    panBase[oscIndex] = normalizedValue * 2 - 1.0;
+                                    *oscParams[oscIndex].Spread = normalizedValue;
                                     break;
                                 }
                                 case CONTROL_TARGET_OSC_PARAM::Gain: {
-//                                    gain[oscIndex] = normalizedValue;
-//                                    *oscParams[oscIndex].Gain = normalizedValue;
                                     *oscParams[oscIndex].Gain = oscParams[oscIndex].Gain->range.convertFrom0to1(normalizedValue);
                                     break;
                                 }
@@ -375,14 +381,24 @@ public:
                     int targetIndex = params->TargetFilter->getIndex();
                     auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
                     for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-                        if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
+                        if(targetIndex == filterIndex) {
                             switch (targetParam) {
                                 case CONTROL_TARGET_FILTER_PARAM::Freq: {
-//                                    filterOctShift[filterIndex] = 4.0 * normalizedValue;
+                                    switch(static_cast<FILTER_FREQ_TYPE>(filterParams[filterIndex].FreqType) {
+                                        case FILTER_FREQ_TYPE::Absolute: {
+                                            *filterParams[filterIndex].Hz = filterParams[filterIndex].Hz->range.convertFrom0to1(normalizedValue);
+                                            break;
+                                        }
+                                        case FILTER_FREQ_TYPE::Relative: {
+                                            auto range = filterParams[filterIndex].Semitone->getRange();
+                                            *filterParams[filterIndex].Semitone = normalizedValue * (range.getEnd() - range.getStart()) + range.getStart();
+                                            break;
+                                        }
+                                    }
                                     break;
                                 }
                                 case CONTROL_TARGET_FILTER_PARAM::Q: {
-//                                    filterQExp[filterIndex] = normalizedValue;
+                                    *filterParams[filterIndex].Q = filterParams[filterIndex].Q->range.convertFrom0to1(normalizedValue);
                                     break;
                                 }
                             }
@@ -394,14 +410,18 @@ public:
                     int targetIndex = params->TargetLfo->getIndex();
                     auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
                     for(int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
-                        if(targetIndex == lfoIndex || targetIndex == NUM_LFO) {
+                        if(targetIndex == lfoIndex) {
                             switch(targetParam) {
                                 case CONTROL_TARGET_LFO_PARAM::Freq: {
-//                                    lfoOctShift[lfoIndex] = 4.0 * normalizedValue;
+                                    if(lfoParams[lfoIndex].shouldUseFastFreq()) {
+                                        *lfoParams[lfoIndex].FastFreq = lfoParams[lfoIndex].FastFreq->range.convertFrom0to1(normalizedValue);
+                                    } else {
+                                        *lfoParams[lfoIndex].SlowFreq = lfoParams[lfoIndex].SlowFreq->range.convertFrom0to1(normalizedValue);
+                                    }
                                     break;
                                 }
                                 case CONTROL_TARGET_LFO_PARAM::Amount: {
-//                                    lfoAmountGain[lfoIndex] = normalizedValue;
+                                    *lfoParams[lfoIndex].Amount = normalizedValue;
                                     break;
                                 }
                             }
@@ -412,17 +432,12 @@ public:
                 case CONTROL_TARGET_TYPE::Master: {
                     auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(params->TargetMiscParam->getIndex());
                     switch(targetParam) {
-                        case CONTROL_TARGET_MISC_PARAM::PortamentoAmount: {
-//                            portamentoAmount = normalizedValue;
+                        case CONTROL_TARGET_MISC_PARAM::PortamentoTime: {
+                            *voiceParams->PortamentoTime = voiceParams->PortamentoTime->range.convertFrom0to1(normalizedValue);
                             break;
                         }
-                        case CONTROL_TARGET_MISC_PARAM::DelayAmount: {
-//                            delayAmount = normalizedValue;
+                        case CONTROL_TARGET_MISC_PARAM::DelayMix: {
                             *delayParams->Mix = normalizedValue;
-                            break;
-                        }
-                        case CONTROL_TARGET_MISC_PARAM::MasterVolume: {
-//                            masterVolume = normalizedValue;
                             break;
                         }
                     }
@@ -431,14 +446,21 @@ public:
             }
         }
     }
+    void pitchWheelMoved(int value) {
+        value -= 8192;
+        *globalParams->Pitch = value >= 0 ? value / 8191.0 : value / 8192.0;
+    }
 private:
     juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo;
     
     MonoStack* monoStack;
     ControlItemParams* controlItemParams;
     
+    GlobalParams* globalParams;
     VoiceParams* voiceParams;
     OscParams* oscParams;
+    FilterParams* filterParams;
+    LfoParams* lfoParams;
     DelayParams* delayParams;
     
     StereoDelay stereoDelay;
