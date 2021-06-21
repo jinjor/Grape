@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "Voice.h"
+#include "Params.h"
 
 namespace {
 const juce::Colour BACKGROUND_COLOUR = juce::Colour(40,40,40);
@@ -12,7 +13,7 @@ const int PANEL_MARGIN = 2;
 GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 : AudioProcessorEditor (&p)
 , audioProcessor (p)
-, keyboardComponent (p.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
+//, keyboardComponent (p.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 , controlComponent { ControlComponent(p.controlItemParams) }
 , voiceComponent (&p.voiceParams, p.controlItemParams)
 , statusComponent (&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider)
@@ -26,7 +27,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 {
     getLookAndFeel().setColour(juce::Label::textColourId, TEXT_COLOUR);
     
-    addAndMakeVisible (keyboardComponent);
+//    addAndMakeVisible (keyboardComponent);
     addAndMakeVisible (voiceComponent);
     addAndMakeVisible (statusComponent);
     addAndMakeVisible (oscComponents[0]);
@@ -46,7 +47,8 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
     addAndMakeVisible (controlComponent);
     addAndMakeVisible (analyserComponent);
     setSize (1024, 768);
-    startTimer (400);
+    startTimer (60);
+    addKeyListener(this);
 //    setResizable(true, true);
 }
 
@@ -167,6 +169,64 @@ void GrapeAudioProcessorEditor::resized()
 }
 void GrapeAudioProcessorEditor::timerCallback()
 {
-    keyboardComponent.grabKeyboardFocus();
-    stopTimer();
+//    keyboardComponent.grabKeyboardFocus();
+//    stopTimer();
+    if(benchmarking) {
+        if(0 <= benchmarkCounter && benchmarkCounter <= 127) {
+            audioProcessor.keyboardState.noteOn(1, benchmarkCounter, 0.5);
+        }
+        if(0 <= benchmarkCounter - 2 && benchmarkCounter - 2 <= 127) {
+            audioProcessor.keyboardState.noteOff(1, benchmarkCounter - 2, 0.5);
+        }
+        if(benchmarkCounter >= 140) {
+            benchmarking = false;
+            benchmarkCounter = 0;
+        } else {
+            benchmarkCounter++;
+        }
+    }
+}
+bool GrapeAudioProcessorEditor::keyPressed(const juce::KeyPress& press, juce::Component* originatingComponent)
+{
+#if JUCE_DEBUG
+    std::cout << "pressed: " << press.getKeyCode() << std::endl;
+    if (press.isKeyCode('P'))
+    {
+        if(benchmarking) {
+            benchmarking = false;
+        } else {
+            *audioProcessor.oscParams[0].Enabled = true;
+            *audioProcessor.oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
+            *audioProcessor.oscParams[1].Enabled = true;
+            *audioProcessor.oscParams[1].Waveform = OSC_WAVEFORM_NAMES.indexOf("Square");
+            *audioProcessor.oscParams[1].Edge = 0.5;
+            *audioProcessor.oscParams[2].Enabled = true;
+            *audioProcessor.oscParams[2].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
+            *audioProcessor.oscParams[2].Unison = 4;
+            *audioProcessor.filterParams[0].Enabled = true;
+            *audioProcessor.filterParams[1].Enabled = true;
+            *audioProcessor.filterParams[1].FreqType = FILTER_FREQ_TYPE_NAMES.indexOf("Rel");
+            *audioProcessor.lfoParams[0].Enabled = true;
+            *audioProcessor.lfoParams[1].Enabled = true;
+            *audioProcessor.lfoParams[1].TargetOscParam = LFO_TARGET_OSC_PARAM_NAMES.indexOf("FM");
+            *audioProcessor.lfoParams[2].Enabled = true;
+            *audioProcessor.lfoParams[2].TargetType = LFO_TARGET_TYPE_NAMES.indexOf("Filter");
+            *audioProcessor.lfoParams[2].TargetFilterParam = LFO_TARGET_FILTER_PARAM_NAMES.indexOf("Freq");
+            *audioProcessor.modEnvParams[0].Enabled = true;
+            *audioProcessor.modEnvParams[0].TargetType = MODENV_TARGET_TYPE_NAMES.indexOf("OSC");
+            *audioProcessor.modEnvParams[0].TargetOscParam = MODENV_TARGET_OSC_PARAM_NAMES.indexOf("Freq");
+            *audioProcessor.modEnvParams[1].Enabled = true;
+            *audioProcessor.modEnvParams[1].TargetType = MODENV_TARGET_TYPE_NAMES.indexOf("Filter");
+            *audioProcessor.modEnvParams[1].TargetFilterParam = MODENV_TARGET_FILTER_PARAM_NAMES.indexOf("Freq");
+            *audioProcessor.modEnvParams[2].Enabled = true;
+            *audioProcessor.modEnvParams[2].TargetType = MODENV_TARGET_TYPE_NAMES.indexOf("LFO");
+            *audioProcessor.modEnvParams[2].TargetLfoParam = MODENV_TARGET_LFO_PARAM_NAMES.indexOf("Freq");
+            *audioProcessor.delayParams.Enabled = true;
+            
+            benchmarking = true;
+        }
+        return true;
+    }
+#endif
+    return false;
 }

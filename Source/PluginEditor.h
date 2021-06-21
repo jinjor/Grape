@@ -6,9 +6,7 @@
 #include "Components.h"
 
 //==============================================================================
-/**
-*/
-class GrapeAudioProcessorEditor  : public juce::AudioProcessorEditor, private juce::Timer
+class GrapeAudioProcessorEditor  : public juce::AudioProcessorEditor, private juce::Timer, juce::KeyListener
 {
 public:
     GrapeAudioProcessorEditor (GrapeAudioProcessor&);
@@ -20,7 +18,7 @@ public:
 
 private:
     GrapeAudioProcessor& audioProcessor;
-    juce::MidiKeyboardComponent keyboardComponent;
+//    juce::MidiKeyboardComponent keyboardComponent;
     
     ControlComponent controlComponent;
     VoiceComponent voiceComponent;
@@ -32,8 +30,11 @@ private:
     ModEnvComponent modEnvComponents[NUM_MODENV];
     DelayComponent delayComponent;
     AnalyserComponent analyserComponent;
+    
+    bool benchmarking = false;
+    int benchmarkCounter = 0;
+    void timerCallback() override;
+    bool keyPressed(const juce::KeyPress& press, juce::Component* originatingComponent) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GrapeAudioProcessorEditor)
-    
-    void timerCallback() override;
 };
