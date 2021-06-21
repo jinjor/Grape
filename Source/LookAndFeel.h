@@ -10,9 +10,10 @@ public:
 class GrapeLookAndFeel : public juce::LookAndFeel_V4
 {
 public:
-    GrapeLookAndFeel();
+    GrapeLookAndFeel(bool controlled = false);
     ~GrapeLookAndFeel();
 private:
+    bool controlled;
     void drawTickBox (juce::Graphics& g, juce::Component& component,
                       float x, float y, float w, float h,
                       const bool ticked,

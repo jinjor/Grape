@@ -15,6 +15,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
                      #endif
                        )
 #endif
+, globalParams()
 , voiceParams()
 , oscParams { OscParams(0), OscParams(1), OscParams(2) }
 , envelopeParams { EnvelopeParams(0), EnvelopeParams(1) }
@@ -24,33 +25,13 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 , delayParams()
 , controlItemParams { ControlItemParams(0), ControlItemParams(1), ControlItemParams(2), ControlItemParams(3), ControlItemParams(4), ControlItemParams(5) }
 , modifiers(&voiceParams, controlItemParams)
-, synth(&currentPositionInfo, &monoStack, &modifiers, &voiceParams, &delayParams)
+, synth(&currentPositionInfo, &monoStack, controlItemParams, &globalParams, &voiceParams, oscParams, filterParams, lfoParams, &delayParams)
 {
     *oscParams[0].Enabled = true;
     
     *controlItemParams[0].Number = CONTROL_NUMBER_NAMES.indexOf("1: Modulation");
     *controlItemParams[0].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("LFO");
     *controlItemParams[0].TargetLfoParam = CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount");
-    
-    *controlItemParams[1].Number = CONTROL_NUMBER_NAMES.indexOf("7: Main Volume");
-    *controlItemParams[1].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("Misc");
-    *controlItemParams[1].TargetMiscParam = CONTROL_TARGET_MISC_PARAM_NAMES.indexOf("Master Volume");
-    
-    *controlItemParams[2].Number = CONTROL_NUMBER_NAMES.indexOf("10: Pan");
-    *controlItemParams[2].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("OSC");
-    *controlItemParams[2].TargetOscParam = CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Pan");
-    
-    *controlItemParams[3].Number = CONTROL_NUMBER_NAMES.indexOf("11: Expression");
-    *controlItemParams[3].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("OSC");
-    *controlItemParams[3].TargetOscParam = CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain");
-    
-    *controlItemParams[4].Number = CONTROL_NUMBER_NAMES.indexOf("71: Resonance");
-    *controlItemParams[4].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("Filter");
-    *controlItemParams[4].TargetFilterParam = CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Q");
-    
-    *controlItemParams[5].Number = CONTROL_NUMBER_NAMES.indexOf("74: Brightness");
-    *controlItemParams[5].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("Filter");
-    *controlItemParams[5].TargetFilterParam = CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq");
     
     voiceParams.addAllParameters(*this);
     for(auto params : envelopeParams) {
@@ -202,6 +183,7 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
         this->monoStack.reset();
         synth.clearVoices();
         synth.addVoice (new GrapeVoice(&currentPositionInfo,
+                                       &globalParams,
                                        &voiceParams,
                                        oscParams,
                                        envelopeParams,
@@ -213,6 +195,7 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
         synth.clearVoices();
         for (auto i = 0; i < numVoices; ++i) {
             synth.addVoice (new GrapeVoice(&currentPositionInfo,
+                                           &globalParams,
                                            &voiceParams,
                                            oscParams,
                                            envelopeParams,

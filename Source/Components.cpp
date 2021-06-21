@@ -63,8 +63,9 @@ void HeaderComponent::resized()
 }
 
 //==============================================================================
-VoiceComponent::VoiceComponent(VoiceParams* params)
+VoiceComponent::VoiceComponent(VoiceParams* params, ControlItemParams* controlItemParams)
 : _paramsPtr(params)
+, controlItemParams(controlItemParams)
 , header("VOICE", false)
 , modeSelector("Mode")
 , portamentoTimeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -84,7 +85,8 @@ VoiceComponent::VoiceComponent(VoiceParams* params)
     
     portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
     portamentoTimeSlider.setRange(_paramsPtr->PortamentoTime->range.start,
-                          _paramsPtr->PortamentoTime->range.end, 0.001);
+                                  _paramsPtr->PortamentoTime->range.end,
+                                  _paramsPtr->PortamentoTime->range.interval);
     portamentoTimeSlider.setSkewFactorFromMidPoint(0.1);
     portamentoTimeSlider.setValue(_paramsPtr->PortamentoTime->get(), juce::dontSendNotification);
     portamentoTimeSlider.setPopupDisplayEnabled(true, true, nullptr);
@@ -180,6 +182,31 @@ void VoiceComponent::timerCallback()
     auto isMono = static_cast<VOICE_MODE>(_paramsPtr->Mode->getIndex()) == VOICE_MODE::Mono;
     portamentoTimeLabel.setEnabled(isMono);
     portamentoTimeSlider.setEnabled(isMono);
+    
+    portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
+    for(int i = 0; i < NUM_CONTROL; ++i) {
+        auto params = &controlItemParams[i];
+        if(params->Number->getIndex() <= 0) {
+            continue;
+        }
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        switch(targetType) {
+            case CONTROL_TARGET_TYPE::Master: {
+                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(params->TargetMiscParam->getIndex());
+                switch(targetParam) {
+                    case CONTROL_TARGET_MISC_PARAM::PortamentoTime: {
+                        portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
 }
 
 //==============================================================================
@@ -295,9 +322,10 @@ void StatusComponent::timerCallback()
 }
 
 //==============================================================================
-OscComponent::OscComponent(int index, OscParams* params)
+OscComponent::OscComponent(int index, OscParams* params, ControlItemParams* controlItemParams)
 : index(index)
 , _paramsPtr(params)
+, controlItemParams(controlItemParams)
 , header("OSC " + std::to_string(index+1), true)
 , envelopeSelector("Envelope")
 , waveformSelector("Waveform")
@@ -385,7 +413,8 @@ OscComponent::OscComponent(int index, OscParams* params)
     
     gainSlider.setLookAndFeel(&grapeLookAndFeel);
     gainSlider.setRange(_paramsPtr->Gain->range.start,
-                         _paramsPtr->Gain->range.end, 0.01);
+                        _paramsPtr->Gain->range.end,
+                        _paramsPtr->Gain->range.interval);
     gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
     gainSlider.setPopupDisplayEnabled(true, true, nullptr);
     gainSlider.setScrollWheelEnabled(false);
@@ -592,6 +621,51 @@ void OscComponent::timerCallback()
     detuneSlider.setEnabled(!isNoise);
     spreadLabel.setEnabled(!isNoise);
     spreadSlider.setEnabled(!isNoise);
+
+    edgeSlider.setLookAndFeel(&grapeLookAndFeel);
+    detuneSlider.setLookAndFeel(&grapeLookAndFeel);
+    spreadSlider.setLookAndFeel(&grapeLookAndFeel);
+    gainSlider.setLookAndFeel(&grapeLookAndFeel);
+    for(int i = 0; i < NUM_CONTROL; ++i) {
+        auto params = &controlItemParams[i];
+        if(params->Number->getIndex() <= 0) {
+            continue;
+        }
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        switch(targetType) {
+            case CONTROL_TARGET_TYPE::OSC: {
+                int targetIndex = params->TargetOsc->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
+                if(targetIndex == index) {
+                    switch(targetParam) {
+                        case CONTROL_TARGET_OSC_PARAM::Edge: {
+                            edgeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+                        case CONTROL_TARGET_OSC_PARAM::Detune: {
+                            detuneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+                        case CONTROL_TARGET_OSC_PARAM::Spread: {
+                            spreadSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+//                        case CONTROL_TARGET_OSC_PARAM::Pan: {
+////                                panSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+//                            break;
+//                        }
+                        case CONTROL_TARGET_OSC_PARAM::Gain: {
+                            gainSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
 }
 
 //==============================================================================
@@ -746,15 +820,16 @@ void EnvelopeComponent::timerCallback()
 }
 
 //==============================================================================
-FilterComponent::FilterComponent(int index, FilterParams* params)
+FilterComponent::FilterComponent(int index, FilterParams* params, ControlItemParams* controlItemParams)
 : index(index)
 , _paramsPtr(params)
+, controlItemParams(controlItemParams)
 , header("FILTER " + std::to_string(index+1), true)
 , targetSelector("Target")
 , typeSelector("Type")
 , freqTypeSelector("Type")
 , hzSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
-, centSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+, semitoneSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , qSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , gainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
@@ -788,7 +863,8 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     
     hzSlider.setLookAndFeel(&grapeLookAndFeel);
     hzSlider.setRange(_paramsPtr->Hz->range.start,
-                         _paramsPtr->Hz->range.end, 1.0);
+                      _paramsPtr->Hz->range.end,
+                      _paramsPtr->Hz->range.interval);
     hzSlider.setSkewFactorFromMidPoint(2000.0f);
     hzSlider.setValue(_paramsPtr->Hz->get(), juce::dontSendNotification);
     hzSlider.setPopupDisplayEnabled(true, true, nullptr);
@@ -797,21 +873,21 @@ FilterComponent::FilterComponent(int index, FilterParams* params)
     hzSlider.addListener(this);
     body.addAndMakeVisible(hzSlider);
     
-    centSlider.setLookAndFeel(&grapeLookAndFeel);
-    centSlider.setRange(_paramsPtr->Cent->getRange().getStart(),
-                         _paramsPtr->Cent->getRange().getEnd(), 1);
-    centSlider.setValue(_paramsPtr->Cent->get(), juce::dontSendNotification);
-    centSlider.setPopupDisplayEnabled(true, true, nullptr);
-    centSlider.setScrollWheelEnabled(false);
-    centSlider.textFromValueFunction = [](double value) -> std::string {
+    semitoneSlider.setLookAndFeel(&grapeLookAndFeel);
+    semitoneSlider.setRange(_paramsPtr->Semitone->getRange().getStart(),
+                         _paramsPtr->Semitone->getRange().getEnd(), 1);
+    semitoneSlider.setValue(_paramsPtr->Semitone->get(), juce::dontSendNotification);
+    semitoneSlider.setPopupDisplayEnabled(true, true, nullptr);
+    semitoneSlider.setScrollWheelEnabled(false);
+    semitoneSlider.textFromValueFunction = [](double value) -> std::string {
         int cent = value;
         int centAbs = std::abs(cent);
         int oct = centAbs / 12;
         int octFrac = centAbs % 12;
         return (cent == 0 ? " " : cent > 0 ? "+" : "-") + std::to_string(oct) + ":" + std::to_string(octFrac) + " oct";
     };
-    centSlider.addListener(this);
-    body.addAndMakeVisible(centSlider);
+    semitoneSlider.addListener(this);
+    body.addAndMakeVisible(semitoneSlider);
     
     qSlider.setLookAndFeel(&grapeLookAndFeel);
     qSlider.setRange(_paramsPtr->Q->range.start,
@@ -913,7 +989,7 @@ void FilterComponent::resized()
         juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH);
         freqLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         hzSlider.setBounds(area.reduced(LOCAL_MARGIN));
-        centSlider.setBounds(area.reduced(LOCAL_MARGIN));
+        semitoneSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = lowerArea.removeFromLeft(SLIDER_WIDTH);
@@ -953,9 +1029,9 @@ void FilterComponent::sliderValueChanged(juce::Slider *slider)
     {
         *_paramsPtr->Hz = (float)hzSlider.getValue();
     }
-    else if(slider == &centSlider)
+    else if(slider == &semitoneSlider)
     {
-        *_paramsPtr->Cent = centSlider.getValue();
+        *_paramsPtr->Semitone = semitoneSlider.getValue();
     }
     else if(slider == &qSlider)
     {
@@ -975,22 +1051,58 @@ void FilterComponent::timerCallback()
     typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
     freqTypeSelector.setSelectedItemIndex(_paramsPtr->FreqType->getIndex(), juce::dontSendNotification);
     hzSlider.setValue(_paramsPtr->Hz->get(), juce::dontSendNotification);
-    centSlider.setValue(_paramsPtr->Cent->get(), juce::dontSendNotification);
+    semitoneSlider.setValue(_paramsPtr->Semitone->get(), juce::dontSendNotification);
     qSlider.setValue(_paramsPtr->Q->get(), juce::dontSendNotification);
     
     auto freqType = static_cast<FILTER_FREQ_TYPE>(_paramsPtr->FreqType->getIndex());
     hzSlider.setVisible(freqType == FILTER_FREQ_TYPE::Absolute);
-    centSlider.setVisible(freqType == FILTER_FREQ_TYPE::Relative);
+    semitoneSlider.setVisible(freqType == FILTER_FREQ_TYPE::Relative);
     
     auto hasGain = _paramsPtr->hasGain();
     gainLabel.setEnabled(hasGain);
     gainSlider.setEnabled(hasGain);
+    
+    hzSlider.setLookAndFeel(&grapeLookAndFeel);
+    semitoneSlider.setLookAndFeel(&grapeLookAndFeel);
+    qSlider.setLookAndFeel(&grapeLookAndFeel);
+    for(int i = 0; i < NUM_CONTROL; ++i) {
+        auto params = &controlItemParams[i];
+        if(params->Number->getIndex() <= 0) {
+            continue;
+        }
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        switch(targetType) {
+            case CONTROL_TARGET_TYPE::Filter: {
+                int targetIndex = params->TargetFilter->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
+                for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+                    if(targetIndex == filterIndex) {
+                        switch (targetParam) {
+                            case CONTROL_TARGET_FILTER_PARAM::Freq: {
+                                hzSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                semitoneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                break;
+                            }
+                            case CONTROL_TARGET_FILTER_PARAM::Q: {
+                                qSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                break;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
 }
 
 //==============================================================================
-LfoComponent::LfoComponent(int index, LfoParams* params)
+LfoComponent::LfoComponent(int index, LfoParams* params, ControlItemParams* controlItemParams)
 : index(index)
 , _paramsPtr(params)
+, controlItemParams(controlItemParams)
 , header("LFO " + std::to_string(index+1), true)
 , targetTypeSelector("TargetType")
 , targetOscSelector("TargetOsc")
@@ -1053,7 +1165,8 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
     
     slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     slowFreqSlider.setRange(_paramsPtr->SlowFreq->range.start,
-                           _paramsPtr->SlowFreq->range.end, 0.01);
+                            _paramsPtr->SlowFreq->range.end,
+                            _paramsPtr->SlowFreq->range.interval);
     slowFreqSlider.setSkewFactorFromMidPoint(4.0f);
     slowFreqSlider.setValue(_paramsPtr->SlowFreq->get(), juce::dontSendNotification);
     slowFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
@@ -1064,7 +1177,8 @@ LfoComponent::LfoComponent(int index, LfoParams* params)
     
     fastFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     fastFreqSlider.setRange(_paramsPtr->FastFreq->range.start,
-                           _paramsPtr->FastFreq->range.end, 0.01);
+                            _paramsPtr->FastFreq->range.end,
+                            _paramsPtr->FastFreq->range.interval);
     fastFreqSlider.setSkewFactorFromMidPoint(1.0f);
     fastFreqSlider.setValue(_paramsPtr->FastFreq->get(), juce::dontSendNotification);
     fastFreqSlider.setSkewFactorFromMidPoint(1.0);
@@ -1257,6 +1371,41 @@ void LfoComponent::timerCallback()
     } else {
         fastFreqSlider.setVisible(false);
         slowFreqSlider.setVisible(true);
+    }
+    
+    fastFreqSlider.setLookAndFeel(&grapeLookAndFeel);
+    slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
+    amountSlider.setLookAndFeel(&grapeLookAndFeel);
+    for(int i = 0; i < NUM_CONTROL; ++i) {
+        auto params = &controlItemParams[i];
+        if(params->Number->getIndex() <= 0) {
+            continue;
+        }
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        switch(targetType) {
+            case CONTROL_TARGET_TYPE::LFO: {
+                int targetIndex = params->TargetLfo->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
+                for(int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
+                    if(targetIndex == lfoIndex) {
+                        switch(targetParam) {
+                            case CONTROL_TARGET_LFO_PARAM::Freq: {
+                                fastFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                slowFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                break;
+                            }
+                            case CONTROL_TARGET_LFO_PARAM::Amount: {
+                                amountSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                                break;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
     }
 }
 
@@ -1628,8 +1777,9 @@ void ModEnvComponent::timerCallback()
 }
 
 //==============================================================================
-DelayComponent::DelayComponent(DelayParams* params)
+DelayComponent::DelayComponent(DelayParams* params, ControlItemParams* controlItemParams)
 : _paramsPtr(params)
+, controlItemParams(controlItemParams)
 , header("DELAY", true)
 , typeSelector("Type")
 , timeLSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -1933,6 +2083,31 @@ void DelayComponent::timerCallback()
     highFreqSlider.setValue(_paramsPtr->HighFreq->get(), juce::dontSendNotification);
     feedbackSlider.setValue(_paramsPtr->Feedback->get(), juce::dontSendNotification);
     mixSlider.setValue(_paramsPtr->Mix->get(), juce::dontSendNotification);
+    
+    mixSlider.setLookAndFeel(&grapeLookAndFeel);
+    for(int i = 0; i < NUM_CONTROL; ++i) {
+        auto params = &controlItemParams[i];
+        if(params->Number->getIndex() <= 0) {
+            continue;
+        }
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        switch(targetType) {
+            case CONTROL_TARGET_TYPE::Master: {
+                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(params->TargetMiscParam->getIndex());
+                switch(targetParam) {
+                    case CONTROL_TARGET_MISC_PARAM::DelayMix: {
+                        mixSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
 }
 
 
@@ -2300,7 +2475,7 @@ void AnalyserComponent::timerCallback()
 }
 void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g)
 {
-    g.setColour(juce::Colour(100,190,140));
+    g.setColour(juce::Colour(100, 190, 140));
     auto offsetX = 3;
     auto offsetY = 2;
     auto width  = bounds.getWidth() - 20;
@@ -2312,7 +2487,7 @@ void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g
                       offsetX + (float) juce::jmap (i,     0, scopeSize - 1, 0, width),
                       offsetY - 0.5f +         juce::jmap (scopeData[i],     0.0f, 1.0f, (float) height, 0.0f) });
     }
-    g.setColour(juce::Colour(100,190,140));
+    g.setColour(juce::Colour(100, 190, 140));
     {
         if(overflowWarningL > 0) {
             g.setColour(juce::Colour(190, 40, 80));
@@ -2321,7 +2496,7 @@ void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g
         int barHeight = juce::jmax(1.0f, currentLevel[0] * height);
         g.fillRect(offsetX + width + 1, offsetY + height - barHeight, 8, barHeight);
     }
-    g.setColour(juce::Colour(100,190,140));
+    g.setColour(juce::Colour(100, 190, 140));
     {
         if(overflowWarningR > 0) {
             g.setColour(juce::Colour(190, 40, 80));

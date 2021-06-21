@@ -2,11 +2,46 @@
 #include "Voice.h"
 
 //==============================================================================
+GlobalParams::GlobalParams() {
+    std::string idPrefix = "GLOBAL_";
+    std::string namePrefix = "Global ";
+    Pitch = new juce::AudioParameterFloat(idPrefix + "PITCH", namePrefix + "Pitch", -1.0f, 1.0f, 0.0f);
+    Pan = new juce::AudioParameterFloat(idPrefix + "PAN", namePrefix + "Pan", -1.0f, 1.0f, 0.0f);
+    Expression = new juce::AudioParameterFloat(idPrefix + "EXPRESSION", namePrefix + "Expression", 0.0f, 1.0f, 1.0f);
+    MasterVolume = new juce::AudioParameterFloat(idPrefix + "MASTER_VOLUME", namePrefix + "Master Volume", 0.0f, 1.0f, 1.0f);
+}
+void GlobalParams::addAllParameters(juce::AudioProcessor& processor)
+{
+    processor.addParameter(Pitch);
+    processor.addParameter(Pan);
+    processor.addParameter(Expression);
+    processor.addParameter(MasterVolume);
+}
+void GlobalParams::saveParameters(juce::XmlElement& xml)
+{
+    xml.setAttribute(Pitch->paramID, (double)Pitch->get());
+    xml.setAttribute(Pan->paramID, (double)Pan->get());
+    xml.setAttribute(Expression->paramID, (double)Expression->get());
+    xml.setAttribute(MasterVolume->paramID, (double)MasterVolume->get());
+}
+void GlobalParams::loadParameters(juce::XmlElement& xml)
+{
+    *Pitch = (float)xml.getDoubleAttribute(Pitch->paramID, 0);
+    *Pan = (float)xml.getDoubleAttribute(Pan->paramID, 0);
+    *Expression = (float)xml.getDoubleAttribute(Expression->paramID, 1.0);
+    *MasterVolume = (float)xml.getDoubleAttribute(MasterVolume->paramID, 1.0);
+}
+
+//==============================================================================
 VoiceParams::VoiceParams() {
     std::string idPrefix = "VOICE_";
     std::string namePrefix = "Voice ";
     Mode = new juce::AudioParameterChoice(idPrefix + "MODE", namePrefix + "Mode", VOICE_MODE_NAMES, VOICE_MODE_NAMES.indexOf("Poly"));
-    PortamentoTime = new juce::AudioParameterFloat(idPrefix + "PORTAMENTO_TIME", namePrefix + "Portamento Time", { 0.001f, 1.0f, 0.001f }, 0.02f);
+    {
+        auto range = juce::NormalisableRange(0.001f, 1.0f, 0.001f);
+        range.setSkewForCentre(0.1f);
+        PortamentoTime = new juce::AudioParameterFloat(idPrefix + "PORTAMENTO_TIME", namePrefix + "Portamento Time", range, 0.02f);
+    }
     PitchBendRange = new juce::AudioParameterInt(idPrefix + "PITCH_BEND_RANGE", namePrefix + "Pitch-Bend Range", 1, 12, 2);
 }
 void VoiceParams::addAllParameters(juce::AudioProcessor& processor)
@@ -40,7 +75,11 @@ OscParams::OscParams(int index) {
     Unison = new juce::AudioParameterInt(idPrefix + "UNISON", namePrefix + "Unison", 1, 4, 1);
     Detune = new juce::AudioParameterFloat(idPrefix + "DETUNE", namePrefix + "Detune", 0.0f, 1.0f, 0.0f);
     Spread = new juce::AudioParameterFloat(idPrefix + "SPREAD", namePrefix + "Spread", 0.0f, 1.0f, 0.0f);
-    Gain = new juce::AudioParameterFloat(idPrefix + "GAIN", namePrefix + "Gain", 0.0f, 4.0f, 1.0f);
+    {
+        auto range = juce::NormalisableRange(0.0f, 4.0f, 0.01f);
+        range.setSkewForCentre(1.0f);
+        Gain = new juce::AudioParameterFloat(idPrefix + "GAIN", namePrefix + "Gain", range, 1.0f);
+    }
     Envelope = new juce::AudioParameterChoice(idPrefix + "ENVELOPE", namePrefix + "Envelope", OSC_ENV_NAMES, OSC_ENV_NAMES.indexOf("1"));
 }
 void OscParams::addAllParameters(juce::AudioProcessor& processor)
@@ -122,8 +161,12 @@ FilterParams::FilterParams(int index) {
     Target = new juce::AudioParameterChoice(idPrefix + "TARGET", namePrefix + "Target", FILTER_TARGET_NAMES, FILTER_TARGET_NAMES.indexOf("All"));
     Type = new juce::AudioParameterChoice(idPrefix + "TYPE", namePrefix + "Type", FILTER_TYPE_NAMES, FILTER_TYPE_NAMES.indexOf("Lowpass"));
     FreqType = new juce::AudioParameterChoice(idPrefix + "FREQ_TYPE", namePrefix + "Freq Type", FILTER_FREQ_TYPE_NAMES, FILTER_FREQ_TYPE_NAMES.indexOf("Abs"));
-    Hz = new juce::AudioParameterFloat(idPrefix + "HZ", namePrefix + "Hz", 30.0f, 20000.0f, 4000.0f);
-    Cent = new juce::AudioParameterInt(idPrefix + "CENT", namePrefix + "Cent", -48, 48, 0);
+    {
+        auto range = juce::NormalisableRange(30.0f, 20000.0f, 0.01f);
+        range.setSkewForCentre(2000.0f);
+        Hz = new juce::AudioParameterFloat(idPrefix + "HZ", namePrefix + "Hz", range, 4000.0f);
+    }
+    Semitone = new juce::AudioParameterInt(idPrefix + "SEMITONE", namePrefix + "Semitone", -48, 48, 0);
     Q = new juce::AudioParameterFloat(idPrefix + "Q", namePrefix + "Q", 0.01f, 100.0f, 1.0f);
     Gain = new juce::AudioParameterFloat(idPrefix + "GAIN", namePrefix + "Gain", -20.0f, 20.0f, 0.0f);
 }
@@ -134,7 +177,7 @@ void FilterParams::addAllParameters(juce::AudioProcessor& processor)
     processor.addParameter(Type);
     processor.addParameter(FreqType);
     processor.addParameter(Hz);
-    processor.addParameter(Cent);
+    processor.addParameter(Semitone);
     processor.addParameter(Q);
     processor.addParameter(Gain);
 }
@@ -145,7 +188,7 @@ void FilterParams::saveParameters(juce::XmlElement& xml)
     xml.setAttribute(Type->paramID, Type->getIndex());
     xml.setAttribute(FreqType->paramID, FreqType->getIndex());
     xml.setAttribute(Hz->paramID, (double)Hz->get());
-    xml.setAttribute(Cent->paramID, Cent->get());
+    xml.setAttribute(Semitone->paramID, Semitone->get());
     xml.setAttribute(Q->paramID, (double)Q->get());
     xml.setAttribute(Gain->paramID, (double)Gain->get());
 }
@@ -156,7 +199,7 @@ void FilterParams::loadParameters(juce::XmlElement& xml)
     *Type = xml.getIntAttribute(Type->paramID, 0);
     *FreqType = xml.getIntAttribute(FreqType->paramID, 0);
     *Hz = (float)xml.getDoubleAttribute(Hz->paramID, 0);
-    *Cent = xml.getDoubleAttribute(Cent->paramID, 0);
+    *Semitone = xml.getDoubleAttribute(Semitone->paramID, 0);
     *Q = (float)xml.getDoubleAttribute(Q->paramID, 1.0);
     *Gain = (float)xml.getDoubleAttribute(Gain->paramID, 0);
 }
@@ -172,8 +215,16 @@ LfoParams::LfoParams(int index) {
     TargetOscParam = new juce::AudioParameterChoice(idPrefix + "TARGET_OSC_PARAM", namePrefix + "Target OSC Param", LFO_TARGET_OSC_PARAM_NAMES, LFO_TARGET_OSC_PARAM_NAMES.indexOf("Vibrato"));
     TargetFilterParam = new juce::AudioParameterChoice(idPrefix + "TARGET_FILTER_PARAM", namePrefix + "Target Filter Param", LFO_TARGET_FILTER_PARAM_NAMES, LFO_TARGET_FILTER_PARAM_NAMES.indexOf("Freq"));
     Waveform = new juce::AudioParameterChoice(idPrefix + "WAVEFORM", namePrefix + "Waveform", LFO_WAVEFORM_NAMES, LFO_WAVEFORM_NAMES.indexOf("Sine"));
-    SlowFreq = new juce::AudioParameterFloat(idPrefix + "SLOW_FREQ", namePrefix + "Slow Freq", 0.0f, 100.0f, 4.0f);
-    FastFreq = new juce::AudioParameterFloat(idPrefix + "FAST_FREQ", namePrefix + "Fast Freq", 0.01f, 100.0f, 1.0f);
+    {
+        auto range = juce::NormalisableRange(0.0f, 100.0f, 0.01f);
+        range.setSkewForCentre(4.0f);
+        SlowFreq = new juce::AudioParameterFloat(idPrefix + "SLOW_FREQ", namePrefix + "Slow Freq", range, 4.0f);
+    }
+    {
+        auto range = juce::NormalisableRange(0.01f, 100.0f, 0.01f);
+        range.setSkewForCentre(1.0f);
+        FastFreq = new juce::AudioParameterFloat(idPrefix + "FAST_FREQ", namePrefix + "Fast Freq", range, 1.0f);
+    }
     Amount = new juce::AudioParameterFloat(idPrefix + "AMOUNT", namePrefix + "Amount", 0.0f, 1.0f, 0.2f);
 }
 void LfoParams::addAllParameters(juce::AudioProcessor& processor)
@@ -347,9 +398,9 @@ ControlItemParams::ControlItemParams(int index)
     auto namePrefix = "Control" + std::to_string(index) + " ";
     Number = new juce::AudioParameterChoice(idPrefix + "NUMBER", namePrefix + "Number", CONTROL_NUMBER_NAMES, CONTROL_NUMBER_NAMES.indexOf("None"));
     TargetType = new juce::AudioParameterChoice(idPrefix + "TARGET_TYPE", namePrefix + "TargetType", CONTROL_TARGET_TYPE_NAMES, CONTROL_TARGET_TYPE_NAMES.indexOf("OSC"));
-    TargetOsc = new juce::AudioParameterChoice(idPrefix + "TARGET_OSC", namePrefix + "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("All"));
-    TargetFilter = new juce::AudioParameterChoice(idPrefix + "TARGET_FILTER", namePrefix + "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("All"));
-    TargetLfo = new juce::AudioParameterChoice(idPrefix + "TARGET_LFO", namePrefix + "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("All"));
+    TargetOsc = new juce::AudioParameterChoice(idPrefix + "TARGET_OSC", namePrefix + "TargetOsc", CONTROL_TARGET_OSC_NAMES, CONTROL_TARGET_OSC_NAMES.indexOf("1"));
+    TargetFilter = new juce::AudioParameterChoice(idPrefix + "TARGET_FILTER", namePrefix + "TargetFilter", CONTROL_TARGET_FILTER_NAMES, CONTROL_TARGET_FILTER_NAMES.indexOf("1"));
+    TargetLfo = new juce::AudioParameterChoice(idPrefix + "TARGET_LFO", namePrefix + "TargetLfo", CONTROL_TARGET_LFO_NAMES, CONTROL_TARGET_LFO_NAMES.indexOf("1"));
     TargetOscParam = new juce::AudioParameterChoice(idPrefix + "TARGET_OSC_PARAM", namePrefix + "TargetOscParam", CONTROL_TARGET_OSC_PARAM_NAMES, CONTROL_TARGET_OSC_PARAM_NAMES.indexOf("Gain"));
     TargetFilterParam =new juce::AudioParameterChoice(idPrefix + "TARGET_FILTER_PARAM", namePrefix + "TargetFilterParam", CONTROL_TARGET_FILTER_PARAM_NAMES, CONTROL_TARGET_FILTER_PARAM_NAMES.indexOf("Freq"));
     TargetLfoParam = new juce::AudioParameterChoice(idPrefix + "TARGET_LFO_PARAM", namePrefix + "TargetLfoParam", CONTROL_TARGET_LFO_PARAM_NAMES, CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount"));
