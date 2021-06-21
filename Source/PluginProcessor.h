@@ -139,7 +139,7 @@ public:
     
     GlobalParams globalParams;
     VoiceParams voiceParams;
-    OscParams oscParams[NUM_OSC];
+    std::array<OscParams, NUM_OSC> oscParams;
     EnvelopeParams envelopeParams[NUM_ENVELOPE];
     FilterParams filterParams[NUM_FILTER];
     LfoParams lfoParams[NUM_LFO];
