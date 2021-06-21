@@ -18,7 +18,6 @@ public:
 
 private:
     GrapeAudioProcessor& audioProcessor;
-//    juce::MidiKeyboardComponent keyboardComponent;
     
     ControlComponent controlComponent;
     VoiceComponent voiceComponent;

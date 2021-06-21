@@ -13,7 +13,6 @@ const int PANEL_MARGIN = 2;
 GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 : AudioProcessorEditor (&p)
 , audioProcessor (p)
-//, keyboardComponent (p.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 , controlComponent { ControlComponent(p.controlItemParams) }
 , voiceComponent (&p.voiceParams, p.controlItemParams)
 , statusComponent (&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider)
@@ -27,7 +26,6 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 {
     getLookAndFeel().setColour(juce::Label::textColourId, TEXT_COLOUR);
     
-//    addAndMakeVisible (keyboardComponent);
     addAndMakeVisible (voiceComponent);
     addAndMakeVisible (statusComponent);
     addAndMakeVisible (oscComponents[0]);
@@ -49,7 +47,6 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
     setSize (1024, 768);
     startTimer (60);
     addKeyListener(this);
-//    setResizable(true, true);
 }
 
 GrapeAudioProcessorEditor::~GrapeAudioProcessorEditor()
@@ -169,8 +166,6 @@ void GrapeAudioProcessorEditor::resized()
 }
 void GrapeAudioProcessorEditor::timerCallback()
 {
-//    keyboardComponent.grabKeyboardFocus();
-//    stopTimer();
     if(benchmarking) {
         if(0 <= benchmarkCounter && benchmarkCounter <= 127) {
             audioProcessor.keyboardState.noteOn(1, benchmarkCounter, 0.5);
