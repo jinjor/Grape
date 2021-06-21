@@ -384,7 +384,7 @@ public:
                         if(targetIndex == filterIndex) {
                             switch (targetParam) {
                                 case CONTROL_TARGET_FILTER_PARAM::Freq: {
-                                    switch(static_cast<FILTER_FREQ_TYPE>(filterParams[filterIndex].FreqType) {
+                                    switch(static_cast<FILTER_FREQ_TYPE>(filterParams[filterIndex].FreqType->getIndex())) {
                                         case FILTER_FREQ_TYPE::Absolute: {
                                             *filterParams[filterIndex].Hz = filterParams[filterIndex].Hz->range.convertFrom0to1(normalizedValue);
                                             break;
