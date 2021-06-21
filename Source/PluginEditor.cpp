@@ -168,12 +168,12 @@ void GrapeAudioProcessorEditor::timerCallback()
 {
     if(benchmarking) {
         if(0 <= benchmarkCounter && benchmarkCounter <= 127) {
-            audioProcessor.keyboardState.noteOn(1, benchmarkCounter, 0.5);
+            audioProcessor.keyboardState.noteOn(1, benchmarkCounter, 0.2);
         }
-        if(0 <= benchmarkCounter - 2 && benchmarkCounter - 2 <= 127) {
-            audioProcessor.keyboardState.noteOff(1, benchmarkCounter - 2, 0.5);
+        if(0 <= benchmarkCounter - 16 && benchmarkCounter - 16 <= 127) {
+            audioProcessor.keyboardState.noteOff(1, benchmarkCounter - 16, 0.2);
         }
-        if(benchmarkCounter >= 140) {
+        if(benchmarkCounter >= 160) {
             benchmarking = false;
             benchmarkCounter = 0;
         } else {
@@ -183,7 +183,7 @@ void GrapeAudioProcessorEditor::timerCallback()
 }
 bool GrapeAudioProcessorEditor::keyPressed(const juce::KeyPress& press, juce::Component* originatingComponent)
 {
-#if JUCE_DEBUG
+//#if JUCE_DEBUG
     std::cout << "pressed: " << press.getKeyCode() << std::endl;
     if (press.isKeyCode('P'))
     {
@@ -222,6 +222,6 @@ bool GrapeAudioProcessorEditor::keyPressed(const juce::KeyPress& press, juce::Co
         }
         return true;
     }
-#endif
+//#endif
     return false;
 }
