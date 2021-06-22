@@ -122,7 +122,7 @@ public:
                 value = targetValue - (targetValue - value) * stepAmount;
                 if(steps <= 0) {
                     end();
-                    ended = true;
+                    return true;
                 }
                 steps--;
                 break;
