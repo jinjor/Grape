@@ -179,8 +179,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
             
             double shiftedNoteNumbers[NUM_OSC] {smoothNote.value, smoothNote.value, smoothNote.value};
             for(int i = 0; i < NUM_OSC; ++i) {
-                shiftedNoteNumbers[i] += oscParams[i].Octave->get() * 12;
-                shiftedNoteNumbers[i] += oscParams[i].Coarse->get();
+                shiftedNoteNumbers[i] += oscParams[i].Octave->get() * 12 + oscParams[i].Coarse->get();
             }
             
             auto modifiers = Modifiers();
