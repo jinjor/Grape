@@ -86,7 +86,6 @@ public:
         targetValue = value;
         stepAmount = 0;
         steps = 0;
-        endThreshold = 0;
     }
     void linear(double duration, double targetValue, double sampleRate) {
         this->targetValue = targetValue;
@@ -97,7 +96,6 @@ public:
         type = TRANSITION_TYPE::LINEAR;
         stepAmount = (targetValue - value) / sampleRate / duration;
         steps = sampleRate * duration;
-        endThreshold = 0;
     }
     void exponential(double duration, double targetValue, double sampleRate) {
         this->targetValue = targetValue;
@@ -107,14 +105,21 @@ public:
         }
         type = TRANSITION_TYPE::EXPONENTIAL;
         stepAmount = std::pow(0.37, 1.0 / sampleRate / duration);// 63% 減衰する時間とする
-        steps = 0;
-        endThreshold = std::abs((this->targetValue - value)) * 0.005;
+        steps = std::log(0.005) / std::log(stepAmount);
     }
     bool step() {
-        bool ended = false;
         switch (type) {
             case TRANSITION_TYPE::LINEAR: {
                 value += stepAmount;
+                if(steps <= 0) {
+                    end();
+                    return true;
+                }
+                steps--;
+                break;
+            }
+            case TRANSITION_TYPE::EXPONENTIAL: {
+                value = targetValue - (targetValue - value) * stepAmount;
                 if(steps <= 0) {
                     end();
                     ended = true;
@@ -122,26 +127,16 @@ public:
                 steps--;
                 break;
             }
-            case TRANSITION_TYPE::EXPONENTIAL: {
-                value = targetValue - (targetValue - value) * stepAmount;
-                if (std::abs(value - targetValue) <= endThreshold) {
-                    end();
-                    ended = true;
-                }
-                break;
-            }
             case TRANSITION_TYPE::NONE:
-                ended = true;
-                break;
+                return true;
         }
-        return ended;
+        return false;
     }
     void end() {
         type = TRANSITION_TYPE::NONE;
         value = targetValue;
         stepAmount = 0;
         steps = 0;
-        endThreshold = 0;
     }
 private:
     TRANSITION_TYPE type = TRANSITION_TYPE::NONE;
