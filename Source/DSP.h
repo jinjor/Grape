@@ -274,11 +274,15 @@ public:
         past[0][0] = past[0][1] = past[1][0] = past[1][1] = 0;
     }
     void setSampleRate(double sampleRate) {
+        if(this->sampleRate != sampleRate) {
+            reciprocal_sampleRate = 1.0 / sampleRate;
+        }
         this->sampleRate = sampleRate;
     }
     double step (FILTER_TYPE filterType, double freq, double q, double dbGain, int ch, double input) {
         jassert(ch < 2);
         jassert(sampleRate != 0.0);
+        jassert(reciprocal_sampleRate > 0.0);
         setParams(filterType, freq, q, dbGain);
         
         double* p = past[ch];
@@ -303,6 +307,7 @@ private:
     double feedback[NUM_FEEDBACK];
     double past[2][NUM_PAST]{};
     double sampleRate = 0.0;
+    double reciprocal_sampleRate = -1;
     FILTER_TYPE currentFilterType = FILTER_TYPE::Lowpass;
     double currentFreq = 0.0;
     double currentQ = 0.0;
@@ -315,42 +320,42 @@ private:
         switch(filterType) {
             case FILTER_TYPE::Lowpass:
             {
-                setLowpassParams(sampleRate, freq, q);
+                setLowpassParams(freq, q);
                 break;
             }
             case FILTER_TYPE::Highpass:
             {
-                setHighpassParams(sampleRate, freq, q);
+                setHighpassParams(freq, q);
                 break;
             }
             case FILTER_TYPE::Bandpass1:
             {
-                setBandpass1Params(sampleRate, freq, q);
+                setBandpass1Params(freq, q);
                 break;
             }
             case FILTER_TYPE::Bandpass2:
             {
-                setBandpass2Params(sampleRate, freq, q);
+                setBandpass2Params(freq, q);
                 break;
             }
             case FILTER_TYPE::Notch:
             {
-                setNotchParams(sampleRate, freq, q);
+                setNotchParams(freq, q);
                 break;
             }
             case FILTER_TYPE::Peaking:
             {
-                setPeakingParams(sampleRate, freq, q, dbGain);
+                setPeakingParams(freq, q, dbGain);
                 break;
             }
             case FILTER_TYPE::LowShelf:
             {
-                setLowShelfParams(sampleRate, freq, q, dbGain);
+                setLowShelfParams(freq, q, dbGain);
                 break;
             }
             case FILTER_TYPE::HighShelf:
             {
-                setHighShelfParams(sampleRate, freq, q, dbGain);
+                setHighShelfParams(freq, q, dbGain);
                 break;
             }
         }
@@ -359,60 +364,66 @@ private:
         currentQ = q;
         currentDbGain = dbGain;
     }
-    void setLowpassParams (double sampleRate, double freq, double q) {
+    void setLowpassParams (double freq, double q) {
         // from RBJ's cookbook
-        auto fc = freq / sampleRate;
+        auto fc = freq * reciprocal_sampleRate;
         auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
-        auto b0 = (1 - std::cos(w0)) * 0.5;
-        auto b1 = (1 - std::cos(w0));
-        auto b2 = (1 - std::cos(w0)) * 0.5;
+        auto b0 = (1 - cosw0) * 0.5;
+        auto b1 = (1 - cosw0);
+        auto b2 = (1 - cosw0) * 0.5;
         auto a0 = 1 + alpha;
-        auto a1 = -2 * std::cos(w0);
+        auto a1 = -2 * cosw0;
         auto a2 = 1 - alpha;
-        feedforward[0] = b0/a0;
-        feedforward[1] = b1/a0;
-        feedforward[2] = b2/a0;
-        feedback[0] = a1/a0;
-        feedback[1] = a2/a0;
+        auto _a0 = 1.0 / a0;
+        feedforward[0] = b0 * _a0;
+        feedforward[1] = b1 * _a0;
+        feedforward[2] = b2 * _a0;
+        feedback[0] = a1 * _a0;
+        feedback[1] = a2 * _a0;
     }
-    void setHighpassParams (double sampleRate, double freq, double q) {
+    void setHighpassParams (double freq, double q) {
         // from RBJ's cookbook
-        auto fc = freq / sampleRate;
+        auto fc = freq * reciprocal_sampleRate;
         auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
-        auto b0 = (1 + std::cos(w0)) * 0.5;
-        auto b1 = -(1 + std::cos(w0));
-        auto b2 = (1 + std::cos(w0)) * 0.5;
+        auto b0 = (1 + cosw0) * 0.5;
+        auto b1 = -(1 + cosw0);
+        auto b2 = (1 + cosw0) * 0.5;
         auto a0 = 1 + alpha;
-        auto a1 = -2 * std::cos(w0);
+        auto a1 = -2 * cosw0;
         auto a2 = 1 - alpha;
-        feedforward[0] = b0/a0;
-        feedforward[1] = b1/a0;
-        feedforward[2] = b2/a0;
-        feedback[0] = a1/a0;
-        feedback[1] = a2/a0;
+        auto _a0 = 1.0 / a0;
+        feedforward[0] = b0 * _a0;
+        feedforward[1] = b1 * _a0;
+        feedforward[2] = b2 * _a0;
+        feedback[0] = a1 * _a0;
+        feedback[1] = a2 * _a0;
     }
-    void setBandpass1Params (double sampleRate, double freq, double q) {
+    void setBandpass1Params (double freq, double q) {
         // from RBJ's cookbook
-        auto fc = freq / sampleRate;
+        auto fc = freq * reciprocal_sampleRate;
         auto w0 = 2 * juce::MathConstants<double>::pi * fc;
-        auto alpha = std::sin(w0) / (2 * q);
-        auto b0 = std::sin(w0) * 0.5;
+        auto sinw0 = std::sin(w0);
+        auto alpha = sinw0 / (2 * q);
+        auto b0 = sinw0 * 0.5;
         auto b1 = 0.0;
-        auto b2 = -std::sin(w0) * 0.5;
+        auto b2 = -sinw0 * 0.5;
         auto a0 = 1 + alpha;
         auto a1 = -2 * std::cos(w0);
         auto a2 = 1 - alpha;
-        feedforward[0] = b0/a0;
-        feedforward[1] = b1/a0;
-        feedforward[2] = b2/a0;
-        feedback[0] = a1/a0;
-        feedback[1] = a2/a0;
+        auto _a0 = 1.0 / a0;
+        feedforward[0] = b0 * _a0;
+        feedforward[1] = b1 * _a0;
+        feedforward[2] = b2 * _a0;
+        feedback[0] = a1 * _a0;
+        feedback[1] = a2 * _a0;
     }
-    void setBandpass2Params (double sampleRate, double freq, double q) {
+    void setBandpass2Params (double freq, double q) {
         // from RBJ's cookbook
-        auto fc = freq / sampleRate;
+        auto fc = freq * reciprocal_sampleRate;
         auto w0 = 2 * juce::MathConstants<double>::pi * fc;
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = alpha;
@@ -421,99 +432,112 @@ private:
         auto a0 = 1 + alpha;
         auto a1 = -2 * std::cos(w0);
         auto a2 = 1 - alpha;
-        feedforward[0] = b0/a0;
-        feedforward[1] = b1/a0;
-        feedforward[2] = b2/a0;
-        feedback[0] = a1/a0;
-        feedback[1] = a2/a0;
+        auto _a0 = 1.0 / a0;
+        feedforward[0] = b0 * _a0;
+        feedforward[1] = b1 * _a0;
+        feedforward[2] = b2 * _a0;
+        feedback[0] = a1 * _a0;
+        feedback[1] = a2 * _a0;
     }
-    void setNotchParams (double sampleRate, double freq, double q) {
+    void setNotchParams (double freq, double q) {
         // from RBJ's cookbook
-        auto fc = freq / sampleRate;
+        auto fc = freq * reciprocal_sampleRate;
         auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = 1.0;
-        auto b1 = -2 * std::cos(w0);
+        auto b1 = -2 * cosw0;
         auto b2 = 1.0;
         auto a0 = 1 + alpha;
-        auto a1 = -2 * std::cos(w0);
+        auto a1 = -2 * cosw0;
         auto a2 = 1 - alpha;
-        feedforward[0] = b0/a0;
-        feedforward[1] = b1/a0;
-        feedforward[2] = b2/a0;
-        feedback[0] = a1/a0;
-        feedback[1] = a2/a0;
+        auto _a0 = 1.0 / a0;
+        feedforward[0] = b0 * _a0;
+        feedforward[1] = b1 * _a0;
+        feedforward[2] = b2 * _a0;
+        feedback[0] = a1 * _a0;
+        feedback[1] = a2 * _a0;
     }
-    void setAllPassParams (double sampleRate, double freq, double q) {
+    void setAllPassParams (double freq, double q) {
         // from RBJ's cookbook
-        auto fc = freq / sampleRate;
+        auto fc = freq * reciprocal_sampleRate;
         auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = 1 - alpha;
-        auto b1 = -2 * std::cos(w0);
+        auto b1 = -2 * cosw0;
         auto b2 = 1 + alpha;
         auto a0 = 1 + alpha;
-        auto a1 = -2 * std::cos(w0);
+        auto a1 = -2 * cosw0;
         auto a2 = 1 - alpha;
-        feedforward[0] = b0/a0;
-        feedforward[1] = b1/a0;
-        feedforward[2] = b2/a0;
-        feedback[0] = a1/a0;
-        feedback[1] = a2/a0;
+        auto _a0 = 1.0 / a0;
+        feedforward[0] = b0 * _a0;
+        feedforward[1] = b1 * _a0;
+        feedforward[2] = b2 * _a0;
+        feedback[0] = a1 * _a0;
+        feedback[1] = a2 * _a0;
     }
-    void setPeakingParams (double sampleRate, double freq, double q, double dbGain) {
+    void setPeakingParams (double freq, double q, double dbGain) {
         // from RBJ's cookbook
-        auto fc = freq / sampleRate;
+        auto fc = freq * reciprocal_sampleRate;
         auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto A = std::pow(10, dbGain/40);
         auto b0 = 1 + alpha * A;
-        auto b1 = -2 * std::cos(w0);
+        auto b1 = -2 * cosw0;
         auto b2 = 1 - alpha * A;
         auto a0 = 1 + alpha / A;
-        auto a1 = -2 * std::cos(w0);
+        auto a1 = -2 * cosw0;
         auto a2 = 1 - alpha / A;
-        feedforward[0] = b0/a0;
-        feedforward[1] = b1/a0;
-        feedforward[2] = b2/a0;
-        feedback[0] = a1/a0;
-        feedback[1] = a2/a0;
+        auto _a0 = 1.0 / a0;
+        feedforward[0] = b0 * _a0;
+        feedforward[1] = b1 * _a0;
+        feedforward[2] = b2 * _a0;
+        feedback[0] = a1 * _a0;
+        feedback[1] = a2 * _a0;
     }
-    void setLowShelfParams (double sampleRate, double freq, double q, double dbGain) {
+    void setLowShelfParams (double freq, double q, double dbGain) {
         // from RBJ's cookbook
-        auto fc = freq / sampleRate;
+        auto fc = freq * reciprocal_sampleRate;
         auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto A = std::pow(10, dbGain/40);
-        auto b0 = A * ((A + 1) - (A - 1) * std::cos(w0) + 2 * std::sqrt(A) * alpha);
-        auto b1 = 2 * A * ((A - 1) - (A + 1) * std::cos(w0));
-        auto b2 = A * ((A + 1) - (A - 1) * std::cos(w0) - 2 * std::sqrt(A) * alpha);
-        auto a0 = (A + 1) + (A - 1) * std::cos(w0) + 2 * std::sqrt(A) * alpha;
-        auto a1 = -2 * ((A - 1) + (A + 1) * std::cos(w0));
-        auto a2 = (A + 1) + (A - 1) * std::cos(w0) - 2 * std::sqrt(A) * alpha;
-        feedforward[0] = b0/a0;
-        feedforward[1] = b1/a0;
-        feedforward[2] = b2/a0;
-        feedback[0] = a1/a0;
-        feedback[1] = a2/a0;
+        auto sqrtA = std::sqrt(A);
+        auto b0 = A * ((A + 1) - (A - 1) * cosw0 + 2 * sqrtA * alpha);
+        auto b1 = 2 * A * ((A - 1) - (A + 1) * cosw0);
+        auto b2 = A * ((A + 1) - (A - 1) * cosw0 - 2 * sqrtA * alpha);
+        auto a0 = (A + 1) + (A - 1) * cosw0 + 2 * sqrtA * alpha;
+        auto a1 = -2 * ((A - 1) + (A + 1) * cosw0);
+        auto a2 = (A + 1) + (A - 1) * cosw0 - 2 * sqrtA * alpha;
+        auto _a0 = 1.0 / a0;
+        feedforward[0] = b0 * _a0;
+        feedforward[1] = b1 * _a0;
+        feedforward[2] = b2 * _a0;
+        feedback[0] = a1 * _a0;
+        feedback[1] = a2 * _a0;
     }
-    void setHighShelfParams (double sampleRate, double freq, double q, double dbGain) {
+    void setHighShelfParams (double freq, double q, double dbGain) {
         // from RBJ's cookbook
-        auto fc = freq / sampleRate;
+        auto fc = freq * reciprocal_sampleRate;
         auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto A = std::pow(10, dbGain/40);
-        auto b0 = A * ((A + 1) + (A - 1) * std::cos(w0) + 2 * std::sqrt(A) * alpha);
-        auto b1 = -2 * A * ((A - 1) - (A + 1) * std::cos(w0));
-        auto b2 = A * ((A + 1) + (A - 1) * std::cos(w0) - 2 * std::sqrt(A) * alpha);
-        auto a0 = (A + 1) - (A - 1) * std::cos(w0) + 2 * std::sqrt(A) * alpha;
-        auto a1 = 2 * ((A - 1) + (A + 1) * std::cos(w0));
-        auto a2 = (A + 1) - (A - 1) * std::cos(w0) - 2 * std::sqrt(A) * alpha;
-        feedforward[0] = b0/a0;
-        feedforward[1] = b1/a0;
-        feedforward[2] = b2/a0;
-        feedback[0] = a1/a0;
-        feedback[1] = a2/a0;
+        auto sqrtA = std::sqrt(A);
+        auto b0 = A * ((A + 1) + (A - 1) * cosw0 + 2 * sqrtA * alpha);
+        auto b1 = -2 * A * ((A - 1) - (A + 1) * cosw0);
+        auto b2 = A * ((A + 1) + (A - 1) * cosw0 - 2 * sqrtA * alpha);
+        auto a0 = (A + 1) - (A - 1) * cosw0 + 2 * sqrtA * alpha;
+        auto a1 = 2 * ((A - 1) + (A + 1) * cosw0);
+        auto a2 = (A + 1) - (A - 1) * cosw0 - 2 * sqrtA * alpha;
+        auto _a0 = 1.0 / a0;
+        feedforward[0] = b0 * _a0;
+        feedforward[1] = b1 * _a0;
+        feedforward[2] = b2 * _a0;
+        feedback[0] = a1 * _a0;
+        feedback[1] = a2 * _a0;
     }
 };
 
