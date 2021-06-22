@@ -531,17 +531,18 @@ public:
         this->waveform = waveform;
     }
     void setSampleRate (double sampleRate) {
-        this->sampleRate = sampleRate;
+//        this->sampleRate = sampleRate;
+        reciprocal_sampleRate = 1.0 / sampleRate;
     }
     void setAngle(double angle) {
         this->currentAngle = angle;
     }
     double step (double freq, double angleShift, double edge) {
-        if (sampleRate == 0.0)
+        if (reciprocal_sampleRate <= 0.0)
         {
             return 0.0;
         }
-        auto angleDelta = freq * juce::MathConstants<double>::twoPi / sampleRate;
+        auto angleDelta = freq * juce::MathConstants<double>::twoPi * reciprocal_sampleRate;
         currentAngle += angleDelta;
         if(currentAngle > juce::MathConstants<double>::twoPi) {
             currentAngle -= juce::MathConstants<double>::twoPi;
@@ -550,7 +551,7 @@ public:
         auto angle = currentAngle + angleShift;
         switch(waveform) {
             case WAVEFORM::Sine:
-                return sin(angle);
+                return std::sin(angle);
             case WAVEFORM::Triangle:
 //                return angle >= juce::MathConstants<double>::pi ?
 //                    angle / juce::MathConstants<double>::twoPi * 4.0 - 1.0 :
@@ -602,7 +603,8 @@ private:
     double pink[7]{};
     juce::Random whiteNoise;
     WAVEFORM waveform = WAVEFORM::Sine;
-    double sampleRate = 0.0;
+//    double sampleRate = 0.0;
+    double reciprocal_sampleRate = -1;
 };
 
 //==============================================================================
