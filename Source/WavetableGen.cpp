@@ -9,6 +9,7 @@ const float BASE_FREQ = 440.0f;
 const float MAX_FREQ = 22000.0f;
 const float PI = 3.141592f;
 const std::string LOOKUP_FILE = "data/lookup";
+const std::string SINE_FILE = "data/sine";
 const std::string SAW_FILE = "data/saw";
 const std::string PARABOLA_FILE = "data/parabola";
 }
@@ -33,6 +34,20 @@ int main() {
         std::ofstream ofs(LOOKUP_FILE, std::ios::out | std::ios::binary);
         ofs.write(reinterpret_cast<const char*>(lookupTable), 22000 * sizeof(int));
         delete[] lookupTable;
+    }
+    {
+        std::cout << "generating sine table..." << std::endl;
+        float* sineTable = new float[NUM_SAMPLES]();
+
+        for(int i = 0; i < NUM_SAMPLES; i++) {
+            float angle = 2.0 * PI / NUM_DIVISIONS * i;
+            float value = std::sin(angle);
+            sineTable[i] = value;
+        }
+        
+        std::ofstream ofs(SINE_FILE, std::ios::out | std::ios::binary);
+        ofs.write(reinterpret_cast<const char*>(sineTable), NUM_SAMPLES * sizeof(float));
+        delete[] sineTable;
     }
     {
         std::cout << "generating saw table..." << std::endl;
