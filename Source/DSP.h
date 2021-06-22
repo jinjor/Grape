@@ -6,10 +6,16 @@
 class Wavetable {
 public:
     const int* lookup = reinterpret_cast<const int*>(BinaryData::lookup);
-    const float* saw = reinterpret_cast<const float*>(BinaryData::saw);
-    const float* parabola = reinterpret_cast<const float*>(BinaryData::parabola);
+    const float* sine = reinterpret_cast<const float*>(BinaryData::sine);
+    const float* saw = reinterpret_cast<const float*>(BinaryData::saw);// 128 variations
+    const float* parabola = reinterpret_cast<const float*>(BinaryData::parabola);// 128 variations
     Wavetable() {};
     ~Wavetable() {};
+    double getSineValue(double angle) {
+        angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
+        float pos = angle / juce::MathConstants<double>::twoPi;
+        return getValue(sine, pos);
+    }
     double getSawDownValue(double freq, double angle) {
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
         float pos = angle / juce::MathConstants<double>::twoPi;
@@ -570,7 +576,8 @@ public:
         auto angle = currentAngle + angleShift;
         switch(waveform) {
             case WAVEFORM::Sine:
-                return std::sin(angle);
+//                return std::sin(angle);
+                return wavetable.getSineValue(angle);
             case WAVEFORM::Triangle:
 //                return angle >= juce::MathConstants<double>::pi ?
 //                    angle / juce::MathConstants<double>::twoPi * 4.0 - 1.0 :
