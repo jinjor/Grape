@@ -369,20 +369,27 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
             double out[2] {0, 0};
             // ---------------- OSC with Envelope and Filter ----------------
             for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                if(!oscParams[oscIndex].Enabled->get()) {
+                auto& p = oscParams[oscIndex];
+                if(!p.Enabled->get()) {
                     continue;
                 }
+                int envelopeIndex = p.Envelope->getIndex();
+                if(!adsr[envelopeIndex].isActive()) {
+                    continue;
+                }
+                active = true;
+                
                 auto freq = getMidiNoteInHertzDouble(shiftedNoteNumbers[oscIndex] + modifiers.octShift[oscIndex] * 12);
-                auto edge = oscParams[oscIndex].Edge->get() * modifiers.edgeRatio[oscIndex];
+                auto edge = p.Edge->get() * modifiers.edgeRatio[oscIndex];
                 auto panBase = globalParams->Pan->get();
                 auto pan = modifiers.panMod[oscIndex] == 0
                     ? panBase
                     : juce::jlimit(-1.0, 1.0, panBase + (std::min(1.0 - panBase, 1.0 + panBase) * modifiers.panMod[oscIndex]));// TODO: 計算減らす
-                auto detune = oscParams[oscIndex].Detune->get() * modifiers.detuneRatio[oscIndex];
-                auto spread = oscParams[oscIndex].Spread->get() * modifiers.spreadRatio[oscIndex];
+                auto detune = p.Detune->get() * modifiers.detuneRatio[oscIndex];
+                auto spread = p.Spread->get() * modifiers.spreadRatio[oscIndex];
                 
                 double o[2] {0, 0};
-                oscs[oscIndex].step(oscParams[oscIndex].Unison->get(),
+                oscs[oscIndex].step(p.Unison->get(),
                                     pan,
                                     detune,
                                     spread,
@@ -390,15 +397,10 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                                     modifiers.angleShift[oscIndex],
                                     edge,
                                     o);
-                int envelopeIndex = oscParams[oscIndex].Envelope->getIndex();
-                if(adsr[envelopeIndex].isActive()) {
-                    active = true;
-//                            sparseLog.log("active", "osc:" + std::to_string(oscIndex) + ", envelope:" + std::to_string(envelopeIndex));
-                }
-                auto oscGain = adsr[envelopeIndex].getValue() * modifiers.gain[oscIndex] * oscParams[oscIndex].Gain->get();
-                for (auto ch = 0; ch < numChannels; ++ch) {
-                    o[ch] *= oscGain;
-                }
+                auto oscGain = adsr[envelopeIndex].getValue() * modifiers.gain[oscIndex] * p.Gain->get();
+                o[0] *= oscGain;
+                o[1] *= oscGain;
+
                 for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
                     if(!filterParams[filterIndex].Enabled->get()) {
                         continue;
