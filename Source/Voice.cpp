@@ -286,8 +286,8 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
             }
             // ---------------- LFO ----------------
             for(int i = 0; i < NUM_LFO; ++i) {
-                auto params = &lfoParams[i];
-                if(!params->Enabled->get()) {
+                auto& params = lfoParams[i];
+                if(!params.Enabled->get()) {
                     continue;
                 }
                 double lfoValue;
@@ -305,12 +305,12 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                     }
                 }
                 lfoValue = lfos[i].step(freq, 0.0, 0.0);
-                auto lfoAmount = params->Amount->get() * modifiers.lfoAmountGain[i];
-                auto targetType = static_cast<LFO_TARGET_TYPE>(params->TargetType->getIndex());
+                auto lfoAmount = params.Amount->get() * modifiers.lfoAmountGain[i];
+                auto targetType = static_cast<LFO_TARGET_TYPE>(params.TargetType->getIndex());
                 switch(targetType) {
                     case LFO_TARGET_TYPE::OSC: {
-                        int targetIndex = params->TargetOsc->getIndex();
-                        auto param = static_cast<LFO_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
+                        int targetIndex = params.TargetOsc->getIndex();
+                        auto param = static_cast<LFO_TARGET_OSC_PARAM>(params.TargetOscParam->getIndex());
                         for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
                             if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
                                 switch(param) {
@@ -345,8 +345,8 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
                         break;
                     }
                     case LFO_TARGET_TYPE::Filter: {
-                        int targetIndex = params->TargetFilter->getIndex();
-                        auto param = static_cast<LFO_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
+                        int targetIndex = params.TargetFilter->getIndex();
+                        auto param = static_cast<LFO_TARGET_FILTER_PARAM>(params.TargetFilterParam->getIndex());
                         for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
                             if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
                                 switch (param) {
