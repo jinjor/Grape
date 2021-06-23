@@ -47,10 +47,7 @@ public:
     enum { numSamples = 2048 };
     std::vector<Consumer*> consumers{};
     
-    LatestDataProvider() {
-        std::cout << "consumers.size(): " << consumers.size() << std::endl;
-        std::cout << "sizeof(Consumer): " << sizeof(Consumer) << std::endl;
-    };
+    LatestDataProvider() {};
     ~LatestDataProvider() {};
     void addConsumer(Consumer* c) {
         std::lock_guard<std::mutex> lock(mtx);
@@ -74,12 +71,6 @@ public:
             fifoIndex++;
             for(auto* consumer : consumers) {
                 if(!consumer->ready && fifoIndex >= consumer->numSamples) {
-                    if(consumer->numSamples < 0) {
-                        std::cout << "consumers.size(): " << consumers.size() << std::endl;
-                        std::cout << "consumer->numSamples: " << consumer->numSamples << std::endl;
-                        std::cout << "consumer->ready: " << consumer->ready << std::endl;
-                        std::cout << "fifoIndex: " << fifoIndex << std::endl;
-                    }
                     memcpy(consumer->destinationL, fifoL + fifoIndex - consumer->numSamples, sizeof(float) * consumer->numSamples);
                     memcpy(consumer->destinationR, fifoR + fifoIndex - consumer->numSamples, sizeof(float) * consumer->numSamples);
                     consumer->ready = true;
