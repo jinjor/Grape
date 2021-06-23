@@ -52,6 +52,7 @@ public:
     };
     ~LatestDataProvider() {};
     void addConsumer(Consumer* c) {
+        std::lock_guard<std::mutex> lock(mtx);
         jassert(c->numSamples <= numSamples);
         consumers.push_back(c);
     }
@@ -59,6 +60,7 @@ public:
         if (buffer.getNumChannels() <= 0) {
             return;
         }
+        std::lock_guard<std::mutex> lock(mtx);
         auto* dataL = buffer.getReadPointer(0);
         auto* dataR = buffer.getReadPointer(1);
         for (auto i = 0; i < buffer.getNumSamples(); ++i) {
@@ -86,6 +88,7 @@ private:
     float fifoL[numSamples]{};
     float fifoR[numSamples]{};
     int fifoIndex = 0;
+    std::mutex mtx;
 };
 
 //==============================================================================
