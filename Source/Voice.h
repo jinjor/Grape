@@ -248,7 +248,9 @@ public:
                         if(GrapeVoice* voice = dynamic_cast<GrapeVoice*>(voices[0]) ) {
                             int firstNoteNumber = monoStack->firstNoteNumber;
                             bool removed = monoStack->remove(midiNoteNumber);
-                            jassert(removed);// TODO: Poly/Mono 切り替え時にここに来ることがある
+                            if(!removed) {
+                                return;
+                            }
                             bool shouldGlide = monoStack->latestNoteNumber != 0;
                             if(shouldGlide) {
                                 jassert(voices[0]->isPlayingChannel (channel));
