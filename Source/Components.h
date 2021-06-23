@@ -66,6 +66,7 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     int* polyphony;
     TimeConsumptionState* timeConsumptionState;
+    LatestDataProvider* latestDataProvider;
    
     HeaderComponent header;
     

@@ -45,16 +45,21 @@ public:
         bool ready = false;
     };
     enum { numSamples = 2048 };
-    std::vector<Consumer*> consumers;
+    std::vector<Consumer*> consumers{};
     
     LatestDataProvider() {
         std::cout << "consumers.size(): " << consumers.size() << std::endl;
+        std::cout << "sizeof(Consumer): " << sizeof(Consumer) << std::endl;
     };
     ~LatestDataProvider() {};
     void addConsumer(Consumer* c) {
         std::lock_guard<std::mutex> lock(mtx);
         jassert(c->numSamples <= numSamples);
         consumers.push_back(c);
+    }
+    void removeConsumer(Consumer* c) {
+        std::lock_guard<std::mutex> lock(mtx);
+        consumers.erase(remove(consumers.begin(), consumers.end(), c), consumers.end());
     }
     void push(juce::AudioBuffer<float>& buffer) {
         if (buffer.getNumChannels() <= 0) {
@@ -69,6 +74,12 @@ public:
             fifoIndex++;
             for(auto* consumer : consumers) {
                 if(!consumer->ready && fifoIndex >= consumer->numSamples) {
+                    if(consumer->numSamples < 0) {
+                        std::cout << "consumers.size(): " << consumers.size() << std::endl;
+                        std::cout << "consumer->numSamples: " << consumer->numSamples << std::endl;
+                        std::cout << "consumer->ready: " << consumer->ready << std::endl;
+                        std::cout << "fifoIndex: " << fifoIndex << std::endl;
+                    }
                     memcpy(consumer->destinationL, fifoL + fifoIndex - consumer->numSamples, sizeof(float) * consumer->numSamples);
                     memcpy(consumer->destinationR, fifoR + fifoIndex - consumer->numSamples, sizeof(float) * consumer->numSamples);
                     consumer->ready = true;

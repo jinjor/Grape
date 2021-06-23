@@ -213,6 +213,7 @@ void VoiceComponent::timerCallback()
 StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsumptionState, LatestDataProvider* latestDataProvider)
 : polyphony(polyphony)
 , timeConsumptionState(timeConsumptionState)
+, latestDataProvider(latestDataProvider)
 , header("STATUS", false)
 {
     latestDataProvider->addConsumer(&levelConsumer);
@@ -263,7 +264,9 @@ StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsu
 }
 
 StatusComponent::~StatusComponent()
-{}
+{
+    latestDataProvider->removeConsumer(&levelConsumer);
+}
 
 void StatusComponent::paint(juce::Graphics& g)
 {
@@ -2396,7 +2399,10 @@ AnalyserComponent::AnalyserComponent(LatestDataProvider* latestDataProvider)
     
     startTimerHz(30.0f);
 }
-AnalyserComponent::~AnalyserComponent(){}
+AnalyserComponent::~AnalyserComponent() {
+    latestDataProvider->removeConsumer(&fftConsumer);
+    latestDataProvider->removeConsumer(&levelConsumer);
+}
 void AnalyserComponent::drawNextFrameOfSpectrum()
 {
     for(int i = 0; i < fftSize; i++) {
