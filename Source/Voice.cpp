@@ -191,7 +191,7 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
             // ---------------- GLOBAL ----------------
             auto octShiftByPitchBend = globalParams->Pitch->get() * (voiceParams->PitchBendRange->get() / 12.0);
             for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                modifiers.octShift[oscIndex] *= octShiftByPitchBend;
+                modifiers.octShift[oscIndex] += octShiftByPitchBend;
             }
             
             // ---------------- MODENV ----------------
