@@ -253,7 +253,7 @@ StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsu
     
     polyphonyLabel.setFont(paramLabelFont);
     polyphonyLabel.setText("Polyphony:", juce::dontSendNotification);
-    polyphonyLabel.setJustificationType(juce::Justification::centred);
+    polyphonyLabel.setJustificationType(juce::Justification::right);
     polyphonyLabel.setEditable(false, false, false);
     addAndMakeVisible(polyphonyLabel);
     
