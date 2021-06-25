@@ -144,18 +144,17 @@ void VoiceComponent::resized()
     bounds.reduce(0, 10);
     auto boundsWidth = bounds.getWidth();
     {
-//        float selectorWidth = 80.0f;
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.24);
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.34);
         modeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         modeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.24);
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.33);
         portamentoTimeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         portamentoTimeSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.24);
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.33);
         pitchBendRangeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         pitchBendRangeSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -217,15 +216,11 @@ StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsu
 : polyphony(polyphony)
 , timeConsumptionState(timeConsumptionState)
 , latestDataProvider(latestDataProvider)
-, header("STATUS", false)
 {
     latestDataProvider->addConsumer(&levelConsumer);
     
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
     juce::Font paramValueLabelFont = juce::Font(PARAM_VALUE_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-    
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
     
     volumeValueLabel.setFont(paramValueLabelFont);
     volumeValueLabel.setText("0.0dB", juce::dontSendNotification);
@@ -278,25 +273,23 @@ void StatusComponent::paint(juce::Graphics& g)
 void StatusComponent::resized()
 {
     juce::Rectangle<int> bounds = getLocalBounds();
-//    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-//    header.setBounds(headerArea);
     
     bounds.reduce(0, 10);
     auto boundsHeight = bounds.getHeight();
     auto boundsWidth = bounds.getWidth();
     {
         juce::Rectangle<int> area = bounds.removeFromTop(boundsHeight / 3);
-        volumeLabel.setBounds(area.removeFromLeft(boundsWidth / 2).reduced(LOCAL_MARGIN));
+        volumeLabel.setBounds(area.removeFromLeft(boundsWidth * 0.4).reduced(LOCAL_MARGIN));
         volumeValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = bounds.removeFromTop(boundsHeight / 3);
-        polyphonyLabel.setBounds(area.removeFromLeft(boundsWidth / 2).reduced(LOCAL_MARGIN));
+        polyphonyLabel.setBounds(area.removeFromLeft(boundsWidth * 0.4).reduced(LOCAL_MARGIN));
         polyphonyValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = bounds.removeFromTop(boundsHeight / 3);
-        timeConsumptionLabel.setBounds(area.removeFromLeft(boundsWidth / 2).reduced(LOCAL_MARGIN));
+        timeConsumptionLabel.setBounds(area.removeFromLeft(boundsWidth * 0.4).reduced(LOCAL_MARGIN));
         timeConsumptionValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
@@ -410,14 +403,14 @@ void MasterComponent::resized()
     header.setBounds(headerArea);
     
     bounds.reduce(0, 10);
-    auto boundsWidth = bounds.getWidth();
+//    auto boundsWidth = bounds.getWidth();
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 2);
+        juce::Rectangle<int> area = bounds.removeFromLeft(SLIDER_WIDTH);
         panLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         panSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 2);
+        juce::Rectangle<int> area = bounds.removeFromLeft(SLIDER_WIDTH);
         volumeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         volumeSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -2504,7 +2497,41 @@ void ControlComponent::resized()
 }
 
 //==============================================================================
-AnalyserComponent::AnalyserComponent(LatestDataProvider* latestDataProvider)
+AnalyserToggleItem::AnalyserToggleItem(std::string name)
+{
+    
+}
+AnalyserToggleItem::~AnalyserToggleItem() {}
+void AnalyserToggleItem::paint(juce::Graphics& g)
+{
+    
+}
+void AnalyserToggleItem::resized()
+{
+    
+}
+
+//==============================================================================
+AnalyserToggle::AnalyserToggle()
+: spectrumToggle("Spectrum")
+, envelopeToggle("Envelope")
+{
+    addAndMakeVisible(spectrumToggle);
+    
+    addAndMakeVisible(spectrumToggle);
+}
+AnalyserToggle::~AnalyserToggle() {
+}
+void AnalyserToggle::paint(juce::Graphics& g)
+{
+}
+void AnalyserToggle::resized()
+{
+//    juce::Rectangle<int> bounds = getLocalBounds();
+}
+
+//==============================================================================
+AnalyserWindow::AnalyserWindow(LatestDataProvider* latestDataProvider)
 : latestDataProvider(latestDataProvider)
 , forwardFFT (fftOrder)
 , window (fftSize, juce::dsp::WindowingFunction<float>::hann)
@@ -2514,11 +2541,11 @@ AnalyserComponent::AnalyserComponent(LatestDataProvider* latestDataProvider)
     
     startTimerHz(30.0f);
 }
-AnalyserComponent::~AnalyserComponent() {
+AnalyserWindow::~AnalyserWindow() {
     latestDataProvider->removeConsumer(&fftConsumer);
     latestDataProvider->removeConsumer(&levelConsumer);
 }
-void AnalyserComponent::drawNextFrameOfSpectrum()
+void AnalyserWindow::drawNextFrameOfSpectrum()
 {
     for(int i = 0; i < fftSize; i++) {
         fftData[i] = (fftData[i] + fftData[i + fftSize]) * 0.5f;
@@ -2542,7 +2569,7 @@ void AnalyserComponent::drawNextFrameOfSpectrum()
     }
 }
 
-void AnalyserComponent::drawNextFrameOfLevel()
+void AnalyserWindow::drawNextFrameOfLevel()
 {
     auto mindB = -100.0f;
     auto maxdB =    0.0f;
@@ -2556,7 +2583,7 @@ void AnalyserComponent::drawNextFrameOfLevel()
         }
     }
 }
-void AnalyserComponent::paint(juce::Graphics& g)
+void AnalyserWindow::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
     
@@ -2569,11 +2596,8 @@ void AnalyserComponent::paint(juce::Graphics& g)
         drawFrame(bounds.reduced(2), g);
     }
 }
-void AnalyserComponent::resized()
-{
-    // TODO: ?
-}
-void AnalyserComponent::timerCallback()
+void AnalyserWindow::resized() {}
+void AnalyserWindow::timerCallback()
 {
     bool shouldRepaint = false;
     if (fftConsumer.ready)
@@ -2594,7 +2618,7 @@ void AnalyserComponent::timerCallback()
         repaint();
     }
 }
-void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g)
+void AnalyserWindow::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g)
 {
     g.setColour(ANALYSER_LINE_COLOUR);
     auto offsetX = 3;

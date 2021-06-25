@@ -21,6 +21,8 @@ private:
     
     ControlComponent controlComponent;
     VoiceComponent voiceComponent;
+    AnalyserToggle analyserToggle;
+    AnalyserWindow analyserWindow;
     StatusComponent statusComponent;
     MasterComponent masterComponent;
     OscComponent oscComponents[NUM_OSC];
@@ -29,7 +31,6 @@ private:
     LfoComponent lfoComponents[NUM_LFO];
     ModEnvComponent modEnvComponents[NUM_MODENV];
     DelayComponent delayComponent;
-    AnalyserComponent analyserComponent;
     
     bool benchmarking = false;
     int benchmarkCounter = 0;

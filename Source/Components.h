@@ -67,8 +67,6 @@ private:
     int* polyphony;
     TimeConsumptionState* timeConsumptionState;
     LatestDataProvider* latestDataProvider;
-   
-    HeaderComponent header;
     
     juce::Label volumeValueLabel;
     juce::Label polyphonyValueLabel;
@@ -377,11 +375,39 @@ private:
 };
 
 //==============================================================================
-class AnalyserComponent : public juce::Component, private juce::Timer
+class AnalyserToggleItem : public juce::ToggleButton
 {
 public:
-    AnalyserComponent(LatestDataProvider* latestDataProvider);
-    virtual ~AnalyserComponent();
+    AnalyserToggleItem(std::string name);
+    virtual ~AnalyserToggleItem();
+    virtual void paint(juce::Graphics& g) override;
+    virtual void resized() override;
+    
+private:
+    std::string name;
+};
+
+//==============================================================================
+class AnalyserToggle : public juce::Component
+{
+public:
+    AnalyserToggle();
+    virtual ~AnalyserToggle();
+    
+    virtual void paint(juce::Graphics& g) override;
+    virtual void resized() override;
+    
+private:
+    AnalyserToggleItem spectrumToggle;
+    AnalyserToggleItem envelopeToggle;
+};
+
+//==============================================================================
+class AnalyserWindow : public juce::Component, private juce::Timer
+{
+public:
+    AnalyserWindow(LatestDataProvider* latestDataProvider);
+    virtual ~AnalyserWindow();
     
     virtual void paint(juce::Graphics& g) override;
     virtual void resized() override;
