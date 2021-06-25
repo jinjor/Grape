@@ -22,6 +22,7 @@ private:
     ControlComponent controlComponent;
     VoiceComponent voiceComponent;
     StatusComponent statusComponent;
+    MasterComponent masterComponent;
     OscComponent oscComponents[NUM_OSC];
     EnvelopeComponent envelopeComponents[NUM_ENVELOPE];
     FilterComponent filterComponents[NUM_FILTER];

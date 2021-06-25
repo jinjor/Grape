@@ -87,6 +87,34 @@ private:
     int overflowWarning = 0;
 };
 
+//==============================================================================
+class MasterComponent : public juce::Component, juce::Slider::Listener, private juce::Timer
+{
+public:
+    MasterComponent(GlobalParams* params);
+    virtual ~MasterComponent();
+    
+    virtual void paint(juce::Graphics& g) override;
+    
+    virtual void resized() override;
+    
+private:
+    virtual void sliderValueChanged(juce::Slider* slider) override;
+    virtual void timerCallback() override;
+
+    GrapeLookAndFeel grapeLookAndFeel;
+    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
+    
+    GlobalParams* _paramsPtr;
+   
+    HeaderComponent header;
+    
+    juce::Slider panSlider;
+    juce::Slider volumeSlider;
+
+    juce::Label panLabel;
+    juce::Label volumeLabel;
+};
 
 //==============================================================================
 class OscComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer

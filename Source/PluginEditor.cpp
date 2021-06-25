@@ -16,6 +16,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 , controlComponent { ControlComponent(p.controlItemParams) }
 , voiceComponent (&p.voiceParams, p.controlItemParams)
 , statusComponent (&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider)
+, masterComponent (&p.globalParams)
 , oscComponents { OscComponent(0, p.oscParams, p.controlItemParams), OscComponent(1, p.oscParams+1, p.controlItemParams), OscComponent(2, p.oscParams+2, p.controlItemParams) }
 , envelopeComponents { EnvelopeComponent(0, p.envelopeParams), EnvelopeComponent(1, p.envelopeParams+1) }
 , filterComponents { FilterComponent(0, p.filterParams, p.controlItemParams), FilterComponent(1, p.filterParams+1, p.controlItemParams) }
@@ -28,6 +29,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
     
     addAndMakeVisible (voiceComponent);
     addAndMakeVisible (statusComponent);
+    addAndMakeVisible (masterComponent);
     addAndMakeVisible (oscComponents[0]);
     addAndMakeVisible (oscComponents[1]);
     addAndMakeVisible (oscComponents[2]);
@@ -78,16 +80,20 @@ void GrapeAudioProcessorEditor::resized()
     
     auto upperArea = bounds.removeFromTop(height * 0.12).reduced(6, 2);
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(width/3);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(width * 0.36);
         voiceComponent.setBounds(area);
     }
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(width/3);
+        juce::Rectangle<int> area = upperArea.removeFromLeft(width * 0.28);
         analyserComponent.setBounds(area.reduced(PANEL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = upperArea;
+        juce::Rectangle<int> area = upperArea.removeFromLeft(width * 0.16);
         statusComponent.setBounds(area.reduced(PANEL_MARGIN));
+    }
+    {
+        juce::Rectangle<int> area = upperArea;
+        masterComponent.setBounds(area.reduced(PANEL_MARGIN));
     }
     
     auto middleArea = bounds.removeFromTop(bounds.getHeight() * 2 / 5).reduced(6, 2);

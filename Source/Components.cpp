@@ -5,7 +5,7 @@
 namespace {
 const float PANEL_NAME_FONT_SIZE = 15.0f;
 const float PARAM_LABEL_FONT_SIZE = 14.0f;
-const float PARAM_VALUE_LABEL_FONT_SIZE = 16.0f;
+const float PARAM_VALUE_LABEL_FONT_SIZE = 14.0f;
 const float PANEL_NAME_HEIGHT = 26.0f;
 const float LOCAL_MARGIN = 2.0f;
 const float LABEL_HEIGHT = 20.0f;
@@ -13,6 +13,9 @@ const float COMBO_BOX_HEIGHT = 28.0f;
 const float SLIDER_WIDTH = 60.0f;
 const juce::Colour TEXT_COLOUR = juce::Colour(200,200,200);
 const juce::Colour PANEL_NAME_COLOUR = juce::Colour(50,50,50);
+const juce::Colour WARNING_COLOUR = juce::Colour(190, 190, 80);
+const juce::Colour ERROR_COLOUR = juce::Colour(190, 40, 80);
+const juce::Colour ANALYSER_LINE_COLOUR = juce::Colour(100, 190, 140);
 }
 
 //==============================================================================
@@ -111,13 +114,13 @@ VoiceComponent::VoiceComponent(VoiceParams* params, ControlItemParams* controlIt
     addAndMakeVisible(modeLabel);
     
     portamentoTimeLabel.setFont(paramLabelFont);
-    portamentoTimeLabel.setText("Portamento Time", juce::dontSendNotification);
+    portamentoTimeLabel.setText("Glide Time", juce::dontSendNotification);
     portamentoTimeLabel.setJustificationType(juce::Justification::centred);
     portamentoTimeLabel.setEditable(false, false, false);
     addAndMakeVisible(portamentoTimeLabel);
     
     pitchBendRangeLabel.setFont(paramLabelFont);
-    pitchBendRangeLabel.setText("PitchBend Range", juce::dontSendNotification);
+    pitchBendRangeLabel.setText("Bend Range", juce::dontSendNotification);
     pitchBendRangeLabel.setJustificationType(juce::Justification::centred);
     pitchBendRangeLabel.setEditable(false, false, false);
     addAndMakeVisible(pitchBendRangeLabel);
@@ -147,12 +150,12 @@ void VoiceComponent::resized()
         modeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.38);
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.24);
         portamentoTimeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         portamentoTimeSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.38);
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.24);
         pitchBendRangeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         pitchBendRangeSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -226,37 +229,37 @@ StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsu
     
     volumeValueLabel.setFont(paramValueLabelFont);
     volumeValueLabel.setText("0.0dB", juce::dontSendNotification);
-    volumeValueLabel.setJustificationType(juce::Justification::centred);
+    volumeValueLabel.setJustificationType(juce::Justification::left);
     volumeValueLabel.setEditable(false, false, false);
     addAndMakeVisible(volumeValueLabel);
     
     polyphonyValueLabel.setFont(paramValueLabelFont);
     polyphonyValueLabel.setText(juce::String(*polyphony), juce::dontSendNotification);
-    polyphonyValueLabel.setJustificationType(juce::Justification::centred);
+    polyphonyValueLabel.setJustificationType(juce::Justification::left);
     polyphonyValueLabel.setEditable(false, false, false);
     addAndMakeVisible(polyphonyValueLabel);
     
     timeConsumptionValueLabel.setFont(paramValueLabelFont);
     timeConsumptionValueLabel.setText(juce::String(juce::roundToInt(timeConsumptionState->currentTimeConsumptionRate * 100)) + "%", juce::dontSendNotification);
-    timeConsumptionValueLabel.setJustificationType(juce::Justification::centred);
+    timeConsumptionValueLabel.setJustificationType(juce::Justification::left);
     timeConsumptionValueLabel.setEditable(false, false, false);
     addAndMakeVisible(timeConsumptionValueLabel);
     
     volumeLabel.setFont(paramLabelFont);
-    volumeLabel.setText("Peak", juce::dontSendNotification);
-    volumeLabel.setJustificationType(juce::Justification::centred);
+    volumeLabel.setText("Peak:", juce::dontSendNotification);
+    volumeLabel.setJustificationType(juce::Justification::right);
     volumeLabel.setEditable(false, false, false);
     addAndMakeVisible(volumeLabel);
     
     polyphonyLabel.setFont(paramLabelFont);
-    polyphonyLabel.setText("Polyphony", juce::dontSendNotification);
+    polyphonyLabel.setText("Polyphony:", juce::dontSendNotification);
     polyphonyLabel.setJustificationType(juce::Justification::centred);
     polyphonyLabel.setEditable(false, false, false);
     addAndMakeVisible(polyphonyLabel);
     
     timeConsumptionLabel.setFont(paramLabelFont);
-    timeConsumptionLabel.setText("Busyness", juce::dontSendNotification);
-    timeConsumptionLabel.setJustificationType(juce::Justification::centred);
+    timeConsumptionLabel.setText("Busyness:", juce::dontSendNotification);
+    timeConsumptionLabel.setJustificationType(juce::Justification::right);
     timeConsumptionLabel.setEditable(false, false, false);
     addAndMakeVisible(timeConsumptionLabel);
     
@@ -275,31 +278,32 @@ void StatusComponent::paint(juce::Graphics& g)
 void StatusComponent::resized()
 {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
+//    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+//    header.setBounds(headerArea);
     
     bounds.reduce(0, 10);
+    auto boundsHeight = bounds.getHeight();
     auto boundsWidth = bounds.getWidth();
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 3);
-        volumeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        juce::Rectangle<int> area = bounds.removeFromTop(boundsHeight / 3);
+        volumeLabel.setBounds(area.removeFromLeft(boundsWidth / 2).reduced(LOCAL_MARGIN));
         volumeValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 3);
-        polyphonyLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        juce::Rectangle<int> area = bounds.removeFromTop(boundsHeight / 3);
+        polyphonyLabel.setBounds(area.removeFromLeft(boundsWidth / 2).reduced(LOCAL_MARGIN));
         polyphonyValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 3);
-        timeConsumptionLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        juce::Rectangle<int> area = bounds.removeFromTop(boundsHeight / 3);
+        timeConsumptionLabel.setBounds(area.removeFromLeft(boundsWidth / 2).reduced(LOCAL_MARGIN));
         timeConsumptionValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
 void StatusComponent::timerCallback()
 {
     if(overflowWarning > 0) {
-        volumeValueLabel.setColour(juce::Label::textColourId, juce::Colour(190, 40, 80));
+        volumeValueLabel.setColour(juce::Label::textColourId, ERROR_COLOUR);
         auto levelStr = juce::String(overflowedLevel, 1) + " dB";
         volumeValueLabel.setText(levelStr, juce::dontSendNotification);
         
@@ -320,8 +324,119 @@ void StatusComponent::timerCallback()
             }
         }
     }
-    polyphonyValueLabel.setText(juce::String(*polyphony), juce::dontSendNotification);
-    timeConsumptionValueLabel.setText(juce::String(juce::roundToInt(timeConsumptionState->currentTimeConsumptionRate * 100)) + "%", juce::dontSendNotification);
+    {
+        int numVoices = 64;// TODO: share this
+        int value = *polyphony;
+        polyphonyValueLabel.setText(juce::String(value), juce::dontSendNotification);
+        if(value >= numVoices) {
+            polyphonyValueLabel.setColour(juce::Label::textColourId, ERROR_COLOUR);
+        } else if(value > numVoices * 0.8) {
+            polyphonyValueLabel.setColour(juce::Label::textColourId, WARNING_COLOUR);
+        } else {
+            polyphonyValueLabel.setColour(juce::Label::textColourId, TEXT_COLOUR);
+        }
+    }
+    {
+        auto value = timeConsumptionState->currentTimeConsumptionRate;
+        timeConsumptionValueLabel.setText(juce::String(juce::roundToInt(value * 100)) + "%", juce::dontSendNotification);
+        if(value >= 1.0) {
+            timeConsumptionValueLabel.setColour(juce::Label::textColourId, ERROR_COLOUR);
+        } else if(value >= 0.8) {
+            timeConsumptionValueLabel.setColour(juce::Label::textColourId, WARNING_COLOUR);
+        } else {
+            timeConsumptionValueLabel.setColour(juce::Label::textColourId, TEXT_COLOUR);
+        }
+    }
+}
+
+//==============================================================================
+MasterComponent::MasterComponent(GlobalParams* params)
+: _paramsPtr(params)
+, header("MASTER", false)
+, panSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+, volumeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+{
+    juce::Font panelNameFont = juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold");
+    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
+
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    addAndMakeVisible(header);
+    
+    panSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+    panSlider.setRange(_paramsPtr->Pan->range.start,
+                          _paramsPtr->Pan->range.end, 0.01);
+    panSlider.setValue(_paramsPtr->Pan->get(), juce::dontSendNotification);
+    panSlider.setPopupDisplayEnabled(true, true, nullptr);
+    panSlider.setScrollWheelEnabled(false);
+    panSlider.addListener(this);
+    addAndMakeVisible(panSlider);
+    
+    volumeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+    volumeSlider.setRange(_paramsPtr->MasterVolume->range.start,
+                          _paramsPtr->MasterVolume->range.end, 0.01);
+    volumeSlider.setValue(_paramsPtr->MasterVolume->get(), juce::dontSendNotification);
+    volumeSlider.setPopupDisplayEnabled(true, true, nullptr);
+    volumeSlider.setScrollWheelEnabled(false);
+//    volumeSlider.textFromValueFunction = [](double gain){ return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
+    volumeSlider.addListener(this);
+    addAndMakeVisible(volumeSlider);
+    
+    panLabel.setFont(paramLabelFont);
+    panLabel.setText("Pan", juce::dontSendNotification);
+    panLabel.setJustificationType(juce::Justification::centred);
+    panLabel.setEditable(false, false, false);
+    addAndMakeVisible(panLabel);
+    
+    volumeLabel.setFont(paramLabelFont);
+    volumeLabel.setText("Volume", juce::dontSendNotification);
+    volumeLabel.setJustificationType(juce::Justification::centred);
+    volumeLabel.setEditable(false, false, false);
+    addAndMakeVisible(volumeLabel);
+    
+    startTimerHz(30.0f);
+}
+
+MasterComponent::~MasterComponent()
+{}
+
+void MasterComponent::paint(juce::Graphics& g)
+{
+}
+
+void MasterComponent::resized()
+{
+    juce::Rectangle<int> bounds = getLocalBounds();
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+    
+    bounds.reduce(0, 10);
+    auto boundsWidth = bounds.getWidth();
+    {
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 2);
+        panLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        panSlider.setBounds(area.reduced(LOCAL_MARGIN));
+    }
+    {
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 2);
+        volumeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        volumeSlider.setBounds(area.reduced(LOCAL_MARGIN));
+    }
+}
+void MasterComponent::sliderValueChanged(juce::Slider *slider)
+{
+    if(slider == &panSlider)
+    {
+        *_paramsPtr->Pan = (float)panSlider.getValue();
+    }
+    else if(slider == &volumeSlider)
+    {
+        *_paramsPtr->MasterVolume = (float)volumeSlider.getValue();
+    }
+}
+void MasterComponent::timerCallback()
+{
+    panSlider.setValue(_paramsPtr->Pan->get(), juce::dontSendNotification);
+    volumeSlider.setValue(_paramsPtr->MasterVolume->get(), juce::dontSendNotification);
 }
 
 //==============================================================================
@@ -2481,7 +2596,7 @@ void AnalyserComponent::timerCallback()
 }
 void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g)
 {
-    g.setColour(juce::Colour(100, 190, 140));
+    g.setColour(ANALYSER_LINE_COLOUR);
     auto offsetX = 3;
     auto offsetY = 2;
     auto width  = bounds.getWidth() - 20;
@@ -2493,19 +2608,19 @@ void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g
                       offsetX + (float) juce::jmap (i,     0, scopeSize - 1, 0, width),
                       offsetY - 0.5f +         juce::jmap (scopeData[i],     0.0f, 1.0f, (float) height, 0.0f) });
     }
-    g.setColour(juce::Colour(100, 190, 140));
+    g.setColour(ANALYSER_LINE_COLOUR);
     {
         if(overflowWarningL > 0) {
-            g.setColour(juce::Colour(190, 40, 80));
+            g.setColour(ERROR_COLOUR);
             overflowWarningL--;
         }
         int barHeight = juce::jmax(1.0f, currentLevel[0] * height);
         g.fillRect(offsetX + width + 1, offsetY + height - barHeight, 8, barHeight);
     }
-    g.setColour(juce::Colour(100, 190, 140));
+    g.setColour(ANALYSER_LINE_COLOUR);
     {
         if(overflowWarningR > 0) {
-            g.setColour(juce::Colour(190, 40, 80));
+            g.setColour(ERROR_COLOUR);
             overflowWarningR--;
         }
         int barHeight = juce::jmax(1.0f, currentLevel[1] * height);
