@@ -1,6 +1,20 @@
 #pragma once
 #include <JuceHeader.h>
 
+namespace {
+const juce::Colour COLOUR_CONTROLLED = juce::Colour(170,170,170);
+const juce::Colour COLOUR_SELECT = juce::Colour(170,100,210);
+const juce::Colour COLOUR_PIT = juce::Colour(0,0,0);
+const juce::Colour COLOUR_BORDER = juce::Colour(30,30,30);
+const juce::Colour COLOUR_BACKGROUND = juce::Colour(30,30,30);
+const juce::Colour COLOUR_TEXT = juce::Colour(200,200,200);
+const int MAX_KNOB_WIDTH = 40;
+const float SLIT_WIDTH = 2.0f;
+const float POINTER_RADIUS = 4.0f;
+const float BORDER_WIDTH = 1.0f;
+const float ARROW_ZONE_WIDTH = 18.0f;
+}
+
 class CentredSlider : public juce::Slider
 {
 public:

@@ -2,22 +2,6 @@
 #include "Components.h"
 #include "Params.h"
 
-namespace {
-const float PANEL_NAME_FONT_SIZE = 15.0f;
-const float PARAM_LABEL_FONT_SIZE = 14.0f;
-const float PARAM_VALUE_LABEL_FONT_SIZE = 14.0f;
-const float PANEL_NAME_HEIGHT = 26.0f;
-const float LOCAL_MARGIN = 2.0f;
-const float LABEL_HEIGHT = 20.0f;
-const float COMBO_BOX_HEIGHT = 28.0f;
-const float SLIDER_WIDTH = 60.0f;
-const juce::Colour TEXT_COLOUR = juce::Colour(200,200,200);
-const juce::Colour PANEL_NAME_COLOUR = juce::Colour(50,50,50);
-const juce::Colour WARNING_COLOUR = juce::Colour(190, 190, 80);
-const juce::Colour ERROR_COLOUR = juce::Colour(190, 40, 80);
-const juce::Colour ANALYSER_LINE_COLOUR = juce::Colour(100, 190, 140);
-}
-
 //==============================================================================
 float calcCurrentLevel(int numSamples, float* data) {
     float maxValue = 0.0;
@@ -144,18 +128,17 @@ void VoiceComponent::resized()
     bounds.reduce(0, 10);
     auto boundsWidth = bounds.getWidth();
     {
-//        float selectorWidth = 80.0f;
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.24);
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.34);
         modeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         modeSelector.setBounds(area.reduced(LOCAL_MARGIN).removeFromTop(COMBO_BOX_HEIGHT));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.24);
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.33);
         portamentoTimeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         portamentoTimeSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.24);
+        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth * 0.33);
         pitchBendRangeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         pitchBendRangeSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -217,15 +200,11 @@ StatusComponent::StatusComponent(int* polyphony, TimeConsumptionState* timeConsu
 : polyphony(polyphony)
 , timeConsumptionState(timeConsumptionState)
 , latestDataProvider(latestDataProvider)
-, header("STATUS", false)
 {
     latestDataProvider->addConsumer(&levelConsumer);
     
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
     juce::Font paramValueLabelFont = juce::Font(PARAM_VALUE_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-    
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
     
     volumeValueLabel.setFont(paramValueLabelFont);
     volumeValueLabel.setText("0.0dB", juce::dontSendNotification);
@@ -278,25 +257,23 @@ void StatusComponent::paint(juce::Graphics& g)
 void StatusComponent::resized()
 {
     juce::Rectangle<int> bounds = getLocalBounds();
-//    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-//    header.setBounds(headerArea);
     
     bounds.reduce(0, 10);
     auto boundsHeight = bounds.getHeight();
     auto boundsWidth = bounds.getWidth();
     {
         juce::Rectangle<int> area = bounds.removeFromTop(boundsHeight / 3);
-        volumeLabel.setBounds(area.removeFromLeft(boundsWidth / 2).reduced(LOCAL_MARGIN));
+        volumeLabel.setBounds(area.removeFromLeft(boundsWidth * 0.4).reduced(LOCAL_MARGIN));
         volumeValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = bounds.removeFromTop(boundsHeight / 3);
-        polyphonyLabel.setBounds(area.removeFromLeft(boundsWidth / 2).reduced(LOCAL_MARGIN));
+        polyphonyLabel.setBounds(area.removeFromLeft(boundsWidth * 0.4).reduced(LOCAL_MARGIN));
         polyphonyValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
         juce::Rectangle<int> area = bounds.removeFromTop(boundsHeight / 3);
-        timeConsumptionLabel.setBounds(area.removeFromLeft(boundsWidth / 2).reduced(LOCAL_MARGIN));
+        timeConsumptionLabel.setBounds(area.removeFromLeft(boundsWidth * 0.4).reduced(LOCAL_MARGIN));
         timeConsumptionValueLabel.setBounds(area.reduced(LOCAL_MARGIN));
     }
 }
@@ -410,14 +387,14 @@ void MasterComponent::resized()
     header.setBounds(headerArea);
     
     bounds.reduce(0, 10);
-    auto boundsWidth = bounds.getWidth();
+//    auto boundsWidth = bounds.getWidth();
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 2);
+        juce::Rectangle<int> area = bounds.removeFromLeft(SLIDER_WIDTH);
         panLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         panSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
     {
-        juce::Rectangle<int> area = bounds.removeFromLeft(boundsWidth / 2);
+        juce::Rectangle<int> area = bounds.removeFromLeft(SLIDER_WIDTH);
         volumeLabel.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
         volumeSlider.setBounds(area.reduced(LOCAL_MARGIN));
     }
@@ -2504,21 +2481,231 @@ void ControlComponent::resized()
 }
 
 //==============================================================================
-AnalyserComponent::AnalyserComponent(LatestDataProvider* latestDataProvider)
-: latestDataProvider(latestDataProvider)
+AnalyserToggleItem::AnalyserToggleItem(std::string name)
+{
+    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
+    
+    nameLabel.setFont(paramLabelFont);
+    nameLabel.setText(name, juce::dontSendNotification);
+    nameLabel.setJustificationType(juce::Justification::right);
+    nameLabel.setInterceptsMouseClicks(false, false);
+    addAndMakeVisible(nameLabel);
+}
+AnalyserToggleItem::~AnalyserToggleItem() {}
+void AnalyserToggleItem::paint(juce::Graphics& g)
+{
+    juce::Rectangle<int> bounds = getLocalBounds().removeFromRight(3).reduced(0, 4);
+    
+    auto color = value ? COLOUR_SELECT : COLOUR_PIT;
+    g.setColour(color);
+    g.fillRect(bounds);
+}
+void AnalyserToggleItem::resized()
+{
+    juce::Rectangle<int> bounds = getLocalBounds();
+    bounds.removeFromRight(5);
+    nameLabel.setBounds(bounds);
+}
+void AnalyserToggleItem::addListener (Listener* l) {
+    listeners.add (l);
+}
+void AnalyserToggleItem::mouseUp (const juce::MouseEvent& e)
+{
+    std::cout << "mouseup:" << nameLabel.getText() << std::endl;
+    Component::BailOutChecker checker (this);
+//    if (checker.shouldBailOut()) {
+//        return;
+//    }
+    if (e.mouseWasClicked()) {
+        if(!value) {
+            value = true;
+            listeners.callChecked (checker, [this] (AnalyserToggleItem::Listener& l) { l.toggleItemSelected (this); });
+        }
+    }
+}
+
+//==============================================================================
+AnalyserToggle::AnalyserToggle(ANALYSER_MODE* analyserMode)
+: analyserMode(analyserMode)
+, spectrumToggle("Spectrum")
+, envelopeToggle("Envelope")
+{
+    spectrumToggle.addListener(this);
+    addAndMakeVisible(spectrumToggle);
+    
+    envelopeToggle.addListener(this);
+    addAndMakeVisible(envelopeToggle);
+    
+    spectrumToggle.setValue(*analyserMode == ANALYSER_MODE::Spectrum);
+    envelopeToggle.setValue(*analyserMode == ANALYSER_MODE::Envelope);
+}
+AnalyserToggle::~AnalyserToggle() {
+}
+void AnalyserToggle::paint(juce::Graphics& g)
+{
+}
+void AnalyserToggle::resized()
+{
+    juce::Rectangle<int> bounds = getLocalBounds().reduced(2, 4);
+    spectrumToggle.setBounds(bounds.removeFromTop(26));
+    envelopeToggle.setBounds(bounds.removeFromTop(26));
+}
+void AnalyserToggle::toggleItemSelected(AnalyserToggleItem* toggleItem)
+{
+    if(toggleItem == &spectrumToggle) {
+        *analyserMode = ANALYSER_MODE::Spectrum;
+    }
+    else if(toggleItem == &envelopeToggle) {
+        *analyserMode = ANALYSER_MODE::Envelope;
+    }
+    spectrumToggle.setValue(*analyserMode == ANALYSER_MODE::Spectrum);
+    envelopeToggle.setValue(*analyserMode == ANALYSER_MODE::Envelope);
+}
+
+//==============================================================================
+AnalyserWindow::AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, EnvelopeParams* envelopeParams, ModEnvParams* modEnvParams)
+: analyserMode(analyserMode)
+, latestDataProvider(latestDataProvider)
+, envelopeParams(envelopeParams)
+, modEnvParams(modEnvParams)
 , forwardFFT (fftOrder)
 , window (fftSize, juce::dsp::WindowingFunction<float>::hann)
+, lastAdsrParams { SimpleAdsrParams(), SimpleAdsrParams() }
+, lastModEnvParams { SimpleModEnvParams(), SimpleModEnvParams(), SimpleModEnvParams() }
 {
     latestDataProvider->addConsumer(&fftConsumer);
     latestDataProvider->addConsumer(&levelConsumer);
-    
+
     startTimerHz(30.0f);
 }
-AnalyserComponent::~AnalyserComponent() {
+AnalyserWindow::~AnalyserWindow() {
     latestDataProvider->removeConsumer(&fftConsumer);
     latestDataProvider->removeConsumer(&levelConsumer);
 }
-void AnalyserComponent::drawNextFrameOfSpectrum()
+
+void AnalyserWindow::resized() {}
+void AnalyserWindow::timerCallback()
+{
+    bool shouldRepaint = false;
+    
+    switch(*analyserMode){
+        case ANALYSER_MODE::Spectrum: {
+            lastAnalyserMode = ANALYSER_MODE::Spectrum;
+            if (fftConsumer.ready)
+            {
+                drawNextFrameOfSpectrum();
+                fftConsumer.ready = false;
+                readyToDrawFrame = true;
+                shouldRepaint = true;
+            }
+            if (levelConsumer.ready)
+            {
+                drawNextFrameOfLevel();
+                levelConsumer.ready = false;
+        //        readyToDrawFrame = true;
+                shouldRepaint = true;
+            }
+            break;
+        }
+        case ANALYSER_MODE::Envelope: {
+            if(lastAnalyserMode != ANALYSER_MODE::Envelope) {
+                shouldRepaint = true;
+            }
+            lastAnalyserMode = ANALYSER_MODE::Envelope;
+            auto changed = false;
+            for(int i = 0; i < NUM_ENVELOPE; i++) {
+                auto p = SimpleAdsrParams(envelopeParams[i]);
+                if(!lastAdsrParams[i].equals(p)) {
+                    changed = true;
+                }
+                lastAdsrParams[i] = p;
+            }
+            for(int i = 0; i < NUM_MODENV; i++) {
+                auto p = SimpleModEnvParams(modEnvParams[i]);
+                if(!lastModEnvParams[i].equals(p)) {
+                    changed = true;
+                }
+                lastModEnvParams[i] = p;
+            }
+            if(!changed) {
+                break;
+            }
+            auto maxAD = std::max({ envelopeParams[0].Attack->get() + envelopeParams[0].Decay->get() * 4,
+                                    envelopeParams[1].Attack->get() + envelopeParams[1].Decay->get() * 4,
+                                    (modEnvParams[0].shouldUseHold() ? modEnvParams[0].Wait->get() : modEnvParams[0].Attack->get()) + modEnvParams[0].Decay->get() * 4,
+                                    (modEnvParams[1].shouldUseHold() ? modEnvParams[1].Wait->get() : modEnvParams[1].Attack->get()) + modEnvParams[1].Decay->get() * 4,
+                                    (modEnvParams[2].shouldUseHold() ? modEnvParams[2].Wait->get() : modEnvParams[2].Attack->get()) + modEnvParams[2].Decay->get() * 4 });
+            auto maxR = std::max({ envelopeParams[0].Release->get() * 4,
+                                   envelopeParams[1].Release->get() * 4 });
+            auto maxSec = maxAD + maxR;
+            auto sampleRate = (float)scopeSize / maxSec;
+            for(int i = 0; i < NUM_ENVELOPE; i++) {
+                adsr[i].setParams(envelopeParams[i].Attack->get(),
+                                  0,
+                                  envelopeParams[i].Decay->get(),
+                                  envelopeParams[i].Sustain->get(),
+                                  envelopeParams[i].Release->get());
+            }
+            for(int i = 0; i < NUM_MODENV; i++) {
+                if(modEnvParams[i].shouldUseHold()) {
+                    modEnvs[i].setParams(0.0,
+                                         modEnvParams[i].Wait->get(),
+                                         modEnvParams[i].Decay->get(),
+                                         0.0,
+                                         0.0);
+                } else {
+                    modEnvs[i].setParams(modEnvParams[i].Attack->get(),
+                                         0.0,
+                                         modEnvParams[i].Decay->get(),
+                                         0.0,
+                                         0.0);
+                }
+            }
+            for(int i = 0; i < NUM_ENVELOPE; i++) {
+                adsr[i].doAttack(sampleRate);
+            }
+            for(int i = 0; i < NUM_MODENV; i++) {
+                modEnvs[i].doAttack(sampleRate);
+            }
+            int releasePoint = sampleRate * maxAD;
+            for(int pos = 0; pos < scopeSize; pos++) {
+                if(pos == releasePoint) {
+                    for(int i = 0; i < NUM_ENVELOPE; i++) {
+                        adsr[i].doRelease(sampleRate);
+                    }
+                }
+                for(int i = 0; i < NUM_ENVELOPE; i++) {
+                    scopeDataForEnvelope[i][pos] = adsr[i].getValue();
+                    adsr[i].step(sampleRate);
+                }
+                for(int i = 0; i < NUM_MODENV; i++) {
+                    auto value = 0.0f;
+                    if(modEnvParams[i].Enabled->get()) {
+                        value = modEnvs[i].getValue();
+                        if(!modEnvParams[i].isTargetFreq() && static_cast<MODENV_FADE>(modEnvParams[i].Fade->getIndex()) == MODENV_FADE::In) {
+                            value = 1 - value;
+                        }
+                    }
+                    scopeDataForEnvelope[i + NUM_ENVELOPE][pos] = value;
+                    modEnvs[i].step(sampleRate);
+                }
+            }
+            for(int i = 0; i < NUM_ENVELOPE; i++) {
+                adsr[i].forceStop();
+            }
+            for(int i = 0; i < NUM_MODENV; i++) {
+                modEnvs[i].forceStop();
+            }
+            readyToDrawFrame = true;
+            shouldRepaint = true;
+            break;
+        }
+    }
+    if(shouldRepaint) {
+        repaint();
+    }
+}
+void AnalyserWindow::drawNextFrameOfSpectrum()
 {
     for(int i = 0; i < fftSize; i++) {
         fftData[i] = (fftData[i] + fftData[i + fftSize]) * 0.5f;
@@ -2537,12 +2724,10 @@ void AnalyserComponent::drawNextFrameOfSpectrum()
         auto level = juce::jmap (juce::jlimit (mindB, maxdB, juce::Decibels::gainToDecibels (fftData[fftDataIndex])
                                                            - juce::Decibels::gainToDecibels ((float) fftSize)),
                                  mindB, maxdB, 0.0f, 1.0f);
-
         scopeData[i] = level;
     }
 }
-
-void AnalyserComponent::drawNextFrameOfLevel()
+void AnalyserWindow::drawNextFrameOfLevel()
 {
     auto mindB = -100.0f;
     auto maxdB =    0.0f;
@@ -2556,51 +2741,47 @@ void AnalyserComponent::drawNextFrameOfLevel()
         }
     }
 }
-void AnalyserComponent::paint(juce::Graphics& g)
+void AnalyserWindow::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
     
     juce::Rectangle<int> bounds = getLocalBounds();
     g.setColour(juce::Colour(30,30,30));
     g.drawRect(bounds, 2.0f);
-
+//    g.setOpacity(1.0f);
+    
     if(readyToDrawFrame) {
-        g.setOpacity(1.0f);
-        drawFrame(bounds.reduced(2), g);
+        auto offsetX = 2;
+        auto offsetY = 2;
+        bounds.reduce(offsetX, offsetY);
+        auto height = bounds.getHeight();
+        
+        switch(*analyserMode) {
+            case ANALYSER_MODE::Spectrum: {
+                auto levelWidth = 8;
+                auto spectrumWidth = bounds.getWidth() - levelWidth * 2;
+
+                paintSpectrum(g, ANALYSER_LINE_COLOUR, offsetX, offsetY, spectrumWidth, height, scopeData);
+                offsetX += spectrumWidth;
+                paintLevel(g, offsetX, offsetY, levelWidth, height, currentLevel[0]);
+                offsetX += levelWidth;
+                paintLevel(g, offsetX, offsetY, levelWidth, height, currentLevel[1]);
+                break;
+            }
+            case ANALYSER_MODE::Envelope: {
+                for(int i = NUM_ENVELOPE + NUM_MODENV - 1; i >= 0; i--) {
+                    auto spectrumWidth = bounds.getWidth();
+                    juce::Colour colour = i >= NUM_ENVELOPE ? ANALYSER_LINE_COLOUR2 : ANALYSER_LINE_COLOUR;
+                    paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForEnvelope[i][0]);
+                }
+                break;
+            }
+        }
     }
 }
-void AnalyserComponent::resized()
+void AnalyserWindow::paintSpectrum(juce::Graphics& g, juce::Colour colour, int offsetX, int offsetY, int width, int height, float* scopeData)
 {
-    // TODO: ?
-}
-void AnalyserComponent::timerCallback()
-{
-    bool shouldRepaint = false;
-    if (fftConsumer.ready)
-    {
-        drawNextFrameOfSpectrum();
-        fftConsumer.ready = false;
-        readyToDrawFrame = true;
-        shouldRepaint = true;
-    }
-    if (levelConsumer.ready)
-    {
-        drawNextFrameOfLevel();
-        levelConsumer.ready = false;
-//        readyToDrawFrame = true;
-        shouldRepaint = true;
-    }
-    if(shouldRepaint) {
-        repaint();
-    }
-}
-void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g)
-{
-    g.setColour(ANALYSER_LINE_COLOUR);
-    auto offsetX = 3;
-    auto offsetY = 2;
-    auto width  = bounds.getWidth() - 20;
-    auto height = bounds.getHeight();
+    g.setColour(colour);
     for (int i = 1; i < scopeSize; ++i)
     {
         g.drawLine ({ offsetX + (float) juce::jmap (i - 1, 0, scopeSize - 1, 0, width),
@@ -2608,22 +2789,15 @@ void AnalyserComponent::drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g
                       offsetX + (float) juce::jmap (i,     0, scopeSize - 1, 0, width),
                       offsetY - 0.5f +         juce::jmap (scopeData[i],     0.0f, 1.0f, (float) height, 0.0f) });
     }
+}
+void AnalyserWindow::paintLevel(juce::Graphics& g, int offsetX, int offsetY, int width, int height, float level)
+{
     g.setColour(ANALYSER_LINE_COLOUR);
-    {
-        if(overflowWarningL > 0) {
-            g.setColour(ERROR_COLOUR);
-            overflowWarningL--;
-        }
-        int barHeight = juce::jmax(1.0f, currentLevel[0] * height);
-        g.fillRect(offsetX + width + 1, offsetY + height - barHeight, 8, barHeight);
+    if(overflowWarningL > 0) {
+        g.setColour(ERROR_COLOUR);
+        overflowWarningL--;
     }
-    g.setColour(ANALYSER_LINE_COLOUR);
-    {
-        if(overflowWarningR > 0) {
-            g.setColour(ERROR_COLOUR);
-            overflowWarningR--;
-        }
-        int barHeight = juce::jmax(1.0f, currentLevel[1] * height);
-        g.fillRect(offsetX + width + 10, offsetY + height - barHeight, 8, barHeight);
-    }
+    int barWidth = width - 1;
+    int barHeight = juce::jmax(1.0f, level * height);
+    g.fillRect(offsetX + 1, offsetY + height - barHeight, barWidth, barHeight);
 }

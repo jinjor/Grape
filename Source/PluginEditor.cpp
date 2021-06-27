@@ -3,18 +3,14 @@
 #include "Voice.h"
 #include "Params.h"
 
-namespace {
-const juce::Colour BACKGROUND_COLOUR = juce::Colour(40,40,40);
-const juce::Colour TEXT_COLOUR = juce::Colour(200,200,200);
-const int PANEL_MARGIN = 2;
-}
-
 //==============================================================================
 GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 : AudioProcessorEditor (&p)
 , audioProcessor (p)
 , controlComponent { ControlComponent(p.controlItemParams) }
 , voiceComponent (&p.voiceParams, p.controlItemParams)
+, analyserToggle(&analyserMode)
+, analyserWindow(&analyserMode, &p.latestDataProvider, p.envelopeParams, p.modEnvParams)
 , statusComponent (&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider)
 , masterComponent (&p.globalParams)
 , oscComponents { OscComponent(0, p.oscParams, p.controlItemParams), OscComponent(1, p.oscParams+1, p.controlItemParams), OscComponent(2, p.oscParams+2, p.controlItemParams) }
@@ -23,11 +19,12 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 , lfoComponents { LfoComponent(0, p.lfoParams, p.controlItemParams), LfoComponent(1, p.lfoParams+1, p.controlItemParams), LfoComponent(2, p.lfoParams+2, p.controlItemParams) }
 , modEnvComponents { ModEnvComponent(0, p.modEnvParams), ModEnvComponent(1, p.modEnvParams+1), ModEnvComponent(2, p.modEnvParams+2) }
 , delayComponent { DelayComponent(&p.delayParams, p.controlItemParams) }
-, analyserComponent (&p.latestDataProvider)
 {
     getLookAndFeel().setColour(juce::Label::textColourId, TEXT_COLOUR);
     
     addAndMakeVisible (voiceComponent);
+    addAndMakeVisible (analyserToggle);
+    addAndMakeVisible (analyserWindow);
     addAndMakeVisible (statusComponent);
     addAndMakeVisible (masterComponent);
     addAndMakeVisible (oscComponents[0]);
@@ -45,7 +42,6 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
     addAndMakeVisible (modEnvComponents[2]);
     addAndMakeVisible (delayComponent);
     addAndMakeVisible (controlComponent);
-    addAndMakeVisible (analyserComponent);
     setSize (1024, 768);
     startTimer (60);
     addKeyListener(this);
@@ -80,20 +76,28 @@ void GrapeAudioProcessorEditor::resized()
     
     auto upperArea = bounds.removeFromTop(height * 0.12).reduced(6, 2);
     {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(width * 0.36);
-        voiceComponent.setBounds(area);
-    }
-    {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(width * 0.28);
-        analyserComponent.setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        juce::Rectangle<int> area = upperArea.removeFromLeft(width * 0.16);
-        statusComponent.setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        juce::Rectangle<int> area = upperArea;
-        masterComponent.setBounds(area.reduced(PANEL_MARGIN));
+        auto upperLeftArea = upperArea.removeFromLeft(width * 0.36);
+        auto upperRightArea = upperArea.removeFromRight(width * 0.36);
+        {
+            juce::Rectangle<int> area = upperLeftArea.removeFromLeft(width * 0.24);
+            voiceComponent.setBounds(area);
+        }
+        {
+            juce::Rectangle<int> area = upperLeftArea;
+            analyserToggle.setBounds(area.reduced(PANEL_MARGIN));
+        }
+        {
+            juce::Rectangle<int> area = upperArea;
+            analyserWindow.setBounds(area.reduced(PANEL_MARGIN));
+        }
+        {
+            juce::Rectangle<int> area = upperRightArea.removeFromLeft(width * 0.18);
+            statusComponent.setBounds(area.reduced(PANEL_MARGIN));
+        }
+        {
+            juce::Rectangle<int> area = upperRightArea;
+            masterComponent.setBounds(area.reduced(PANEL_MARGIN));
+        }
     }
     
     auto middleArea = bounds.removeFromTop(bounds.getHeight() * 2 / 5).reduced(6, 2);
