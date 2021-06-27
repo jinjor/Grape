@@ -18,7 +18,7 @@ public:
 
 private:
     GrapeAudioProcessor& audioProcessor;
-    ANALYSER_MODE analyserMode = ANALYSER_MODE::Envelope;
+    ANALYSER_MODE analyserMode = ANALYSER_MODE::Spectrum;
     
     ControlComponent controlComponent;
     VoiceComponent voiceComponent;

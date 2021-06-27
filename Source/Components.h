@@ -401,7 +401,7 @@ class AnalyserToggleItem : public juce::Component
 public:
     AnalyserToggleItem(std::string name);
     virtual ~AnalyserToggleItem();
-    void setValue(bool value) { this->value = value; };
+    void setValue(bool value) { this->value = value; repaint(); };
     bool getValue() { return value; };
     
     virtual void paint(juce::Graphics& g) override;
@@ -419,7 +419,7 @@ private:
     
     juce::ListenerList<Listener> listeners;
     ANALYSER_MODE* analyserMode;
-    std::string name;
+    juce::Label nameLabel;
     bool value;
 };
 
@@ -459,6 +459,7 @@ private:
     LatestDataProvider* latestDataProvider;
     EnvelopeParams* envelopeParams;
     ModEnvParams* modEnvParams;
+    ANALYSER_MODE lastAnalyserMode = ANALYSER_MODE::Spectrum;
     
     // FFT
     juce::dsp::FFT forwardFFT;

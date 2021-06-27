@@ -2482,22 +2482,36 @@ void ControlComponent::resized()
 
 //==============================================================================
 AnalyserToggleItem::AnalyserToggleItem(std::string name)
-: name(name)
-{}
+{
+    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
+    
+    nameLabel.setFont(paramLabelFont);
+    nameLabel.setText(name, juce::dontSendNotification);
+    nameLabel.setJustificationType(juce::Justification::right);
+    nameLabel.setInterceptsMouseClicks(false, false);
+    addAndMakeVisible(nameLabel);
+}
 AnalyserToggleItem::~AnalyserToggleItem() {}
 void AnalyserToggleItem::paint(juce::Graphics& g)
 {
+    juce::Rectangle<int> bounds = getLocalBounds().removeFromRight(3).reduced(0, 4);
     
+    auto color = value ? COLOUR_SELECT : COLOUR_PIT;
+    g.setColour(color);
+    g.fillRect(bounds);
 }
 void AnalyserToggleItem::resized()
 {
-    
+    juce::Rectangle<int> bounds = getLocalBounds();
+    bounds.removeFromRight(5);
+    nameLabel.setBounds(bounds);
 }
 void AnalyserToggleItem::addListener (Listener* l) {
     listeners.add (l);
 }
 void AnalyserToggleItem::mouseUp (const juce::MouseEvent& e)
 {
+    std::cout << "mouseup:" << nameLabel.getText() << std::endl;
     Component::BailOutChecker checker (this);
 //    if (checker.shouldBailOut()) {
 //        return;
@@ -2521,6 +2535,9 @@ AnalyserToggle::AnalyserToggle(ANALYSER_MODE* analyserMode)
     
     envelopeToggle.addListener(this);
     addAndMakeVisible(envelopeToggle);
+    
+    spectrumToggle.setValue(*analyserMode == ANALYSER_MODE::Spectrum);
+    envelopeToggle.setValue(*analyserMode == ANALYSER_MODE::Envelope);
 }
 AnalyserToggle::~AnalyserToggle() {
 }
@@ -2529,7 +2546,9 @@ void AnalyserToggle::paint(juce::Graphics& g)
 }
 void AnalyserToggle::resized()
 {
-//    juce::Rectangle<int> bounds = getLocalBounds();
+    juce::Rectangle<int> bounds = getLocalBounds().reduced(2, 4);
+    spectrumToggle.setBounds(bounds.removeFromTop(26));
+    envelopeToggle.setBounds(bounds.removeFromTop(26));
 }
 void AnalyserToggle::toggleItemSelected(AnalyserToggleItem* toggleItem)
 {
@@ -2539,7 +2558,8 @@ void AnalyserToggle::toggleItemSelected(AnalyserToggleItem* toggleItem)
     else if(toggleItem == &envelopeToggle) {
         *analyserMode = ANALYSER_MODE::Envelope;
     }
-//    juce::Rectangle<int> bounds = getLocalBounds();
+    spectrumToggle.setValue(*analyserMode == ANALYSER_MODE::Spectrum);
+    envelopeToggle.setValue(*analyserMode == ANALYSER_MODE::Envelope);
 }
 
 //==============================================================================
@@ -2555,7 +2575,7 @@ AnalyserWindow::AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* 
 {
     latestDataProvider->addConsumer(&fftConsumer);
     latestDataProvider->addConsumer(&levelConsumer);
-    
+
     startTimerHz(30.0f);
 }
 AnalyserWindow::~AnalyserWindow() {
@@ -2567,8 +2587,10 @@ void AnalyserWindow::resized() {}
 void AnalyserWindow::timerCallback()
 {
     bool shouldRepaint = false;
+    
     switch(*analyserMode){
         case ANALYSER_MODE::Spectrum: {
+            lastAnalyserMode = ANALYSER_MODE::Spectrum;
             if (fftConsumer.ready)
             {
                 drawNextFrameOfSpectrum();
@@ -2586,6 +2608,10 @@ void AnalyserWindow::timerCallback()
             break;
         }
         case ANALYSER_MODE::Envelope: {
+            if(lastAnalyserMode != ANALYSER_MODE::Envelope) {
+                shouldRepaint = true;
+            }
+            lastAnalyserMode = ANALYSER_MODE::Envelope;
             auto changed = false;
             for(int i = 0; i < NUM_ENVELOPE; i++) {
                 auto p = SimpleAdsrParams(envelopeParams[i]);
