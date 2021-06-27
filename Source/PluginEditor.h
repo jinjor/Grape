@@ -18,6 +18,7 @@ public:
 
 private:
     GrapeAudioProcessor& audioProcessor;
+    ANALYSER_MODE analyserMode = ANALYSER_MODE::Envelope;
     
     ControlComponent controlComponent;
     VoiceComponent voiceComponent;
@@ -34,6 +35,7 @@ private:
     
     bool benchmarking = false;
     int benchmarkCounter = 0;
+    
     void timerCallback() override;
     bool keyPressed(const juce::KeyPress& press, juce::Component* originatingComponent) override;
 

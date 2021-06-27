@@ -5,6 +5,27 @@
 #include "LookAndFeel.h"
 #include "PluginProcessor.h"
 
+namespace {
+const float PANEL_NAME_FONT_SIZE = 15.0f;
+const float PARAM_LABEL_FONT_SIZE = 14.0f;
+const float PARAM_VALUE_LABEL_FONT_SIZE = 14.0f;
+const float PANEL_NAME_HEIGHT = 26.0f;
+const int PANEL_MARGIN = 2;
+const float LOCAL_MARGIN = 2.0f;
+const float LABEL_HEIGHT = 20.0f;
+const float COMBO_BOX_HEIGHT = 28.0f;
+const float SLIDER_WIDTH = 60.0f;
+const juce::Colour TEXT_COLOUR = juce::Colour(200,200,200);
+const juce::Colour PANEL_NAME_COLOUR = juce::Colour(50,50,50);
+const juce::Colour WARNING_COLOUR = juce::Colour(190, 190, 80);
+const juce::Colour ERROR_COLOUR = juce::Colour(190, 40, 80);
+const juce::Colour ANALYSER_LINE_COLOUR = juce::Colour(100, 190, 140);
+const juce::Colour ANALYSER_LINE_COLOUR2 = juce::Colour(60, 100, 150);
+const juce::Colour BACKGROUND_COLOUR = juce::Colour(40,40,40);
+}
+
+enum class ANALYSER_MODE { Spectrum, Envelope };
+
 //==============================================================================
 class HeaderComponent : public juce::Component
 {
@@ -375,38 +396,56 @@ private:
 };
 
 //==============================================================================
-class AnalyserToggleItem : public juce::ToggleButton
+class AnalyserToggleItem : public juce::Component
 {
 public:
     AnalyserToggleItem(std::string name);
     virtual ~AnalyserToggleItem();
+    void setValue(bool value) { this->value = value; };
+    bool getValue() { return value; };
+    
     virtual void paint(juce::Graphics& g) override;
     virtual void resized() override;
     
+    class Listener
+    {
+    public:
+        virtual ~Listener() = default;
+        virtual void toggleItemSelected (AnalyserToggleItem*) = 0;
+    };
+    void addListener (Listener* e);
 private:
+    virtual void mouseUp (const juce::MouseEvent& e) override;
+    
+    juce::ListenerList<Listener> listeners;
+    ANALYSER_MODE* analyserMode;
     std::string name;
+    bool value;
 };
 
 //==============================================================================
-class AnalyserToggle : public juce::Component
+class AnalyserToggle : public juce::Component, private AnalyserToggleItem::Listener
 {
 public:
-    AnalyserToggle();
+    AnalyserToggle(ANALYSER_MODE* analyserMode);
     virtual ~AnalyserToggle();
     
     virtual void paint(juce::Graphics& g) override;
     virtual void resized() override;
     
 private:
+    ANALYSER_MODE* analyserMode;
     AnalyserToggleItem spectrumToggle;
     AnalyserToggleItem envelopeToggle;
+    
+    virtual void toggleItemSelected(AnalyserToggleItem* toggleItem) override;
 };
 
 //==============================================================================
 class AnalyserWindow : public juce::Component, private juce::Timer
 {
 public:
-    AnalyserWindow(LatestDataProvider* latestDataProvider);
+    AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, EnvelopeParams* envelopeParams, ModEnvParams* modEnvParams);
     virtual ~AnalyserWindow();
     
     virtual void paint(juce::Graphics& g) override;
@@ -416,36 +455,87 @@ private:
     enum {
         scopeSize = 512
     };
+    ANALYSER_MODE* analyserMode;
     LatestDataProvider* latestDataProvider;
+    EnvelopeParams* envelopeParams;
+    ModEnvParams* modEnvParams;
     
+    // FFT
+    juce::dsp::FFT forwardFFT;
+    juce::dsp::WindowingFunction<float> window;
     static const int fftOrder = 11;
     static const int fftSize = 2048;
     float fftData[fftSize * 2];
     LatestDataProvider::Consumer fftConsumer {
         fftData, fftData + fftSize, fftSize, false
     };
+    float scopeData[scopeSize]{};
+    bool readyToDrawFrame = false;
     
+    // Level
     float levelDataL[2048];
     float levelDataR[2048];
     LatestDataProvider::Consumer levelConsumer {
         levelDataL, levelDataR, 2048, false
     };
-    
-    juce::dsp::FFT forwardFFT;
-    juce::dsp::WindowingFunction<float> window;
-    float scopeData[scopeSize]{};
-    bool readyToDrawFrame = false;
     float currentLevel[2]{};
-
-    virtual void timerCallback() override;
-    void drawNextFrameOfSpectrum();
-    void drawNextFrameOfLevel();
-    void drawFrame(juce::Rectangle<int> bounds, juce::Graphics& g);
-    
     float overflowedLevelL = 0;
     float overflowedLevelR = 0;
     int overflowWarningL = 0;
     int overflowWarningR = 0;
+    
+    // Envelope
+    Adsr adsr[NUM_ENVELOPE];
+    Adsr modEnvs[NUM_MODENV];
+    class SimpleAdsrParams {
+    public:
+        SimpleAdsrParams() {}
+        SimpleAdsrParams(EnvelopeParams& envelopeParams) {
+            a = envelopeParams.Attack->get();
+            d = envelopeParams.Decay->get();
+            s = envelopeParams.Sustain->get();
+            r = envelopeParams.Release->get();
+        }
+        float a = 0;
+        float d = 0;
+        float s = 0;
+        float r = 0;
+        bool equals(SimpleAdsrParams& p) {
+            return a == p.a && d == p.d && s == p.s && r == p.r;
+        }
+    };
+    class SimpleModEnvParams {
+    public:
+        SimpleModEnvParams() {}
+        SimpleModEnvParams(ModEnvParams& modEnvParams) {
+            w = modEnvParams.Wait->get();
+            a = modEnvParams.Attack->get();
+            d = modEnvParams.Decay->get();
+            enabled = modEnvParams.Enabled->get();
+            isTargetFreq = modEnvParams.isTargetFreq();
+            fadeIn = static_cast<MODENV_FADE>(modEnvParams.Fade->getIndex()) == MODENV_FADE::In;
+        }
+        float w = 0;
+        float a = 0;
+        float d = 0;
+        bool enabled = false;
+        bool isTargetFreq = false;
+        bool fadeIn = false;
+        bool equals(SimpleModEnvParams& p) {
+            return w == p.w && a == p.a && d == p.d && enabled == p.enabled && isTargetFreq == p.isTargetFreq && fadeIn == p.fadeIn;
+        }
+    };
+    SimpleAdsrParams lastAdsrParams[NUM_ENVELOPE];
+    SimpleModEnvParams lastModEnvParams[NUM_MODENV];
+    
+    float scopeDataForEnvelope[NUM_ENVELOPE+NUM_MODENV][scopeSize]{};
+    
+    // methods
+    virtual void timerCallback() override;
+    void drawNextFrameOfSpectrum();
+    void drawNextFrameOfLevel();
+    void paintSpectrum(juce::Graphics& g, juce::Colour colour, int offsetX, int offsetY, int width, int height, float* scopeData);
+    void paintLevel(juce::Graphics& g, int offsetX, int offsetY, int width, int height, float level);
 };
 
 //==============================================================================

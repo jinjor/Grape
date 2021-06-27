@@ -3,20 +3,14 @@
 #include "Voice.h"
 #include "Params.h"
 
-namespace {
-const juce::Colour BACKGROUND_COLOUR = juce::Colour(40,40,40);
-const juce::Colour TEXT_COLOUR = juce::Colour(200,200,200);
-const int PANEL_MARGIN = 2;
-}
-
 //==============================================================================
 GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 : AudioProcessorEditor (&p)
 , audioProcessor (p)
 , controlComponent { ControlComponent(p.controlItemParams) }
 , voiceComponent (&p.voiceParams, p.controlItemParams)
-, analyserToggle()
-, analyserWindow(&p.latestDataProvider)
+, analyserToggle(&analyserMode)
+, analyserWindow(&analyserMode, &p.latestDataProvider, p.envelopeParams, p.modEnvParams)
 , statusComponent (&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider)
 , masterComponent (&p.globalParams)
 , oscComponents { OscComponent(0, p.oscParams, p.controlItemParams), OscComponent(1, p.oscParams+1, p.controlItemParams), OscComponent(2, p.oscParams+2, p.controlItemParams) }
