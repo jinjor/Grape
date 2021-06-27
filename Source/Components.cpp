@@ -2529,6 +2529,7 @@ AnalyserToggle::AnalyserToggle(ANALYSER_MODE* analyserMode)
 : analyserMode(analyserMode)
 , spectrumToggle("Spectrum")
 , envelopeToggle("Envelope")
+, filterToggle("Filter")
 {
     spectrumToggle.addListener(this);
     addAndMakeVisible(spectrumToggle);
@@ -2536,8 +2537,12 @@ AnalyserToggle::AnalyserToggle(ANALYSER_MODE* analyserMode)
     envelopeToggle.addListener(this);
     addAndMakeVisible(envelopeToggle);
     
+    filterToggle.addListener(this);
+    addAndMakeVisible(filterToggle);
+    
     spectrumToggle.setValue(*analyserMode == ANALYSER_MODE::Spectrum);
     envelopeToggle.setValue(*analyserMode == ANALYSER_MODE::Envelope);
+    filterToggle.setValue(*analyserMode == ANALYSER_MODE::Filter);
 }
 AnalyserToggle::~AnalyserToggle() {
 }
@@ -2547,8 +2552,9 @@ void AnalyserToggle::paint(juce::Graphics& g)
 void AnalyserToggle::resized()
 {
     juce::Rectangle<int> bounds = getLocalBounds().reduced(2, 4);
-    spectrumToggle.setBounds(bounds.removeFromTop(26));
-    envelopeToggle.setBounds(bounds.removeFromTop(26));
+    spectrumToggle.setBounds(bounds.removeFromTop(25));
+    envelopeToggle.setBounds(bounds.removeFromTop(25));
+    filterToggle.setBounds(bounds.removeFromTop(25));
 }
 void AnalyserToggle::toggleItemSelected(AnalyserToggleItem* toggleItem)
 {
@@ -2558,8 +2564,12 @@ void AnalyserToggle::toggleItemSelected(AnalyserToggleItem* toggleItem)
     else if(toggleItem == &envelopeToggle) {
         *analyserMode = ANALYSER_MODE::Envelope;
     }
+    else if(toggleItem == &filterToggle) {
+        *analyserMode = ANALYSER_MODE::Filter;
+    }
     spectrumToggle.setValue(*analyserMode == ANALYSER_MODE::Spectrum);
     envelopeToggle.setValue(*analyserMode == ANALYSER_MODE::Envelope);
+    filterToggle.setValue(*analyserMode == ANALYSER_MODE::Filter);
 }
 
 //==============================================================================
@@ -2700,6 +2710,10 @@ void AnalyserWindow::timerCallback()
             shouldRepaint = true;
             break;
         }
+        case ANALYSER_MODE::Filter: {
+            lastAnalyserMode = ANALYSER_MODE::Filter;
+            break;
+        }
     }
     if(shouldRepaint) {
         repaint();
@@ -2774,6 +2788,9 @@ void AnalyserWindow::paint(juce::Graphics& g)
                     juce::Colour colour = i >= NUM_ENVELOPE ? ANALYSER_LINE_COLOUR2 : ANALYSER_LINE_COLOUR;
                     paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForEnvelope[i][0]);
                 }
+                break;
+            }
+            case ANALYSER_MODE::Filter: {
                 break;
             }
         }

@@ -24,7 +24,7 @@ const juce::Colour ANALYSER_LINE_COLOUR2 = juce::Colour(60, 100, 150);
 const juce::Colour BACKGROUND_COLOUR = juce::Colour(40,40,40);
 }
 
-enum class ANALYSER_MODE { Spectrum, Envelope };
+enum class ANALYSER_MODE { Spectrum, Envelope, Filter };
 
 //==============================================================================
 class HeaderComponent : public juce::Component
@@ -437,6 +437,7 @@ private:
     ANALYSER_MODE* analyserMode;
     AnalyserToggleItem spectrumToggle;
     AnalyserToggleItem envelopeToggle;
+    AnalyserToggleItem filterToggle;
     
     virtual void toggleItemSelected(AnalyserToggleItem* toggleItem) override;
 };
