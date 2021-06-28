@@ -446,7 +446,7 @@ private:
 class AnalyserWindow : public juce::Component, private juce::Timer
 {
 public:
-    AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, EnvelopeParams* envelopeParams, ModEnvParams* modEnvParams);
+    AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, EnvelopeParams* envelopeParams, OscParams* oscParams, FilterParams* filterParams, ModEnvParams* modEnvParams);
     virtual ~AnalyserWindow();
     
     virtual void paint(juce::Graphics& g) override;
@@ -459,6 +459,8 @@ private:
     ANALYSER_MODE* analyserMode;
     LatestDataProvider* latestDataProvider;
     EnvelopeParams* envelopeParams;
+    OscParams* oscParams;
+    FilterParams* filterParams;
     ModEnvParams* modEnvParams;
     ANALYSER_MODE lastAnalyserMode = ANALYSER_MODE::Spectrum;
     
@@ -529,8 +531,25 @@ private:
     };
     SimpleAdsrParams lastAdsrParams[NUM_ENVELOPE];
     SimpleModEnvParams lastModEnvParams[NUM_MODENV];
-    
     float scopeDataForEnvelope[NUM_ENVELOPE+NUM_MODENV][scopeSize]{};
+    
+    // Filter
+    Filter filters[NUM_FILTER];
+    class SimpleFilterParams {
+    public:
+        SimpleFilterParams() {}
+        bool enabled = false;
+        int type = -1;
+        float freq = 0;
+        float q = 0;
+        float gain = 0;
+        bool equals(SimpleFilterParams& p) {
+            return enabled == p.enabled && type == p.type && freq == p.freq && q == p.q & gain == p.gain;
+        }
+    };
+    SimpleFilterParams lastFilterParams[NUM_FILTER];
+    float filterSource[fftSize * 2]{};
+    float scopeDataForFilter[NUM_FILTER][scopeSize]{};
     
     // methods
     virtual void timerCallback() override;
