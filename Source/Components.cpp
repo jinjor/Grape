@@ -2573,9 +2573,10 @@ void AnalyserToggle::toggleItemSelected(AnalyserToggleItem* toggleItem)
 }
 
 //==============================================================================
-AnalyserWindow::AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, EnvelopeParams* envelopeParams, OscParams* oscParams, FilterParams* filterParams, ModEnvParams* modEnvParams)
+AnalyserWindow::AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, MonoStack* monoStack, EnvelopeParams* envelopeParams, OscParams* oscParams, FilterParams* filterParams, ModEnvParams* modEnvParams)
 : analyserMode(analyserMode)
 , latestDataProvider(latestDataProvider)
+, monoStack(monoStack)
 , envelopeParams(envelopeParams)
 , oscParams(oscParams)
 , filterParams(filterParams)
@@ -2717,22 +2718,32 @@ void AnalyserWindow::timerCallback()
                 shouldRepaint = true;
             }
             lastAnalyserMode = ANALYSER_MODE::Filter;
+            
+            bool noteChanged = false;
+            if(monoStack->latestNoteNumber != 0) {
+                auto newNoteNumber = monoStack->latestNoteNumber;
+                noteChanged = relNoteNumber != newNoteNumber;
+                relNoteNumber = newNoteNumber;
+            }
             for(int i = 0; i < NUM_FILTER; ++i) {
                 auto filterType = static_cast<FILTER_TYPE>(filterParams[i].Type->getIndex());
                 double freq;
-                int lastNote = 60;// TODO
+                bool isRel = false;
                 switch(static_cast<FILTER_FREQ_TYPE>(filterParams[i].FreqType->getIndex())) {
                     case FILTER_FREQ_TYPE::Absolute: {
                         freq = filterParams[i].Hz->get();
                         break;
                     }
                     case FILTER_FREQ_TYPE::Relative: {
+                        isRel = true;
                         auto target = filterParams[i].Target->getIndex();
+                        float lastNote = relNoteNumber;
                         if(target != NUM_OSC) {
                             lastNote += oscParams[target].Octave->get() * 12;
                             lastNote += oscParams[target].Coarse->get();
                         }
-                        freq = 440.0 * std::pow(2.0, (lastNote - 69) / 12);
+                        lastNote += filterParams[i].Semitone->get();
+                        freq = 440.0 * std::pow(2.0, (float)(lastNote - 69) / 12);
                         break;
                     }
                 }
@@ -2745,16 +2756,20 @@ void AnalyserWindow::timerCallback()
                 params.freq = freq;
                 params.q = q;
                 params.gain = gain;
-                if(lastFilterParams[i].equals(params)) {
+                if(lastFilterParams[i].equals(params) && !(isRel && noteChanged)) {
                     continue;
                 }
                 lastFilterParams[i] = params;
+                
+                std::fill_n(filterSource, fftSize * 2, 0);
+                if(!filterParams[i].Enabled->get()) {
+                    continue;
+                }
                 
                 auto& filter = filters[i];
                 auto sampleRate = 48000;
                 filter.setSampleRate(sampleRate);// TODO: ?
                 filter.initializePastData();
-                std::fill_n(filterSource, fftSize * 2, 0);
                 filterSource[0] = 1;
                 for(int i = 0; i < fftSize; i++) {
                     filterSource[i] = filter.step(filterType, freq, q, gain, 0, filterSource[i]);

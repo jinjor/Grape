@@ -216,21 +216,20 @@ public:
     ~GrapeSynthesiser() {}
     virtual void handleMidiEvent (const juce::MidiMessage& m) override {
         const int channel = m.getChannel();
-        if(static_cast<VOICE_MODE>(voiceParams->Mode->getIndex()) == VOICE_MODE::Mono) {
-            jassert(getNumVoices() == 1);
-            if (m.isNoteOn())
+        if (m.isNoteOn())
+        {
+            auto midiNoteNumber = m.getNoteNumber();
+            auto velocity = m.getFloatVelocity();
+            for (auto* sound : sounds)
             {
-                auto midiNoteNumber = m.getNoteNumber();
-                auto velocity = m.getFloatVelocity();
-                for (auto* sound : sounds)
+                if (sound->appliesToNote (midiNoteNumber) && sound->appliesToChannel (channel))
                 {
-                    if (sound->appliesToNote (midiNoteNumber) && sound->appliesToChannel (channel))
-                    {
-                        if(GrapeVoice* voice = dynamic_cast<GrapeVoice*>(voices[0]) ) {
-                            bool shouldGlide = monoStack->latestNoteNumber != 0;
-                            monoStack->push(midiNoteNumber, velocity);
-                            if(shouldGlide) {
-                                jassert(voices[0]->isPlayingChannel (channel));
+                    if(GrapeVoice* voice = dynamic_cast<GrapeVoice*>(voices[0]) ) {
+                        bool playingNotesExist = monoStack->latestNoteNumber != 0;
+                        monoStack->push(midiNoteNumber, velocity);
+                        if(static_cast<VOICE_MODE>(voiceParams->Mode->getIndex()) == VOICE_MODE::Mono) {
+                            jassert(getNumVoices() == 1);
+                            if(voice->isPlayingChannel(channel) && playingNotesExist) {
                                 voice->glide(midiNoteNumber, velocity);
                                 return;
                             }
@@ -238,22 +237,24 @@ public:
                     }
                 }
             }
-            else if (m.isNoteOff())
+        }
+        else if (m.isNoteOff())
+        {
+            auto midiNoteNumber = m.getNoteNumber();
+            for (auto* sound : sounds)
             {
-                auto midiNoteNumber = m.getNoteNumber();
-                for (auto* sound : sounds)
+                if (sound->appliesToNote (midiNoteNumber) && sound->appliesToChannel (channel))
                 {
-                    if (sound->appliesToNote (midiNoteNumber) && sound->appliesToChannel (channel))
-                    {
-                        if(GrapeVoice* voice = dynamic_cast<GrapeVoice*>(voices[0]) ) {
-                            int firstNoteNumber = monoStack->firstNoteNumber;
-                            bool removed = monoStack->remove(midiNoteNumber);
-                            if(!removed) {
-                                return;
-                            }
-                            bool shouldGlide = monoStack->latestNoteNumber != 0;
-                            if(shouldGlide) {
-                                jassert(voices[0]->isPlayingChannel (channel));
+                    if(GrapeVoice* voice = dynamic_cast<GrapeVoice*>(voices[0]) ) {
+                        int firstNoteNumber = monoStack->firstNoteNumber;
+                        bool removed = monoStack->remove(midiNoteNumber);
+                        if(!removed) {
+                            return;
+                        }
+                        bool playingNotesExist = monoStack->latestNoteNumber != 0;
+                        if(static_cast<VOICE_MODE>(voiceParams->Mode->getIndex()) == VOICE_MODE::Mono) {
+                            jassert(getNumVoices() == 1);
+                            if(voice->isPlayingChannel(channel) && playingNotesExist) {
                                 auto velocity = monoStack->getVelocity(monoStack->latestNoteNumber);
                                 jassert(velocity != 0);
                                 voice->glide(monoStack->latestNoteNumber, velocity);
@@ -265,14 +266,14 @@ public:
                     }
                 }
             }
-            else if (m.isAllNotesOff())
-            {
-                monoStack->reset();
-            }
-            else if (m.isAllSoundOff())
-            {
-                monoStack->reset();
-            }
+        }
+        else if (m.isAllNotesOff())
+        {
+            monoStack->reset();
+        }
+        else if (m.isAllSoundOff())
+        {
+            monoStack->reset();
         }
         Synthesiser::handleMidiEvent(m);
         

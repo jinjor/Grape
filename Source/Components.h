@@ -446,7 +446,7 @@ private:
 class AnalyserWindow : public juce::Component, private juce::Timer
 {
 public:
-    AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, EnvelopeParams* envelopeParams, OscParams* oscParams, FilterParams* filterParams, ModEnvParams* modEnvParams);
+    AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, MonoStack* monoStack, EnvelopeParams* envelopeParams, OscParams* oscParams, FilterParams* filterParams, ModEnvParams* modEnvParams);
     virtual ~AnalyserWindow();
     
     virtual void paint(juce::Graphics& g) override;
@@ -458,6 +458,7 @@ private:
     };
     ANALYSER_MODE* analyserMode;
     LatestDataProvider* latestDataProvider;
+    MonoStack* monoStack;
     EnvelopeParams* envelopeParams;
     OscParams* oscParams;
     FilterParams* filterParams;
@@ -548,6 +549,7 @@ private:
         }
     };
     SimpleFilterParams lastFilterParams[NUM_FILTER];
+    int relNoteNumber = 69;
     float filterSource[fftSize * 2]{};
     float scopeDataForFilter[NUM_FILTER][scopeSize]{};
     
