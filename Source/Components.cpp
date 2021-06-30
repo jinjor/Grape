@@ -2761,15 +2761,22 @@ void AnalyserWindow::timerCallback()
                 }
                 lastFilterParams[i] = params;
                 
-                std::fill_n(filterSource, fftSize * 2, 0);
+                readyToDrawFrame = true;
+                shouldRepaint = true;
+                
                 if(!filterParams[i].Enabled->get()) {
+                    // TODO: utility?
+                    for (int j = 0; j < scopeSize; ++j)
+                    {
+                        scopeDataForFilter[i][j] = 0;
+                    }
                     continue;
                 }
-                
                 auto& filter = filters[i];
                 auto sampleRate = 48000;
                 filter.setSampleRate(sampleRate);// TODO: ?
                 filter.initializePastData();
+                std::fill_n(filterSource, fftSize * 2, 0);
                 filterSource[0] = 1;
                 for(int i = 0; i < fftSize; i++) {
                     filterSource[i] = filter.step(filterType, freq, q, gain, 0, filterSource[i]);
@@ -2790,8 +2797,6 @@ void AnalyserWindow::timerCallback()
                                              mindB, maxdB, 0.0f, 1.0f);
                     scopeDataForFilter[i][j] = level;
                 }
-                readyToDrawFrame = true;
-                shouldRepaint = true;
             }
             break;
         }
