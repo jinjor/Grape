@@ -559,6 +559,15 @@ private:
     void drawNextFrameOfLevel();
     void paintSpectrum(juce::Graphics& g, juce::Colour colour, int offsetX, int offsetY, int width, int height, float* scopeData);
     void paintLevel(juce::Graphics& g, int offsetX, int offsetY, int width, int height, float level);
+    static float xToHz(float minFreq, float maxFreq, float notmalizedX) {
+        return minFreq * std::pow(maxFreq / minFreq, notmalizedX);
+    }
+    static float getFFTDataByHz(float* processedFFTData, float fftSize, float sampleRate, float hz) {
+        float indexFloat = hz * ((fftSize * 0.5) / (sampleRate * 0.5));
+        int index = indexFloat;
+        float frac = indexFloat - index;
+        return processedFFTData[index] * (1 - frac) + processedFFTData[index + 1] * frac;
+    }
 };
 
 //==============================================================================

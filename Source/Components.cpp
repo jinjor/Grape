@@ -2765,16 +2765,11 @@ void AnalyserWindow::timerCallback()
                 shouldRepaint = true;
                 
                 if(!filterParams[i].Enabled->get()) {
-                    // TODO: utility?
-                    for (int j = 0; j < scopeSize; ++j)
-                    {
-                        scopeDataForFilter[i][j] = 0;
-                    }
                     continue;
                 }
                 auto& filter = filters[i];
-                auto sampleRate = 48000;
-                filter.setSampleRate(sampleRate);// TODO: ?
+                auto sampleRate = 48000;// TODO: ?
+                filter.setSampleRate(sampleRate);
                 filter.initializePastData();
                 std::fill_n(filterSource, fftSize * 2, 0);
                 filterSource[0] = 1;
@@ -2783,17 +2778,15 @@ void AnalyserWindow::timerCallback()
                 }
                 forwardFFT.performFrequencyOnlyForwardTransform(filterSource);
                 
-                auto minFreq = 20.0f;
+                auto minFreq = 40.0f;
                 auto maxFreq = 20000.0f;
                 auto mindB = -50.0f;
                 auto maxdB =  50.0f;
                 for (int j = 0; j < scopeSize; ++j)
                 {
-                    float indexFloat = (minFreq * std::pow(maxFreq / minFreq, (float)j / scopeSize)) * ((fftSize * 0.5) / (sampleRate * 0.5));
-                    int index = indexFloat;
-                    float frac = indexFloat - index;
-                    float gain = filterSource[index] * (1 - frac) + filterSource[index + 1] * frac;
-                    auto level = juce::jmap (juce::jlimit (mindB, maxdB, juce::Decibels::gainToDecibels(gain)),
+                    float hz = xToHz(minFreq, maxFreq, (float)j / scopeSize);
+                    float gain = getFFTDataByHz(filterSource, fftSize, sampleRate, hz);
+                    auto level = juce::jmap (juce::Decibels::gainToDecibels(gain),
                                              mindB, maxdB, 0.0f, 1.0f);
                     scopeDataForFilter[i][j] = level;
                 }
@@ -2805,6 +2798,7 @@ void AnalyserWindow::timerCallback()
         repaint();
     }
 }
+
 void AnalyserWindow::drawNextFrameOfSpectrum()
 {
     for(int i = 0; i < fftSize; i++) {
@@ -2814,15 +2808,16 @@ void AnalyserWindow::drawNextFrameOfSpectrum()
     window.multiplyWithWindowingTable(fftData, fftSize);
     forwardFFT.performFrequencyOnlyForwardTransform (fftData);
 
+    auto sampleRate = 48000;// TODO: ?
+    auto minFreq = 40.0f;
+    auto maxFreq = 20000.0f;
     auto mindB = -100.0f;
     auto maxdB =    0.0f;
-
     for (int i = 0; i < scopeSize; ++i)
     {
-        auto skewedProportionX = 1.0f - std::exp (std::log (1.0f - (float) i / (float) scopeSize) * 0.2f);
-        auto fftDataIndex = juce::jlimit (0, fftSize / 2, (int) (skewedProportionX * (float) fftSize * 0.5f));
-        auto level = juce::jmap (juce::jlimit (mindB, maxdB, juce::Decibels::gainToDecibels (fftData[fftDataIndex])
-                                                           - juce::Decibels::gainToDecibels ((float) fftSize)),
+        float hz = xToHz(minFreq, maxFreq, (float)i / scopeSize);
+        float gain = getFFTDataByHz(fftData, fftSize, sampleRate, hz);
+        auto level = juce::jmap (juce::Decibels::gainToDecibels(gain) - juce::Decibels::gainToDecibels ((float) fftSize),
                                  mindB, maxdB, 0.0f, 1.0f);
         scopeData[i] = level;
     }
@@ -2834,7 +2829,7 @@ void AnalyserWindow::drawNextFrameOfLevel()
     for(int i = 0; i < 2; i++) {
         auto* data = i == 0 ? levelConsumer.destinationL : levelConsumer.destinationR;
         auto db = calcCurrentLevel(levelConsumer.numSamples, data);
-        currentLevel[i] = juce::jmap(juce::jlimit(mindB, maxdB, db), mindB, maxdB, 0.0f, 1.0f);
+        currentLevel[i] = juce::jmap(db, mindB, maxdB, 0.0f, 1.0f);
         if(db > 0) {
             (i == 0 ? overflowedLevelL : overflowedLevelR) = db;
             (i == 0 ? overflowWarningL : overflowWarningR) = 30 * 1.2;
@@ -2846,20 +2841,17 @@ void AnalyserWindow::paint(juce::Graphics& g)
     g.fillAll(juce::Colours::black);
     
     juce::Rectangle<int> bounds = getLocalBounds();
-    g.setColour(juce::Colour(30,30,30));
-    g.drawRect(bounds, 2.0f);
-//    g.setOpacity(1.0f);
-    
+
     if(readyToDrawFrame) {
         auto offsetX = 2;
         auto offsetY = 2;
-        bounds.reduce(offsetX, offsetY);
-        auto height = bounds.getHeight();
+        auto displayBounds = bounds.reduced(offsetX, offsetY);
+        auto height = displayBounds.getHeight();
         
         switch(*analyserMode) {
             case ANALYSER_MODE::Spectrum: {
                 auto levelWidth = 8;
-                auto spectrumWidth = bounds.getWidth() - levelWidth * 2;
+                auto spectrumWidth = displayBounds.getWidth() - levelWidth * 2;
 
                 paintSpectrum(g, ANALYSER_LINE_COLOUR, offsetX, offsetY, spectrumWidth, height, scopeData);
                 offsetX += spectrumWidth;
@@ -2870,7 +2862,7 @@ void AnalyserWindow::paint(juce::Graphics& g)
             }
             case ANALYSER_MODE::Envelope: {
                 for(int i = NUM_ENVELOPE + NUM_MODENV - 1; i >= 0; i--) {
-                    auto spectrumWidth = bounds.getWidth();
+                    auto spectrumWidth = displayBounds.getWidth();
                     juce::Colour colour = i >= NUM_ENVELOPE ? ANALYSER_LINE_COLOUR2 : ANALYSER_LINE_COLOUR;
                     paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForEnvelope[i][0]);
                 }
@@ -2878,7 +2870,10 @@ void AnalyserWindow::paint(juce::Graphics& g)
             }
             case ANALYSER_MODE::Filter: {
                 for(int i = 0; i < NUM_FILTER; i++) {
-                    auto spectrumWidth = bounds.getWidth();
+                    if(!filterParams[i].Enabled->get()) {
+                        continue;
+                    }
+                    auto spectrumWidth = displayBounds.getWidth();
                     bool isRel = static_cast<FILTER_FREQ_TYPE>(filterParams[i].FreqType->getIndex()) == FILTER_FREQ_TYPE::Relative;
                     juce::Colour colour = isRel ? ANALYSER_LINE_COLOUR2 : ANALYSER_LINE_COLOUR;
                     paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForFilter[i][0]);
@@ -2887,6 +2882,8 @@ void AnalyserWindow::paint(juce::Graphics& g)
             }
         }
     }
+    g.setColour(juce::Colour(30,30,30));
+    g.drawRect(bounds, 2.0f);
 }
 void AnalyserWindow::paintSpectrum(juce::Graphics& g, juce::Colour colour, int offsetX, int offsetY, int width, int height, float* scopeData)
 {
@@ -2907,6 +2904,6 @@ void AnalyserWindow::paintLevel(juce::Graphics& g, int offsetX, int offsetY, int
         overflowWarningL--;
     }
     int barWidth = width - 1;
-    int barHeight = juce::jmax(1.0f, level * height);
+    int barHeight = level * height;
     g.fillRect(offsetX + 1, offsetY + height - barHeight, barWidth, barHeight);
 }
