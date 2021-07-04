@@ -179,7 +179,7 @@ void GrapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     auto voiceMode = static_cast<VOICE_MODE>(voiceParams.Mode->getIndex());
     int numVoices = 64;
     if(voiceMode == VOICE_MODE::Mono && synth.getNumVoices() != 1) {
-        this->monoStack.reset();
+//        this->monoStack.reset();
         synth.clearVoices();
         synth.addVoice (new GrapeVoice(&currentPositionInfo,
                                        &globalParams,

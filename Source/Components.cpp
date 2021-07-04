@@ -2529,6 +2529,7 @@ AnalyserToggle::AnalyserToggle(ANALYSER_MODE* analyserMode)
 : analyserMode(analyserMode)
 , spectrumToggle("Spectrum")
 , envelopeToggle("Envelope")
+, filterToggle("Filter")
 {
     spectrumToggle.addListener(this);
     addAndMakeVisible(spectrumToggle);
@@ -2536,8 +2537,12 @@ AnalyserToggle::AnalyserToggle(ANALYSER_MODE* analyserMode)
     envelopeToggle.addListener(this);
     addAndMakeVisible(envelopeToggle);
     
+    filterToggle.addListener(this);
+    addAndMakeVisible(filterToggle);
+    
     spectrumToggle.setValue(*analyserMode == ANALYSER_MODE::Spectrum);
     envelopeToggle.setValue(*analyserMode == ANALYSER_MODE::Envelope);
+    filterToggle.setValue(*analyserMode == ANALYSER_MODE::Filter);
 }
 AnalyserToggle::~AnalyserToggle() {
 }
@@ -2547,8 +2552,9 @@ void AnalyserToggle::paint(juce::Graphics& g)
 void AnalyserToggle::resized()
 {
     juce::Rectangle<int> bounds = getLocalBounds().reduced(2, 4);
-    spectrumToggle.setBounds(bounds.removeFromTop(26));
-    envelopeToggle.setBounds(bounds.removeFromTop(26));
+    spectrumToggle.setBounds(bounds.removeFromTop(25));
+    envelopeToggle.setBounds(bounds.removeFromTop(25));
+    filterToggle.setBounds(bounds.removeFromTop(25));
 }
 void AnalyserToggle::toggleItemSelected(AnalyserToggleItem* toggleItem)
 {
@@ -2558,19 +2564,26 @@ void AnalyserToggle::toggleItemSelected(AnalyserToggleItem* toggleItem)
     else if(toggleItem == &envelopeToggle) {
         *analyserMode = ANALYSER_MODE::Envelope;
     }
+    else if(toggleItem == &filterToggle) {
+        *analyserMode = ANALYSER_MODE::Filter;
+    }
     spectrumToggle.setValue(*analyserMode == ANALYSER_MODE::Spectrum);
     envelopeToggle.setValue(*analyserMode == ANALYSER_MODE::Envelope);
+    filterToggle.setValue(*analyserMode == ANALYSER_MODE::Filter);
 }
 
 //==============================================================================
-AnalyserWindow::AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, EnvelopeParams* envelopeParams, ModEnvParams* modEnvParams)
+AnalyserWindow::AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, MonoStack* monoStack, EnvelopeParams* envelopeParams, OscParams* oscParams, FilterParams* filterParams, ModEnvParams* modEnvParams)
 : analyserMode(analyserMode)
 , latestDataProvider(latestDataProvider)
+, monoStack(monoStack)
 , envelopeParams(envelopeParams)
+, oscParams(oscParams)
+, filterParams(filterParams)
 , modEnvParams(modEnvParams)
 , forwardFFT (fftOrder)
 , window (fftSize, juce::dsp::WindowingFunction<float>::hann)
-, lastAdsrParams { SimpleAdsrParams(), SimpleAdsrParams() }
+, lastAmpEnvParams { SimpleAmpEnvParams(), SimpleAmpEnvParams() }
 , lastModEnvParams { SimpleModEnvParams(), SimpleModEnvParams(), SimpleModEnvParams() }
 {
     latestDataProvider->addConsumer(&fftConsumer);
@@ -2614,11 +2627,11 @@ void AnalyserWindow::timerCallback()
             lastAnalyserMode = ANALYSER_MODE::Envelope;
             auto changed = false;
             for(int i = 0; i < NUM_ENVELOPE; i++) {
-                auto p = SimpleAdsrParams(envelopeParams[i]);
-                if(!lastAdsrParams[i].equals(p)) {
+                auto p = SimpleAmpEnvParams(envelopeParams[i]);
+                if(!lastAmpEnvParams[i].equals(p)) {
                     changed = true;
                 }
-                lastAdsrParams[i] = p;
+                lastAmpEnvParams[i] = p;
             }
             for(int i = 0; i < NUM_MODENV; i++) {
                 auto p = SimpleModEnvParams(modEnvParams[i]);
@@ -2640,11 +2653,11 @@ void AnalyserWindow::timerCallback()
             auto maxSec = maxAD + maxR;
             auto sampleRate = (float)scopeSize / maxSec;
             for(int i = 0; i < NUM_ENVELOPE; i++) {
-                adsr[i].setParams(envelopeParams[i].Attack->get(),
-                                  0,
-                                  envelopeParams[i].Decay->get(),
-                                  envelopeParams[i].Sustain->get(),
-                                  envelopeParams[i].Release->get());
+                ampEnvs[i].setParams(envelopeParams[i].Attack->get(),
+                                     0,
+                                     envelopeParams[i].Decay->get(),
+                                     envelopeParams[i].Sustain->get(),
+                                     envelopeParams[i].Release->get());
             }
             for(int i = 0; i < NUM_MODENV; i++) {
                 if(modEnvParams[i].shouldUseHold()) {
@@ -2662,7 +2675,7 @@ void AnalyserWindow::timerCallback()
                 }
             }
             for(int i = 0; i < NUM_ENVELOPE; i++) {
-                adsr[i].doAttack(sampleRate);
+                ampEnvs[i].doAttack(sampleRate);
             }
             for(int i = 0; i < NUM_MODENV; i++) {
                 modEnvs[i].doAttack(sampleRate);
@@ -2671,12 +2684,12 @@ void AnalyserWindow::timerCallback()
             for(int pos = 0; pos < scopeSize; pos++) {
                 if(pos == releasePoint) {
                     for(int i = 0; i < NUM_ENVELOPE; i++) {
-                        adsr[i].doRelease(sampleRate);
+                        ampEnvs[i].doRelease(sampleRate);
                     }
                 }
                 for(int i = 0; i < NUM_ENVELOPE; i++) {
-                    scopeDataForEnvelope[i][pos] = adsr[i].getValue();
-                    adsr[i].step(sampleRate);
+                    scopeDataForAmpEnv[i][pos] = ampEnvs[i].getValue();
+                    ampEnvs[i].step(sampleRate);
                 }
                 for(int i = 0; i < NUM_MODENV; i++) {
                     auto value = 0.0f;
@@ -2686,12 +2699,12 @@ void AnalyserWindow::timerCallback()
                             value = 1 - value;
                         }
                     }
-                    scopeDataForEnvelope[i + NUM_ENVELOPE][pos] = value;
+                    scopeDataForModEnv[i][pos] = value;
                     modEnvs[i].step(sampleRate);
                 }
             }
             for(int i = 0; i < NUM_ENVELOPE; i++) {
-                adsr[i].forceStop();
+                ampEnvs[i].forceStop();
             }
             for(int i = 0; i < NUM_MODENV; i++) {
                 modEnvs[i].forceStop();
@@ -2700,11 +2713,92 @@ void AnalyserWindow::timerCallback()
             shouldRepaint = true;
             break;
         }
+        case ANALYSER_MODE::Filter: {
+            if(lastAnalyserMode != ANALYSER_MODE::Filter) {
+                shouldRepaint = true;
+            }
+            lastAnalyserMode = ANALYSER_MODE::Filter;
+            
+            bool noteChanged = false;
+            if(monoStack->latestNoteNumber != 0) {
+                auto newNoteNumber = monoStack->latestNoteNumber;
+                noteChanged = relNoteNumber != newNoteNumber;
+                relNoteNumber = newNoteNumber;
+            }
+            for(int i = 0; i < NUM_FILTER; ++i) {
+                auto filterType = static_cast<FILTER_TYPE>(filterParams[i].Type->getIndex());
+                double freq;
+                bool isRel = false;
+                switch(static_cast<FILTER_FREQ_TYPE>(filterParams[i].FreqType->getIndex())) {
+                    case FILTER_FREQ_TYPE::Absolute: {
+                        freq = filterParams[i].Hz->get();
+                        break;
+                    }
+                    case FILTER_FREQ_TYPE::Relative: {
+                        isRel = true;
+                        auto target = filterParams[i].Target->getIndex();
+                        float lastNote = relNoteNumber;
+                        if(target != NUM_OSC) {
+                            lastNote += oscParams[target].Octave->get() * 12;
+                            lastNote += oscParams[target].Coarse->get();
+                        }
+                        lastNote += filterParams[i].Semitone->get();
+                        freq = 440.0 * std::pow(2.0, (float)(lastNote - 69) / 12);
+                        break;
+                    }
+                }
+                auto q = filterParams[i].Q->get();
+                auto gain = filterParams[i].Gain->get();
+                
+                auto params = SimpleFilterParams();
+                params.enabled = filterParams[i].Enabled->get();
+                params.type = filterParams[i].Type->getIndex();
+                params.freq = freq;
+                params.q = q;
+                params.gain = gain;
+                if(lastFilterParams[i].equals(params) && !(isRel && noteChanged)) {
+                    continue;
+                }
+                lastFilterParams[i] = params;
+                
+                readyToDrawFrame = true;
+                shouldRepaint = true;
+                
+                if(!filterParams[i].Enabled->get()) {
+                    continue;
+                }
+                auto& filter = filters[i];
+                auto sampleRate = 48000;// TODO: ?
+                filter.setSampleRate(sampleRate);
+                filter.initializePastData();
+                std::fill_n(filterSource, fftSize * 2, 0);
+                filterSource[0] = 1;
+                for(int i = 0; i < fftSize; i++) {
+                    filterSource[i] = filter.step(filterType, freq, q, gain, 0, filterSource[i]);
+                }
+                forwardFFT.performFrequencyOnlyForwardTransform(filterSource);
+                
+                auto minFreq = 40.0f;
+                auto maxFreq = 20000.0f;
+                auto mindB = -50.0f;
+                auto maxdB =  50.0f;
+                for (int j = 0; j < scopeSize; ++j)
+                {
+                    float hz = xToHz(minFreq, maxFreq, (float)j / scopeSize);
+                    float gain = getFFTDataByHz(filterSource, fftSize, sampleRate, hz);
+                    auto level = juce::jmap (juce::Decibels::gainToDecibels(gain),
+                                             mindB, maxdB, 0.0f, 1.0f);
+                    scopeDataForFilter[i][j] = level;
+                }
+            }
+            break;
+        }
     }
     if(shouldRepaint) {
         repaint();
     }
 }
+
 void AnalyserWindow::drawNextFrameOfSpectrum()
 {
     for(int i = 0; i < fftSize; i++) {
@@ -2714,15 +2808,16 @@ void AnalyserWindow::drawNextFrameOfSpectrum()
     window.multiplyWithWindowingTable(fftData, fftSize);
     forwardFFT.performFrequencyOnlyForwardTransform (fftData);
 
+    auto sampleRate = 48000;// TODO: ?
+    auto minFreq = 40.0f;
+    auto maxFreq = 20000.0f;
     auto mindB = -100.0f;
     auto maxdB =    0.0f;
-
     for (int i = 0; i < scopeSize; ++i)
     {
-        auto skewedProportionX = 1.0f - std::exp (std::log (1.0f - (float) i / (float) scopeSize) * 0.2f);
-        auto fftDataIndex = juce::jlimit (0, fftSize / 2, (int) (skewedProportionX * (float) fftSize * 0.5f));
-        auto level = juce::jmap (juce::jlimit (mindB, maxdB, juce::Decibels::gainToDecibels (fftData[fftDataIndex])
-                                                           - juce::Decibels::gainToDecibels ((float) fftSize)),
+        float hz = xToHz(minFreq, maxFreq, (float)i / scopeSize);
+        float gain = getFFTDataByHz(fftData, fftSize, sampleRate, hz);
+        auto level = juce::jmap (juce::Decibels::gainToDecibels(gain) - juce::Decibels::gainToDecibels ((float) fftSize),
                                  mindB, maxdB, 0.0f, 1.0f);
         scopeData[i] = level;
     }
@@ -2734,7 +2829,7 @@ void AnalyserWindow::drawNextFrameOfLevel()
     for(int i = 0; i < 2; i++) {
         auto* data = i == 0 ? levelConsumer.destinationL : levelConsumer.destinationR;
         auto db = calcCurrentLevel(levelConsumer.numSamples, data);
-        currentLevel[i] = juce::jmap(juce::jlimit(mindB, maxdB, db), mindB, maxdB, 0.0f, 1.0f);
+        currentLevel[i] = juce::jmap(db, mindB, maxdB, 0.0f, 1.0f);
         if(db > 0) {
             (i == 0 ? overflowedLevelL : overflowedLevelR) = db;
             (i == 0 ? overflowWarningL : overflowWarningR) = 30 * 1.2;
@@ -2746,20 +2841,17 @@ void AnalyserWindow::paint(juce::Graphics& g)
     g.fillAll(juce::Colours::black);
     
     juce::Rectangle<int> bounds = getLocalBounds();
-    g.setColour(juce::Colour(30,30,30));
-    g.drawRect(bounds, 2.0f);
-//    g.setOpacity(1.0f);
-    
+
     if(readyToDrawFrame) {
         auto offsetX = 2;
         auto offsetY = 2;
-        bounds.reduce(offsetX, offsetY);
-        auto height = bounds.getHeight();
+        auto displayBounds = bounds.reduced(offsetX, offsetY);
+        auto height = displayBounds.getHeight();
         
         switch(*analyserMode) {
             case ANALYSER_MODE::Spectrum: {
                 auto levelWidth = 8;
-                auto spectrumWidth = bounds.getWidth() - levelWidth * 2;
+                auto spectrumWidth = displayBounds.getWidth() - levelWidth * 2;
 
                 paintSpectrum(g, ANALYSER_LINE_COLOUR, offsetX, offsetY, spectrumWidth, height, scopeData);
                 offsetX += spectrumWidth;
@@ -2769,15 +2861,36 @@ void AnalyserWindow::paint(juce::Graphics& g)
                 break;
             }
             case ANALYSER_MODE::Envelope: {
-                for(int i = NUM_ENVELOPE + NUM_MODENV - 1; i >= 0; i--) {
-                    auto spectrumWidth = bounds.getWidth();
-                    juce::Colour colour = i >= NUM_ENVELOPE ? ANALYSER_LINE_COLOUR2 : ANALYSER_LINE_COLOUR;
-                    paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForEnvelope[i][0]);
+                auto spectrumWidth = displayBounds.getWidth();
+                for(int i = NUM_MODENV - 1; i >= 0; i--) {
+                    if(!modEnvParams[i].Enabled->get()) {
+                        continue;
+                    }
+                    juce::Colour colour = ANALYSER_LINE_COLOUR2;
+                    paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForModEnv[i][0]);
+                }
+                for(int i = NUM_ENVELOPE - 1; i >= 0; i--) {
+                    juce::Colour colour = ANALYSER_LINE_COLOUR;
+                    paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForAmpEnv[i][0]);
+                }
+                break;
+            }
+            case ANALYSER_MODE::Filter: {
+                for(int i = 0; i < NUM_FILTER; i++) {
+                    if(!filterParams[i].Enabled->get()) {
+                        continue;
+                    }
+                    auto spectrumWidth = displayBounds.getWidth();
+                    bool isRel = static_cast<FILTER_FREQ_TYPE>(filterParams[i].FreqType->getIndex()) == FILTER_FREQ_TYPE::Relative;
+                    juce::Colour colour = isRel ? ANALYSER_LINE_COLOUR2 : ANALYSER_LINE_COLOUR;
+                    paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForFilter[i][0]);
                 }
                 break;
             }
         }
     }
+    g.setColour(juce::Colour(30,30,30));
+    g.drawRect(bounds, 2.0f);
 }
 void AnalyserWindow::paintSpectrum(juce::Graphics& g, juce::Colour colour, int offsetX, int offsetY, int width, int height, float* scopeData)
 {
@@ -2798,6 +2911,6 @@ void AnalyserWindow::paintLevel(juce::Graphics& g, int offsetX, int offsetY, int
         overflowWarningL--;
     }
     int barWidth = width - 1;
-    int barHeight = juce::jmax(1.0f, level * height);
+    int barHeight = level * height;
     g.fillRect(offsetX + 1, offsetY + height - barHeight, barWidth, barHeight);
 }

@@ -24,7 +24,7 @@ const juce::Colour ANALYSER_LINE_COLOUR2 = juce::Colour(60, 100, 150);
 const juce::Colour BACKGROUND_COLOUR = juce::Colour(40,40,40);
 }
 
-enum class ANALYSER_MODE { Spectrum, Envelope };
+enum class ANALYSER_MODE { Spectrum, Envelope, Filter };
 
 //==============================================================================
 class HeaderComponent : public juce::Component
@@ -437,6 +437,7 @@ private:
     ANALYSER_MODE* analyserMode;
     AnalyserToggleItem spectrumToggle;
     AnalyserToggleItem envelopeToggle;
+    AnalyserToggleItem filterToggle;
     
     virtual void toggleItemSelected(AnalyserToggleItem* toggleItem) override;
 };
@@ -445,7 +446,7 @@ private:
 class AnalyserWindow : public juce::Component, private juce::Timer
 {
 public:
-    AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, EnvelopeParams* envelopeParams, ModEnvParams* modEnvParams);
+    AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, MonoStack* monoStack, EnvelopeParams* envelopeParams, OscParams* oscParams, FilterParams* filterParams, ModEnvParams* modEnvParams);
     virtual ~AnalyserWindow();
     
     virtual void paint(juce::Graphics& g) override;
@@ -457,7 +458,10 @@ private:
     };
     ANALYSER_MODE* analyserMode;
     LatestDataProvider* latestDataProvider;
+    MonoStack* monoStack;
     EnvelopeParams* envelopeParams;
+    OscParams* oscParams;
+    FilterParams* filterParams;
     ModEnvParams* modEnvParams;
     ANALYSER_MODE lastAnalyserMode = ANALYSER_MODE::Spectrum;
     
@@ -486,12 +490,12 @@ private:
     int overflowWarningR = 0;
     
     // Envelope
-    Adsr adsr[NUM_ENVELOPE];
+    Adsr ampEnvs[NUM_ENVELOPE];
     Adsr modEnvs[NUM_MODENV];
-    class SimpleAdsrParams {
+    class SimpleAmpEnvParams {
     public:
-        SimpleAdsrParams() {}
-        SimpleAdsrParams(EnvelopeParams& envelopeParams) {
+        SimpleAmpEnvParams() {}
+        SimpleAmpEnvParams(EnvelopeParams& envelopeParams) {
             a = envelopeParams.Attack->get();
             d = envelopeParams.Decay->get();
             s = envelopeParams.Sustain->get();
@@ -501,7 +505,7 @@ private:
         float d = 0;
         float s = 0;
         float r = 0;
-        bool equals(SimpleAdsrParams& p) {
+        bool equals(SimpleAmpEnvParams& p) {
             return a == p.a && d == p.d && s == p.s && r == p.r;
         }
     };
@@ -526,10 +530,29 @@ private:
             return w == p.w && a == p.a && d == p.d && enabled == p.enabled && isTargetFreq == p.isTargetFreq && fadeIn == p.fadeIn;
         }
     };
-    SimpleAdsrParams lastAdsrParams[NUM_ENVELOPE];
+    SimpleAmpEnvParams lastAmpEnvParams[NUM_ENVELOPE];
     SimpleModEnvParams lastModEnvParams[NUM_MODENV];
+    float scopeDataForAmpEnv[NUM_ENVELOPE][scopeSize]{};
+    float scopeDataForModEnv[NUM_MODENV][scopeSize]{};
     
-    float scopeDataForEnvelope[NUM_ENVELOPE+NUM_MODENV][scopeSize]{};
+    // Filter
+    Filter filters[NUM_FILTER];
+    class SimpleFilterParams {
+    public:
+        SimpleFilterParams() {}
+        bool enabled = false;
+        int type = -1;
+        float freq = 0;
+        float q = 0;
+        float gain = 0;
+        bool equals(SimpleFilterParams& p) {
+            return enabled == p.enabled && type == p.type && freq == p.freq && q == p.q & gain == p.gain;
+        }
+    };
+    SimpleFilterParams lastFilterParams[NUM_FILTER];
+    int relNoteNumber = 69;
+    float filterSource[fftSize * 2]{};
+    float scopeDataForFilter[NUM_FILTER][scopeSize]{};
     
     // methods
     virtual void timerCallback() override;
@@ -537,6 +560,15 @@ private:
     void drawNextFrameOfLevel();
     void paintSpectrum(juce::Graphics& g, juce::Colour colour, int offsetX, int offsetY, int width, int height, float* scopeData);
     void paintLevel(juce::Graphics& g, int offsetX, int offsetY, int width, int height, float level);
+    static float xToHz(float minFreq, float maxFreq, float notmalizedX) {
+        return minFreq * std::pow(maxFreq / minFreq, notmalizedX);
+    }
+    static float getFFTDataByHz(float* processedFFTData, float fftSize, float sampleRate, float hz) {
+        float indexFloat = hz * ((fftSize * 0.5) / (sampleRate * 0.5));
+        int index = indexFloat;
+        float frac = indexFloat - index;
+        return processedFFTData[index] * (1 - frac) + processedFFTData[index + 1] * frac;
+    }
 };
 
 //==============================================================================

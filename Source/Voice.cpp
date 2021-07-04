@@ -126,7 +126,6 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
 {
     if(GrapeSound* playingSound = dynamic_cast<GrapeSound*>(getCurrentlyPlayingSound().get()))
     {
-        auto midiNoteNumber = getCurrentlyPlayingNote();// TODO: まだ必要？
         if(getCurrentlyPlayingNote() == 0) {
             return;
         }
@@ -176,6 +175,8 @@ void GrapeVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int st
 #endif
             smoothNote.step();
             smoothVelocity.step();
+            
+            double midiNoteNumber = smoothNote.value;
             
             double shiftedNoteNumbers[NUM_OSC] {smoothNote.value, smoothNote.value, smoothNote.value};
             for(int i = 0; i < NUM_OSC; ++i) {

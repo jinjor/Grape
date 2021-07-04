@@ -10,7 +10,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 , controlComponent { ControlComponent(p.controlItemParams) }
 , voiceComponent (&p.voiceParams, p.controlItemParams)
 , analyserToggle(&analyserMode)
-, analyserWindow(&analyserMode, &p.latestDataProvider, p.envelopeParams, p.modEnvParams)
+, analyserWindow(&analyserMode, &p.latestDataProvider, &p.monoStack, p.envelopeParams, p.oscParams, p.filterParams, p.modEnvParams)
 , statusComponent (&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider)
 , masterComponent (&p.globalParams)
 , oscComponents { OscComponent(0, p.oscParams, p.controlItemParams), OscComponent(1, p.oscParams+1, p.controlItemParams), OscComponent(2, p.oscParams+2, p.controlItemParams) }
