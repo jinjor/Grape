@@ -32,6 +32,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     *controlItemParams[0].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("LFO");
     *controlItemParams[0].TargetLfoParam = CONTROL_TARGET_LFO_PARAM_NAMES.indexOf("Amount");
     
+    globalParams.addAllParameters(*this);
     voiceParams.addAllParameters(*this);
     for(auto params : envelopeParams) {
         params.addAllParameters(*this);
@@ -248,6 +249,7 @@ void GrapeAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     // TODO: ValueTree でもできるらしいので調べる
     juce::XmlElement xml("GrapeInstrument");
     
+    globalParams.saveParameters(xml);
     voiceParams.saveParameters(xml);
     for(auto param : envelopeParams) {
         param.saveParameters(xml);
@@ -278,6 +280,7 @@ void GrapeAudioProcessor::setStateInformation (const void* data, int sizeInBytes
     {
         if (xml->hasTagName ("GrapeInstrument"))
         {
+            globalParams.loadParameters(*xml);
             voiceParams.loadParameters(*xml);
             for(auto param : envelopeParams) {
                 param.loadParameters(*xml);
