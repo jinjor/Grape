@@ -2583,7 +2583,7 @@ AnalyserWindow::AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* 
 , modEnvParams(modEnvParams)
 , forwardFFT (fftOrder)
 , window (fftSize, juce::dsp::WindowingFunction<float>::hann)
-, lastAdsrParams { SimpleAdsrParams(), SimpleAdsrParams() }
+, lastAmpEnvParams { SimpleAmpEnvParams(), SimpleAmpEnvParams() }
 , lastModEnvParams { SimpleModEnvParams(), SimpleModEnvParams(), SimpleModEnvParams() }
 {
     latestDataProvider->addConsumer(&fftConsumer);
@@ -2627,11 +2627,11 @@ void AnalyserWindow::timerCallback()
             lastAnalyserMode = ANALYSER_MODE::Envelope;
             auto changed = false;
             for(int i = 0; i < NUM_ENVELOPE; i++) {
-                auto p = SimpleAdsrParams(envelopeParams[i]);
-                if(!lastAdsrParams[i].equals(p)) {
+                auto p = SimpleAmpEnvParams(envelopeParams[i]);
+                if(!lastAmpEnvParams[i].equals(p)) {
                     changed = true;
                 }
-                lastAdsrParams[i] = p;
+                lastAmpEnvParams[i] = p;
             }
             for(int i = 0; i < NUM_MODENV; i++) {
                 auto p = SimpleModEnvParams(modEnvParams[i]);
@@ -2653,11 +2653,11 @@ void AnalyserWindow::timerCallback()
             auto maxSec = maxAD + maxR;
             auto sampleRate = (float)scopeSize / maxSec;
             for(int i = 0; i < NUM_ENVELOPE; i++) {
-                adsr[i].setParams(envelopeParams[i].Attack->get(),
-                                  0,
-                                  envelopeParams[i].Decay->get(),
-                                  envelopeParams[i].Sustain->get(),
-                                  envelopeParams[i].Release->get());
+                ampEnvs[i].setParams(envelopeParams[i].Attack->get(),
+                                     0,
+                                     envelopeParams[i].Decay->get(),
+                                     envelopeParams[i].Sustain->get(),
+                                     envelopeParams[i].Release->get());
             }
             for(int i = 0; i < NUM_MODENV; i++) {
                 if(modEnvParams[i].shouldUseHold()) {
@@ -2675,7 +2675,7 @@ void AnalyserWindow::timerCallback()
                 }
             }
             for(int i = 0; i < NUM_ENVELOPE; i++) {
-                adsr[i].doAttack(sampleRate);
+                ampEnvs[i].doAttack(sampleRate);
             }
             for(int i = 0; i < NUM_MODENV; i++) {
                 modEnvs[i].doAttack(sampleRate);
@@ -2684,12 +2684,12 @@ void AnalyserWindow::timerCallback()
             for(int pos = 0; pos < scopeSize; pos++) {
                 if(pos == releasePoint) {
                     for(int i = 0; i < NUM_ENVELOPE; i++) {
-                        adsr[i].doRelease(sampleRate);
+                        ampEnvs[i].doRelease(sampleRate);
                     }
                 }
                 for(int i = 0; i < NUM_ENVELOPE; i++) {
-                    scopeDataForEnvelope[i][pos] = adsr[i].getValue();
-                    adsr[i].step(sampleRate);
+                    scopeDataForAmpEnv[i][pos] = ampEnvs[i].getValue();
+                    ampEnvs[i].step(sampleRate);
                 }
                 for(int i = 0; i < NUM_MODENV; i++) {
                     auto value = 0.0f;
@@ -2699,12 +2699,12 @@ void AnalyserWindow::timerCallback()
                             value = 1 - value;
                         }
                     }
-                    scopeDataForEnvelope[i + NUM_ENVELOPE][pos] = value;
+                    scopeDataForModEnv[i][pos] = value;
                     modEnvs[i].step(sampleRate);
                 }
             }
             for(int i = 0; i < NUM_ENVELOPE; i++) {
-                adsr[i].forceStop();
+                ampEnvs[i].forceStop();
             }
             for(int i = 0; i < NUM_MODENV; i++) {
                 modEnvs[i].forceStop();
@@ -2861,10 +2861,17 @@ void AnalyserWindow::paint(juce::Graphics& g)
                 break;
             }
             case ANALYSER_MODE::Envelope: {
-                for(int i = NUM_ENVELOPE + NUM_MODENV - 1; i >= 0; i--) {
-                    auto spectrumWidth = displayBounds.getWidth();
-                    juce::Colour colour = i >= NUM_ENVELOPE ? ANALYSER_LINE_COLOUR2 : ANALYSER_LINE_COLOUR;
-                    paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForEnvelope[i][0]);
+                auto spectrumWidth = displayBounds.getWidth();
+                for(int i = NUM_MODENV - 1; i >= 0; i--) {
+                    if(!modEnvParams[i].Enabled->get()) {
+                        continue;
+                    }
+                    juce::Colour colour = ANALYSER_LINE_COLOUR2;
+                    paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForModEnv[i][0]);
+                }
+                for(int i = NUM_ENVELOPE - 1; i >= 0; i--) {
+                    juce::Colour colour = ANALYSER_LINE_COLOUR;
+                    paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForAmpEnv[i][0]);
                 }
                 break;
             }

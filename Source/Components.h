@@ -490,12 +490,12 @@ private:
     int overflowWarningR = 0;
     
     // Envelope
-    Adsr adsr[NUM_ENVELOPE];
+    Adsr ampEnvs[NUM_ENVELOPE];
     Adsr modEnvs[NUM_MODENV];
-    class SimpleAdsrParams {
+    class SimpleAmpEnvParams {
     public:
-        SimpleAdsrParams() {}
-        SimpleAdsrParams(EnvelopeParams& envelopeParams) {
+        SimpleAmpEnvParams() {}
+        SimpleAmpEnvParams(EnvelopeParams& envelopeParams) {
             a = envelopeParams.Attack->get();
             d = envelopeParams.Decay->get();
             s = envelopeParams.Sustain->get();
@@ -505,7 +505,7 @@ private:
         float d = 0;
         float s = 0;
         float r = 0;
-        bool equals(SimpleAdsrParams& p) {
+        bool equals(SimpleAmpEnvParams& p) {
             return a == p.a && d == p.d && s == p.s && r == p.r;
         }
     };
@@ -530,9 +530,10 @@ private:
             return w == p.w && a == p.a && d == p.d && enabled == p.enabled && isTargetFreq == p.isTargetFreq && fadeIn == p.fadeIn;
         }
     };
-    SimpleAdsrParams lastAdsrParams[NUM_ENVELOPE];
+    SimpleAmpEnvParams lastAmpEnvParams[NUM_ENVELOPE];
     SimpleModEnvParams lastModEnvParams[NUM_MODENV];
-    float scopeDataForEnvelope[NUM_ENVELOPE+NUM_MODENV][scopeSize]{};
+    float scopeDataForAmpEnv[NUM_ENVELOPE][scopeSize]{};
+    float scopeDataForModEnv[NUM_MODENV][scopeSize]{};
     
     // Filter
     Filter filters[NUM_FILTER];
