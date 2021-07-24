@@ -1,0 +1,61 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "extensions": {
+    "recommendations": [
+      "ms-vscode.cmake-tools",
+      "twxs.cmake",
+      "ms-vscode.cpptools",
+      "llvm-vs-code-extensions.vscode-clangd",
+      "vadimcn.vscode-lldb"
+    ]
+  },
+  "settings": {
+    "C_Cpp.intelliSenseEngine": "Disabled",
+    "C_Cpp.default.cppStandard": "c++17",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "git.ignoreLimitWarning": true,
+    "clangd.arguments": [
+      "-clang-tidy",
+      "-background-index",
+      "-compile-commands-dir=${workspaceFolder}/build",
+      "-header-insertion=never",
+      "--query-driver=\"/usr/bin/clang++\""
+    ],
+    "cmake.ctestArgs": ["--verbose"],
+    "cmake.configureArgs": [
+      "-DJUCE_BUILD_EXTRAS=ON",
+      "-DJUCE_COPY_PLUGIN_AFTER_BUILD=ON"
+    ],
+    "cmake.preferredGenerators": ["Ninja", "Unix Makefiles"]
+  },
+  "launch": {
+    "configurations": [
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "Debug with AudioPluginHost",
+        "program": "./debug-with-plugin-host.sh",
+        "args": [],
+        "cwd": "${workspaceFolder}"
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "echo",
+        "type": "shell",
+        "command": "./release-build",
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      }
+    ]
+  }
+}
