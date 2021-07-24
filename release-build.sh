@@ -2,10 +2,16 @@
 
 set -e
 
+build_dir=release-build
+
 cmake \
-  -B release-build \
+  -B $build_dir \
   -G 'Unix Makefiles' \
   -D CMAKE_BUILD_TYPE=Release \
   -D JUCE_COPY_PLUGIN_AFTER_BUILD=ON
   
-cmake --build release-build
+cmake --build $build_dir
+
+echo
+
+$build_dir/benchmark/GrapeBenchmarks
