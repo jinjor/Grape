@@ -38,23 +38,9 @@
         "type": "lldb",
         "request": "launch",
         "name": "Debug with AudioPluginHost",
-        "program": "./debug-with-plugin-host.sh",
+        "program": "build/libs/JUCE/extras/AudioPluginHost/AudioPluginHost_artefacts/Debug/AudioPluginHost.app/Contents/MacOS/AudioPluginHost",
         "args": [],
         "cwd": "${workspaceFolder}"
-      }
-    ]
-  },
-  "tasks": {
-    "version": "2.0.0",
-    "tasks": [
-      {
-        "label": "echo",
-        "type": "shell",
-        "command": "./release-build",
-        "group": {
-          "kind": "build",
-          "isDefault": true
-        }
       }
     ]
   }
