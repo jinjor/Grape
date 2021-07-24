@@ -1,4 +1,7 @@
 #include <benchmark/benchmark.h>
+// #include "../src/Params.h"
+// #include "../src/Voice.h"
+// #include <JuceHeader.h>
 
 static void BM_StringCreation(benchmark::State& state) {
   for (auto _ : state)
