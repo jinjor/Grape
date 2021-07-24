@@ -27,6 +27,7 @@
     ],
     "cmake.ctestArgs": ["--verbose"],
     "cmake.configureArgs": [
+      "-DCMAKE_BUILD_TYPE=Debug",
       "-DJUCE_BUILD_EXTRAS=ON",
       "-DJUCE_COPY_PLUGIN_AFTER_BUILD=ON"
     ],

@@ -1,7 +1,6 @@
 build
 release-build
 
-data
+.cache
 tmp
-*.jucer
 *.out
