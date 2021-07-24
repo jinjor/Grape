@@ -1,6 +1,6 @@
-Builds
-JuceLibraryCode
-data
+build
+release-build
+
+.cache
 tmp
-*.jucer
 *.out

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
+#include <filesystem>
 
 namespace {
 const int NUM_DIVISIONS = 4095;
@@ -8,10 +9,10 @@ const int NUM_SAMPLES = NUM_DIVISIONS+1;
 const float BASE_FREQ = 440.0f;
 const float MAX_FREQ = 22000.0f;
 const float PI = 3.141592f;
-const std::string LOOKUP_FILE = "data/lookup";
-const std::string SINE_FILE = "data/sine";
-const std::string SAW_FILE = "data/saw";
-const std::string PARABOLA_FILE = "data/parabola";
+const std::string LOOKUP_FILE = "lookup";
+const std::string SINE_FILE = "sine";
+const std::string SAW_FILE = "saw";
+const std::string PARABOLA_FILE = "parabola";
 }
 
 int main() {
