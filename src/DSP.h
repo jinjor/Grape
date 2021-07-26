@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "Params.h" // TODO: 依存が逆
 
 //==============================================================================
 class Wavetable {

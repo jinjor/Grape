@@ -22,7 +22,7 @@ class SparseLog
 public:
     SparseLog(int count) : count(count){}
     ~SparseLog(){}
-    void log(std::string key, std::string message) {
+    void log(std::string& key, std::string& message) {
         if (map.find(key) == map.end()) {
             map[key] = 0;
         }
@@ -33,8 +33,9 @@ public:
             map[key]++;
         }
     }
-    void log(std::string key, double message) {
-        log(key, std::to_string(message));
+    void log(std::string& key, double message) {
+        auto s = std::to_string(message);
+        log(key, s);
     }
 private:
     int count;
