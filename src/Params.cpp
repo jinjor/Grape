@@ -59,7 +59,7 @@ void VoiceParams::saveParameters(juce::XmlElement& xml)
 void VoiceParams::loadParameters(juce::XmlElement& xml)
 {
     *Mode = xml.getIntAttribute(Mode->paramID, 0);
-    *PortamentoTime = xml.getIntAttribute(PortamentoTime->paramID, 0.001);
+    *PortamentoTime = xml.getDoubleAttribute(PortamentoTime->paramID, 0.001);
     *PitchBendRange = xml.getIntAttribute(PitchBendRange->paramID, 2);
 }
 
