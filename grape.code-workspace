@@ -23,7 +23,7 @@
       "-background-index",
       "-compile-commands-dir=${workspaceFolder}/build",
       "-header-insertion=never",
-      "--query-driver=\"/usr/bin/clang++\""
+      "--query-driver=/usr/bin/clang++"
     ],
     "cmake.ctestArgs": ["--verbose"],
     "cmake.configureArgs": [

@@ -1,9 +1,22 @@
 add_executable(wavetable-gen WavetableGen.cpp)
 target_compile_features(wavetable-gen PUBLIC cxx_std_17)
 
-add_custom_target(wavetables
+add_custom_command(
+    OUTPUT
+        lookup
+        parabola
+        saw
+        sine
     COMMAND wavetable-gen
     DEPENDS wavetable-gen
+    VERBATIM)
+
+add_custom_target(wavetables
+    DEPENDS
+        lookup
+        parabola
+        saw
+        sine
     VERBATIM)
 
 juce_add_binary_data(GrapePluginBinaries SOURCES 
