@@ -15,4 +15,4 @@ cmake --build $build_dir
 
 echo
 
-$build_dir/benchmark/GrapeBenchmarks
+$build_dir/benchmark/GrapeBenchmarks_artefacts/Release/GrapeBenchmarks

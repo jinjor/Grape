@@ -163,6 +163,8 @@ public:
     virtual void pitchWheelMoved (int) override {};
     virtual void controllerMoved (int, int) override {};
     void renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int startSample, int numSamples) override;
+    void applyParamsBeforeLoop (double sampleRate);
+    bool step (double* out, double sampleRate, int numChannels);
 private:
     juce::PerformanceCounter perf;
     juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo;

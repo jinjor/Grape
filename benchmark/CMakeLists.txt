@@ -24,4 +24,6 @@ target_link_libraries(GrapeBenchmarks
 target_sources(GrapeBenchmarks
   PRIVATE
     Benchmark.cpp
+    ../src/Params.cpp
+    ../src/Voice.cpp
 )
