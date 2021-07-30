@@ -113,7 +113,7 @@ public:
     juce::AudioParameterFloat* MasterVolume;
     
     GlobalParams();
-    
+    GlobalParams(const GlobalParams &) = delete;
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
@@ -130,7 +130,7 @@ public:
     juce::AudioParameterInt* PitchBendRange;
     
     VoiceParams();
-    
+    VoiceParams(const VoiceParams &) = delete;
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
@@ -154,7 +154,7 @@ public:
     juce::AudioParameterChoice* Envelope;
     
     OscParams(int index);
-    
+    OscParams(const OscParams &) = delete;
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
@@ -171,8 +171,9 @@ public:
     juce::AudioParameterFloat* Decay;
     juce::AudioParameterFloat* Sustain;
     juce::AudioParameterFloat* Release;
-    
+
     EnvelopeParams(int index);
+    EnvelopeParams(const EnvelopeParams &) = delete;
     
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -194,8 +195,9 @@ public:
     juce::AudioParameterInt* Semitone;
     juce::AudioParameterFloat* Q;
     juce::AudioParameterFloat* Gain;
-    
+
     FilterParams(int index);
+    FilterParams(const FilterParams&) = delete;
     
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -229,8 +231,9 @@ public:
     juce::AudioParameterFloat* SlowFreq;
     juce::AudioParameterFloat* FastFreq;
     juce::AudioParameterFloat* Amount;
-    
+
     LfoParams(int index);
+    LfoParams(const LfoParams&) = delete;
     
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -270,8 +273,9 @@ public:
     juce::AudioParameterFloat* Wait;
     juce::AudioParameterFloat* Attack;
     juce::AudioParameterFloat* Decay;
-    
+
     ModEnvParams(int index);
+    ModEnvParams(const ModEnvParams&) = delete;
     
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -305,6 +309,7 @@ public:
     juce::AudioParameterFloat* Feedback;
     juce::AudioParameterFloat* Mix;
     DelayParams();
+    DelayParams(const DelayParams &) = delete;
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
@@ -326,6 +331,7 @@ public:
     juce::AudioParameterChoice* TargetLfoParam;
     juce::AudioParameterChoice* TargetMiscParam;
     ControlItemParams(int index);
+    ControlItemParams(const ControlItemParams &) = delete;
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;

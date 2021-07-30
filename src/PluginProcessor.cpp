@@ -34,23 +34,23 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     
     globalParams.addAllParameters(*this);
     voiceParams.addAllParameters(*this);
-    for(auto params : envelopeParams) {
+    for(auto& params : envelopeParams) {
         params.addAllParameters(*this);
     }
-    for(auto params : oscParams) {
+    for(auto& params : oscParams) {
         params.addAllParameters(*this);
     }
-    for(auto params : filterParams) {
+    for(auto& params : filterParams) {
         params.addAllParameters(*this);
     }
-    for(auto params : lfoParams) {
+    for(auto& params : lfoParams) {
         params.addAllParameters(*this);
     }
-    for(auto params : modEnvParams) {
+    for(auto& params : modEnvParams) {
         params.addAllParameters(*this);
     }
     delayParams.addAllParameters(*this);
-    for(auto params : controlItemParams) {
+    for(auto& params : controlItemParams) {
         params.addAllParameters(*this);
     }
 }
@@ -251,23 +251,23 @@ void GrapeAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     
     globalParams.saveParameters(xml);
     voiceParams.saveParameters(xml);
-    for(auto param : envelopeParams) {
+    for(auto& param : envelopeParams) {
         param.saveParameters(xml);
     }
-    for(auto param : oscParams) {
+    for(auto& param : oscParams) {
         param.saveParameters(xml);
     }
-    for(auto param : filterParams) {
+    for(auto& param : filterParams) {
         param.saveParameters(xml);
     }
-    for(auto param : lfoParams) {
+    for(auto& param : lfoParams) {
         param.saveParameters(xml);
     }
-    for(auto param : modEnvParams) {
+    for(auto& param : modEnvParams) {
         param.saveParameters(xml);
     }
     delayParams.saveParameters(xml);
-    for(auto param : controlItemParams) {
+    for(auto& param : controlItemParams) {
         param.saveParameters(xml);
     }
     copyXmlToBinary(xml, destData);
@@ -282,23 +282,23 @@ void GrapeAudioProcessor::setStateInformation (const void* data, int sizeInBytes
         {
             globalParams.loadParameters(*xml);
             voiceParams.loadParameters(*xml);
-            for(auto param : envelopeParams) {
+            for(auto& param : envelopeParams) {
                 param.loadParameters(*xml);
             }
-            for(auto param : oscParams) {
+            for(auto& param : oscParams) {
                 param.loadParameters(*xml);
             }
-            for(auto param : filterParams) {
+            for(auto& param : filterParams) {
                 param.loadParameters(*xml);
             }
-            for(auto param : lfoParams) {
+            for(auto& param : lfoParams) {
                 param.loadParameters(*xml);
             }
-            for(auto param : modEnvParams) {
+            for(auto& param : modEnvParams) {
                 param.loadParameters(*xml);
             }
             delayParams.loadParameters(*xml);
-            for(auto param : controlItemParams) {
+            for(auto& param : controlItemParams) {
                 param.loadParameters(*xml);
             }
         }

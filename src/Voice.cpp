@@ -195,7 +195,10 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
     double midiNoteNumber = smoothNote.value;
     
     double shiftedNoteNumbers[NUM_OSC] {smoothNote.value, smoothNote.value, smoothNote.value};
-    for(int i = 0; i < NUM_OSC; ++i) {
+    for (int i = 0; i < NUM_OSC; ++i) {
+        if(!oscParams[i].Enabled->get()) {
+            continue;
+        }
         shiftedNoteNumbers[i] += oscParams[i].Octave->get() * 12 + oscParams[i].Coarse->get();
     }
     
@@ -237,14 +240,14 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                             }
                             case MODENV_TARGET_OSC_PARAM::Detune: {
                                 if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
-                                    modEnvValue = 1 - modEnvValue;
+                                    modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_OSC
                                 }
                                 modifiers.detuneRatio[oscIndex] *= modEnvValue;
                                 break;
                             }
                             case MODENV_TARGET_OSC_PARAM::Spread: {
                                 if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
-                                    modEnvValue = 1 - modEnvValue;
+                                    modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_OSC
                                 }
                                 modifiers.spreadRatio[oscIndex] *= modEnvValue;
                                 break;
@@ -266,7 +269,7 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                             }
                             case MODENV_TARGET_FILTER_PARAM::Q: {
                                 if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
-                                    modEnvValue = 1 - modEnvValue;
+                                    modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_FILTER
                                 }
                                 modifiers.filterQExp[filterIndex] *= modEnvValue;
                                 break;
