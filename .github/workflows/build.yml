@@ -19,7 +19,7 @@ jobs:
           path: .
           key: ${{ runner.os }}-benchmark
       - name: Build and run benchmark
-        run: release-build
+        run: release-build.sh
       - name: Store benchmark result
         uses: rhysd/github-action-benchmark@v1
         with:
