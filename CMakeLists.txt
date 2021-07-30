@@ -7,7 +7,7 @@ VERSION 0.0.1
 
 add_subdirectory(libs/JUCE)
 
-set(GOOGLETEST_PATH ${CMAKE_SOURCE_DIR}/libs/googletest)
+set(GOOGLETEST_PATH ${CMAKE_SOURCE_DIR}/libs/googletest CACHE PATH "")
 # set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
 add_subdirectory(libs/benchmark)
 
