@@ -15,4 +15,9 @@ cmake --build $build_dir
 
 echo
 
-$build_dir/benchmark/GrapeBenchmarks_artefacts/Release/GrapeBenchmarks
+benchmark_executable="$build_dir/benchmark/GrapeBenchmarks_artefacts/Release/GrapeBenchmarks"
+if [ -n "$CI" ] ; then
+  "$benchmark_executable" --benchmark_format=json | tee benchmark_result.json
+else
+  "$benchmark_executable" 
+fi
