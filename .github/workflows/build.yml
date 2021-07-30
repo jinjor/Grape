@@ -14,7 +14,7 @@ jobs:
         with:
           submodules: true
       - name: Build and run benchmark
-        run: release-build.sh
+        run: ./release-build.sh
       - name: Store benchmark result
         uses: rhysd/github-action-benchmark@v1
         with:
