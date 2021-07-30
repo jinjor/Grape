@@ -16,6 +16,7 @@ jobs:
       - run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git remote set-url origin git@github.com:jinjor/Grape.git
       - name: Cache Benchmark library
         uses: actions/cache@v2
         with:
