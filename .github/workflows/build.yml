@@ -13,11 +13,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Cache Benchmark library
-        uses: actions/cache@v1
-        with:
-          path: .
-          key: ${{ runner.os }}-benchmark
       - name: Build and run benchmark
         run: release-build.sh
       - name: Store benchmark result
