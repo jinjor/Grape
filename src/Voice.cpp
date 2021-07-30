@@ -291,7 +291,7 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                             }
                             case MODENV_TARGET_LFO_PARAM::Amount: {
                                 if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
-                                    modEnvValue = 1 - modEnvValue;
+                                    modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_LFO
                                 }
                                 modifiers.lfoAmountGain[lfoIndex] *= modEnvValue;
                                 break;
