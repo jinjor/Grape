@@ -5,8 +5,8 @@ on:
       - main
 
 jobs:
-  benchmark:
-    name: Run C++ benchmark example
+  build-and-benchmark:
+    name: Build and benchmark
     runs-on: macos-latest
     steps:
       - name: Checkout
