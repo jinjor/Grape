@@ -195,7 +195,10 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
     double midiNoteNumber = smoothNote.value;
     
     double shiftedNoteNumbers[NUM_OSC] {smoothNote.value, smoothNote.value, smoothNote.value};
-    for(int i = 0; i < NUM_OSC; ++i) {
+    for (int i = 0; i < NUM_OSC; ++i) {
+        if(!oscParams[i].Enabled->get()) {
+            continue;
+        }
         shiftedNoteNumbers[i] += oscParams[i].Octave->get() * 12 + oscParams[i].Coarse->get();
     }
     
