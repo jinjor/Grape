@@ -216,22 +216,22 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
     
     // ---------------- MODENV ----------------
     for(int i = 0; i < NUM_MODENV; ++i) {
-        auto params = &modEnvParams[i];
-        if(!params->Enabled->get()) {
+        auto& params = modEnvParams[i];
+        if(!params.Enabled->get()) {
             continue;
         }
         modEnvs[i].step(sampleRate);
         auto modEnvValue = modEnvs[i].getValue();
-        auto targetType = static_cast<MODENV_TARGET_TYPE>(params->TargetType->getIndex());
+        auto targetType = static_cast<MODENV_TARGET_TYPE>(params.TargetType->getIndex());
         switch(targetType) {
             case MODENV_TARGET_TYPE::OSC: {
-                int targetIndex = params->TargetOsc->getIndex();
-                auto targetParam = static_cast<MODENV_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
+                int targetIndex = params.TargetOsc->getIndex();
+                auto targetParam = static_cast<MODENV_TARGET_OSC_PARAM>(params.TargetOscParam->getIndex());
                 for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
                     if(targetIndex == oscIndex || targetIndex == NUM_OSC) {
                         switch(targetParam) {
                             case MODENV_TARGET_OSC_PARAM::Freq: {
-                                modifiers.octShift[oscIndex] += params->PeakFreq->get() * modEnvValue;
+                                modifiers.octShift[oscIndex] += params.PeakFreq->get() * modEnvValue;
                                 break;
                             }
                             case MODENV_TARGET_OSC_PARAM::Edge: {
@@ -239,14 +239,14 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                                 break;
                             }
                             case MODENV_TARGET_OSC_PARAM::Detune: {
-                                if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
+                                if(static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In) {
                                     modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_OSC
                                 }
                                 modifiers.detuneRatio[oscIndex] *= modEnvValue;
                                 break;
                             }
                             case MODENV_TARGET_OSC_PARAM::Spread: {
-                                if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
+                                if(static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In) {
                                     modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_OSC
                                 }
                                 modifiers.spreadRatio[oscIndex] *= modEnvValue;
@@ -258,17 +258,17 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                 break;
             }
             case MODENV_TARGET_TYPE::Filter: {
-                int targetIndex = params->TargetFilter->getIndex();
-                auto targetParam = static_cast<MODENV_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
+                int targetIndex = params.TargetFilter->getIndex();
+                auto targetParam = static_cast<MODENV_TARGET_FILTER_PARAM>(params.TargetFilterParam->getIndex());
                 for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
                     if(targetIndex == filterIndex || targetIndex == NUM_FILTER) {
                         switch (targetParam) {
                             case MODENV_TARGET_FILTER_PARAM::Freq: {
-                                modifiers.filterOctShift[filterIndex] += params->PeakFreq->get() * modEnvValue;
+                                modifiers.filterOctShift[filterIndex] += params.PeakFreq->get() * modEnvValue;
                                 break;
                             }
                             case MODENV_TARGET_FILTER_PARAM::Q: {
-                                if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
+                                if(static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In) {
                                     modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_FILTER
                                 }
                                 modifiers.filterQExp[filterIndex] *= modEnvValue;
@@ -280,17 +280,17 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                 break;
             }
             case MODENV_TARGET_TYPE::LFO: {
-                int targetIndex = params->TargetLfo->getIndex();
-                auto targetParam = static_cast<MODENV_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
+                int targetIndex = params.TargetLfo->getIndex();
+                auto targetParam = static_cast<MODENV_TARGET_LFO_PARAM>(params.TargetLfoParam->getIndex());
                 for(int lfoIndex = 0; lfoIndex < NUM_LFO; ++lfoIndex) {
                     if(targetIndex == lfoIndex || targetIndex == NUM_LFO) {
                         switch(targetParam) {
                             case MODENV_TARGET_LFO_PARAM::Freq: {
-                                modifiers.lfoOctShift[lfoIndex] += params->PeakFreq->get() * modEnvValue;
+                                modifiers.lfoOctShift[lfoIndex] += params.PeakFreq->get() * modEnvValue;
                                 break;
                             }
                             case MODENV_TARGET_LFO_PARAM::Amount: {
-                                if(static_cast<MODENV_FADE>(params->Fade->getIndex()) == MODENV_FADE::In) {
+                                if(static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In) {
                                     modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_LFO
                                 }
                                 modifiers.lfoAmountGain[lfoIndex] *= modEnvValue;
