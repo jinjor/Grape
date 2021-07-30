@@ -9,13 +9,13 @@ jobs:
     name: Run C++ benchmark example
     runs-on: macos-latest
     steps:
-      - run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
       - name: Checkout
         uses: actions/checkout@v2
         with:
           submodules: true
+      - run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
       - name: Cache Benchmark library
         uses: actions/cache@v2
         with:
