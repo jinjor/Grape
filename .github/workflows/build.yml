@@ -13,10 +13,10 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
-      - run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git remote set-url origin git@github.com:jinjor/Grape.git
+      # - run: |
+      #     git config --local user.email "action@github.com"
+      #     git config --local user.name "GitHub Action"
+      #     git remote set-url origin git@github.com:jinjor/Grape.git
       - name: Cache Benchmark library
         uses: actions/cache@v2
         with:
@@ -25,7 +25,7 @@ jobs:
       - name: Build and run benchmark
         run: ./release-build.sh
       - name: Store benchmark result
-        uses: rhysd/github-action-benchmark@v1
+        uses: leoholz/github-action-benchmark@v1
         with:
           name: Grape Benchmark
           tool: "googlecpp"
