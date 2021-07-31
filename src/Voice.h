@@ -111,36 +111,18 @@ private:
 };
 
 //==============================================================================
-class Modifiers {
-public:
-    Modifiers()
-    {
-        std::fill_n(angleShift, NUM_OSC, 0);
-        std::fill_n(octShift, NUM_OSC, 0);
-        std::fill_n(edgeRatio, NUM_OSC, 1.0);
-        std::fill_n(panMod, NUM_OSC, 0.0);
-        std::fill_n(detuneRatio, NUM_OSC, 1.0);
-        std::fill_n(spreadRatio, NUM_OSC, 1.0);
-        std::fill_n(gain, NUM_OSC, 1.0);
-        
-        std::fill_n(filterOctShift, NUM_FILTER, 0);
-        std::fill_n(filterQExp, NUM_FILTER, 1.0);
-        
-        std::fill_n(lfoOctShift, NUM_LFO, 0);
-        std::fill_n(lfoAmountGain, NUM_LFO, 1.0);
-    }
-    ~Modifiers() {};
-    double angleShift[NUM_OSC] {};
-    double octShift[NUM_OSC] {};
-    double edgeRatio[NUM_OSC] {};
-    double panMod[NUM_OSC] {};
-    double detuneRatio[NUM_OSC] {};
-    double spreadRatio[NUM_OSC] {};
-    double gain[NUM_OSC] {};
-    double filterOctShift[NUM_FILTER] {};
-    double filterQExp[NUM_FILTER] {};
-    double lfoOctShift[NUM_LFO] {};
-    double lfoAmountGain[NUM_LFO] {};
+struct Modifiers {
+    double angleShift[NUM_OSC] {0.0, 0.0, 0.0};
+    double octShift[NUM_OSC] {0.0, 0.0, 0.0};
+    double edgeRatio[NUM_OSC] {1.0, 1.0, 1.0};
+    double panMod[NUM_OSC] {0.0, 0.0, 0.0};
+    double detuneRatio[NUM_OSC] {1.0, 1.0, 1.0};
+    double spreadRatio[NUM_OSC] {1.0, 1.0, 1.0};
+    double gain[NUM_OSC] {1.0, 1.0, 1.0};
+    double filterOctShift[NUM_FILTER] {0.0, 0.0};
+    double filterQExp[NUM_FILTER] {1.0, 1.0};
+    double lfoOctShift[NUM_LFO] {0.0, 0.0, 0.0};
+    double lfoAmountGain[NUM_LFO] {1.0, 1.0, 1.0};
 };
 
 //==============================================================================

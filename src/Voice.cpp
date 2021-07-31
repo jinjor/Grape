@@ -201,8 +201,7 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
         }
         shiftedNoteNumbers[i] += oscParams[i].Octave->get() * 12 + oscParams[i].Coarse->get();
     }
-    
-    auto modifiers = Modifiers();
+    auto modifiers = Modifiers {};
     
     for(int i = 0; i < NUM_ENVELOPE; ++i) {
         adsr[i].step(sampleRate);
