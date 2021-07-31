@@ -233,17 +233,13 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                                 break;
                             }
                             case MODENV_TARGET_OSC_PARAM::Detune: {
-                                if(static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In) {
-                                    modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_OSC
-                                }
-                                modifiers.detuneRatio[oscIndex] *= modEnvValue;
+                                auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
+                                modifiers.detuneRatio[oscIndex] *= isFadeIn ? 1 - modEnvValue : modEnvValue;
                                 break;
                             }
                             case MODENV_TARGET_OSC_PARAM::Spread: {
-                                if(static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In) {
-                                    modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_OSC
-                                }
-                                modifiers.spreadRatio[oscIndex] *= modEnvValue;
+                                auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
+                                modifiers.spreadRatio[oscIndex] *= isFadeIn ? 1 - modEnvValue : modEnvValue;
                                 break;
                             }
                         }
@@ -262,10 +258,8 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                                 break;
                             }
                             case MODENV_TARGET_FILTER_PARAM::Q: {
-                                if(static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In) {
-                                    modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_FILTER
-                                }
-                                modifiers.filterQExp[filterIndex] *= modEnvValue;
+                                auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
+                                modifiers.filterQExp[filterIndex] *= isFadeIn ? 1 - modEnvValue : modEnvValue;
                                 break;
                             }
                         }
@@ -284,10 +278,8 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                                 break;
                             }
                             case MODENV_TARGET_LFO_PARAM::Amount: {
-                                if(static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In) {
-                                    modEnvValue = 1 - modEnvValue;// TODO: cause a bug when targetIndex == NUM_LFO
-                                }
-                                modifiers.lfoAmountGain[lfoIndex] *= modEnvValue;
+                                auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
+                                modifiers.lfoAmountGain[lfoIndex] *= isFadeIn ? 1 - modEnvValue : modEnvValue;
                                 break;
                             }
                         }
