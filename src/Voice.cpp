@@ -335,7 +335,8 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                         switch(param) {
                             case LFO_TARGET_OSC_PARAM::Vibrato: {
                                 jassert(lfoValue <= 1.1);
-                                modifiers.octShift[oscIndex] += lfoValue * lfoAmount / 12;
+                                constexpr auto by12 = 1 / 12.0;
+                                modifiers.octShift[oscIndex] += lfoValue * lfoAmount * by12;
                                 break;
                             }
                             case LFO_TARGET_OSC_PARAM::Tremolo: {
