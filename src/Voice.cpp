@@ -192,9 +192,9 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
     smoothNote.step();
     smoothVelocity.step();
     
-    double midiNoteNumber = smoothNote.value;
+    double midiNoteNumber = smoothNote.value + globalParams->Pitch->get() * voiceParams->PitchBendRange->get();
     
-    double shiftedNoteNumbers[NUM_OSC] {smoothNote.value, smoothNote.value, smoothNote.value};
+    double shiftedNoteNumbers[NUM_OSC] {midiNoteNumber, midiNoteNumber, midiNoteNumber};
     for (int i = 0; i < NUM_OSC; ++i) {
         if(!oscParams[i].Enabled->get()) {
             continue;
@@ -206,12 +206,6 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
     
     for(int i = 0; i < NUM_ENVELOPE; ++i) {
         adsr[i].step(sampleRate);
-    }
-    
-    // ---------------- GLOBAL ----------------
-    auto octShiftByPitchBend = globalParams->Pitch->get() * (voiceParams->PitchBendRange->get() / 12.0);
-    for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-        modifiers.octShift[oscIndex] += octShiftByPitchBend;
     }
     
     // ---------------- MODENV ----------------
