@@ -42,10 +42,10 @@ bool GrapeVoice::canPlaySound (juce::SynthesiserSound* sound)
     return false;
 }
 void GrapeVoice::startNote (int midiNoteNumber, float velocity,
-                juce::SynthesiserSound*, int currentPitchWheelPosition)
+                juce::SynthesiserSound* sound, int currentPitchWheelPosition)
 {
     DBG("startNote() midiNoteNumber:" << midiNoteNumber);
-    if(GrapeSound* playingSound = dynamic_cast<GrapeSound*>(getCurrentlyPlayingSound().get()))
+    if(GrapeSound* playingSound = dynamic_cast<GrapeSound*>(sound))
     {
         auto sampleRate = getSampleRate();
         smoothNote.init(midiNoteNumber);
