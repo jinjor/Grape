@@ -171,6 +171,19 @@ static void BM_VoiceStep_single_rel_filter(benchmark::State& state) {
 }
 BENCHMARK(BM_VoiceStep_single_rel_filter);
 
+static void BM_VoiceStep_single_rel_filter_with_vibrato(benchmark::State& state) {
+  Params p {};
+  *p.oscParams[0].Enabled = true;
+  *p.oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
+  *p.filterParams[0].Enabled = true;
+  *p.filterParams[0].FreqType = FILTER_FREQ_TYPE_NAMES.indexOf("Rel");
+  *p.lfoParams[0].Enabled = true;
+  *p.lfoParams[0].TargetType = LFO_TARGET_TYPE_NAMES.indexOf("OSC");
+  *p.lfoParams[0].TargetOscParam = LFO_TARGET_OSC_PARAM_NAMES.indexOf("Vibrato");
+  doStepLoop(state, p);
+}
+BENCHMARK(BM_VoiceStep_single_rel_filter_with_vibrato);
+
 static void BM_VoiceStep_multiple_abs_filter(benchmark::State& state) {
   Params p {};
   *p.oscParams[0].Enabled = true;
@@ -192,6 +205,21 @@ static void BM_VoiceStep_multiple_rel_filter(benchmark::State& state) {
   doStepLoop(state, p);
 }
 BENCHMARK(BM_VoiceStep_multiple_rel_filter);
+
+static void BM_VoiceStep_multiple_rel_filter_with_vibrato(benchmark::State& state) {
+  Params p {};
+  *p.oscParams[0].Enabled = true;
+  *p.oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
+  *p.filterParams[0].Enabled = true;
+  *p.filterParams[0].FreqType = FILTER_FREQ_TYPE_NAMES.indexOf("Rel");
+  *p.filterParams[1].Enabled = true;
+  *p.filterParams[1].FreqType = FILTER_FREQ_TYPE_NAMES.indexOf("Rel");
+  *p.lfoParams[0].Enabled = true;
+  *p.lfoParams[0].TargetType = LFO_TARGET_TYPE_NAMES.indexOf("OSC");
+  *p.lfoParams[0].TargetOscParam = LFO_TARGET_OSC_PARAM_NAMES.indexOf("Vibrato");
+  doStepLoop(state, p);
+}
+BENCHMARK(BM_VoiceStep_multiple_rel_filter_with_vibrato);
 
 static void BM_VoiceStep_full(benchmark::State& state) {
   Params p {};
