@@ -29,9 +29,6 @@ public:
         const float* partial = getPartial(saw, freq);
         return getValueReverse(partial, pos);
     }
-    double getSquareValue(double freq, double angle) {
-        return getPulseValue(freq, angle, 0.5);
-    }
     double getPulseValue(double freq, double angle, double edge) {
         double phaseShift = (1.0 - edge * 0.99) * 0.5;
         jassert(phaseShift > 0.0);
@@ -46,15 +43,14 @@ public:
         return getSlopedVariableTriangleValue(freq, angle, 0.5);
     }
     double getSlopedVariableTriangleValue(double freq, double angle, double edge) {
-        double phaseShift = (1.0 - edge * 0.99) * 0.5;
+        double phaseShift = (1.0 - edge * 0.9) * 0.5;
         jassert(phaseShift > 0.0);
         jassert(phaseShift <= 0.5);
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
         float pos1 = angle / juce::MathConstants<double>::twoPi;
         float pos2 = std::fmod(pos1 + phaseShift, 1.0f);
         const float* partial = getPartial(parabola, freq);
-//        return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (duty - duty * duty));
-        return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (-0.8*(phaseShift-0.5)*(phaseShift-0.5)+0.25));// TODO: gibbs 試して再考
+        return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (phaseShift - phaseShift * phaseShift));
     }
 private:
     double getValue(const float* partial, float normalizedAngle) {
