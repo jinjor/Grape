@@ -370,7 +370,7 @@ private:
     void setLowpassParams (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto w0 = juce::MathConstants<double>::twoPi * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = (1 - cosw0) * 0.5;
@@ -389,7 +389,7 @@ private:
     void setHighpassParams (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto w0 = juce::MathConstants<double>::twoPi * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = (1 + cosw0) * 0.5;
@@ -408,7 +408,7 @@ private:
     void setBandpass1Params (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto w0 = juce::MathConstants<double>::twoPi * fc;
         auto sinw0 = std::sin(w0);
         auto alpha = sinw0 / (2 * q);
         auto b0 = sinw0 * 0.5;
@@ -427,7 +427,7 @@ private:
     void setBandpass2Params (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto w0 = juce::MathConstants<double>::twoPi * fc;
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = alpha;
         auto b1 = 0.0;
@@ -445,7 +445,7 @@ private:
     void setNotchParams (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto w0 = juce::MathConstants<double>::twoPi * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = 1.0;
@@ -464,7 +464,7 @@ private:
     void setAllPassParams (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto w0 = juce::MathConstants<double>::twoPi * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = 1 - alpha;
@@ -483,7 +483,7 @@ private:
     void setPeakingParams (double freq, double q, double dbGain) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto w0 = juce::MathConstants<double>::twoPi * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto A = std::pow(10, dbGain/40);
@@ -503,7 +503,7 @@ private:
     void setLowShelfParams (double freq, double q, double dbGain) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto w0 = juce::MathConstants<double>::twoPi * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto A = std::pow(10, dbGain/40);
@@ -524,7 +524,7 @@ private:
     void setHighShelfParams (double freq, double q, double dbGain) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = 2 * juce::MathConstants<double>::pi * fc;
+        auto w0 = juce::MathConstants<double>::twoPi * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto A = std::pow(10, dbGain/40);
