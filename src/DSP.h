@@ -683,17 +683,23 @@ private:
             }
         }
         if(pan != currentPan || spread != currentSpread || numOsc != currentNumOsc) {
-            auto panMax = pan + std::min(1.0 - pan, spread);
-            auto panMin = pan - std::min(1.0 + pan, spread);
-            for(int i = 0; i < numOsc; ++i) {
-                double p = numOsc == 1
-                    ? (panMin + panMax) * 0.5
-                    : panMin * (numOsc - 1 - i) / (numOsc - 1) + panMax * i / (numOsc - 1);
+            auto panMax = std::min(1.0, pan + spread);
+            auto panMin = std::max(-1.0, pan - spread);
+            if (numOsc == 1) {
+                double p = (panMin + panMax) * 0.5;
+                double theta = (p + 1) * 0.5 * juce::MathConstants<double>::halfPi;
+                pans[0][0] = std::cos(theta);
+                pans[0][1] = std::sin(theta);
+            } else {
+              auto by_intervals = 1.0 / (numOsc - 1);
+              for (int i = 0; i < numOsc; ++i) {
+                double p = panMin * (numOsc - 1 - i) * by_intervals + panMax * i * by_intervals;
                 jassert(p >= -1);
                 jassert(p <= 1);
                 double theta = (p + 1) * 0.5 * juce::MathConstants<double>::halfPi;
                 pans[i][0] = std::cos(theta);
                 pans[i][1] = std::sin(theta);
+              }
             }
         }
         if(numOsc != currentNumOsc) {
