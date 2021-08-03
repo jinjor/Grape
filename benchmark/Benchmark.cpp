@@ -151,6 +151,19 @@ static void BM_VoiceStep_single_abs_filter_with_lfo_filterfreq(benchmark::State&
 }
 BENCHMARK(BM_VoiceStep_single_abs_filter_with_lfo_filterfreq);
 
+static void BM_VoiceStep_single_abs_lowshelf_with_lfo_filterfreq(benchmark::State& state) {
+  Params p {};
+  *p.oscParams[0].Enabled = true;
+  *p.oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
+  *p.filterParams[0].Enabled = true;
+  *p.filterParams[0].Type = FILTER_TYPE_NAMES.indexOf("LowShelf");
+  *p.lfoParams[0].Enabled = true;
+  *p.lfoParams[0].TargetType = LFO_TARGET_TYPE_NAMES.indexOf("Filter");
+  *p.lfoParams[0].TargetFilterParam = LFO_TARGET_FILTER_PARAM_NAMES.indexOf("Freq");
+  doStepLoop(state, p);
+}
+BENCHMARK(BM_VoiceStep_single_abs_lowshelf_with_lfo_filterfreq);
+
 static void BM_VoiceStep_single_abs_filter_with_lfo_filterq(benchmark::State& state) {
   Params p {};
   *p.oscParams[0].Enabled = true;
