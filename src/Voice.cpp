@@ -371,6 +371,8 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
         }
     }
     bool active = false;
+    auto panBase = globalParams->Pan->get();
+    auto panModAmp = std::min(1.0 - panBase, 1.0 + panBase);
     // ---------------- OSC with Envelope and Filter ----------------
     for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
         auto& p = oscParams[oscIndex];
@@ -385,12 +387,11 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
         
         auto freq = getMidiNoteInHertzDouble(shiftedNoteNumbers[oscIndex] + modifiers.octShift[oscIndex] * 12);
         auto edge = p.Edge->get() * modifiers.edgeRatio[oscIndex];
-        auto panBase = globalParams->Pan->get();
-        auto pan = modifiers.panMod[oscIndex] == 0
-            ? panBase
-            : juce::jlimit(-1.0, 1.0, panBase + (std::min(1.0 - panBase, 1.0 + panBase) * modifiers.panMod[oscIndex]));// TODO: 計算減らす
+        auto pan = panBase + panModAmp * modifiers.panMod[oscIndex];
         auto detune = p.Detune->get() * modifiers.detuneRatio[oscIndex];
         auto spread = p.Spread->get() * modifiers.spreadRatio[oscIndex];
+        jassert(pan >= -1);
+        jassert(pan <= 1);
         
         double o[2] {0, 0};
         oscs[oscIndex].step(p.Unison->get(),
