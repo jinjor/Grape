@@ -1170,18 +1170,16 @@ void FilterComponent::timerCallback()
             case CONTROL_TARGET_TYPE::Filter: {
                 int targetIndex = params->TargetFilter->getIndex();
                 auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
-                for(int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-                    if(targetIndex == filterIndex) {
-                        switch (targetParam) {
-                            case CONTROL_TARGET_FILTER_PARAM::Freq: {
-                                hzSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                                semitoneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                                break;
-                            }
-                            case CONTROL_TARGET_FILTER_PARAM::Q: {
-                                qSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                                break;
-                            }
+                if(targetIndex == index) {
+                    switch (targetParam) {
+                        case CONTROL_TARGET_FILTER_PARAM::Freq: {
+                            hzSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            semitoneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+                        case CONTROL_TARGET_FILTER_PARAM::Q: {
+                            qSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
                         }
                     }
                 }
@@ -1481,18 +1479,16 @@ void LfoComponent::timerCallback()
             case CONTROL_TARGET_TYPE::LFO: {
                 int targetIndex = params->TargetLfo->getIndex();
                 auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
-                for(int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
-                    if(targetIndex == lfoIndex) {
-                        switch(targetParam) {
-                            case CONTROL_TARGET_LFO_PARAM::Freq: {
-                                fastFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                                slowFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                                break;
-                            }
-                            case CONTROL_TARGET_LFO_PARAM::Amount: {
-                                amountSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                                break;
-                            }
+                if(targetIndex == index) {
+                    switch(targetParam) {
+                        case CONTROL_TARGET_LFO_PARAM::Freq: {
+                            fastFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            slowFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
+                        }
+                        case CONTROL_TARGET_LFO_PARAM::Amount: {
+                            amountSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+                            break;
                         }
                     }
                 }
