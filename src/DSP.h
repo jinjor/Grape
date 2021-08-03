@@ -14,18 +14,21 @@ public:
     ~Wavetable() {};
     double getSineValue(double angle) {
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
-        float pos = angle / juce::MathConstants<double>::twoPi;
+        constexpr double by_twoPi = 1.0 / juce::MathConstants<double>::twoPi;
+        float pos = angle * by_twoPi;
         return getValue(sine, pos);
     }
     double getSawDownValue(double freq, double angle) {
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
-        float pos = angle / juce::MathConstants<double>::twoPi;
+        constexpr double by_twoPi = 1.0 / juce::MathConstants<double>::twoPi;
+        float pos = angle * by_twoPi;
         const float* partial = getPartial(saw, freq);
         return getValue(partial, pos);
     }
     double getSawUpValue(double freq, double angle) {
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
-        float pos = angle / juce::MathConstants<double>::twoPi;
+        constexpr double by_twoPi = 1.0 / juce::MathConstants<double>::twoPi;
+        float pos = angle * by_twoPi;
         const float* partial = getPartial(saw, freq);
         return getValueReverse(partial, pos);
     }
@@ -34,7 +37,8 @@ public:
         jassert(phaseShift > 0.0);
         jassert(phaseShift <= 0.5);
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
-        float pos1 = angle / juce::MathConstants<double>::twoPi;
+        constexpr double by_twoPi = 1.0 / juce::MathConstants<double>::twoPi;
+        float pos1 = angle * by_twoPi;
         float pos2 = std::fmod(pos1 + phaseShift, 1.0f);
         const float* partial = getPartial(saw, freq);
         return getValue(partial, pos1) + getValueReverse(partial, pos2) + (1.0 - 2 * phaseShift);
@@ -47,7 +51,8 @@ public:
         jassert(phaseShift > 0.0);
         jassert(phaseShift <= 0.5);
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
-        float pos1 = angle / juce::MathConstants<double>::twoPi;
+        constexpr double by_twoPi = 1.0 / juce::MathConstants<double>::twoPi;
+        float pos1 = angle * by_twoPi;
         float pos2 = std::fmod(pos1 + phaseShift, 1.0f);
         const float* partial = getPartial(parabola, freq);
         return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (phaseShift - phaseShift * phaseShift));
