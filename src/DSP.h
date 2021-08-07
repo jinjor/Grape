@@ -16,42 +16,39 @@ public:
     Wavetable() {};
     ~Wavetable(){};
     Wavetable(const Wavetable &) = delete;
-    double getSineValue(double angle) {
-        angle = std::fmod(angle, TWO_PI);
-        float pos = angle * RECIPROCAL_TWO_PI;
-        return getValue(sine, pos);
+    double getSineValue(double normalizedAngle) {
+        normalizedAngle = std::fmod(normalizedAngle, 1.0);
+        return getValue(sine, normalizedAngle);
     }
-    double getSawDownValue(double freq, double angle) {
-        angle = std::fmod(angle, TWO_PI);
-        float pos = angle * RECIPROCAL_TWO_PI;
+    double getSawDownValue(double freq, double normalizedAngle) {
+        normalizedAngle = std::fmod(normalizedAngle, 1.0);
         const float* partial = getPartial(saw, freq);
-        return getValue(partial, pos);
+        return getValue(partial, normalizedAngle);
     }
-    double getSawUpValue(double freq, double angle) {
-        angle = std::fmod(angle, TWO_PI);
-        float pos = angle * RECIPROCAL_TWO_PI;
+    double getSawUpValue(double freq, double normalizedAngle) {
+        normalizedAngle = std::fmod(normalizedAngle, 1.0);
         const float* partial = getPartial(saw, freq);
-        return getValueReverse(partial, pos);
+        return getValueReverse(partial, normalizedAngle);
     }
-    double getPulseValue(double freq, double angle, double edge) {
+    double getPulseValue(double freq, double normalizedAngle, double edge) {
         double phaseShift = (1.0 - edge * 0.99) * 0.5;
         jassert(phaseShift > 0.0);
         jassert(phaseShift <= 0.5);
-        angle = std::fmod(angle, TWO_PI);
-        float pos1 = angle * RECIPROCAL_TWO_PI;
+        normalizedAngle = std::fmod(normalizedAngle, 1.0);
+        float pos1 = normalizedAngle;
         float pos2 = std::fmod(pos1 + phaseShift, 1.0f);
         const float* partial = getPartial(saw, freq);
         return getValue(partial, pos1) + getValueReverse(partial, pos2) + (1.0 - 2 * phaseShift);
     }
-    double getTriangleValue(double freq, double angle) {
-        return getSlopedVariableTriangleValue(freq, angle, 0.5);
+    double getTriangleValue(double freq, double normalizedAngle) {
+        return getSlopedVariableTriangleValue(freq, normalizedAngle, 0.5);
     }
-    double getSlopedVariableTriangleValue(double freq, double angle, double edge) {
+    double getSlopedVariableTriangleValue(double freq, double normalizedAngle, double edge) {
         double phaseShift = (1.0 - edge * 0.9) * 0.5;
         jassert(phaseShift > 0.0);
         jassert(phaseShift <= 0.5);
-        angle = std::fmod(angle, TWO_PI);
-        float pos1 = angle * RECIPROCAL_TWO_PI;
+        normalizedAngle = std::fmod(normalizedAngle, 1.0);
+        float pos1 = normalizedAngle;
         float pos2 = std::fmod(pos1 + phaseShift, 1.0f);
         const float* partial = getPartial(parabola, freq);
         return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (phaseShift - phaseShift * phaseShift));
@@ -557,39 +554,39 @@ public:
     void setSampleRate (double sampleRate) {
         reciprocal_sampleRate = 1.0 / sampleRate;
     }
-    void setAngle(double angle) {
-        this->currentAngle = angle;
+    void setNormalizedAngle(double normalizedAngle) {
+        currentNormalizedAngle = normalizedAngle;
     }
-    double step (double freq, double angleShift, double edge) {
+    double step (double freq, double normalizedAngleShift, double edge) {
         if (reciprocal_sampleRate <= 0.0)
         {
             return 0.0;
         }
-        auto angleDelta = freq * TWO_PI * reciprocal_sampleRate;
-        currentAngle += angleDelta;
-        if(currentAngle > TWO_PI) {
-            currentAngle -= TWO_PI;
+        auto normalizedAngleDelta = freq * reciprocal_sampleRate;
+        currentNormalizedAngle += normalizedAngleDelta;
+        if(currentNormalizedAngle > 1.0) {
+            currentNormalizedAngle -= 1.0;
             currentRandomValue = 0.0;
         }
-        auto angle = currentAngle + angleShift;
+        auto normalizedAngle = currentNormalizedAngle + normalizedAngleShift;
         switch(waveform) {
             case WAVEFORM::Sine:
 //                return std::sin(angle);
-                return wavetable.getSineValue(angle);
+                return wavetable.getSineValue(normalizedAngle);
             case WAVEFORM::Triangle:
 //                return angle >= PI ?
 //                    angle / TWO_PI * 4.0 - 1.0 :
 //                    angle / TWO_PI - 4.0 + 3.0;
-                return wavetable.getSlopedVariableTriangleValue(freq, angle, edge);
+                return wavetable.getSlopedVariableTriangleValue(freq, normalizedAngle, edge);
             case WAVEFORM::SawUp:
 //                return angle / TWO_PI * 2.0 - 1.0;
-                return wavetable.getSawUpValue(freq, angle);
+                return wavetable.getSawUpValue(freq, normalizedAngle);
             case WAVEFORM::SawDown:
 //                return angle / TWO_PI * -2.0 + 1.0;
-                return wavetable.getSawDownValue(freq, angle);
+                return wavetable.getSawDownValue(freq, normalizedAngle);
             case WAVEFORM::Square:
 //                return angle < PI ? 1.0 : -1.0;
-                return wavetable.getPulseValue(freq, angle, edge);
+                return wavetable.getPulseValue(freq, normalizedAngle, edge);
             case WAVEFORM::Random:
                 if(currentRandomValue == 0.0) {
                     currentRandomValue = whiteNoise.nextDouble() * 2.0 - 1.0;
@@ -622,7 +619,7 @@ public:
     }
 private:
     Wavetable wavetable;
-    double currentAngle = 0.0;
+    double currentNormalizedAngle = 0.0;
     double currentRandomValue = 0.0;
     double pink[7]{};
     juce::Random whiteNoise;
@@ -651,15 +648,15 @@ public:
             oscs[i].setSampleRate(sampleRate);
         }
     }
-    void step(double numOsc, double pan, double detune, double spread, double freq, double angleShift, double edge, double* outout) {
+    void step(double numOsc, double pan, double detune, double spread, double freq, double normalizedAngleShift, double edge, double* outout) {
 //        if(numOsc == 1) {
-//            outout[0] = outout[1] = oscs[0].step(freq, angleShift, edge) * GAIN_AT_CENTER;
+//            outout[0] = outout[1] = oscs[0].step(freq, normalizedAngleShift, edge) * GAIN_AT_CENTER;
 //        } else {
             setUnison(numOsc, pan, detune, spread);
             outout[0] = 0;
             outout[1] = 0;
             for(int i = 0; i < currentNumOsc; ++i) {
-                auto value = oscs[i].step(freq * detunes[i], angleShifts[i] + angleShift, edge);
+                auto value = oscs[i].step(freq * detunes[i], normalizedAngleShifts[i] + normalizedAngleShift, edge);
                 outout[0] += value * pans[i][0];
                 outout[1] += value * pans[i][1];
             }
@@ -669,7 +666,7 @@ private:
     Osc oscs[MAX_NUM_OSC];
     double pans[MAX_NUM_OSC][2]{};
     double detunes[MAX_NUM_OSC]{};
-    double angleShifts[MAX_NUM_OSC]{};
+    double normalizedAngleShifts[MAX_NUM_OSC]{};
     int currentNumOsc = 1;
     double currentPan = 0.0;
     double currentDetune = 1;
@@ -703,7 +700,7 @@ private:
         }
         if(numOsc != currentNumOsc) {
             for(int i = 0; i < numOsc; ++i) {
-                angleShifts[i] = PI * i / numOsc;
+                normalizedAngleShifts[i] = 0.5 * i / numOsc;
             }
         }
         currentNumOsc = numOsc;

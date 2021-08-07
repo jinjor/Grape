@@ -73,7 +73,7 @@ void GrapeVoice::startNote (int midiNoteNumber, float velocity,
             filters[i].initializePastData();
         }
         for(int i = 0; i < NUM_LFO; ++i) {
-            lfos[i].setAngle(0.0);
+            lfos[i].setNormalizedAngle(0.0);
         }
         for(int i = 0; i < NUM_MODENV; ++i) {
             if(modEnvParams[i].shouldUseHold()) {
@@ -332,7 +332,7 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                                 break;
                             }
                             case LFO_TARGET_OSC_PARAM::FM: {
-                                modifiers.angleShift[oscIndex] += lfoValue * lfoAmount * TWO_PI;
+                                modifiers.normalizedAngleShift[oscIndex] += lfoValue * lfoAmount;
                                 break;
                             }
                             case LFO_TARGET_OSC_PARAM::AM: {
@@ -398,7 +398,7 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
                             detune,
                             spread,
                             freq,
-                            modifiers.angleShift[oscIndex],
+                            modifiers.normalizedAngleShift[oscIndex],
                             edge,
                             o);
         auto oscGain = adsr[envelopeIndex].getValue() * modifiers.gain[oscIndex] * p.Gain->get();
