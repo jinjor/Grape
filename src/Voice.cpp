@@ -9,13 +9,13 @@ bool GrapeSound::appliesToChannel(int) { return true; }
 
 //==============================================================================
 GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo,
-                       GlobalParams* globalParams,
-                       VoiceParams* voiceParams,
-                       OscParams* oscParams,
-                       EnvelopeParams* envelopeParams,
-                       FilterParams* filterParams,
-                       LfoParams* lfoParams,
-                       ModEnvParams* modEnvParams)
+                       GlobalParams& globalParams,
+                       VoiceParams& voiceParams,
+                       std::array<OscParams, NUM_OSC>& oscParams,
+                       std::array<EnvelopeParams, NUM_ENVELOPE>& envelopeParams,
+                       std::array<FilterParams, NUM_FILTER>& filterParams,
+                       std::array<LfoParams, NUM_LFO>& lfoParams,
+                       std::array<ModEnvParams, NUM_MODENV>& modEnvParams)
 : perf(juce::PerformanceCounter("voice cycle", 100000))
 , currentPositionInfo(currentPositionInfo)
 , globalParams(globalParams)
@@ -118,7 +118,7 @@ void GrapeVoice::stopNote (float velocity, bool allowTailOff)
 void GrapeVoice::glide(int midiNoteNumber, float velocity)
 {
     auto sampleRate = getSampleRate();
-    auto portamentTime = voiceParams->PortamentoTime->get();
+    auto portamentTime = voiceParams.PortamentoTime->get();
     smoothNote.exponential(portamentTime, midiNoteNumber, sampleRate);
     smoothVelocity.exponential(portamentTime, velocity, sampleRate);
 }
@@ -192,7 +192,7 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
     smoothNote.step();
     smoothVelocity.step();
     
-    double midiNoteNumber = smoothNote.value + globalParams->Pitch->get() * voiceParams->PitchBendRange->get();
+    double midiNoteNumber = smoothNote.value + globalParams.Pitch->get() * voiceParams.PitchBendRange->get();
     
     double shiftedNoteNumbers[NUM_OSC] {midiNoteNumber, midiNoteNumber, midiNoteNumber};
     for (int i = 0; i < NUM_OSC; ++i) {
@@ -371,7 +371,7 @@ bool GrapeVoice::step (double* out, double sampleRate, int numChannels)
         }
     }
     bool active = false;
-    auto panBase = globalParams->Pan->get();
+    auto panBase = globalParams.Pan->get();
     auto panModAmp = std::min(1.0 - panBase, 1.0 + panBase);
     // ---------------- OSC with Envelope and Filter ----------------
     for(int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {

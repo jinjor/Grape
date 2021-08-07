@@ -8,20 +8,20 @@ class Params {
   public:
   GlobalParams globalParams {};
   VoiceParams voiceParams {};
-  OscParams oscParams[3] = { OscParams(0), OscParams(1), OscParams(2) };
-  EnvelopeParams envelopeParams[2] = { EnvelopeParams(0), EnvelopeParams(1) };
-  FilterParams filterParams[2] = { FilterParams(0), FilterParams(1) };
-  LfoParams lfoParams[3] = { LfoParams(0), LfoParams(1), LfoParams(2) };
-  ModEnvParams modEnvParams[3] = { ModEnvParams(0), ModEnvParams(1), ModEnvParams(2) };
+  std::array<OscParams, NUM_OSC> oscParams = { OscParams(0), OscParams(1), OscParams(2) };
+  std::array<EnvelopeParams, NUM_ENVELOPE> envelopeParams = { EnvelopeParams(0), EnvelopeParams(1) };
+  std::array<FilterParams, NUM_FILTER> filterParams = { FilterParams(0), FilterParams(1) };
+  std::array<LfoParams, NUM_LFO> lfoParams = { LfoParams(0), LfoParams(1), LfoParams(2) };
+  std::array<ModEnvParams, NUM_MODENV> modEnvParams = { ModEnvParams(0), ModEnvParams(1), ModEnvParams(2) };
   DelayParams delayParams {};
-  ControlItemParams controlItemParams[6] = { ControlItemParams(0), ControlItemParams(1), ControlItemParams(2), ControlItemParams(3), ControlItemParams(4), ControlItemParams(5) };
+  std::array<ControlItemParams, NUM_CONTROL> controlItemParams = { ControlItemParams(0), ControlItemParams(1), ControlItemParams(2), ControlItemParams(3), ControlItemParams(4), ControlItemParams(5) };
 };
 
 static void doStepLoop(benchmark::State &state, Params &p) {
   juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo {};
   juce::AudioBuffer<float> buf {};
   
-  GrapeVoice voice { &currentPositionInfo, &p.globalParams, &p.voiceParams, p.oscParams, p.envelopeParams, p.filterParams, p.lfoParams, p.modEnvParams };
+  GrapeVoice voice { &currentPositionInfo, p.globalParams, p.voiceParams, p.oscParams, p.envelopeParams, p.filterParams, p.lfoParams, p.modEnvParams };
   
   auto numChannels = 2;
   auto sampleRate = 48000;

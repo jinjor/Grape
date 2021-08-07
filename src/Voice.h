@@ -130,13 +130,13 @@ class GrapeVoice   : public juce::SynthesiserVoice
 {
 public:
     GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo,
-               GlobalParams* globalParams,
-               VoiceParams* voiceParams,
-               OscParams* oscParams,
-               EnvelopeParams* envelopeParams,
-               FilterParams* filterParams,
-               LfoParams* lfoParams,
-               ModEnvParams* modEnvParams);
+               GlobalParams& globalParams,
+               VoiceParams& voiceParams,
+               std::array<OscParams, NUM_OSC>& oscParams,
+               std::array<EnvelopeParams, NUM_ENVELOPE>& envelopeParams,
+               std::array<FilterParams, NUM_FILTER>& filterParams,
+               std::array<LfoParams, NUM_LFO>& lfoParams,
+               std::array<ModEnvParams, NUM_MODENV>& modEnvParams);
     ~GrapeVoice();
     bool canPlaySound (juce::SynthesiserSound* sound) override;
     void startNote (int midiNoteNumber, float velocity,
@@ -152,13 +152,13 @@ private:
     juce::PerformanceCounter perf;
     juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo;
     
-    GlobalParams* globalParams;
-    VoiceParams* voiceParams;
-    OscParams* oscParams;
-    EnvelopeParams* envelopeParams;
-    FilterParams* filterParams;
-    LfoParams* lfoParams;
-    ModEnvParams* modEnvParams;
+    GlobalParams& globalParams;
+    VoiceParams& voiceParams;
+    std::array<OscParams, NUM_OSC>& oscParams;
+    std::array<EnvelopeParams, NUM_ENVELOPE>& envelopeParams;
+    std::array<FilterParams, NUM_FILTER>& filterParams;
+    std::array<LfoParams, NUM_LFO>& lfoParams;
+    std::array<ModEnvParams, NUM_MODENV>& modEnvParams;
     
     MultiOsc oscs[NUM_OSC];
     Adsr adsr[NUM_ENVELOPE];
@@ -186,7 +186,7 @@ private:
 class GrapeSynthesiser   : public juce::Synthesiser
 {
 public:
-    GrapeSynthesiser(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, MonoStack* monoStack, ControlItemParams* controlItemParams, GlobalParams* globalParams, VoiceParams* voiceParams, OscParams* oscParams, FilterParams* filterParams, LfoParams* lfoParams, DelayParams* delayParams)
+    GrapeSynthesiser(juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo, MonoStack* monoStack, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams, GlobalParams& globalParams, VoiceParams& voiceParams, std::array<OscParams, NUM_OSC>& oscParams, std::array<FilterParams, NUM_FILTER>& filterParams, std::array<LfoParams, NUM_LFO>& lfoParams, DelayParams& delayParams)
     : currentPositionInfo(currentPositionInfo)
     , monoStack(monoStack)
     , controlItemParams(controlItemParams)
@@ -212,7 +212,7 @@ public:
                     if(GrapeVoice* voice = dynamic_cast<GrapeVoice*>(voices[0]) ) {
                         bool playingNotesExist = monoStack->latestNoteNumber != 0;
                         monoStack->push(midiNoteNumber, velocity);
-                        if(static_cast<VOICE_MODE>(voiceParams->Mode->getIndex()) == VOICE_MODE::Mono) {
+                        if(static_cast<VOICE_MODE>(voiceParams.Mode->getIndex()) == VOICE_MODE::Mono) {
                             jassert(getNumVoices() == 1);
                             if(voice->isPlayingChannel(channel) && playingNotesExist) {
                                 voice->glide(midiNoteNumber, velocity);
@@ -237,7 +237,7 @@ public:
                             return;
                         }
                         bool playingNotesExist = monoStack->latestNoteNumber != 0;
-                        if(static_cast<VOICE_MODE>(voiceParams->Mode->getIndex()) == VOICE_MODE::Mono) {
+                        if(static_cast<VOICE_MODE>(voiceParams.Mode->getIndex()) == VOICE_MODE::Mono) {
                             jassert(getNumVoices() == 1);
                             if(voice->isPlayingChannel(channel) && playingNotesExist) {
                                 auto velocity = monoStack->getVelocity(monoStack->latestNoteNumber);
@@ -287,16 +287,16 @@ public:
         
         stereoDelay.setParams(getSampleRate(),
                               currentPositionInfo->bpm,
-                              static_cast<DELAY_TYPE>(delayParams->Type->getIndex()),
-                              delayParams->Sync->get(),
-                              delayParams->TimeL->get(),
-                              delayParams->TimeR->get(),
-                              DELAY_TIME_SYNC_VALUES[delayParams->TimeSyncL->getIndex()],
-                              DELAY_TIME_SYNC_VALUES[delayParams->TimeSyncR->getIndex()],
-                              delayParams->LowFreq->get(),
-                              delayParams->HighFreq->get(),
-                              delayParams->Feedback->get(),
-                              delayParams->Mix->get());
+                              static_cast<DELAY_TYPE>(delayParams.Type->getIndex()),
+                              delayParams.Sync->get(),
+                              delayParams.TimeL->get(),
+                              delayParams.TimeR->get(),
+                              DELAY_TIME_SYNC_VALUES[delayParams.TimeSyncL->getIndex()],
+                              DELAY_TIME_SYNC_VALUES[delayParams.TimeSyncR->getIndex()],
+                              delayParams.LowFreq->get(),
+                              delayParams.HighFreq->get(),
+                              delayParams.Feedback->get(),
+                              delayParams.Mix->get());
         
         auto* leftIn = buffer.getReadPointer(0, startSample);
         auto* rightIn = buffer.getReadPointer(1, startSample);
@@ -308,13 +308,13 @@ public:
             double sample[2] { leftIn[i], rightIn[i] };
             
             // Delay
-            if(delayParams->Enabled->get()) {
+            if(delayParams.Enabled->get()) {
                 stereoDelay.step(sample);
             }
             
             // Master Volume
-            sample[0] *= globalParams->MasterVolume->get();
-            sample[1] *= globalParams->MasterVolume->get();
+            sample[0] *= globalParams.MasterVolume->get();
+            sample[1] *= globalParams.MasterVolume->get();
             
             leftOut[i] = sample[0];
             rightOut[i] = sample[1];
@@ -330,13 +330,13 @@ public:
         // predefined
         switch(number) {
             case 7:
-                *globalParams->MasterVolume = normalizedValue;
+                *globalParams.MasterVolume = normalizedValue;
                 return;
             case 10:
-                *globalParams->Pan = normalizedValue * 2 - 1.0;
+                *globalParams.Pan = normalizedValue * 2 - 1.0;
                 return;
             case 11:
-                *globalParams->Expression = normalizedValue;
+                *globalParams.Expression = normalizedValue;
                 return;
         }
 
@@ -431,11 +431,11 @@ public:
                     auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(params->TargetMiscParam->getIndex());
                     switch(targetParam) {
                         case CONTROL_TARGET_MISC_PARAM::PortamentoTime: {
-                            *voiceParams->PortamentoTime = voiceParams->PortamentoTime->range.convertFrom0to1(normalizedValue);
+                            *voiceParams.PortamentoTime = voiceParams.PortamentoTime->range.convertFrom0to1(normalizedValue);
                             break;
                         }
                         case CONTROL_TARGET_MISC_PARAM::DelayMix: {
-                            *delayParams->Mix = normalizedValue;
+                            *delayParams.Mix = normalizedValue;
                             break;
                         }
                     }
@@ -446,20 +446,20 @@ public:
     }
     void pitchWheelMoved(int value) {
         value -= 8192;
-        *globalParams->Pitch = value >= 0 ? value / 8191.0 : value / 8192.0;
+        *globalParams.Pitch = value >= 0 ? value / 8191.0 : value / 8192.0;
     }
 private:
     juce::AudioPlayHead::CurrentPositionInfo* currentPositionInfo;
     
     MonoStack* monoStack;
-    ControlItemParams* controlItemParams;
+    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
     
-    GlobalParams* globalParams;
-    VoiceParams* voiceParams;
-    OscParams* oscParams;
-    FilterParams* filterParams;
-    LfoParams* lfoParams;
-    DelayParams* delayParams;
+    GlobalParams& globalParams;
+    VoiceParams& voiceParams;
+    std::array<OscParams, NUM_OSC>& oscParams;
+    std::array<FilterParams, NUM_FILTER>& filterParams;
+    std::array<LfoParams, NUM_LFO>& lfoParams;
+    DelayParams& delayParams;
     
     StereoDelay stereoDelay;
 };

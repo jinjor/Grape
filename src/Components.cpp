@@ -50,8 +50,8 @@ void HeaderComponent::resized()
 }
 
 //==============================================================================
-VoiceComponent::VoiceComponent(VoiceParams* params, ControlItemParams* controlItemParams)
-: _paramsPtr(params)
+VoiceComponent::VoiceComponent(VoiceParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+: params(params)
 , controlItemParams(controlItemParams)
 , header("VOICE", false)
 , modeSelector("Mode")
@@ -64,18 +64,18 @@ VoiceComponent::VoiceComponent(VoiceParams* params, ControlItemParams* controlIt
     addAndMakeVisible(header);
 
     modeSelector.setLookAndFeel(&grapeLookAndFeel);
-    modeSelector.addItemList(_paramsPtr->Mode->getAllValueStrings(), 1);
-    modeSelector.setSelectedItemIndex(_paramsPtr->Mode->getIndex(), juce::dontSendNotification);
+    modeSelector.addItemList(params.Mode->getAllValueStrings(), 1);
+    modeSelector.setSelectedItemIndex(params.Mode->getIndex(), juce::dontSendNotification);
     modeSelector.setJustificationType(juce::Justification::centred);
     modeSelector.addListener(this);
     addAndMakeVisible(modeSelector);
     
     portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
-    portamentoTimeSlider.setRange(_paramsPtr->PortamentoTime->range.start,
-                                  _paramsPtr->PortamentoTime->range.end,
-                                  _paramsPtr->PortamentoTime->range.interval);
+    portamentoTimeSlider.setRange(params.PortamentoTime->range.start,
+                                  params.PortamentoTime->range.end,
+                                  params.PortamentoTime->range.interval);
     portamentoTimeSlider.setSkewFactorFromMidPoint(0.1);
-    portamentoTimeSlider.setValue(_paramsPtr->PortamentoTime->get(), juce::dontSendNotification);
+    portamentoTimeSlider.setValue(params.PortamentoTime->get(), juce::dontSendNotification);
     portamentoTimeSlider.setPopupDisplayEnabled(true, true, nullptr);
     portamentoTimeSlider.setScrollWheelEnabled(false);
     portamentoTimeSlider.setTextValueSuffix(" sec");
@@ -83,9 +83,9 @@ VoiceComponent::VoiceComponent(VoiceParams* params, ControlItemParams* controlIt
     addAndMakeVisible(portamentoTimeSlider);
     
     pitchBendRangeSlider.setLookAndFeel(&grapeLookAndFeel);
-    pitchBendRangeSlider.setRange(_paramsPtr->PitchBendRange->getRange().getStart(),
-                                  _paramsPtr->PitchBendRange->getRange().getEnd(), 1);
-    pitchBendRangeSlider.setValue(_paramsPtr->PitchBendRange->get(), juce::dontSendNotification);
+    pitchBendRangeSlider.setRange(params.PitchBendRange->getRange().getStart(),
+                                  params.PitchBendRange->getRange().getEnd(), 1);
+    pitchBendRangeSlider.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
     pitchBendRangeSlider.setPopupDisplayEnabled(true, true, nullptr);
     pitchBendRangeSlider.setScrollWheelEnabled(false);
     pitchBendRangeSlider.addListener(this);
@@ -146,39 +146,38 @@ void VoiceComponent::resized()
 void VoiceComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     if(comboBox == &modeSelector)
     {
-        *_paramsPtr->Mode = modeSelector.getSelectedItemIndex();
+        *params.Mode = modeSelector.getSelectedItemIndex();
     }
 }
 void VoiceComponent::sliderValueChanged(juce::Slider *slider)
 {
     if(slider == &portamentoTimeSlider)
     {
-        *_paramsPtr->PortamentoTime = portamentoTimeSlider.getValue();
+        *params.PortamentoTime = portamentoTimeSlider.getValue();
     }
     else if(slider == &pitchBendRangeSlider)
     {
-        *_paramsPtr->PitchBendRange = pitchBendRangeSlider.getValue();
+        *params.PitchBendRange = pitchBendRangeSlider.getValue();
     }
 }
 void VoiceComponent::timerCallback()
 {
-    portamentoTimeSlider.setValue(_paramsPtr->PortamentoTime->get(), juce::dontSendNotification);
-    pitchBendRangeSlider.setValue(_paramsPtr->PitchBendRange->get(), juce::dontSendNotification);
+    portamentoTimeSlider.setValue(params.PortamentoTime->get(), juce::dontSendNotification);
+    pitchBendRangeSlider.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
     
-    auto isMono = static_cast<VOICE_MODE>(_paramsPtr->Mode->getIndex()) == VOICE_MODE::Mono;
+    auto isMono = static_cast<VOICE_MODE>(params.Mode->getIndex()) == VOICE_MODE::Mono;
     portamentoTimeLabel.setEnabled(isMono);
     portamentoTimeSlider.setEnabled(isMono);
     
     portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
-    for(int i = 0; i < NUM_CONTROL; ++i) {
-        auto params = &controlItemParams[i];
-        if(params->Number->getIndex() <= 0) {
+    for(auto& p : controlItemParams) {
+        if(p.Number->getIndex() <= 0) {
             continue;
         }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
         switch(targetType) {
             case CONTROL_TARGET_TYPE::Master: {
-                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(params->TargetMiscParam->getIndex());
+                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(p.TargetMiscParam->getIndex());
                 switch(targetParam) {
                     case CONTROL_TARGET_MISC_PARAM::PortamentoTime: {
                         portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
@@ -327,8 +326,8 @@ void StatusComponent::timerCallback()
 }
 
 //==============================================================================
-MasterComponent::MasterComponent(GlobalParams* params)
-: _paramsPtr(params)
+MasterComponent::MasterComponent(GlobalParams& params)
+: params(params)
 , header("MASTER", false)
 , panSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , volumeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -340,18 +339,18 @@ MasterComponent::MasterComponent(GlobalParams* params)
     addAndMakeVisible(header);
     
     panSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-    panSlider.setRange(_paramsPtr->Pan->range.start,
-                          _paramsPtr->Pan->range.end, 0.01);
-    panSlider.setValue(_paramsPtr->Pan->get(), juce::dontSendNotification);
+    panSlider.setRange(params.Pan->range.start,
+                          params.Pan->range.end, 0.01);
+    panSlider.setValue(params.Pan->get(), juce::dontSendNotification);
     panSlider.setPopupDisplayEnabled(true, true, nullptr);
     panSlider.setScrollWheelEnabled(false);
     panSlider.addListener(this);
     addAndMakeVisible(panSlider);
     
     volumeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-    volumeSlider.setRange(_paramsPtr->MasterVolume->range.start,
-                          _paramsPtr->MasterVolume->range.end, 0.01);
-    volumeSlider.setValue(_paramsPtr->MasterVolume->get(), juce::dontSendNotification);
+    volumeSlider.setRange(params.MasterVolume->range.start,
+                          params.MasterVolume->range.end, 0.01);
+    volumeSlider.setValue(params.MasterVolume->get(), juce::dontSendNotification);
     volumeSlider.setPopupDisplayEnabled(true, true, nullptr);
     volumeSlider.setScrollWheelEnabled(false);
 //    volumeSlider.textFromValueFunction = [](double gain){ return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
@@ -403,23 +402,23 @@ void MasterComponent::sliderValueChanged(juce::Slider *slider)
 {
     if(slider == &panSlider)
     {
-        *_paramsPtr->Pan = (float)panSlider.getValue();
+        *params.Pan = (float)panSlider.getValue();
     }
     else if(slider == &volumeSlider)
     {
-        *_paramsPtr->MasterVolume = (float)volumeSlider.getValue();
+        *params.MasterVolume = (float)volumeSlider.getValue();
     }
 }
 void MasterComponent::timerCallback()
 {
-    panSlider.setValue(_paramsPtr->Pan->get(), juce::dontSendNotification);
-    volumeSlider.setValue(_paramsPtr->MasterVolume->get(), juce::dontSendNotification);
+    panSlider.setValue(params.Pan->get(), juce::dontSendNotification);
+    volumeSlider.setValue(params.MasterVolume->get(), juce::dontSendNotification);
 }
 
 //==============================================================================
-OscComponent::OscComponent(int index, OscParams* params, ControlItemParams* controlItemParams)
+OscComponent::OscComponent(int index, OscParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
 : index(index)
-, _paramsPtr(params)
+, params(params)
 , controlItemParams(controlItemParams)
 , header("OSC " + std::to_string(index+1), true)
 , envelopeSelector("Envelope")
@@ -439,78 +438,78 @@ OscComponent::OscComponent(int index, OscParams* params, ControlItemParams* cont
     addAndMakeVisible(header);
     
     envelopeSelector.setLookAndFeel(&grapeLookAndFeel);
-    envelopeSelector.addItemList(_paramsPtr->Envelope->getAllValueStrings(), 1);
-    envelopeSelector.setSelectedItemIndex(_paramsPtr->Envelope->getIndex(), juce::dontSendNotification);
+    envelopeSelector.addItemList(params.Envelope->getAllValueStrings(), 1);
+    envelopeSelector.setSelectedItemIndex(params.Envelope->getIndex(), juce::dontSendNotification);
     envelopeSelector.setJustificationType(juce::Justification::centred);
     envelopeSelector.addListener(this);
     body.addAndMakeVisible(envelopeSelector);
     
     waveformSelector.setLookAndFeel(&grapeLookAndFeel);
-    waveformSelector.addItemList(_paramsPtr->Waveform->getAllValueStrings(), 1);
-    waveformSelector.setSelectedItemIndex(_paramsPtr->Waveform->getIndex(), juce::dontSendNotification);
+    waveformSelector.addItemList(params.Waveform->getAllValueStrings(), 1);
+    waveformSelector.setSelectedItemIndex(params.Waveform->getIndex(), juce::dontSendNotification);
     waveformSelector.setJustificationType(juce::Justification::centred);
     waveformSelector.addListener(this);
     body.addAndMakeVisible(waveformSelector);
     
     edgeSlider.setLookAndFeel(&grapeLookAndFeel);
-    edgeSlider.setRange(_paramsPtr->Edge->range.start,
-                         _paramsPtr->Edge->range.end, 0.01);
-    edgeSlider.setValue(_paramsPtr->Edge->get(), juce::dontSendNotification);
+    edgeSlider.setRange(params.Edge->range.start,
+                         params.Edge->range.end, 0.01);
+    edgeSlider.setValue(params.Edge->get(), juce::dontSendNotification);
     edgeSlider.setPopupDisplayEnabled(true, true, nullptr);
     edgeSlider.setScrollWheelEnabled(false);
     edgeSlider.addListener(this);
     body.addAndMakeVisible(edgeSlider);
     
     octaveSlider.setLookAndFeel(&grapeLookAndFeel);
-    octaveSlider.setRange(_paramsPtr->Octave->getRange().getStart(),
-                          _paramsPtr->Octave->getRange().getEnd(), 1);
-    octaveSlider.setValue(_paramsPtr->Octave->get(), juce::dontSendNotification);
+    octaveSlider.setRange(params.Octave->getRange().getStart(),
+                          params.Octave->getRange().getEnd(), 1);
+    octaveSlider.setValue(params.Octave->get(), juce::dontSendNotification);
     octaveSlider.setPopupDisplayEnabled(true, true, nullptr);
     octaveSlider.setScrollWheelEnabled(false);
     octaveSlider.addListener(this);
     body.addAndMakeVisible(octaveSlider);
     
     coarseSlider.setLookAndFeel(&grapeLookAndFeel);
-    coarseSlider.setRange(_paramsPtr->Coarse->getRange().getStart(),
-                         _paramsPtr->Coarse->getRange().getEnd(), 1);
-    coarseSlider.setValue(_paramsPtr->Coarse->get(), juce::dontSendNotification);
+    coarseSlider.setRange(params.Coarse->getRange().getStart(),
+                         params.Coarse->getRange().getEnd(), 1);
+    coarseSlider.setValue(params.Coarse->get(), juce::dontSendNotification);
     coarseSlider.setPopupDisplayEnabled(true, true, nullptr);
     coarseSlider.setScrollWheelEnabled(false);
     coarseSlider.addListener(this);
     body.addAndMakeVisible(coarseSlider);
     
     unisonSlider.setLookAndFeel(&grapeLookAndFeel);
-    unisonSlider.setRange(_paramsPtr->Unison->getRange().getStart(),
-                         _paramsPtr->Unison->getRange().getEnd(), 1);
-    unisonSlider.setValue(_paramsPtr->Unison->get(), juce::dontSendNotification);
+    unisonSlider.setRange(params.Unison->getRange().getStart(),
+                         params.Unison->getRange().getEnd(), 1);
+    unisonSlider.setValue(params.Unison->get(), juce::dontSendNotification);
     unisonSlider.setPopupDisplayEnabled(true, true, nullptr);
     unisonSlider.setScrollWheelEnabled(false);
     unisonSlider.addListener(this);
     body.addAndMakeVisible(unisonSlider);
     
     detuneSlider.setLookAndFeel(&grapeLookAndFeel);
-    detuneSlider.setRange(_paramsPtr->Detune->range.start,
-                         _paramsPtr->Detune->range.end, 0.01);
-    detuneSlider.setValue(_paramsPtr->Detune->get(), juce::dontSendNotification);
+    detuneSlider.setRange(params.Detune->range.start,
+                         params.Detune->range.end, 0.01);
+    detuneSlider.setValue(params.Detune->get(), juce::dontSendNotification);
     detuneSlider.setPopupDisplayEnabled(true, true, nullptr);
     detuneSlider.setScrollWheelEnabled(false);
     detuneSlider.addListener(this);
     body.addAndMakeVisible(detuneSlider);
     
     spreadSlider.setLookAndFeel(&grapeLookAndFeel);
-    spreadSlider.setRange(_paramsPtr->Spread->range.start,
-                         _paramsPtr->Spread->range.end, 0.01);
-    spreadSlider.setValue(_paramsPtr->Spread->get(), juce::dontSendNotification);
+    spreadSlider.setRange(params.Spread->range.start,
+                         params.Spread->range.end, 0.01);
+    spreadSlider.setValue(params.Spread->get(), juce::dontSendNotification);
     spreadSlider.setPopupDisplayEnabled(true, true, nullptr);
     spreadSlider.setScrollWheelEnabled(false);
     spreadSlider.addListener(this);
     body.addAndMakeVisible(spreadSlider);
     
     gainSlider.setLookAndFeel(&grapeLookAndFeel);
-    gainSlider.setRange(_paramsPtr->Gain->range.start,
-                        _paramsPtr->Gain->range.end,
-                        _paramsPtr->Gain->range.interval);
-    gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
+    gainSlider.setRange(params.Gain->range.start,
+                        params.Gain->range.end,
+                        params.Gain->range.interval);
+    gainSlider.setValue(params.Gain->get(), juce::dontSendNotification);
     gainSlider.setPopupDisplayEnabled(true, true, nullptr);
     gainSlider.setScrollWheelEnabled(false);
     gainSlider.setSkewFactorFromMidPoint(1.0);
@@ -572,7 +571,7 @@ OscComponent::OscComponent(int index, OscParams* params, ControlItemParams* cont
     gainLabel.setEditable(false, false, false);
     body.addAndMakeVisible(gainLabel);
     
-    body.setEnabled(_paramsPtr->Enabled->get());
+    body.setEnabled(params.Enabled->get());
     addAndMakeVisible(body);
 
     startTimerHz(30.0f);
@@ -647,69 +646,69 @@ void OscComponent::resized()
 void OscComponent::buttonClicked(juce::Button* button) {
     if(button == &header.enabledButton)
     {
-        *_paramsPtr->Enabled = header.enabledButton.getToggleState();
+        *params.Enabled = header.enabledButton.getToggleState();
     }
 }
 void OscComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     if(comboBox == &envelopeSelector)
     {
-        *_paramsPtr->Envelope = envelopeSelector.getSelectedItemIndex();
+        *params.Envelope = envelopeSelector.getSelectedItemIndex();
     }
     else if(comboBox == &waveformSelector)
     {
-        *_paramsPtr->Waveform = waveformSelector.getSelectedItemIndex();
+        *params.Waveform = waveformSelector.getSelectedItemIndex();
     }
 }
 void OscComponent::sliderValueChanged(juce::Slider *slider)
 {
     if(slider == &edgeSlider)
     {
-        *_paramsPtr->Edge = edgeSlider.getValue();
+        *params.Edge = edgeSlider.getValue();
     }
     else if(slider == &octaveSlider)
     {
-        *_paramsPtr->Octave = octaveSlider.getValue();
+        *params.Octave = octaveSlider.getValue();
     }
     else if(slider == &coarseSlider)
     {
-        *_paramsPtr->Coarse = coarseSlider.getValue();
+        *params.Coarse = coarseSlider.getValue();
     }
     else if(slider == &unisonSlider)
     {
-        *_paramsPtr->Unison = unisonSlider.getValue();
+        *params.Unison = unisonSlider.getValue();
     }
     else if(slider == &detuneSlider)
     {
-        *_paramsPtr->Detune = (float)detuneSlider.getValue();
+        *params.Detune = (float)detuneSlider.getValue();
     }
     else if(slider == &spreadSlider)
     {
-        *_paramsPtr->Spread = (float)spreadSlider.getValue();
+        *params.Spread = (float)spreadSlider.getValue();
     }
     else if(slider == &gainSlider)
     {
-        *_paramsPtr->Gain = (float)gainSlider.getValue();
+        *params.Gain = (float)gainSlider.getValue();
     }
 }
 void OscComponent::timerCallback()
 {
-    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(_paramsPtr->Enabled->get());
-    envelopeSelector.setSelectedItemIndex(_paramsPtr->Envelope->getIndex(), juce::dontSendNotification);
-    waveformSelector.setSelectedItemIndex(_paramsPtr->Waveform->getIndex(), juce::dontSendNotification);
-    edgeSlider.setValue(_paramsPtr->Edge->get(), juce::dontSendNotification);
-    octaveSlider.setValue(_paramsPtr->Octave->get(), juce::dontSendNotification);
-    coarseSlider.setValue(_paramsPtr->Coarse->get(), juce::dontSendNotification);
-    unisonSlider.setValue(_paramsPtr->Unison->get(), juce::dontSendNotification);
-    detuneSlider.setValue(_paramsPtr->Detune->get(), juce::dontSendNotification);
-    spreadSlider.setValue(_paramsPtr->Spread->get(), juce::dontSendNotification);
-    gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
-    auto hasEdge = OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Square ||
-                   OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Triangle;
+    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
+    body.setEnabled(params.Enabled->get());
+    envelopeSelector.setSelectedItemIndex(params.Envelope->getIndex(), juce::dontSendNotification);
+    waveformSelector.setSelectedItemIndex(params.Waveform->getIndex(), juce::dontSendNotification);
+    edgeSlider.setValue(params.Edge->get(), juce::dontSendNotification);
+    octaveSlider.setValue(params.Octave->get(), juce::dontSendNotification);
+    coarseSlider.setValue(params.Coarse->get(), juce::dontSendNotification);
+    unisonSlider.setValue(params.Unison->get(), juce::dontSendNotification);
+    detuneSlider.setValue(params.Detune->get(), juce::dontSendNotification);
+    spreadSlider.setValue(params.Spread->get(), juce::dontSendNotification);
+    gainSlider.setValue(params.Gain->get(), juce::dontSendNotification);
+    auto hasEdge = OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::Square ||
+                   OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::Triangle;
     edgeLabel.setEnabled(hasEdge);
     edgeSlider.setEnabled(hasEdge);
-    auto isNoise = OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::White ||
-                   OSC_WAVEFORM_VALUES[_paramsPtr->Waveform->getIndex()] == WAVEFORM::Pink;
+    auto isNoise = OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::White ||
+                   OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::Pink;
     unisonLabel.setEnabled(!isNoise);
     unisonSlider.setEnabled(!isNoise);
     detuneLabel.setEnabled(!isNoise);
@@ -721,16 +720,15 @@ void OscComponent::timerCallback()
     detuneSlider.setLookAndFeel(&grapeLookAndFeel);
     spreadSlider.setLookAndFeel(&grapeLookAndFeel);
     gainSlider.setLookAndFeel(&grapeLookAndFeel);
-    for(int i = 0; i < NUM_CONTROL; ++i) {
-        auto params = &controlItemParams[i];
-        if(params->Number->getIndex() <= 0) {
+    for(auto& p : controlItemParams) {
+        if(p.Number->getIndex() <= 0) {
             continue;
         }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
         switch(targetType) {
             case CONTROL_TARGET_TYPE::OSC: {
-                int targetIndex = params->TargetOsc->getIndex();
-                auto targetParam = static_cast<CONTROL_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
+                int targetIndex = p.TargetOsc->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_OSC_PARAM>(p.TargetOscParam->getIndex());
                 if(targetIndex == index) {
                     switch(targetParam) {
                         case CONTROL_TARGET_OSC_PARAM::Edge: {
@@ -764,9 +762,9 @@ void OscComponent::timerCallback()
 }
 
 //==============================================================================
-EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
+EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams& params)
 : index(index)
-, _paramsPtr(params)
+, params(params)
 , header("AMP ENV " + std::to_string(index+1), false)
 , attackSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
 , decaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -780,10 +778,10 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     addAndMakeVisible(header);
     
     attackSlider.setLookAndFeel(&grapeLookAndFeel);
-    attackSlider.setRange(_paramsPtr->Attack->range.start,
-                          _paramsPtr->Attack->range.end, 0.001);
+    attackSlider.setRange(params.Attack->range.start,
+                          params.Attack->range.end, 0.001);
     attackSlider.setSkewFactorFromMidPoint(0.2);
-    attackSlider.setValue(_paramsPtr->Attack->get(), juce::dontSendNotification);
+    attackSlider.setValue(params.Attack->get(), juce::dontSendNotification);
     attackSlider.setPopupDisplayEnabled(true, true, nullptr);
     attackSlider.setScrollWheelEnabled(false);
     attackSlider.setTextValueSuffix(" sec");
@@ -791,10 +789,10 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     addAndMakeVisible(attackSlider);
     
     decaySlider.setLookAndFeel(&grapeLookAndFeel);
-    decaySlider.setRange(_paramsPtr->Decay->range.start,
-                         _paramsPtr->Decay->range.end, 0.01);
+    decaySlider.setRange(params.Decay->range.start,
+                         params.Decay->range.end, 0.01);
     decaySlider.setSkewFactorFromMidPoint(0.4);
-    decaySlider.setValue(_paramsPtr->Decay->get(), juce::dontSendNotification);
+    decaySlider.setValue(params.Decay->get(), juce::dontSendNotification);
     decaySlider.setPopupDisplayEnabled(true, true, nullptr);
     decaySlider.setScrollWheelEnabled(false);
     decaySlider.setTextValueSuffix(" sec");
@@ -802,9 +800,9 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     addAndMakeVisible(decaySlider);
     
     sustainSlider.setLookAndFeel(&grapeLookAndFeel);
-    sustainSlider.setRange(_paramsPtr->Sustain->range.start,
-                           _paramsPtr->Sustain->range.end, 0.01);
-    sustainSlider.setValue(_paramsPtr->Sustain->get(), juce::dontSendNotification);
+    sustainSlider.setRange(params.Sustain->range.start,
+                           params.Sustain->range.end, 0.01);
+    sustainSlider.setValue(params.Sustain->get(), juce::dontSendNotification);
     sustainSlider.setPopupDisplayEnabled(true, true, nullptr);
     sustainSlider.setScrollWheelEnabled(false);
 //    sustainSlider.textFromValueFunction = [](double gain){ return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
@@ -813,10 +811,10 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams* params)
     addAndMakeVisible(sustainSlider);
     
     releaseSlider.setLookAndFeel(&grapeLookAndFeel);
-    releaseSlider.setRange(_paramsPtr->Release->range.start,
-                           _paramsPtr->Release->range.end, 0.01);
+    releaseSlider.setRange(params.Release->range.start,
+                           params.Release->range.end, 0.01);
     releaseSlider.setSkewFactorFromMidPoint(0.4);
-    releaseSlider.setValue(_paramsPtr->Release->get(), juce::dontSendNotification);
+    releaseSlider.setValue(params.Release->get(), juce::dontSendNotification);
     releaseSlider.setPopupDisplayEnabled(true, true, nullptr);
     releaseSlider.setScrollWheelEnabled(false);
     releaseSlider.setTextValueSuffix(" sec");
@@ -891,33 +889,33 @@ void EnvelopeComponent::sliderValueChanged(juce::Slider *slider)
 {
     if(slider == &attackSlider)
     {
-        *_paramsPtr->Attack = (float)attackSlider.getValue();
+        *params.Attack = (float)attackSlider.getValue();
     }
     else if(slider == &decaySlider)
     {
-        *_paramsPtr->Decay = (float)decaySlider.getValue();
+        *params.Decay = (float)decaySlider.getValue();
     }
     else if(slider == &sustainSlider)
     {
-        *_paramsPtr->Sustain = (float)sustainSlider.getValue();
+        *params.Sustain = (float)sustainSlider.getValue();
     }
     else if(slider == &releaseSlider)
     {
-        *_paramsPtr->Release = (float)releaseSlider.getValue();
+        *params.Release = (float)releaseSlider.getValue();
     }
 }
 void EnvelopeComponent::timerCallback()
 {
-    attackSlider.setValue(_paramsPtr->Attack->get(), juce::dontSendNotification);
-    decaySlider.setValue(_paramsPtr->Decay->get(), juce::dontSendNotification);
-    sustainSlider.setValue(_paramsPtr->Sustain->get(), juce::dontSendNotification);
-    releaseSlider.setValue(_paramsPtr->Release->get(), juce::dontSendNotification);
+    attackSlider.setValue(params.Attack->get(), juce::dontSendNotification);
+    decaySlider.setValue(params.Decay->get(), juce::dontSendNotification);
+    sustainSlider.setValue(params.Sustain->get(), juce::dontSendNotification);
+    releaseSlider.setValue(params.Release->get(), juce::dontSendNotification);
 }
 
 //==============================================================================
-FilterComponent::FilterComponent(int index, FilterParams* params, ControlItemParams* controlItemParams)
+FilterComponent::FilterComponent(int index, FilterParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
 : index(index)
-, _paramsPtr(params)
+, params(params)
 , controlItemParams(controlItemParams)
 , header("FILTER " + std::to_string(index+1), true)
 , targetSelector("Target")
@@ -931,37 +929,37 @@ FilterComponent::FilterComponent(int index, FilterParams* params, ControlItemPar
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
 
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
+    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
     addAndMakeVisible(header);
 
     targetSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetSelector.addItemList(_paramsPtr->Target->getAllValueStrings(), 1);
-    targetSelector.setSelectedItemIndex(_paramsPtr->Target->getIndex(), juce::dontSendNotification);
+    targetSelector.addItemList(params.Target->getAllValueStrings(), 1);
+    targetSelector.setSelectedItemIndex(params.Target->getIndex(), juce::dontSendNotification);
     targetSelector.setJustificationType(juce::Justification::centred);
     targetSelector.addListener(this);
     body.addAndMakeVisible(targetSelector);
     
     typeSelector.setLookAndFeel(&grapeLookAndFeel);
-    typeSelector.addItemList(_paramsPtr->Type->getAllValueStrings(), 1);
-    typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
+    typeSelector.addItemList(params.Type->getAllValueStrings(), 1);
+    typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
     typeSelector.setJustificationType(juce::Justification::centred);
     typeSelector.addListener(this);
     body.addAndMakeVisible(typeSelector);
     
     freqTypeSelector.setLookAndFeel(&grapeLookAndFeel);
-    freqTypeSelector.addItemList(_paramsPtr->FreqType->getAllValueStrings(), 1);
-    freqTypeSelector.setSelectedItemIndex(_paramsPtr->FreqType->getIndex(), juce::dontSendNotification);
+    freqTypeSelector.addItemList(params.FreqType->getAllValueStrings(), 1);
+    freqTypeSelector.setSelectedItemIndex(params.FreqType->getIndex(), juce::dontSendNotification);
     freqTypeSelector.setJustificationType(juce::Justification::centred);
     freqTypeSelector.addListener(this);
     body.addAndMakeVisible(freqTypeSelector);
     
     hzSlider.setLookAndFeel(&grapeLookAndFeel);
-    hzSlider.setRange(_paramsPtr->Hz->range.start,
-                      _paramsPtr->Hz->range.end,
-                      _paramsPtr->Hz->range.interval);
+    hzSlider.setRange(params.Hz->range.start,
+                      params.Hz->range.end,
+                      params.Hz->range.interval);
     hzSlider.setSkewFactorFromMidPoint(2000.0f);
-    hzSlider.setValue(_paramsPtr->Hz->get(), juce::dontSendNotification);
+    hzSlider.setValue(params.Hz->get(), juce::dontSendNotification);
     hzSlider.setPopupDisplayEnabled(true, true, nullptr);
     hzSlider.setScrollWheelEnabled(false);
     hzSlider.setTextValueSuffix(" Hz");
@@ -969,9 +967,9 @@ FilterComponent::FilterComponent(int index, FilterParams* params, ControlItemPar
     body.addAndMakeVisible(hzSlider);
     
     semitoneSlider.setLookAndFeel(&grapeLookAndFeel);
-    semitoneSlider.setRange(_paramsPtr->Semitone->getRange().getStart(),
-                         _paramsPtr->Semitone->getRange().getEnd(), 1);
-    semitoneSlider.setValue(_paramsPtr->Semitone->get(), juce::dontSendNotification);
+    semitoneSlider.setRange(params.Semitone->getRange().getStart(),
+                         params.Semitone->getRange().getEnd(), 1);
+    semitoneSlider.setValue(params.Semitone->get(), juce::dontSendNotification);
     semitoneSlider.setPopupDisplayEnabled(true, true, nullptr);
     semitoneSlider.setScrollWheelEnabled(false);
     semitoneSlider.textFromValueFunction = [](double value) -> std::string {
@@ -985,19 +983,19 @@ FilterComponent::FilterComponent(int index, FilterParams* params, ControlItemPar
     body.addAndMakeVisible(semitoneSlider);
     
     qSlider.setLookAndFeel(&grapeLookAndFeel);
-    qSlider.setRange(_paramsPtr->Q->range.start,
-                           _paramsPtr->Q->range.end, 0.01);
+    qSlider.setRange(params.Q->range.start,
+                           params.Q->range.end, 0.01);
     qSlider.setSkewFactorFromMidPoint(1.0f);
-    qSlider.setValue(_paramsPtr->Q->get(), juce::dontSendNotification);
+    qSlider.setValue(params.Q->get(), juce::dontSendNotification);
     qSlider.setPopupDisplayEnabled(true, true, nullptr);
     qSlider.setScrollWheelEnabled(false);
     qSlider.addListener(this);
     body.addAndMakeVisible(qSlider);
     
     gainSlider.setLookAndFeel(&grapeLookAndFeel);
-    gainSlider.setRange(_paramsPtr->Gain->range.start,
-                           _paramsPtr->Gain->range.end, 0.01);
-    gainSlider.setValue(_paramsPtr->Gain->get(), juce::dontSendNotification);
+    gainSlider.setRange(params.Gain->range.start,
+                           params.Gain->range.end, 0.01);
+    gainSlider.setValue(params.Gain->get(), juce::dontSendNotification);
     gainSlider.setPopupDisplayEnabled(true, true, nullptr);
     gainSlider.setScrollWheelEnabled(false);
     gainSlider.addListener(this);
@@ -1100,76 +1098,75 @@ void FilterComponent::resized()
 void FilterComponent::buttonClicked(juce::Button* button) {
     if(button == &header.enabledButton)
     {
-        *_paramsPtr->Enabled = header.enabledButton.getToggleState();
+        *params.Enabled = header.enabledButton.getToggleState();
     }
 }
 void FilterComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
 {
     if(comboBoxThatHasChanged == &targetSelector)
     {
-        *_paramsPtr->Target = targetSelector.getSelectedItemIndex();
+        *params.Target = targetSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &typeSelector)
     {
-        *_paramsPtr->Type = typeSelector.getSelectedItemIndex();
+        *params.Type = typeSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &freqTypeSelector)
     {
-        *_paramsPtr->FreqType = freqTypeSelector.getSelectedItemIndex();
+        *params.FreqType = freqTypeSelector.getSelectedItemIndex();
     }
 }
 void FilterComponent::sliderValueChanged(juce::Slider *slider)
 {
     if(slider == &hzSlider)
     {
-        *_paramsPtr->Hz = (float)hzSlider.getValue();
+        *params.Hz = (float)hzSlider.getValue();
     }
     else if(slider == &semitoneSlider)
     {
-        *_paramsPtr->Semitone = semitoneSlider.getValue();
+        *params.Semitone = semitoneSlider.getValue();
     }
     else if(slider == &qSlider)
     {
-        *_paramsPtr->Q = (float)qSlider.getValue();
+        *params.Q = (float)qSlider.getValue();
     }
     else if(slider == &gainSlider)
     {
-        *_paramsPtr->Gain = (float)gainSlider.getValue();
+        *params.Gain = (float)gainSlider.getValue();
     }
 }
 void FilterComponent::timerCallback()
 {
-    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(_paramsPtr->Enabled->get());
+    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
+    body.setEnabled(params.Enabled->get());
     
-    targetSelector.setSelectedItemIndex(_paramsPtr->Target->getIndex(), juce::dontSendNotification);
-    typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
-    freqTypeSelector.setSelectedItemIndex(_paramsPtr->FreqType->getIndex(), juce::dontSendNotification);
-    hzSlider.setValue(_paramsPtr->Hz->get(), juce::dontSendNotification);
-    semitoneSlider.setValue(_paramsPtr->Semitone->get(), juce::dontSendNotification);
-    qSlider.setValue(_paramsPtr->Q->get(), juce::dontSendNotification);
+    targetSelector.setSelectedItemIndex(params.Target->getIndex(), juce::dontSendNotification);
+    typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
+    freqTypeSelector.setSelectedItemIndex(params.FreqType->getIndex(), juce::dontSendNotification);
+    hzSlider.setValue(params.Hz->get(), juce::dontSendNotification);
+    semitoneSlider.setValue(params.Semitone->get(), juce::dontSendNotification);
+    qSlider.setValue(params.Q->get(), juce::dontSendNotification);
     
-    auto freqType = static_cast<FILTER_FREQ_TYPE>(_paramsPtr->FreqType->getIndex());
+    auto freqType = static_cast<FILTER_FREQ_TYPE>(params.FreqType->getIndex());
     hzSlider.setVisible(freqType == FILTER_FREQ_TYPE::Absolute);
     semitoneSlider.setVisible(freqType == FILTER_FREQ_TYPE::Relative);
     
-    auto hasGain = _paramsPtr->hasGain();
+    auto hasGain = params.hasGain();
     gainLabel.setEnabled(hasGain);
     gainSlider.setEnabled(hasGain);
     
     hzSlider.setLookAndFeel(&grapeLookAndFeel);
     semitoneSlider.setLookAndFeel(&grapeLookAndFeel);
     qSlider.setLookAndFeel(&grapeLookAndFeel);
-    for(int i = 0; i < NUM_CONTROL; ++i) {
-        auto params = &controlItemParams[i];
-        if(params->Number->getIndex() <= 0) {
+    for(auto& p : controlItemParams) {
+        if(p.Number->getIndex() <= 0) {
             continue;
         }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
         switch(targetType) {
             case CONTROL_TARGET_TYPE::Filter: {
-                int targetIndex = params->TargetFilter->getIndex();
-                auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
+                int targetIndex = p.TargetFilter->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(p.TargetFilterParam->getIndex());
                 if(targetIndex == index) {
                     switch (targetParam) {
                         case CONTROL_TARGET_FILTER_PARAM::Freq: {
@@ -1192,9 +1189,9 @@ void FilterComponent::timerCallback()
 }
 
 //==============================================================================
-LfoComponent::LfoComponent(int index, LfoParams* params, ControlItemParams* controlItemParams)
+LfoComponent::LfoComponent(int index, LfoParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
 : index(index)
-, _paramsPtr(params)
+, params(params)
 , controlItemParams(controlItemParams)
 , header("LFO " + std::to_string(index+1), true)
 , targetTypeSelector("TargetType")
@@ -1210,58 +1207,58 @@ LfoComponent::LfoComponent(int index, LfoParams* params, ControlItemParams* cont
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
     
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
+    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
     addAndMakeVisible(header);
 
     targetTypeSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetTypeSelector.addItemList(_paramsPtr->TargetType->getAllValueStrings(), 1);
-    targetTypeSelector.setSelectedItemIndex(_paramsPtr->TargetType->getIndex(), juce::dontSendNotification);
+    targetTypeSelector.addItemList(params.TargetType->getAllValueStrings(), 1);
+    targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
     targetTypeSelector.setJustificationType(juce::Justification::centred);
     targetTypeSelector.addListener(this);
     body.addAndMakeVisible(targetTypeSelector);
     
     targetOscSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscSelector.addItemList(_paramsPtr->TargetOsc->getAllValueStrings(), 1);
-    targetOscSelector.setSelectedItemIndex(_paramsPtr->TargetOsc->getIndex(), juce::dontSendNotification);
+    targetOscSelector.addItemList(params.TargetOsc->getAllValueStrings(), 1);
+    targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
     targetOscSelector.setJustificationType(juce::Justification::centred);
     targetOscSelector.addListener(this);
     body.addAndMakeVisible(targetOscSelector);
     
     targetFilterSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterSelector.addItemList(_paramsPtr->TargetFilter->getAllValueStrings(), 1);
-    targetFilterSelector.setSelectedItemIndex(_paramsPtr->TargetFilter->getIndex(), juce::dontSendNotification);
+    targetFilterSelector.addItemList(params.TargetFilter->getAllValueStrings(), 1);
+    targetFilterSelector.setSelectedItemIndex(params.TargetFilter->getIndex(), juce::dontSendNotification);
     targetFilterSelector.setJustificationType(juce::Justification::centred);
     targetFilterSelector.addListener(this);
     body.addAndMakeVisible(targetFilterSelector);
     
     targetOscParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscParamSelector.addItemList(_paramsPtr->TargetOscParam->getAllValueStrings(), 1);
-    targetOscParamSelector.setSelectedItemIndex(_paramsPtr->TargetOscParam->getIndex(), juce::dontSendNotification);
+    targetOscParamSelector.addItemList(params.TargetOscParam->getAllValueStrings(), 1);
+    targetOscParamSelector.setSelectedItemIndex(params.TargetOscParam->getIndex(), juce::dontSendNotification);
     targetOscParamSelector.setJustificationType(juce::Justification::centred);
     targetOscParamSelector.addListener(this);
     body.addAndMakeVisible(targetOscParamSelector);
     
     targetFilterParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterParamSelector.addItemList(_paramsPtr->TargetFilterParam->getAllValueStrings(), 1);
-    targetFilterParamSelector.setSelectedItemIndex(_paramsPtr->TargetFilterParam->getIndex(), juce::dontSendNotification);
+    targetFilterParamSelector.addItemList(params.TargetFilterParam->getAllValueStrings(), 1);
+    targetFilterParamSelector.setSelectedItemIndex(params.TargetFilterParam->getIndex(), juce::dontSendNotification);
     targetFilterParamSelector.setJustificationType(juce::Justification::centred);
     targetFilterParamSelector.addListener(this);
     body.addAndMakeVisible(targetFilterParamSelector);
     
     waveformSelector.setLookAndFeel(&grapeLookAndFeel);
-    waveformSelector.addItemList(_paramsPtr->Waveform->getAllValueStrings(), 1);
-    waveformSelector.setSelectedItemIndex(_paramsPtr->Waveform->getIndex(), juce::dontSendNotification);
+    waveformSelector.addItemList(params.Waveform->getAllValueStrings(), 1);
+    waveformSelector.setSelectedItemIndex(params.Waveform->getIndex(), juce::dontSendNotification);
     waveformSelector.setJustificationType(juce::Justification::centred);
     waveformSelector.addListener(this);
     body.addAndMakeVisible(waveformSelector);
     
     slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
-    slowFreqSlider.setRange(_paramsPtr->SlowFreq->range.start,
-                            _paramsPtr->SlowFreq->range.end,
-                            _paramsPtr->SlowFreq->range.interval);
+    slowFreqSlider.setRange(params.SlowFreq->range.start,
+                            params.SlowFreq->range.end,
+                            params.SlowFreq->range.interval);
     slowFreqSlider.setSkewFactorFromMidPoint(4.0f);
-    slowFreqSlider.setValue(_paramsPtr->SlowFreq->get(), juce::dontSendNotification);
+    slowFreqSlider.setValue(params.SlowFreq->get(), juce::dontSendNotification);
     slowFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     slowFreqSlider.setScrollWheelEnabled(false);
     slowFreqSlider.setTextValueSuffix(" Hz");
@@ -1269,11 +1266,11 @@ LfoComponent::LfoComponent(int index, LfoParams* params, ControlItemParams* cont
     body.addAndMakeVisible(slowFreqSlider);
     
     fastFreqSlider.setLookAndFeel(&grapeLookAndFeel);
-    fastFreqSlider.setRange(_paramsPtr->FastFreq->range.start,
-                            _paramsPtr->FastFreq->range.end,
-                            _paramsPtr->FastFreq->range.interval);
+    fastFreqSlider.setRange(params.FastFreq->range.start,
+                            params.FastFreq->range.end,
+                            params.FastFreq->range.interval);
     fastFreqSlider.setSkewFactorFromMidPoint(1.0f);
-    fastFreqSlider.setValue(_paramsPtr->FastFreq->get(), juce::dontSendNotification);
+    fastFreqSlider.setValue(params.FastFreq->get(), juce::dontSendNotification);
     fastFreqSlider.setSkewFactorFromMidPoint(1.0);
     fastFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     fastFreqSlider.setScrollWheelEnabled(false);
@@ -1282,9 +1279,9 @@ LfoComponent::LfoComponent(int index, LfoParams* params, ControlItemParams* cont
     body.addAndMakeVisible(fastFreqSlider);
     
     amountSlider.setLookAndFeel(&grapeLookAndFeel);
-    amountSlider.setRange(_paramsPtr->Amount->range.start,
-                           _paramsPtr->Amount->range.end, 0.01);
-    amountSlider.setValue(_paramsPtr->Amount->get(), juce::dontSendNotification);
+    amountSlider.setRange(params.Amount->range.start,
+                           params.Amount->range.end, 0.01);
+    amountSlider.setValue(params.Amount->get(), juce::dontSendNotification);
     amountSlider.setPopupDisplayEnabled(true, true, nullptr);
     amountSlider.setScrollWheelEnabled(false);
     amountSlider.addListener(this);
@@ -1377,34 +1374,34 @@ void LfoComponent::resized()
 void LfoComponent::buttonClicked(juce::Button* button) {
     if(button == &header.enabledButton)
     {
-        *_paramsPtr->Enabled = header.enabledButton.getToggleState();
+        *params.Enabled = header.enabledButton.getToggleState();
     }
 }
 void LfoComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
 {
     if(comboBoxThatHasChanged == &targetTypeSelector)
     {
-        *_paramsPtr->TargetType = targetTypeSelector.getSelectedItemIndex();
+        *params.TargetType = targetTypeSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetOscSelector)
     {
-        *_paramsPtr->TargetOsc = targetOscSelector.getSelectedItemIndex();
+        *params.TargetOsc = targetOscSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetFilterSelector)
     {
-        *_paramsPtr->TargetFilter = targetFilterSelector.getSelectedItemIndex();
+        *params.TargetFilter = targetFilterSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetOscParamSelector)
     {
-        *_paramsPtr->TargetOscParam = targetOscParamSelector.getSelectedItemIndex();
+        *params.TargetOscParam = targetOscParamSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetFilterParamSelector)
     {
-        *_paramsPtr->TargetFilterParam = targetFilterParamSelector.getSelectedItemIndex();
+        *params.TargetFilterParam = targetFilterParamSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &waveformSelector)
     {
-        *_paramsPtr->Waveform = waveformSelector.getSelectedItemIndex();
+        *params.Waveform = waveformSelector.getSelectedItemIndex();
     }
     resized();// re-render
 }
@@ -1412,33 +1409,33 @@ void LfoComponent::sliderValueChanged(juce::Slider *slider)
 {
     if(slider == &slowFreqSlider)
     {
-        *_paramsPtr->SlowFreq = (float)slowFreqSlider.getValue();
+        *params.SlowFreq = (float)slowFreqSlider.getValue();
     }
     else if(slider == &fastFreqSlider)
     {
-        *_paramsPtr->FastFreq = (float)fastFreqSlider.getValue();
+        *params.FastFreq = (float)fastFreqSlider.getValue();
     }
     else if(slider == &amountSlider)
     {
-        *_paramsPtr->Amount = (float)amountSlider.getValue();
+        *params.Amount = (float)amountSlider.getValue();
     }
 }
 void LfoComponent::timerCallback()
 {
-    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(_paramsPtr->Enabled->get());
+    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
+    body.setEnabled(params.Enabled->get());
     
-    targetTypeSelector.setSelectedItemIndex(_paramsPtr->TargetType->getIndex(), juce::dontSendNotification);
-    targetOscSelector.setSelectedItemIndex(_paramsPtr->TargetOsc->getIndex(), juce::dontSendNotification);
-    targetFilterSelector.setSelectedItemIndex(_paramsPtr->TargetFilter->getIndex(), juce::dontSendNotification);
-    targetOscParamSelector.setSelectedItemIndex(_paramsPtr->TargetOscParam->getIndex(), juce::dontSendNotification);
-    targetFilterParamSelector.setSelectedItemIndex(_paramsPtr->TargetFilterParam->getIndex(), juce::dontSendNotification);
-    waveformSelector.setSelectedItemIndex(_paramsPtr->Waveform->getIndex(), juce::dontSendNotification);
+    targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
+    targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
+    targetFilterSelector.setSelectedItemIndex(params.TargetFilter->getIndex(), juce::dontSendNotification);
+    targetOscParamSelector.setSelectedItemIndex(params.TargetOscParam->getIndex(), juce::dontSendNotification);
+    targetFilterParamSelector.setSelectedItemIndex(params.TargetFilterParam->getIndex(), juce::dontSendNotification);
+    waveformSelector.setSelectedItemIndex(params.Waveform->getIndex(), juce::dontSendNotification);
     
-    slowFreqSlider.setValue(_paramsPtr->SlowFreq->get(), juce::dontSendNotification);
-    fastFreqSlider.setValue(_paramsPtr->FastFreq->get(), juce::dontSendNotification);
-    amountSlider.setValue(_paramsPtr->Amount->get(), juce::dontSendNotification);
-    switch(static_cast<LFO_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
+    slowFreqSlider.setValue(params.SlowFreq->get(), juce::dontSendNotification);
+    fastFreqSlider.setValue(params.FastFreq->get(), juce::dontSendNotification);
+    amountSlider.setValue(params.Amount->get(), juce::dontSendNotification);
+    switch(static_cast<LFO_TARGET_TYPE>(params.TargetType->getIndex())) {
         case LFO_TARGET_TYPE::OSC: {
             targetOscSelector.setVisible(true);
             targetFilterSelector.setVisible(false);
@@ -1454,9 +1451,9 @@ void LfoComponent::timerCallback()
             break;
         }
     }
-    if(static_cast<LFO_TARGET_TYPE>(_paramsPtr->TargetType->getIndex()) == LFO_TARGET_TYPE::OSC &&
-       (static_cast<LFO_TARGET_OSC_PARAM>(_paramsPtr->TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::FM ||
-        static_cast<LFO_TARGET_OSC_PARAM>(_paramsPtr->TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::AM
+    if(static_cast<LFO_TARGET_TYPE>(params.TargetType->getIndex()) == LFO_TARGET_TYPE::OSC &&
+       (static_cast<LFO_TARGET_OSC_PARAM>(params.TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::FM ||
+        static_cast<LFO_TARGET_OSC_PARAM>(params.TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::AM
         )
        ) {
         fastFreqSlider.setVisible(true);
@@ -1469,16 +1466,15 @@ void LfoComponent::timerCallback()
     fastFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     amountSlider.setLookAndFeel(&grapeLookAndFeel);
-    for(int i = 0; i < NUM_CONTROL; ++i) {
-        auto params = &controlItemParams[i];
-        if(params->Number->getIndex() <= 0) {
+    for(auto& p : controlItemParams) {
+        if(p.Number->getIndex() <= 0) {
             continue;
         }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
         switch(targetType) {
             case CONTROL_TARGET_TYPE::LFO: {
-                int targetIndex = params->TargetLfo->getIndex();
-                auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
+                int targetIndex = p.TargetLfo->getIndex();
+                auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(p.TargetLfoParam->getIndex());
                 if(targetIndex == index) {
                     switch(targetParam) {
                         case CONTROL_TARGET_LFO_PARAM::Freq: {
@@ -1501,9 +1497,9 @@ void LfoComponent::timerCallback()
 }
 
 //==============================================================================
-ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
+ModEnvComponent::ModEnvComponent(int index, ModEnvParams& params)
 : index(index)
-, _paramsPtr(params)
+, params(params)
 , header("MOD ENV " + std::to_string(index+1), true)
 , targetTypeSelector("TargetType")
 , targetOscSelector("TargetOsc")
@@ -1518,70 +1514,70 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
     
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
+    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
     addAndMakeVisible(header);
 
     targetTypeSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetTypeSelector.addItemList(_paramsPtr->TargetType->getAllValueStrings(), 1);
-    targetTypeSelector.setSelectedItemIndex(_paramsPtr->TargetType->getIndex(), juce::dontSendNotification);
+    targetTypeSelector.addItemList(params.TargetType->getAllValueStrings(), 1);
+    targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
     targetTypeSelector.setJustificationType(juce::Justification::centred);
     targetTypeSelector.addListener(this);
     body.addAndMakeVisible(targetTypeSelector);
     
     targetOscSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscSelector.addItemList(_paramsPtr->TargetOsc->getAllValueStrings(), 1);
-    targetOscSelector.setSelectedItemIndex(_paramsPtr->TargetOsc->getIndex(), juce::dontSendNotification);
+    targetOscSelector.addItemList(params.TargetOsc->getAllValueStrings(), 1);
+    targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
     targetOscSelector.setJustificationType(juce::Justification::centred);
     targetOscSelector.addListener(this);
     body.addAndMakeVisible(targetOscSelector);
     
     targetFilterSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterSelector.addItemList(_paramsPtr->TargetFilter->getAllValueStrings(), 1);
-    targetFilterSelector.setSelectedItemIndex(_paramsPtr->TargetFilter->getIndex(), juce::dontSendNotification);
+    targetFilterSelector.addItemList(params.TargetFilter->getAllValueStrings(), 1);
+    targetFilterSelector.setSelectedItemIndex(params.TargetFilter->getIndex(), juce::dontSendNotification);
     targetFilterSelector.setJustificationType(juce::Justification::centred);
     targetFilterSelector.addListener(this);
     body.addAndMakeVisible(targetFilterSelector);
     
     targetLfoSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetLfoSelector.addItemList(_paramsPtr->TargetLfo->getAllValueStrings(), 1);
-    targetLfoSelector.setSelectedItemIndex(_paramsPtr->TargetLfo->getIndex(), juce::dontSendNotification);
+    targetLfoSelector.addItemList(params.TargetLfo->getAllValueStrings(), 1);
+    targetLfoSelector.setSelectedItemIndex(params.TargetLfo->getIndex(), juce::dontSendNotification);
     targetLfoSelector.setJustificationType(juce::Justification::centred);
     targetLfoSelector.addListener(this);
     body.addAndMakeVisible(targetLfoSelector);
     
     targetOscParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscParamSelector.addItemList(_paramsPtr->TargetOscParam->getAllValueStrings(), 1);
-    targetOscParamSelector.setSelectedItemIndex(_paramsPtr->TargetOscParam->getIndex(), juce::dontSendNotification);
+    targetOscParamSelector.addItemList(params.TargetOscParam->getAllValueStrings(), 1);
+    targetOscParamSelector.setSelectedItemIndex(params.TargetOscParam->getIndex(), juce::dontSendNotification);
     targetOscParamSelector.setJustificationType(juce::Justification::centred);
     targetOscParamSelector.addListener(this);
     body.addAndMakeVisible(targetOscParamSelector);
     
     targetFilterParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterParamSelector.addItemList(_paramsPtr->TargetFilterParam->getAllValueStrings(), 1);
-    targetFilterParamSelector.setSelectedItemIndex(_paramsPtr->TargetFilterParam->getIndex(), juce::dontSendNotification);
+    targetFilterParamSelector.addItemList(params.TargetFilterParam->getAllValueStrings(), 1);
+    targetFilterParamSelector.setSelectedItemIndex(params.TargetFilterParam->getIndex(), juce::dontSendNotification);
     targetFilterParamSelector.setJustificationType(juce::Justification::centred);
     targetFilterParamSelector.addListener(this);
     body.addAndMakeVisible(targetFilterParamSelector);
     
     targetLfoParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetLfoParamSelector.addItemList(_paramsPtr->TargetLfoParam->getAllValueStrings(), 1);
-    targetLfoParamSelector.setSelectedItemIndex(_paramsPtr->TargetLfoParam->getIndex(), juce::dontSendNotification);
+    targetLfoParamSelector.addItemList(params.TargetLfoParam->getAllValueStrings(), 1);
+    targetLfoParamSelector.setSelectedItemIndex(params.TargetLfoParam->getIndex(), juce::dontSendNotification);
     targetLfoParamSelector.setJustificationType(juce::Justification::centred);
     targetLfoParamSelector.addListener(this);
     body.addAndMakeVisible(targetLfoParamSelector);
     
     fadeSelector.setLookAndFeel(&grapeLookAndFeel);
-    fadeSelector.addItemList(_paramsPtr->Fade->getAllValueStrings(), 1);
-    fadeSelector.setSelectedItemIndex(_paramsPtr->Fade->getIndex(), juce::dontSendNotification);
+    fadeSelector.addItemList(params.Fade->getAllValueStrings(), 1);
+    fadeSelector.setSelectedItemIndex(params.Fade->getIndex(), juce::dontSendNotification);
     fadeSelector.setJustificationType(juce::Justification::centred);
     fadeSelector.addListener(this);
     body.addAndMakeVisible(fadeSelector);
     
     peakFreqSlider.setLookAndFeel(&grapeLookAndFeel);
-    peakFreqSlider.setRange(_paramsPtr->PeakFreq->range.start,
-                           _paramsPtr->PeakFreq->range.end, 0.01);
-    peakFreqSlider.setValue(_paramsPtr->PeakFreq->get(), juce::dontSendNotification);
+    peakFreqSlider.setRange(params.PeakFreq->range.start,
+                           params.PeakFreq->range.end, 0.01);
+    peakFreqSlider.setValue(params.PeakFreq->get(), juce::dontSendNotification);
     peakFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     peakFreqSlider.setScrollWheelEnabled(false);
     peakFreqSlider.textFromValueFunction = [](double oct) -> juce::String {
@@ -1591,10 +1587,10 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     body.addAndMakeVisible(peakFreqSlider);
     
     waitSlider.setLookAndFeel(&grapeLookAndFeel);
-    waitSlider.setRange(_paramsPtr->Wait->range.start,
-                           _paramsPtr->Wait->range.end, 0.01);
+    waitSlider.setRange(params.Wait->range.start,
+                           params.Wait->range.end, 0.01);
     waitSlider.setSkewFactorFromMidPoint(0.2f);
-    waitSlider.setValue(_paramsPtr->Wait->get(), juce::dontSendNotification);
+    waitSlider.setValue(params.Wait->get(), juce::dontSendNotification);
     waitSlider.setPopupDisplayEnabled(true, true, nullptr);
     waitSlider.setScrollWheelEnabled(false);
     waitSlider.setTextValueSuffix(" sec");
@@ -1602,10 +1598,10 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     body.addAndMakeVisible(waitSlider);
     
     attackSlider.setLookAndFeel(&grapeLookAndFeel);
-    attackSlider.setRange(_paramsPtr->Attack->range.start,
-                           _paramsPtr->Attack->range.end, 0.001);
+    attackSlider.setRange(params.Attack->range.start,
+                           params.Attack->range.end, 0.001);
     attackSlider.setSkewFactorFromMidPoint(0.2f);
-    attackSlider.setValue(_paramsPtr->Attack->get(), juce::dontSendNotification);
+    attackSlider.setValue(params.Attack->get(), juce::dontSendNotification);
     attackSlider.setPopupDisplayEnabled(true, true, nullptr);
     attackSlider.setScrollWheelEnabled(false);
     attackSlider.setTextValueSuffix(" sec");
@@ -1613,10 +1609,10 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams* params)
     body.addAndMakeVisible(attackSlider);
     
     decaySlider.setLookAndFeel(&grapeLookAndFeel);
-    decaySlider.setRange(_paramsPtr->Decay->range.start,
-                           _paramsPtr->Decay->range.end, 0.01);
+    decaySlider.setRange(params.Decay->range.start,
+                           params.Decay->range.end, 0.01);
     decaySlider.setSkewFactorFromMidPoint(0.4f);
-    decaySlider.setValue(_paramsPtr->Decay->get(), juce::dontSendNotification);
+    decaySlider.setValue(params.Decay->get(), juce::dontSendNotification);
     decaySlider.setPopupDisplayEnabled(true, true, nullptr);
     decaySlider.setScrollWheelEnabled(false);
     decaySlider.setTextValueSuffix(" sec");
@@ -1730,42 +1726,42 @@ void ModEnvComponent::resized()
 void ModEnvComponent::buttonClicked(juce::Button* button) {
     if(button == &header.enabledButton)
     {
-        *_paramsPtr->Enabled = header.enabledButton.getToggleState();
+        *params.Enabled = header.enabledButton.getToggleState();
     }
 }
 void ModEnvComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
 {
     if(comboBoxThatHasChanged == &targetTypeSelector)
     {
-        *_paramsPtr->TargetType = targetTypeSelector.getSelectedItemIndex();
+        *params.TargetType = targetTypeSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetOscSelector)
     {
-        *_paramsPtr->TargetOsc = targetOscSelector.getSelectedItemIndex();
+        *params.TargetOsc = targetOscSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetFilterSelector)
     {
-        *_paramsPtr->TargetFilter = targetFilterSelector.getSelectedItemIndex();
+        *params.TargetFilter = targetFilterSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetLfoSelector)
     {
-        *_paramsPtr->TargetLfo = targetLfoSelector.getSelectedItemIndex();
+        *params.TargetLfo = targetLfoSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetOscParamSelector)
     {
-        *_paramsPtr->TargetOscParam = targetOscParamSelector.getSelectedItemIndex();
+        *params.TargetOscParam = targetOscParamSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetFilterParamSelector)
     {
-        *_paramsPtr->TargetFilterParam = targetFilterParamSelector.getSelectedItemIndex();
+        *params.TargetFilterParam = targetFilterParamSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetLfoParamSelector)
     {
-        *_paramsPtr->TargetLfoParam = targetLfoParamSelector.getSelectedItemIndex();
+        *params.TargetLfoParam = targetLfoParamSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &fadeSelector)
     {
-        *_paramsPtr->Fade = fadeSelector.getSelectedItemIndex();
+        *params.Fade = fadeSelector.getSelectedItemIndex();
     }
     resized();// re-render
 }
@@ -1773,40 +1769,40 @@ void ModEnvComponent::sliderValueChanged(juce::Slider *slider)
 {
     if(slider == &peakFreqSlider)
     {
-        *_paramsPtr->PeakFreq = (float)peakFreqSlider.getValue();
+        *params.PeakFreq = (float)peakFreqSlider.getValue();
     }
     else if(slider == &waitSlider)
     {
-        *_paramsPtr->Wait = (float)waitSlider.getValue();
+        *params.Wait = (float)waitSlider.getValue();
     }
     else if(slider == &attackSlider)
     {
-        *_paramsPtr->Attack = (float)attackSlider.getValue();
+        *params.Attack = (float)attackSlider.getValue();
     }
     else if(slider == &decaySlider)
     {
-        *_paramsPtr->Decay = (float)decaySlider.getValue();
+        *params.Decay = (float)decaySlider.getValue();
     }
 }
 void ModEnvComponent::timerCallback()
 {
-    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(_paramsPtr->Enabled->get());
+    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
+    body.setEnabled(params.Enabled->get());
     
-    targetTypeSelector.setSelectedItemIndex(_paramsPtr->TargetType->getIndex(), juce::dontSendNotification);
-    targetOscSelector.setSelectedItemIndex(_paramsPtr->TargetOsc->getIndex(), juce::dontSendNotification);
-    targetFilterSelector.setSelectedItemIndex(_paramsPtr->TargetFilter->getIndex(), juce::dontSendNotification);
-    targetLfoSelector.setSelectedItemIndex(_paramsPtr->TargetLfo->getIndex(), juce::dontSendNotification);
-    targetOscParamSelector.setSelectedItemIndex(_paramsPtr->TargetOscParam->getIndex(), juce::dontSendNotification);
-    targetFilterParamSelector.setSelectedItemIndex(_paramsPtr->TargetFilterParam->getIndex(), juce::dontSendNotification);
-    targetLfoParamSelector.setSelectedItemIndex(_paramsPtr->TargetLfoParam->getIndex(), juce::dontSendNotification);
-    fadeSelector.setSelectedItemIndex(_paramsPtr->Fade->getIndex(), juce::dontSendNotification);
+    targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
+    targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
+    targetFilterSelector.setSelectedItemIndex(params.TargetFilter->getIndex(), juce::dontSendNotification);
+    targetLfoSelector.setSelectedItemIndex(params.TargetLfo->getIndex(), juce::dontSendNotification);
+    targetOscParamSelector.setSelectedItemIndex(params.TargetOscParam->getIndex(), juce::dontSendNotification);
+    targetFilterParamSelector.setSelectedItemIndex(params.TargetFilterParam->getIndex(), juce::dontSendNotification);
+    targetLfoParamSelector.setSelectedItemIndex(params.TargetLfoParam->getIndex(), juce::dontSendNotification);
+    fadeSelector.setSelectedItemIndex(params.Fade->getIndex(), juce::dontSendNotification);
     
-    peakFreqSlider.setValue(_paramsPtr->PeakFreq->get(), juce::dontSendNotification);
-    waitSlider.setValue(_paramsPtr->Wait->get(), juce::dontSendNotification);
-    attackSlider.setValue(_paramsPtr->Attack->get(), juce::dontSendNotification);
-    decaySlider.setValue(_paramsPtr->Decay->get(), juce::dontSendNotification);
-    switch(static_cast<MODENV_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
+    peakFreqSlider.setValue(params.PeakFreq->get(), juce::dontSendNotification);
+    waitSlider.setValue(params.Wait->get(), juce::dontSendNotification);
+    attackSlider.setValue(params.Attack->get(), juce::dontSendNotification);
+    decaySlider.setValue(params.Decay->get(), juce::dontSendNotification);
+    switch(static_cast<MODENV_TARGET_TYPE>(params.TargetType->getIndex())) {
         case MODENV_TARGET_TYPE::OSC: {
             targetOscSelector.setVisible(true);
             targetFilterSelector.setVisible(false);
@@ -1835,7 +1831,7 @@ void ModEnvComponent::timerCallback()
             break;
         }
     }
-    if(_paramsPtr->isTargetFreq()) {
+    if(params.isTargetFreq()) {
         // 1
         peakFreqLabel.setVisible(true);
         fadeLabel.setVisible(false);
@@ -1853,7 +1849,7 @@ void ModEnvComponent::timerCallback()
         peakFreqSlider.setVisible(false);
         fadeSelector.setVisible(true);
         // 2
-        if(static_cast<MODENV_FADE>(_paramsPtr->Fade->getIndex()) == MODENV_FADE::In) {
+        if(static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In) {
             waitLabel.setVisible(true);
             attackLabel.setVisible(false);
             waitSlider.setVisible(true);
@@ -1868,8 +1864,8 @@ void ModEnvComponent::timerCallback()
 }
 
 //==============================================================================
-DelayComponent::DelayComponent(DelayParams* params, ControlItemParams* controlItemParams)
-: _paramsPtr(params)
+DelayComponent::DelayComponent(DelayParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+: params(params)
 , controlItemParams(controlItemParams)
 , header("DELAY", true)
 , typeSelector("Type")
@@ -1885,29 +1881,29 @@ DelayComponent::DelayComponent(DelayParams* params, ControlItemParams* controlIt
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
     
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
+    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
     addAndMakeVisible(header);
     
     typeSelector.setLookAndFeel(&grapeLookAndFeel);
-    typeSelector.addItemList(_paramsPtr->Type->getAllValueStrings(), 1);
-    typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
+    typeSelector.addItemList(params.Type->getAllValueStrings(), 1);
+    typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
     typeSelector.setJustificationType(juce::Justification::centred);
     typeSelector.addListener(this);
     body.addAndMakeVisible(typeSelector);
     
     syncSelector.setLookAndFeel(&grapeLookAndFeel);
-    syncSelector.addItemList(_paramsPtr->Sync->getAllValueStrings(), 1);
-    syncSelector.setSelectedItemIndex(_paramsPtr->Sync->get(), juce::dontSendNotification);
+    syncSelector.addItemList(params.Sync->getAllValueStrings(), 1);
+    syncSelector.setSelectedItemIndex(params.Sync->get(), juce::dontSendNotification);
     syncSelector.setJustificationType(juce::Justification::centred);
     syncSelector.addListener(this);
     body.addAndMakeVisible(syncSelector);
     
     timeLSlider.setLookAndFeel(&grapeLookAndFeel);
-    timeLSlider.setRange(_paramsPtr->TimeL->range.start,
-                          _paramsPtr->TimeL->range.end, 0.01);
+    timeLSlider.setRange(params.TimeL->range.start,
+                          params.TimeL->range.end, 0.01);
     timeLSlider.setSkewFactorFromMidPoint(0.4f);
-    timeLSlider.setValue(_paramsPtr->TimeL->get(), juce::dontSendNotification);
+    timeLSlider.setValue(params.TimeL->get(), juce::dontSendNotification);
     timeLSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeLSlider.setScrollWheelEnabled(false);
     timeLSlider.setTextValueSuffix(" sec");
@@ -1915,10 +1911,10 @@ DelayComponent::DelayComponent(DelayParams* params, ControlItemParams* controlIt
     body.addAndMakeVisible(timeLSlider);
     
     timeRSlider.setLookAndFeel(&grapeLookAndFeel);
-    timeRSlider.setRange(_paramsPtr->TimeR->range.start,
-                          _paramsPtr->TimeR->range.end, 0.01);
+    timeRSlider.setRange(params.TimeR->range.start,
+                          params.TimeR->range.end, 0.01);
     timeRSlider.setSkewFactorFromMidPoint(0.4f);
-    timeRSlider.setValue(_paramsPtr->TimeR->get(), juce::dontSendNotification);
+    timeRSlider.setValue(params.TimeR->get(), juce::dontSendNotification);
     timeRSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeRSlider.setScrollWheelEnabled(false);
     timeRSlider.setTextValueSuffix(" sec");
@@ -1927,7 +1923,7 @@ DelayComponent::DelayComponent(DelayParams* params, ControlItemParams* controlIt
     
     timeSyncLSlider.setLookAndFeel(&grapeLookAndFeel);
     timeSyncLSlider.setRange(0, DELAY_TIME_SYNC_NAMES.size() - 1, 1);
-    timeSyncLSlider.setValue(_paramsPtr->TimeSyncL->getIndex(), juce::dontSendNotification);
+    timeSyncLSlider.setValue(params.TimeSyncL->getIndex(), juce::dontSendNotification);
     timeSyncLSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeSyncLSlider.setScrollWheelEnabled(false);
     timeSyncLSlider.textFromValueFunction = [](double index){ return DELAY_TIME_SYNC_NAMES[index]; };
@@ -1936,7 +1932,7 @@ DelayComponent::DelayComponent(DelayParams* params, ControlItemParams* controlIt
     
     timeSyncRSlider.setLookAndFeel(&grapeLookAndFeel);
     timeSyncRSlider.setRange(0, DELAY_TIME_SYNC_NAMES.size() - 1, 1);
-    timeSyncRSlider.setValue(_paramsPtr->TimeSyncR->getIndex(), juce::dontSendNotification);
+    timeSyncRSlider.setValue(params.TimeSyncR->getIndex(), juce::dontSendNotification);
     timeSyncRSlider.setPopupDisplayEnabled(true, true, nullptr);
     timeSyncRSlider.setScrollWheelEnabled(false);
     timeSyncRSlider.textFromValueFunction = [](double index){ return DELAY_TIME_SYNC_NAMES[index]; };
@@ -1944,10 +1940,10 @@ DelayComponent::DelayComponent(DelayParams* params, ControlItemParams* controlIt
     body.addAndMakeVisible(timeSyncRSlider);
     
     lowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
-    lowFreqSlider.setRange(_paramsPtr->LowFreq->range.start,
-                          _paramsPtr->LowFreq->range.end, 1.0);
+    lowFreqSlider.setRange(params.LowFreq->range.start,
+                          params.LowFreq->range.end, 1.0);
     lowFreqSlider.setSkewFactorFromMidPoint(2000.0f);
-    lowFreqSlider.setValue(_paramsPtr->LowFreq->get(), juce::dontSendNotification);
+    lowFreqSlider.setValue(params.LowFreq->get(), juce::dontSendNotification);
     lowFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     lowFreqSlider.setScrollWheelEnabled(false);
     lowFreqSlider.setTextValueSuffix(" Hz");
@@ -1955,10 +1951,10 @@ DelayComponent::DelayComponent(DelayParams* params, ControlItemParams* controlIt
     body.addAndMakeVisible(lowFreqSlider);
     
     highFreqSlider.setLookAndFeel(&grapeLookAndFeel);
-    highFreqSlider.setRange(_paramsPtr->HighFreq->range.start,
-                          _paramsPtr->HighFreq->range.end, 1.0);
+    highFreqSlider.setRange(params.HighFreq->range.start,
+                          params.HighFreq->range.end, 1.0);
     highFreqSlider.setSkewFactorFromMidPoint(2000.0f);
-    highFreqSlider.setValue(_paramsPtr->HighFreq->get(), juce::dontSendNotification);
+    highFreqSlider.setValue(params.HighFreq->get(), juce::dontSendNotification);
     highFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
     highFreqSlider.setScrollWheelEnabled(false);
     highFreqSlider.setTextValueSuffix(" Hz");
@@ -1966,10 +1962,10 @@ DelayComponent::DelayComponent(DelayParams* params, ControlItemParams* controlIt
     body.addAndMakeVisible(highFreqSlider);
     
     feedbackSlider.setLookAndFeel(&grapeLookAndFeel);
-    feedbackSlider.setRange(_paramsPtr->Feedback->range.start,
-                          _paramsPtr->Feedback->range.end, 0.01);
+    feedbackSlider.setRange(params.Feedback->range.start,
+                          params.Feedback->range.end, 0.01);
     feedbackSlider.setSkewFactorFromMidPoint(0.4f);
-    feedbackSlider.setValue(_paramsPtr->Feedback->get(), juce::dontSendNotification);
+    feedbackSlider.setValue(params.Feedback->get(), juce::dontSendNotification);
     feedbackSlider.setPopupDisplayEnabled(true, true, nullptr);
     feedbackSlider.setScrollWheelEnabled(false);
     feedbackSlider.textFromValueFunction = [](double gain){ return juce::String(gain * 100, 0) + " %"; };
@@ -1977,9 +1973,9 @@ DelayComponent::DelayComponent(DelayParams* params, ControlItemParams* controlIt
     body.addAndMakeVisible(feedbackSlider);
     
     mixSlider.setLookAndFeel(&grapeLookAndFeel);
-    mixSlider.setRange(_paramsPtr->Mix->range.start,
-                          _paramsPtr->Mix->range.end, 0.01);
-    mixSlider.setValue(_paramsPtr->Mix->get(), juce::dontSendNotification);
+    mixSlider.setRange(params.Mix->range.start,
+                          params.Mix->range.end, 0.01);
+    mixSlider.setValue(params.Mix->get(), juce::dontSendNotification);
     mixSlider.setPopupDisplayEnabled(true, true, nullptr);
     mixSlider.setScrollWheelEnabled(false);
     mixSlider.addListener(this);
@@ -2106,85 +2102,84 @@ void DelayComponent::resized()
 void DelayComponent::buttonClicked(juce::Button* button) {
     if(button == &header.enabledButton)
     {
-        *_paramsPtr->Enabled = header.enabledButton.getToggleState();
+        *params.Enabled = header.enabledButton.getToggleState();
     }
 }
 void DelayComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     if(comboBox == &typeSelector)
     {
-        *_paramsPtr->Type = typeSelector.getSelectedItemIndex();
+        *params.Type = typeSelector.getSelectedItemIndex();
     }
     else if(comboBox == &syncSelector)
     {
-        *_paramsPtr->Sync = syncSelector.getSelectedItemIndex();
+        *params.Sync = syncSelector.getSelectedItemIndex();
     }
 }
 void DelayComponent::sliderValueChanged(juce::Slider *slider)
 {
     if(slider == &timeLSlider)
     {
-        *_paramsPtr->TimeL = (float)timeLSlider.getValue();
+        *params.TimeL = (float)timeLSlider.getValue();
     }
     else if(slider == &timeRSlider)
     {
-        *_paramsPtr->TimeR = (float)timeRSlider.getValue();
+        *params.TimeR = (float)timeRSlider.getValue();
     }
     else if(slider == &timeSyncLSlider)
     {
-        *_paramsPtr->TimeSyncL = timeSyncLSlider.getValue();
+        *params.TimeSyncL = timeSyncLSlider.getValue();
     }
     else if(slider == &timeSyncRSlider)
     {
-        *_paramsPtr->TimeSyncR = timeSyncRSlider.getValue();
+        *params.TimeSyncR = timeSyncRSlider.getValue();
     }
     else if(slider == &lowFreqSlider)
     {
-        *_paramsPtr->LowFreq = (float)lowFreqSlider.getValue();
+        *params.LowFreq = (float)lowFreqSlider.getValue();
     }
     else if(slider == &highFreqSlider)
     {
-        *_paramsPtr->HighFreq = (float)highFreqSlider.getValue();
+        *params.HighFreq = (float)highFreqSlider.getValue();
     }
     else if(slider == &feedbackSlider)
     {
-        *_paramsPtr->Feedback = (float)feedbackSlider.getValue();
+        *params.Feedback = (float)feedbackSlider.getValue();
     }
     else if(slider == &mixSlider)
     {
-        *_paramsPtr->Mix = (float)mixSlider.getValue();
+        *params.Mix = (float)mixSlider.getValue();
     }
 }
 void DelayComponent::timerCallback()
 {
-    header.enabledButton.setToggleState(_paramsPtr->Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(_paramsPtr->Enabled->get());
+    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
+    body.setEnabled(params.Enabled->get());
     
-    typeSelector.setSelectedItemIndex(_paramsPtr->Type->getIndex(), juce::dontSendNotification);
-    syncSelector.setSelectedItemIndex(_paramsPtr->Sync->get(), juce::dontSendNotification);
-    timeLSlider.setVisible(!_paramsPtr->Sync->get());
-    timeRSlider.setVisible(!_paramsPtr->Sync->get());
-    timeSyncLSlider.setVisible(_paramsPtr->Sync->get());
-    timeSyncRSlider.setVisible(_paramsPtr->Sync->get());
-    timeLSlider.setValue(_paramsPtr->TimeL->get(), juce::dontSendNotification);
-    timeRSlider.setValue(_paramsPtr->TimeR->get(), juce::dontSendNotification);
-    timeSyncLSlider.setValue(_paramsPtr->TimeSyncL->getIndex(), juce::dontSendNotification);
-    timeSyncRSlider.setValue(_paramsPtr->TimeSyncR->getIndex(), juce::dontSendNotification);
+    typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
+    syncSelector.setSelectedItemIndex(params.Sync->get(), juce::dontSendNotification);
+    timeLSlider.setVisible(!params.Sync->get());
+    timeRSlider.setVisible(!params.Sync->get());
+    timeSyncLSlider.setVisible(params.Sync->get());
+    timeSyncRSlider.setVisible(params.Sync->get());
+    timeLSlider.setValue(params.TimeL->get(), juce::dontSendNotification);
+    timeRSlider.setValue(params.TimeR->get(), juce::dontSendNotification);
+    timeSyncLSlider.setValue(params.TimeSyncL->getIndex(), juce::dontSendNotification);
+    timeSyncRSlider.setValue(params.TimeSyncR->getIndex(), juce::dontSendNotification);
 
-    lowFreqSlider.setValue(_paramsPtr->LowFreq->get(), juce::dontSendNotification);
-    highFreqSlider.setValue(_paramsPtr->HighFreq->get(), juce::dontSendNotification);
-    feedbackSlider.setValue(_paramsPtr->Feedback->get(), juce::dontSendNotification);
-    mixSlider.setValue(_paramsPtr->Mix->get(), juce::dontSendNotification);
+    lowFreqSlider.setValue(params.LowFreq->get(), juce::dontSendNotification);
+    highFreqSlider.setValue(params.HighFreq->get(), juce::dontSendNotification);
+    feedbackSlider.setValue(params.Feedback->get(), juce::dontSendNotification);
+    mixSlider.setValue(params.Mix->get(), juce::dontSendNotification);
     
     mixSlider.setLookAndFeel(&grapeLookAndFeel);
-    for(int i = 0; i < NUM_CONTROL; ++i) {
-        auto params = &controlItemParams[i];
-        if(params->Number->getIndex() <= 0) {
+    for(auto & p : controlItemParams) {
+        if(p.Number->getIndex() <= 0) {
             continue;
         }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
         switch(targetType) {
             case CONTROL_TARGET_TYPE::Master: {
-                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(params->TargetMiscParam->getIndex());
+                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(p.TargetMiscParam->getIndex());
                 switch(targetParam) {
                     case CONTROL_TARGET_MISC_PARAM::DelayMix: {
                         mixSlider.setLookAndFeel(&grapeLookAndFeelControlled);
@@ -2203,8 +2198,8 @@ void DelayComponent::timerCallback()
 
 
 //==============================================================================
-ControlItemComponent::ControlItemComponent(ControlItemParams* params)
-: _paramsPtr(params)
+ControlItemComponent::ControlItemComponent(ControlItemParams& params)
+: params(params)
 , numberSelector("Number")
 , targetTypeSelector("TargetType")
 , targetOscSelector("TargetOsc")
@@ -2216,64 +2211,64 @@ ControlItemComponent::ControlItemComponent(ControlItemParams* params)
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
 
     numberSelector.setLookAndFeel(&grapeLookAndFeel);
-    numberSelector.addItemList(_paramsPtr->Number->getAllValueStrings(), 1);
-    numberSelector.setSelectedItemIndex(_paramsPtr->Number->getIndex(), juce::dontSendNotification);
+    numberSelector.addItemList(params.Number->getAllValueStrings(), 1);
+    numberSelector.setSelectedItemIndex(params.Number->getIndex(), juce::dontSendNotification);
     numberSelector.setJustificationType(juce::Justification::centred);
     numberSelector.addListener(this);
     addAndMakeVisible(numberSelector);
     
     targetTypeSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetTypeSelector.addItemList(_paramsPtr->TargetType->getAllValueStrings(), 1);
-    targetTypeSelector.setSelectedItemIndex(_paramsPtr->TargetType->getIndex(), juce::dontSendNotification);
+    targetTypeSelector.addItemList(params.TargetType->getAllValueStrings(), 1);
+    targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
     targetTypeSelector.setJustificationType(juce::Justification::centred);
     targetTypeSelector.addListener(this);
     addAndMakeVisible(targetTypeSelector);
     
     targetOscSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscSelector.addItemList(_paramsPtr->TargetOsc->getAllValueStrings(), 1);
-    targetOscSelector.setSelectedItemIndex(_paramsPtr->TargetOsc->getIndex(), juce::dontSendNotification);
+    targetOscSelector.addItemList(params.TargetOsc->getAllValueStrings(), 1);
+    targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
     targetOscSelector.setJustificationType(juce::Justification::centred);
     targetOscSelector.addListener(this);
     addAndMakeVisible(targetOscSelector);
     
     targetFilterSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterSelector.addItemList(_paramsPtr->TargetFilter->getAllValueStrings(), 1);
-    targetFilterSelector.setSelectedItemIndex(_paramsPtr->TargetFilter->getIndex(), juce::dontSendNotification);
+    targetFilterSelector.addItemList(params.TargetFilter->getAllValueStrings(), 1);
+    targetFilterSelector.setSelectedItemIndex(params.TargetFilter->getIndex(), juce::dontSendNotification);
     targetFilterSelector.setJustificationType(juce::Justification::centred);
     targetFilterSelector.addListener(this);
     addAndMakeVisible(targetFilterSelector);
     
     targetLfoSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetLfoSelector.addItemList(_paramsPtr->TargetLfo->getAllValueStrings(), 1);
-    targetLfoSelector.setSelectedItemIndex(_paramsPtr->TargetLfo->getIndex(), juce::dontSendNotification);
+    targetLfoSelector.addItemList(params.TargetLfo->getAllValueStrings(), 1);
+    targetLfoSelector.setSelectedItemIndex(params.TargetLfo->getIndex(), juce::dontSendNotification);
     targetLfoSelector.setJustificationType(juce::Justification::centred);
     targetLfoSelector.addListener(this);
     addAndMakeVisible(targetLfoSelector);
     
     targetOscParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscParamSelector.addItemList(_paramsPtr->TargetOscParam->getAllValueStrings(), 1);
-    targetOscParamSelector.setSelectedItemIndex(_paramsPtr->TargetOscParam->getIndex(), juce::dontSendNotification);
+    targetOscParamSelector.addItemList(params.TargetOscParam->getAllValueStrings(), 1);
+    targetOscParamSelector.setSelectedItemIndex(params.TargetOscParam->getIndex(), juce::dontSendNotification);
     targetOscParamSelector.setJustificationType(juce::Justification::centred);
     targetOscParamSelector.addListener(this);
     addAndMakeVisible(targetOscParamSelector);
     
     targetFilterParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterParamSelector.addItemList(_paramsPtr->TargetFilterParam->getAllValueStrings(), 1);
-    targetFilterParamSelector.setSelectedItemIndex(_paramsPtr->TargetFilterParam->getIndex(), juce::dontSendNotification);
+    targetFilterParamSelector.addItemList(params.TargetFilterParam->getAllValueStrings(), 1);
+    targetFilterParamSelector.setSelectedItemIndex(params.TargetFilterParam->getIndex(), juce::dontSendNotification);
     targetFilterParamSelector.setJustificationType(juce::Justification::centred);
     targetFilterParamSelector.addListener(this);
     addAndMakeVisible(targetFilterParamSelector);
     
     targetLfoParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetLfoParamSelector.addItemList(_paramsPtr->TargetLfoParam->getAllValueStrings(), 1);
-    targetLfoParamSelector.setSelectedItemIndex(_paramsPtr->TargetLfoParam->getIndex(), juce::dontSendNotification);
+    targetLfoParamSelector.addItemList(params.TargetLfoParam->getAllValueStrings(), 1);
+    targetLfoParamSelector.setSelectedItemIndex(params.TargetLfoParam->getIndex(), juce::dontSendNotification);
     targetLfoParamSelector.setJustificationType(juce::Justification::centred);
     targetLfoParamSelector.addListener(this);
     addAndMakeVisible(targetLfoParamSelector);
     
     targetMiscParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetMiscParamSelector.addItemList(_paramsPtr->TargetMiscParam->getAllValueStrings(), 1);
-    targetMiscParamSelector.setSelectedItemIndex(_paramsPtr->TargetMiscParam->getIndex(), juce::dontSendNotification);
+    targetMiscParamSelector.addItemList(params.TargetMiscParam->getAllValueStrings(), 1);
+    targetMiscParamSelector.setSelectedItemIndex(params.TargetMiscParam->getIndex(), juce::dontSendNotification);
     targetMiscParamSelector.setJustificationType(juce::Justification::centred);
     targetMiscParamSelector.addListener(this);
     addAndMakeVisible(targetMiscParamSelector);
@@ -2317,54 +2312,54 @@ void ControlItemComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChange
 {
     if(comboBoxThatHasChanged == &numberSelector)
     {
-        *_paramsPtr->Number = numberSelector.getSelectedItemIndex();
+        *params.Number = numberSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetTypeSelector)
     {
-        *_paramsPtr->TargetType = targetTypeSelector.getSelectedItemIndex();
+        *params.TargetType = targetTypeSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetOscSelector)
     {
-        *_paramsPtr->TargetOsc = targetOscSelector.getSelectedItemIndex();
+        *params.TargetOsc = targetOscSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetFilterSelector)
     {
-        *_paramsPtr->TargetFilter = targetFilterSelector.getSelectedItemIndex();
+        *params.TargetFilter = targetFilterSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetLfoSelector)
     {
-        *_paramsPtr->TargetLfo = targetLfoSelector.getSelectedItemIndex();
+        *params.TargetLfo = targetLfoSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetOscParamSelector)
     {
-        *_paramsPtr->TargetOscParam = targetOscParamSelector.getSelectedItemIndex();
+        *params.TargetOscParam = targetOscParamSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetFilterParamSelector)
     {
-        *_paramsPtr->TargetFilterParam = targetFilterParamSelector.getSelectedItemIndex();
+        *params.TargetFilterParam = targetFilterParamSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetLfoParamSelector)
     {
-        *_paramsPtr->TargetLfoParam = targetLfoParamSelector.getSelectedItemIndex();
+        *params.TargetLfoParam = targetLfoParamSelector.getSelectedItemIndex();
     }
     else if(comboBoxThatHasChanged == &targetMiscParamSelector)
     {
-        *_paramsPtr->TargetMiscParam = targetMiscParamSelector.getSelectedItemIndex();
+        *params.TargetMiscParam = targetMiscParamSelector.getSelectedItemIndex();
     }
     resized();// re-render
 }
 void ControlItemComponent::timerCallback()
 {
-    numberSelector.setSelectedItemIndex(_paramsPtr->Number->getIndex(), juce::dontSendNotification);
-    targetTypeSelector.setSelectedItemIndex(_paramsPtr->TargetType->getIndex(), juce::dontSendNotification);
-    targetOscSelector.setSelectedItemIndex(_paramsPtr->TargetOsc->getIndex(), juce::dontSendNotification);
-    targetFilterSelector.setSelectedItemIndex(_paramsPtr->TargetFilter->getIndex(), juce::dontSendNotification);
-    targetLfoSelector.setSelectedItemIndex(_paramsPtr->TargetLfo->getIndex(), juce::dontSendNotification);
-    targetOscParamSelector.setSelectedItemIndex(_paramsPtr->TargetOscParam->getIndex(), juce::dontSendNotification);
-    targetFilterParamSelector.setSelectedItemIndex(_paramsPtr->TargetFilterParam->getIndex(), juce::dontSendNotification);
-    targetLfoParamSelector.setSelectedItemIndex(_paramsPtr->TargetLfoParam->getIndex(), juce::dontSendNotification);
-    targetMiscParamSelector.setSelectedItemIndex(_paramsPtr->TargetMiscParam->getIndex(), juce::dontSendNotification);
-    auto enabled = _paramsPtr->Number->getIndex() != 0;
+    numberSelector.setSelectedItemIndex(params.Number->getIndex(), juce::dontSendNotification);
+    targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
+    targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
+    targetFilterSelector.setSelectedItemIndex(params.TargetFilter->getIndex(), juce::dontSendNotification);
+    targetLfoSelector.setSelectedItemIndex(params.TargetLfo->getIndex(), juce::dontSendNotification);
+    targetOscParamSelector.setSelectedItemIndex(params.TargetOscParam->getIndex(), juce::dontSendNotification);
+    targetFilterParamSelector.setSelectedItemIndex(params.TargetFilterParam->getIndex(), juce::dontSendNotification);
+    targetLfoParamSelector.setSelectedItemIndex(params.TargetLfoParam->getIndex(), juce::dontSendNotification);
+    targetMiscParamSelector.setSelectedItemIndex(params.TargetMiscParam->getIndex(), juce::dontSendNotification);
+    auto enabled = params.Number->getIndex() != 0;
     targetTypeSelector.setEnabled(enabled);
     targetOscSelector.setEnabled(enabled);
     targetFilterSelector.setEnabled(enabled);
@@ -2373,7 +2368,7 @@ void ControlItemComponent::timerCallback()
     targetFilterParamSelector.setEnabled(enabled);
     targetLfoParamSelector.setEnabled(enabled);
     targetMiscParamSelector.setEnabled(enabled);
-    switch(static_cast<CONTROL_TARGET_TYPE>(_paramsPtr->TargetType->getIndex())) {
+    switch(static_cast<CONTROL_TARGET_TYPE>(params.TargetType->getIndex())) {
         case CONTROL_TARGET_TYPE::OSC: {
             targetOscSelector.setVisible(true);
             targetFilterSelector.setVisible(false);
@@ -2419,15 +2414,15 @@ void ControlItemComponent::timerCallback()
 
 
 //==============================================================================
-ControlComponent::ControlComponent(ControlItemParams* params)
+ControlComponent::ControlComponent(std::array<ControlItemParams, NUM_CONTROL>& params)
 : header("CONTROLS", false)
 , controlItemComponents {
-    ControlItemComponent(params),
-    ControlItemComponent(params+1),
-    ControlItemComponent(params+2),
-    ControlItemComponent(params+3),
-    ControlItemComponent(params+4),
-    ControlItemComponent(params+5)
+    ControlItemComponent(params[0]),
+    ControlItemComponent(params[1]),
+    ControlItemComponent(params[2]),
+    ControlItemComponent(params[3]),
+    ControlItemComponent(params[4]),
+    ControlItemComponent(params[5])
 }
 {
     juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
@@ -2569,7 +2564,7 @@ void AnalyserToggle::toggleItemSelected(AnalyserToggleItem* toggleItem)
 }
 
 //==============================================================================
-AnalyserWindow::AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, MonoStack* monoStack, EnvelopeParams* envelopeParams, OscParams* oscParams, FilterParams* filterParams, ModEnvParams* modEnvParams)
+AnalyserWindow::AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, MonoStack* monoStack, std::array<EnvelopeParams, NUM_ENVELOPE>& envelopeParams, std::array<OscParams, NUM_OSC>& oscParams, std::array<FilterParams, NUM_FILTER>& filterParams, std::array<ModEnvParams, NUM_MODENV>& modEnvParams)
 : analyserMode(analyserMode)
 , latestDataProvider(latestDataProvider)
 , monoStack(monoStack)

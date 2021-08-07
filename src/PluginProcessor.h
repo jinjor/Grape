@@ -139,13 +139,13 @@ public:
     
     GlobalParams globalParams;
     VoiceParams voiceParams;
-    OscParams oscParams[NUM_OSC];
-    EnvelopeParams envelopeParams[NUM_ENVELOPE];
-    FilterParams filterParams[NUM_FILTER];
-    LfoParams lfoParams[NUM_LFO];
-    ModEnvParams modEnvParams[NUM_MODENV];
+    std::array<OscParams, NUM_OSC> oscParams;
+    std::array<EnvelopeParams, NUM_ENVELOPE> envelopeParams;
+    std::array<FilterParams, NUM_FILTER> filterParams;
+    std::array<LfoParams, NUM_LFO> lfoParams;
+    std::array<ModEnvParams, NUM_MODENV> modEnvParams;
     DelayParams delayParams;
-    ControlItemParams controlItemParams[NUM_CONTROL];
+    std::array<ControlItemParams, NUM_CONTROL> controlItemParams;
     
     MonoStack monoStack;
     GrapeSynthesiser synth;

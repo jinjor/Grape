@@ -8,17 +8,17 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 : AudioProcessorEditor (&p)
 , audioProcessor (p)
 , controlComponent { ControlComponent(p.controlItemParams) }
-, voiceComponent (&p.voiceParams, p.controlItemParams)
+, voiceComponent (p.voiceParams, p.controlItemParams)
 , analyserToggle(&analyserMode)
 , analyserWindow(&analyserMode, &p.latestDataProvider, &p.monoStack, p.envelopeParams, p.oscParams, p.filterParams, p.modEnvParams)
 , statusComponent (&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider)
-, masterComponent (&p.globalParams)
-, oscComponents { OscComponent(0, p.oscParams, p.controlItemParams), OscComponent(1, p.oscParams+1, p.controlItemParams), OscComponent(2, p.oscParams+2, p.controlItemParams) }
-, envelopeComponents { EnvelopeComponent(0, p.envelopeParams), EnvelopeComponent(1, p.envelopeParams+1) }
-, filterComponents { FilterComponent(0, p.filterParams, p.controlItemParams), FilterComponent(1, p.filterParams+1, p.controlItemParams) }
-, lfoComponents { LfoComponent(0, p.lfoParams, p.controlItemParams), LfoComponent(1, p.lfoParams+1, p.controlItemParams), LfoComponent(2, p.lfoParams+2, p.controlItemParams) }
-, modEnvComponents { ModEnvComponent(0, p.modEnvParams), ModEnvComponent(1, p.modEnvParams+1), ModEnvComponent(2, p.modEnvParams+2) }
-, delayComponent { DelayComponent(&p.delayParams, p.controlItemParams) }
+, masterComponent (p.globalParams)
+, oscComponents { OscComponent(0, p.oscParams[0], p.controlItemParams), OscComponent(1, p.oscParams[1], p.controlItemParams), OscComponent(2, p.oscParams[2], p.controlItemParams) }
+, envelopeComponents { EnvelopeComponent(0, p.envelopeParams[0]), EnvelopeComponent(1, p.envelopeParams[1]) }
+, filterComponents { FilterComponent(0, p.filterParams[0], p.controlItemParams), FilterComponent(1, p.filterParams[1], p.controlItemParams) }
+, lfoComponents { LfoComponent(0, p.lfoParams[0], p.controlItemParams), LfoComponent(1, p.lfoParams[1], p.controlItemParams), LfoComponent(2, p.lfoParams[2], p.controlItemParams) }
+, modEnvComponents { ModEnvComponent(0, p.modEnvParams[0]), ModEnvComponent(1, p.modEnvParams[1]), ModEnvComponent(2, p.modEnvParams[2]) }
+, delayComponent { DelayComponent(p.delayParams, p.controlItemParams) }
 {
     getLookAndFeel().setColour(juce::Label::textColourId, TEXT_COLOUR);
     

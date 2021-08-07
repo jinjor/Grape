@@ -46,7 +46,7 @@ private:
 class VoiceComponent : public juce::Component, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
-    VoiceComponent(VoiceParams* params, ControlItemParams* controlItemParams);
+    VoiceComponent(VoiceParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~VoiceComponent();
     VoiceComponent(const VoiceComponent &) = delete;
     
@@ -60,8 +60,8 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
     
-    VoiceParams* _paramsPtr;
-    ControlItemParams* controlItemParams;
+    VoiceParams& params;
+    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
    
     HeaderComponent header;
     
@@ -113,7 +113,7 @@ private:
 class MasterComponent : public juce::Component, juce::Slider::Listener, private juce::Timer
 {
 public:
-    MasterComponent(GlobalParams* params);
+    MasterComponent(GlobalParams& params);
     virtual ~MasterComponent();
     MasterComponent(const MasterComponent &) = delete;
     
@@ -128,7 +128,7 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
     
-    GlobalParams* _paramsPtr;
+    GlobalParams& params;
    
     HeaderComponent header;
     
@@ -143,7 +143,7 @@ private:
 class OscComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
-    OscComponent(int index, OscParams* params, ControlItemParams* controlItemParams);
+    OscComponent(int index, OscParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~OscComponent();
     OscComponent(const OscComponent &) = delete;
     
@@ -161,8 +161,8 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
     
-    OscParams* _paramsPtr;
-    ControlItemParams* controlItemParams;
+    OscParams& params;
+    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
    
     HeaderComponent header;
     juce::Component body;
@@ -192,7 +192,7 @@ private:
 class EnvelopeComponent : public juce::Component, juce::Slider::Listener, private juce::Timer
 {
 public:
-    EnvelopeComponent(int index, EnvelopeParams* params);
+    EnvelopeComponent(int index, EnvelopeParams& params);
     virtual ~EnvelopeComponent();
     EnvelopeComponent(const EnvelopeComponent &) = delete;
     
@@ -205,7 +205,7 @@ private:
     virtual void timerCallback() override;
     int index;
     GrapeLookAndFeel grapeLookAndFeel;
-    EnvelopeParams* _paramsPtr;
+    EnvelopeParams& params;
     
     HeaderComponent header;
     
@@ -224,7 +224,7 @@ private:
 class FilterComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
-    FilterComponent(int index, FilterParams* params, ControlItemParams* controlItemParams);
+    FilterComponent(int index, FilterParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~FilterComponent();
     FilterComponent(const FilterComponent &) = delete;
     
@@ -241,8 +241,8 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
     
-    FilterParams* _paramsPtr;
-    ControlItemParams* controlItemParams;
+    FilterParams& params;
+    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
     
     HeaderComponent header;
     
@@ -268,7 +268,7 @@ private:
 class LfoComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
-    LfoComponent(int index, LfoParams* params, ControlItemParams* controlItemParams);
+    LfoComponent(int index, LfoParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~LfoComponent();
     LfoComponent(const LfoComponent &) = delete;
     
@@ -285,8 +285,8 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
     
-    LfoParams* _paramsPtr;
-    ControlItemParams* controlItemParams;
+    LfoParams& params;
+    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
     
     HeaderComponent header;
     
@@ -313,7 +313,7 @@ private:
 class ModEnvComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
-    ModEnvComponent(int index, ModEnvParams* params);
+    ModEnvComponent(int index, ModEnvParams& params);
     virtual ~ModEnvComponent();
     ModEnvComponent(const ModEnvComponent &) = delete;
     
@@ -328,7 +328,7 @@ private:
     virtual void timerCallback() override;
     int index;
     GrapeLookAndFeel grapeLookAndFeel;
-    ModEnvParams* _paramsPtr;
+    ModEnvParams& params;
     
     HeaderComponent header;
     
@@ -360,7 +360,7 @@ private:
 class DelayComponent : public juce::Component, juce::ToggleButton::Listener, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer
 {
 public:
-    DelayComponent(DelayParams* params, ControlItemParams* controlItemParams);
+    DelayComponent(DelayParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~DelayComponent();
     DelayComponent(const DelayComponent &) = delete;
     
@@ -377,8 +377,8 @@ private:
     GrapeLookAndFeel grapeLookAndFeel;
     GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
     
-    DelayParams* _paramsPtr;
-    ControlItemParams* controlItemParams;
+    DelayParams& params;
+    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
    
     HeaderComponent header;
     
@@ -459,7 +459,7 @@ private:
 class AnalyserWindow : public juce::Component, private juce::Timer
 {
 public:
-    AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, MonoStack* monoStack, EnvelopeParams* envelopeParams, OscParams* oscParams, FilterParams* filterParams, ModEnvParams* modEnvParams);
+    AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, MonoStack* monoStack, std::array<EnvelopeParams, NUM_ENVELOPE>& envelopeParams, std::array<OscParams, NUM_OSC>& oscParams, std::array<FilterParams, NUM_FILTER>& filterParams, std::array<ModEnvParams, NUM_MODENV>& modEnvParams);
     virtual ~AnalyserWindow();
     AnalyserWindow(const AnalyserWindow &) = delete;
     
@@ -473,10 +473,10 @@ private:
     ANALYSER_MODE* analyserMode;
     LatestDataProvider* latestDataProvider;
     MonoStack* monoStack;
-    EnvelopeParams* envelopeParams;
-    OscParams* oscParams;
-    FilterParams* filterParams;
-    ModEnvParams* modEnvParams;
+    std::array<EnvelopeParams, NUM_ENVELOPE>& envelopeParams;
+    std::array<OscParams, NUM_OSC>& oscParams;
+    std::array<FilterParams, NUM_FILTER>& filterParams;
+    std::array<ModEnvParams, NUM_MODENV>& modEnvParams;
     ANALYSER_MODE lastAnalyserMode = ANALYSER_MODE::Spectrum;
     
     // FFT
@@ -592,7 +592,7 @@ private:
 class ControlItemComponent : public juce::Component, private juce::ComboBox::Listener, juce::Timer
 {
 public:
-    ControlItemComponent(ControlItemParams* params);
+    ControlItemComponent(ControlItemParams& params);
     virtual ~ControlItemComponent();
     ControlItemComponent(const ControlItemComponent &) = delete;
 
@@ -603,7 +603,7 @@ private:
     virtual void timerCallback() override;
 
     GrapeLookAndFeel grapeLookAndFeel;
-    ControlItemParams* _paramsPtr;
+    ControlItemParams& params;
 
     juce::ComboBox numberSelector;
     juce::ComboBox targetTypeSelector;
@@ -623,7 +623,7 @@ private:
 class ControlComponent : public juce::Component
 {
 public:
-    ControlComponent(ControlItemParams* params);
+    ControlComponent(std::array<ControlItemParams, NUM_CONTROL>& params);
     virtual ~ControlComponent();
     ControlComponent(const ControlComponent &) = delete;
 
@@ -634,10 +634,9 @@ public:
 private:
     
     GrapeLookAndFeel grapeLookAndFeel;
-    ModEnvParams* _paramsPtr;
 
     HeaderComponent header;
     juce::Label numberLabel;
     juce::Label targetLabel;
-    ControlItemComponent controlItemComponents[NUM_CONTROL];
+    std::array<ControlItemComponent, NUM_CONTROL> controlItemComponents;
 };
