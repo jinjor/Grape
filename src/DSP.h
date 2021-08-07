@@ -11,7 +11,8 @@ public:
     const float* saw = reinterpret_cast<const float*>(BinaryData::saw);// 128 variations
     const float* parabola = reinterpret_cast<const float*>(BinaryData::parabola);// 128 variations
     Wavetable() {};
-    ~Wavetable() {};
+    ~Wavetable(){};
+    Wavetable(const Wavetable &) = delete;
     double getSineValue(double angle) {
         angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
         constexpr double by_twoPi = 1.0 / juce::MathConstants<double>::twoPi;
@@ -87,7 +88,8 @@ class TransitiveValue {
 public:
     double value = 0;
     TransitiveValue() {};
-    ~TransitiveValue() {};
+    ~TransitiveValue(){};
+    TransitiveValue(const TransitiveValue &) = delete;
     void init(double value) {
         this->value = value;
         type = TRANSITION_TYPE::NONE;
@@ -178,6 +180,7 @@ class Adsr {
 public:
     Adsr(){};
     ~Adsr(){};
+    Adsr(const Adsr &) = delete;
     double getValue() {
         return tvalue.value;
     }
@@ -270,9 +273,8 @@ class Filter
 {
 public:
     Filter() {}
-    ~Filter() {
-        DBG("Filter's destructor called.");
-    }
+    ~Filter() { DBG("Filter's destructor called."); }
+    Filter(const Filter &) = delete;
     void initializePastData() {
         past[0][0] = past[0][1] = past[1][0] = past[1][1] = 0;
     }
@@ -551,9 +553,8 @@ public:
     Osc() {
 //        currentAngle = whiteNoise.nextFloat() * juce::MathConstants<double>::twoPi;
     }
-    ~Osc() {
-        DBG("Osc's destructor called.");
-    }
+    ~Osc() { DBG("Osc's destructor called."); }
+    Osc(const Osc &) = delete;
     void setWaveform (WAVEFORM waveform) {
         this->waveform = waveform;
     }
@@ -644,9 +645,8 @@ class MultiOsc
 {
 public:
     MultiOsc() {}
-    ~MultiOsc() {
-        DBG("MultiOsc's destructor called.");
-    }
+    ~MultiOsc() { DBG("MultiOsc's destructor called."); }
+    MultiOsc(const MultiOsc &) = delete;
     void setWaveform (WAVEFORM waveform) {
         for(int i = 0; i < MAX_NUM_OSC; ++i) {
             oscs[i].setWaveform(waveform);
@@ -725,9 +725,8 @@ class StereoDelay
 public:
     StereoDelay() {
     }
-    ~StereoDelay() {
-        DBG("DelayEffect's destructor called.");
-    }
+    ~StereoDelay() { DBG("DelayEffect's destructor called."); }
+    StereoDelay(const StereoDelay &) = delete;
     void setParams(double sampleRate,
                    double bpm,
                    DELAY_TYPE type,

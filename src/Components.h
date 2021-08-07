@@ -32,6 +32,7 @@ class HeaderComponent : public juce::Component
 public:
     HeaderComponent(std::string name, bool hasEnableButton);
     virtual ~HeaderComponent();
+    HeaderComponent(const HeaderComponent &) = delete;
     juce::ToggleButton enabledButton;
     virtual void paint(juce::Graphics& g) override;
     virtual void resized() override;
@@ -47,6 +48,7 @@ class VoiceComponent : public juce::Component, juce::ComboBox::Listener, juce::S
 public:
     VoiceComponent(VoiceParams* params, ControlItemParams* controlItemParams);
     virtual ~VoiceComponent();
+    VoiceComponent(const VoiceComponent &) = delete;
     
     virtual void paint(juce::Graphics& g) override;
     virtual void resized() override;
@@ -78,6 +80,7 @@ class StatusComponent : public juce::Component, private juce::Timer
 public:
     StatusComponent(int* polyphony, TimeConsumptionState* timeConsumptionState, LatestDataProvider* latestDataProvider);
     virtual ~StatusComponent();
+    StatusComponent(const StatusComponent &) = delete;
     
     virtual void paint(juce::Graphics& g) override;
     virtual void resized() override;
@@ -112,6 +115,7 @@ class MasterComponent : public juce::Component, juce::Slider::Listener, private 
 public:
     MasterComponent(GlobalParams* params);
     virtual ~MasterComponent();
+    MasterComponent(const MasterComponent &) = delete;
     
     virtual void paint(juce::Graphics& g) override;
     
@@ -141,6 +145,7 @@ class OscComponent : public juce::Component, juce::ToggleButton::Listener, juce:
 public:
     OscComponent(int index, OscParams* params, ControlItemParams* controlItemParams);
     virtual ~OscComponent();
+    OscComponent(const OscComponent &) = delete;
     
     virtual void paint(juce::Graphics& g) override;
     
@@ -189,6 +194,7 @@ class EnvelopeComponent : public juce::Component, juce::Slider::Listener, privat
 public:
     EnvelopeComponent(int index, EnvelopeParams* params);
     virtual ~EnvelopeComponent();
+    EnvelopeComponent(const EnvelopeComponent &) = delete;
     
     virtual void paint(juce::Graphics& g) override;
     
@@ -220,6 +226,7 @@ class FilterComponent : public juce::Component, juce::ToggleButton::Listener, ju
 public:
     FilterComponent(int index, FilterParams* params, ControlItemParams* controlItemParams);
     virtual ~FilterComponent();
+    FilterComponent(const FilterComponent &) = delete;
     
     virtual void paint(juce::Graphics& g) override;
     
@@ -263,6 +270,7 @@ class LfoComponent : public juce::Component, juce::ToggleButton::Listener, juce:
 public:
     LfoComponent(int index, LfoParams* params, ControlItemParams* controlItemParams);
     virtual ~LfoComponent();
+    LfoComponent(const LfoComponent &) = delete;
     
     virtual void paint(juce::Graphics& g) override;
     
@@ -307,6 +315,7 @@ class ModEnvComponent : public juce::Component, juce::ToggleButton::Listener, ju
 public:
     ModEnvComponent(int index, ModEnvParams* params);
     virtual ~ModEnvComponent();
+    ModEnvComponent(const ModEnvComponent &) = delete;
     
     virtual void paint(juce::Graphics& g) override;
     
@@ -353,6 +362,7 @@ class DelayComponent : public juce::Component, juce::ToggleButton::Listener, juc
 public:
     DelayComponent(DelayParams* params, ControlItemParams* controlItemParams);
     virtual ~DelayComponent();
+    DelayComponent(const DelayComponent &) = delete;
     
     virtual void paint(juce::Graphics& g) override;
     
@@ -401,6 +411,8 @@ class AnalyserToggleItem : public juce::Component
 public:
     AnalyserToggleItem(std::string name);
     virtual ~AnalyserToggleItem();
+    AnalyserToggleItem(const AnalyserToggleItem &) = delete;
+
     void setValue(bool value) { this->value = value; repaint(); };
     bool getValue() { return value; };
     
@@ -429,6 +441,7 @@ class AnalyserToggle : public juce::Component, private AnalyserToggleItem::Liste
 public:
     AnalyserToggle(ANALYSER_MODE* analyserMode);
     virtual ~AnalyserToggle();
+    AnalyserToggle(const AnalyserToggle &) = delete;
     
     virtual void paint(juce::Graphics& g) override;
     virtual void resized() override;
@@ -448,6 +461,7 @@ class AnalyserWindow : public juce::Component, private juce::Timer
 public:
     AnalyserWindow(ANALYSER_MODE* analyserMode, LatestDataProvider* latestDataProvider, MonoStack* monoStack, EnvelopeParams* envelopeParams, OscParams* oscParams, FilterParams* filterParams, ModEnvParams* modEnvParams);
     virtual ~AnalyserWindow();
+    AnalyserWindow(const AnalyserWindow &) = delete;
     
     virtual void paint(juce::Graphics& g) override;
     virtual void resized() override;
@@ -501,6 +515,7 @@ private:
             s = envelopeParams.Sustain->get();
             r = envelopeParams.Release->get();
         }
+        SimpleAmpEnvParams(const SimpleAmpEnvParams &) = delete;
         float a = 0;
         float d = 0;
         float s = 0;
@@ -520,6 +535,7 @@ private:
             isTargetFreq = modEnvParams.isTargetFreq();
             fadeIn = static_cast<MODENV_FADE>(modEnvParams.Fade->getIndex()) == MODENV_FADE::In;
         }
+        SimpleModEnvParams(const SimpleModEnvParams &) = delete;
         float w = 0;
         float a = 0;
         float d = 0;
@@ -539,7 +555,8 @@ private:
     Filter filters[NUM_FILTER];
     class SimpleFilterParams {
     public:
-        SimpleFilterParams() {}
+      SimpleFilterParams() {}
+      SimpleFilterParams(const SimpleFilterParams &) = delete;
         bool enabled = false;
         int type = -1;
         float freq = 0;
@@ -577,6 +594,7 @@ class ControlItemComponent : public juce::Component, private juce::ComboBox::Lis
 public:
     ControlItemComponent(ControlItemParams* params);
     virtual ~ControlItemComponent();
+    ControlItemComponent(const ControlItemComponent &) = delete;
 
     virtual void paint(juce::Graphics& g) override;
     virtual void resized() override;
@@ -607,6 +625,7 @@ class ControlComponent : public juce::Component
 public:
     ControlComponent(ControlItemParams* params);
     virtual ~ControlComponent();
+    ControlComponent(const ControlComponent &) = delete;
 
     virtual void paint(juce::Graphics& g) override;
 
