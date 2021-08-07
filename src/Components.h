@@ -5,25 +5,6 @@
 #include "LookAndFeel.h"
 #include "PluginProcessor.h"
 
-namespace {
-const float PANEL_NAME_FONT_SIZE = 15.0f;
-const float PARAM_LABEL_FONT_SIZE = 14.0f;
-const float PARAM_VALUE_LABEL_FONT_SIZE = 14.0f;
-const float PANEL_NAME_HEIGHT = 26.0f;
-const int PANEL_MARGIN = 2;
-const float LOCAL_MARGIN = 2.0f;
-const float LABEL_HEIGHT = 20.0f;
-const float COMBO_BOX_HEIGHT = 28.0f;
-const float SLIDER_WIDTH = 60.0f;
-const juce::Colour TEXT_COLOUR = juce::Colour(200,200,200);
-const juce::Colour PANEL_NAME_COLOUR = juce::Colour(50,50,50);
-const juce::Colour WARNING_COLOUR = juce::Colour(190, 190, 80);
-const juce::Colour ERROR_COLOUR = juce::Colour(190, 40, 80);
-const juce::Colour ANALYSER_LINE_COLOUR = juce::Colour(100, 190, 140);
-const juce::Colour ANALYSER_LINE_COLOUR2 = juce::Colour(60, 100, 150);
-const juce::Colour BACKGROUND_COLOUR = juce::Colour(40,40,40);
-}
-
 enum class ANALYSER_MODE { Spectrum, Envelope, Filter };
 
 //==============================================================================

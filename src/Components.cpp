@@ -1,6 +1,9 @@
 #include <JuceHeader.h>
 #include "Components.h"
 #include "Params.h"
+#include "StyleConstants.h"
+
+using namespace styles;
 
 //==============================================================================
 float calcCurrentLevel(int numSamples, float* data) {
@@ -25,7 +28,7 @@ HeaderComponent::~HeaderComponent(){}
 void HeaderComponent::paint(juce::Graphics& g)
 {
     juce::Rectangle<int> bounds = getLocalBounds();
-    g.setColour(PANEL_NAME_COLOUR);
+    g.setColour(colour::PANEL_NAME_BACKGROUND);
     g.fillRect(bounds);
     
     juce::GlyphArrangement ga;
@@ -39,7 +42,7 @@ void HeaderComponent::paint(juce::Graphics& g)
                          .translated(pathBounds.getHeight()/2 + bounds.getWidth()/2,
                                      pathBounds.getWidth() + PANEL_NAME_HEIGHT + 2.0)
                          );
-    g.setColour(TEXT_COLOUR);
+    g.setColour(colour::TEXT);
     g.fillPath(p);
 }
 void HeaderComponent::resized()
@@ -279,7 +282,7 @@ void StatusComponent::resized()
 void StatusComponent::timerCallback()
 {
     if(overflowWarning > 0) {
-        volumeValueLabel.setColour(juce::Label::textColourId, ERROR_COLOUR);
+        volumeValueLabel.setColour(juce::Label::textColourId, colour::ERROR);
         auto levelStr = juce::String(overflowedLevel, 1) + " dB";
         volumeValueLabel.setText(levelStr, juce::dontSendNotification);
         
@@ -305,22 +308,22 @@ void StatusComponent::timerCallback()
         int value = *polyphony;
         polyphonyValueLabel.setText(juce::String(value), juce::dontSendNotification);
         if(value >= numVoices) {
-            polyphonyValueLabel.setColour(juce::Label::textColourId, ERROR_COLOUR);
+            polyphonyValueLabel.setColour(juce::Label::textColourId, colour::ERROR);
         } else if(value > numVoices * 0.8) {
-            polyphonyValueLabel.setColour(juce::Label::textColourId, WARNING_COLOUR);
+            polyphonyValueLabel.setColour(juce::Label::textColourId, colour::WARNING);
         } else {
-            polyphonyValueLabel.setColour(juce::Label::textColourId, TEXT_COLOUR);
+            polyphonyValueLabel.setColour(juce::Label::textColourId, colour::TEXT);
         }
     }
     {
         auto value = timeConsumptionState->currentTimeConsumptionRate;
         timeConsumptionValueLabel.setText(juce::String(juce::roundToInt(value * 100)) + "%", juce::dontSendNotification);
         if(value >= 1.0) {
-            timeConsumptionValueLabel.setColour(juce::Label::textColourId, ERROR_COLOUR);
+            timeConsumptionValueLabel.setColour(juce::Label::textColourId, colour::ERROR);
         } else if(value >= 0.8) {
-            timeConsumptionValueLabel.setColour(juce::Label::textColourId, WARNING_COLOUR);
+            timeConsumptionValueLabel.setColour(juce::Label::textColourId, colour::WARNING);
         } else {
-            timeConsumptionValueLabel.setColour(juce::Label::textColourId, TEXT_COLOUR);
+            timeConsumptionValueLabel.setColour(juce::Label::textColourId, colour::TEXT);
         }
     }
 }
@@ -2487,7 +2490,7 @@ void AnalyserToggleItem::paint(juce::Graphics& g)
 {
     juce::Rectangle<int> bounds = getLocalBounds().removeFromRight(3).reduced(0, 4);
     
-    auto color = value ? COLOUR_SELECT : COLOUR_PIT;
+    auto color = value ? colour::SELECT : colour::PIT;
     g.setColour(color);
     g.fillRect(bounds);
 }
@@ -2844,7 +2847,7 @@ void AnalyserWindow::paint(juce::Graphics& g)
                 auto levelWidth = 8;
                 auto spectrumWidth = displayBounds.getWidth() - levelWidth * 2;
 
-                paintSpectrum(g, ANALYSER_LINE_COLOUR, offsetX, offsetY, spectrumWidth, height, scopeData);
+                paintSpectrum(g, colour::ANALYSER_LINE, offsetX, offsetY, spectrumWidth, height, scopeData);
                 offsetX += spectrumWidth;
                 paintLevel(g, offsetX, offsetY, levelWidth, height, currentLevel[0]);
                 offsetX += levelWidth;
@@ -2857,11 +2860,11 @@ void AnalyserWindow::paint(juce::Graphics& g)
                     if(!modEnvParams[i].Enabled->get()) {
                         continue;
                     }
-                    juce::Colour colour = ANALYSER_LINE_COLOUR2;
+                    juce::Colour colour = colour::ANALYSER_LINE2;
                     paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForModEnv[i][0]);
                 }
                 for(int i = NUM_ENVELOPE - 1; i >= 0; i--) {
-                    juce::Colour colour = ANALYSER_LINE_COLOUR;
+                    juce::Colour colour = colour::ANALYSER_LINE;
                     paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForAmpEnv[i][0]);
                 }
                 break;
@@ -2873,7 +2876,7 @@ void AnalyserWindow::paint(juce::Graphics& g)
                     }
                     auto spectrumWidth = displayBounds.getWidth();
                     bool isRel = static_cast<FILTER_FREQ_TYPE>(filterParams[i].FreqType->getIndex()) == FILTER_FREQ_TYPE::Relative;
-                    juce::Colour colour = isRel ? ANALYSER_LINE_COLOUR2 : ANALYSER_LINE_COLOUR;
+                    juce::Colour colour = isRel ? colour::ANALYSER_LINE2 : colour::ANALYSER_LINE;
                     paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForFilter[i][0]);
                 }
                 break;
@@ -2896,9 +2899,9 @@ void AnalyserWindow::paintSpectrum(juce::Graphics& g, juce::Colour colour, int o
 }
 void AnalyserWindow::paintLevel(juce::Graphics& g, int offsetX, int offsetY, int width, int height, float level)
 {
-    g.setColour(ANALYSER_LINE_COLOUR);
+    g.setColour(colour::ANALYSER_LINE);
     if(overflowWarningL > 0) {
-        g.setColour(ERROR_COLOUR);
+        g.setColour(colour::ERROR);
         overflowWarningL--;
     }
     int barWidth = width - 1;

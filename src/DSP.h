@@ -4,6 +4,8 @@
 #include "Params.h" // TODO: 依存が逆
 #include "MathConstants.h"
 
+using namespace math_constants;
+
 //==============================================================================
 class Wavetable {
 public:

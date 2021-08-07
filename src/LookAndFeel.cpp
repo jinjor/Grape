@@ -1,18 +1,17 @@
 #include "LookAndFeel.h"
+#include "StyleConstants.h"
+
+using namespace styles;
 
 GrapeLookAndFeel::GrapeLookAndFeel(bool controlled) : controlled(controlled)
 {
-    setColour (juce::ComboBox::textColourId, COLOUR_TEXT);
-    setColour (juce::ComboBox::arrowColourId, COLOUR_TEXT);
-    setColour (juce::ComboBox::outlineColourId, COLOUR_BORDER);
-    setColour (juce::PopupMenu::backgroundColourId, COLOUR_BACKGROUND);
-    setColour (juce::PopupMenu::highlightedBackgroundColourId, COLOUR_SELECT.withBrightness(0.4));
-//    setColour (juce::TooltipWindow::outlineColourId, COLOUR_BORDER);
-//    setColour (juce::TooltipWindow::backgroundColourId, COLOUR_BACKGROUND);
-//    setColour (juce::Slider::textBoxOutlineColourId, COLOUR_BORDER);
-//    setColour (juce::Slider::textBoxBackgroundColourId, COLOUR_BACKGROUND);
-    setColour (juce::BubbleComponent::outlineColourId, COLOUR_BORDER);
-    setColour (juce::BubbleComponent::backgroundColourId, COLOUR_PIT);
+    setColour (juce::ComboBox::textColourId, colour::TEXT);
+    setColour (juce::ComboBox::arrowColourId, colour::TEXT);
+    setColour (juce::ComboBox::outlineColourId, colour::BORDER);
+    setColour (juce::PopupMenu::backgroundColourId, colour::POPUP_BACKGROUND);
+    setColour (juce::PopupMenu::highlightedBackgroundColourId, colour::SELECT.withBrightness(0.4));
+    setColour (juce::BubbleComponent::outlineColourId, colour::BORDER);
+    setColour (juce::BubbleComponent::backgroundColourId, colour::PIT);
 }
 GrapeLookAndFeel::~GrapeLookAndFeel()
 {}
@@ -28,21 +27,21 @@ void GrapeLookAndFeel::drawTickBox (juce::Graphics& g, juce::Component& componen
     tickBounds = tickBounds.reduced(1);
     auto reduced = tickBounds.reduced(0.5);
     if(isEnabled) {
-        g.setColour (COLOUR_PIT);
+        g.setColour (colour::PIT);
         g.fillRect(tickBounds);
     }
-    g.setColour (COLOUR_BORDER.withBrightness(isEnabled ? 0.1 : 0.14));
+    g.setColour (colour::BORDER.withBrightness(isEnabled ? 0.1 : 0.14));
     g.drawRect(reduced, 1.0f);
     if (ticked)
     {
-        g.setColour (COLOUR_SELECT);
+        g.setColour (colour::SELECT);
         g.fillRect(tickBounds.reduced(1.5f));
     }
 }
 void GrapeLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
 const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider& slider)
 {
-    auto knobWidth = juce::jmin(MAX_KNOB_WIDTH, juce::jmin(width, height));
+    auto knobWidth = juce::jmin(MAX_KNOB_WIDTH, (float)juce::jmin(width, height));
     auto fromCentre = dynamic_cast<CentredSlider*> (&slider) != nullptr;
     auto radius = knobWidth / 2 - 4.0f;
     auto centreX = (float) x + (float) width  * 0.5f;
@@ -56,37 +55,29 @@ const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider& slider)
         juce::Path p;
         p.addArc(rx, ry, rw, rw, rotaryStartAngle, rotaryEndAngle, true);
         juce::PathStrokeType strokeType(SLIT_WIDTH);
-        g.setColour (COLOUR_PIT.withAlpha(slider.isEnabled() ? 1.0f : 0.3f));
+        g.setColour (colour::PIT.withAlpha(slider.isEnabled() ? 1.0f : 0.3f));
         g.strokePath(p, strokeType);
     }
     {
         juce::Path p;
         p.addArc(rx, ry, rw, rw, fromAngle, angle, true);
         juce::PathStrokeType strokeType(SLIT_WIDTH);
-        auto color = controlled ? COLOUR_CONTROLLED : COLOUR_SELECT;
+        auto color = controlled ? colour::CONTROLLED : colour::SELECT;
         g.setColour (color.withAlpha(slider.isEnabled() ? 1.0f : 0.3f));
-//        g.setColour (COLOUR_SELECT.withAlpha(slider.isEnabled() ? 1.0f : 0.3f));
+//        g.setColour (colour::SELECT.withAlpha(slider.isEnabled() ? 1.0f : 0.3f));
         g.strokePath(p, strokeType);
     }
     {
         juce::Path p;
         p.addEllipse(-POINTER_RADIUS/2, -radius*0.8, POINTER_RADIUS, POINTER_RADIUS);
         p.applyTransform (juce::AffineTransform::rotation (angle).translated (centreX, centreY));
-        auto color = controlled ? COLOUR_CONTROLLED : COLOUR_SELECT;
+        auto color = controlled ? colour::CONTROLLED : colour::SELECT;
         g.setColour (color.withAlpha(slider.isEnabled() ? 1.0f : 0.3f));
         g.fillPath(p);
     }
 }
 void GrapeLookAndFeel::drawComboBox(juce::Graphics& g, int width, int height, bool isButtonDown, int buttonX, int buttonY, int buttonW, int buttonH, juce::ComboBox& box)
 {
-//    {
-//        juce::Path p;
-//        juce::PathStrokeType strokeType(BORDER_WIDTH);
-//        juce::Rectangle<float> boxBounds (0, 0, width, height);
-//        p.addRectangle(boxBounds.reduced(BORDER_WIDTH / 2));
-//        g.setColour (COLOUR_BORDER);
-//        g.strokePath(p, strokeType);
-//    }
     {
         juce::Rectangle<float> boxBounds (0, 0, width, height);
         auto reduced = boxBounds.reduced(BORDER_WIDTH / 2);
@@ -125,23 +116,6 @@ void GrapeLookAndFeel::drawComboBox(juce::Graphics& g, int width, int height, bo
         g.setColour(box.findColour(juce::ComboBox::arrowColourId).withAlpha(box.isEnabled() ? 1.0f : 0.3f));
         g.fillPath(p);
     }
-
-//    auto cornerSize = box.findParentComponentOfClass<ChoicePropertyComponent>() != nullptr ? 0.0f : 3.0f;
-//    Rectangle<int> boxBounds (0, 0, width, height);
-//
-//    g.setColour (box.findColour (ComboBox::backgroundColourId));
-//    g.fillRoundedRectangle (boxBounds.toFloat(), cornerSize);
-//
-//    g.setColour (box.findColour (ComboBox::outlineColourId));
-//    g.drawRoundedRectangle (boxBounds.toFloat().reduced (0.5f, 0.5f), cornerSize, 1.0f);
-//
-    
-//    path.startNewSubPath ((float) arrowZone.getX() + 3.0f, (float) arrowZone.getCentreY() - 2.0f);
-//    path.lineTo ((float) arrowZone.getCentreX(), (float) arrowZone.getCentreY() + 3.0f);
-//    path.lineTo ((float) arrowZone.getRight() - 3.0f, (float) arrowZone.getCentreY() - 2.0f);
-//
-//    g.setColour (box.findColour (ComboBox::arrowColourId).withAlpha ((box.isEnabled() ? 0.9f : 0.2f)));
-//    g.strokePath (path, PathStrokeType (2.0f));
 }
 void GrapeLookAndFeel::positionComboBoxText (juce::ComboBox& box, juce::Label& label)
 {
@@ -184,17 +158,8 @@ void GrapeLookAndFeel::drawLabel (juce::Graphics& g, juce::Label& label)
 void GrapeLookAndFeel::drawPopupMenuBackground (juce::Graphics& g, int width, int height)
 {
     auto background = findColour (juce::PopupMenu::backgroundColourId);
-
     g.fillAll (background);
     g.setColour (background.overlaidWith (juce::Colour (0x2badd8e6)));
-
-//    for (int i = 0; i < height; i += 3)
-//        g.fillRect (0, i, width, 1);
-
-   #if ! JUCE_MAC
-    g.setColour (findColour (PopupMenu::textColourId).withAlpha (0.6f));
-    g.drawRect (0, 0, width, height);
-   #endif
 }
 void GrapeLookAndFeel::drawPopupMenuItem (juce::Graphics& g, const juce::Rectangle<int>& area,
                                         const bool isSeparator, const bool isActive,

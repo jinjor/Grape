@@ -2,6 +2,9 @@
 #include "PluginEditor.h"
 #include "Voice.h"
 #include "Params.h"
+#include "StyleConstants.h"
+
+using namespace styles;
 
 //==============================================================================
 GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
@@ -20,7 +23,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
 , modEnvComponents { ModEnvComponent(0, p.modEnvParams[0]), ModEnvComponent(1, p.modEnvParams[1]), ModEnvComponent(2, p.modEnvParams[2]) }
 , delayComponent { DelayComponent(p.delayParams, p.controlItemParams) }
 {
-    getLookAndFeel().setColour(juce::Label::textColourId, TEXT_COLOUR);
+    getLookAndFeel().setColour(juce::Label::textColourId, colour::TEXT);
     
     addAndMakeVisible (voiceComponent);
     addAndMakeVisible (analyserToggle);
@@ -57,7 +60,7 @@ void GrapeAudioProcessorEditor::paint (juce::Graphics& g)
     auto upperArea = bounds.removeFromTop(height * 0.12);
     auto middleArea = bounds.removeFromTop(bounds.getHeight() * 2 / 5);
     
-    g.fillAll(BACKGROUND_COLOUR);
+    g.fillAll(colour::BACKGROUND);
     juce::Path p;
     p.addLineSegment(juce::Line<float>(0, upperArea.getBottom() - 0.5, upperArea.getWidth(), upperArea.getBottom() - 0.5), 1.0);
     p.addLineSegment(juce::Line<float>(0, middleArea.getBottom() - 0.5, middleArea.getWidth(), middleArea.getBottom() - 0.5), 1.0);
