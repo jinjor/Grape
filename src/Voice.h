@@ -302,28 +302,26 @@ public:
         auto* rightIn = buffer.getReadPointer(1, startSample);
         auto* leftOut = buffer.getWritePointer(0, startSample);
         auto* rightOut = buffer.getWritePointer(1, startSample);
-        
+
+        auto delayEnabled = delayParams.Enabled->get();
+        auto masterVolume = globalParams.MasterVolume->get();
         for(int i = 0; i < numSamples; ++i)
         {
             double sample[2] { leftIn[i], rightIn[i] };
             
             // Delay
-            if(delayParams.Enabled->get()) {
+            if(delayEnabled) {
                 stereoDelay.step(sample);
             }
             
             // Master Volume
-            sample[0] *= globalParams.MasterVolume->get();
-            sample[1] *= globalParams.MasterVolume->get();
+            sample[0] *= masterVolume;
+            sample[1] *= masterVolume;
             
             leftOut[i] = sample[0];
             rightOut[i] = sample[1];
         }
     }
-//    void renderVoices (juce::AudioBuffer<double>& buffer, int startSample, int numSamples) override
-//    {
-//        juce::Synthesiser::renderVoices(buffer, startSample, numSamples);
-//    }
     void controllerMoved(int number, int value) {
         auto normalizedValue = value / 127.0;
         

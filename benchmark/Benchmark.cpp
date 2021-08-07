@@ -269,4 +269,31 @@ static void BM_VoiceStep_full(benchmark::State& state) {
 }
 BENCHMARK(BM_VoiceStep_full);
 
+static void BM_DelayStep(benchmark::State &state) {
+    auto numChannels = 2;
+    auto sampleRate = 48000;
+    auto bpm = 120;
+    StereoDelay stereoDelay{};
+
+    stereoDelay.setParams(sampleRate,
+                          bpm,
+                          DELAY_TYPE::Parallel,
+                          false,// Sync
+                          0.3,// TimeL
+                          0.3,// TimeR
+                          0.125,// TimeSyncL
+                          0.125,// TimeSyncR
+                          100,// LowFreq
+                          4000,// HighFreq
+                          0.3,// Feedback
+                          0.3);// Mix
+    juce::Random whiteNoise;
+    for (auto _ : state) {
+        double s = whiteNoise.nextDouble();
+        double sample[2]{s, s};
+        stereoDelay.step(sample);
+    }
+}
+BENCHMARK(BM_DelayStep);
+
 BENCHMARK_MAIN();
