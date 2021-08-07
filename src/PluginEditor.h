@@ -6,7 +6,7 @@
 #include "Components.h"
 
 //==============================================================================
-class GrapeAudioProcessorEditor  : public juce::AudioProcessorEditor, private juce::Timer, juce::KeyListener
+class GrapeAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
     GrapeAudioProcessorEditor (GrapeAudioProcessor&);
@@ -32,12 +32,6 @@ private:
     LfoComponent lfoComponents[NUM_LFO];
     ModEnvComponent modEnvComponents[NUM_MODENV];
     DelayComponent delayComponent;
-    
-    bool benchmarking = false;
-    int benchmarkCounter = 0;
-    
-    void timerCallback() override;
-    bool keyPressed(const juce::KeyPress& press, juce::Component* originatingComponent) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GrapeAudioProcessorEditor)
 };
