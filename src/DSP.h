@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "Params.h" // TODO: 依存が逆
+#include "MathConstants.h"
 
 //==============================================================================
 class Wavetable {
@@ -14,22 +15,19 @@ public:
     ~Wavetable(){};
     Wavetable(const Wavetable &) = delete;
     double getSineValue(double angle) {
-        angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
-        constexpr double by_twoPi = 1.0 / juce::MathConstants<double>::twoPi;
-        float pos = angle * by_twoPi;
+        angle = std::fmod(angle, TWO_PI);
+        float pos = angle * RECIPROCAL_TWO_PI;
         return getValue(sine, pos);
     }
     double getSawDownValue(double freq, double angle) {
-        angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
-        constexpr double by_twoPi = 1.0 / juce::MathConstants<double>::twoPi;
-        float pos = angle * by_twoPi;
+        angle = std::fmod(angle, TWO_PI);
+        float pos = angle * RECIPROCAL_TWO_PI;
         const float* partial = getPartial(saw, freq);
         return getValue(partial, pos);
     }
     double getSawUpValue(double freq, double angle) {
-        angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
-        constexpr double by_twoPi = 1.0 / juce::MathConstants<double>::twoPi;
-        float pos = angle * by_twoPi;
+        angle = std::fmod(angle, TWO_PI);
+        float pos = angle * RECIPROCAL_TWO_PI;
         const float* partial = getPartial(saw, freq);
         return getValueReverse(partial, pos);
     }
@@ -37,9 +35,8 @@ public:
         double phaseShift = (1.0 - edge * 0.99) * 0.5;
         jassert(phaseShift > 0.0);
         jassert(phaseShift <= 0.5);
-        angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
-        constexpr double by_twoPi = 1.0 / juce::MathConstants<double>::twoPi;
-        float pos1 = angle * by_twoPi;
+        angle = std::fmod(angle, TWO_PI);
+        float pos1 = angle * RECIPROCAL_TWO_PI;
         float pos2 = std::fmod(pos1 + phaseShift, 1.0f);
         const float* partial = getPartial(saw, freq);
         return getValue(partial, pos1) + getValueReverse(partial, pos2) + (1.0 - 2 * phaseShift);
@@ -51,9 +48,8 @@ public:
         double phaseShift = (1.0 - edge * 0.9) * 0.5;
         jassert(phaseShift > 0.0);
         jassert(phaseShift <= 0.5);
-        angle = std::fmod(angle, juce::MathConstants<double>::twoPi);
-        constexpr double by_twoPi = 1.0 / juce::MathConstants<double>::twoPi;
-        float pos1 = angle * by_twoPi;
+        angle = std::fmod(angle, TWO_PI);
+        float pos1 = angle * RECIPROCAL_TWO_PI;
         float pos2 = std::fmod(pos1 + phaseShift, 1.0f);
         const float* partial = getPartial(parabola, freq);
         return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (phaseShift - phaseShift * phaseShift));
@@ -372,7 +368,7 @@ private:
     void setLowpassParams (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = juce::MathConstants<double>::twoPi * fc;
+        auto w0 = TWO_PI * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = (1 - cosw0) * 0.5;
@@ -391,7 +387,7 @@ private:
     void setHighpassParams (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = juce::MathConstants<double>::twoPi * fc;
+        auto w0 = TWO_PI * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = (1 + cosw0) * 0.5;
@@ -410,7 +406,7 @@ private:
     void setBandpass1Params (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = juce::MathConstants<double>::twoPi * fc;
+        auto w0 = TWO_PI * fc;
         auto sinw0 = std::sin(w0);
         auto alpha = sinw0 / (2 * q);
         auto b0 = sinw0 * 0.5;
@@ -429,7 +425,7 @@ private:
     void setBandpass2Params (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = juce::MathConstants<double>::twoPi * fc;
+        auto w0 = TWO_PI * fc;
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = alpha;
         auto b1 = 0.0;
@@ -447,7 +443,7 @@ private:
     void setNotchParams (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = juce::MathConstants<double>::twoPi * fc;
+        auto w0 = TWO_PI * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = 1.0;
@@ -466,7 +462,7 @@ private:
     void setAllPassParams (double freq, double q) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = juce::MathConstants<double>::twoPi * fc;
+        auto w0 = TWO_PI * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto b0 = 1 - alpha;
@@ -485,7 +481,7 @@ private:
     void setPeakingParams (double freq, double q, double dbGain) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = juce::MathConstants<double>::twoPi * fc;
+        auto w0 = TWO_PI * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto A = std::pow(10, dbGain/40);
@@ -505,7 +501,7 @@ private:
     void setLowShelfParams (double freq, double q, double dbGain) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = juce::MathConstants<double>::twoPi * fc;
+        auto w0 = TWO_PI * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto A = std::pow(10, dbGain/40);
@@ -526,7 +522,7 @@ private:
     void setHighShelfParams (double freq, double q, double dbGain) {
         // from RBJ's cookbook
         auto fc = freq * reciprocal_sampleRate;
-        auto w0 = juce::MathConstants<double>::twoPi * fc;
+        auto w0 = TWO_PI * fc;
         auto cosw0 = std::cos(w0);
         auto alpha = std::sin(w0) / (2 * q);
         auto A = std::pow(10, dbGain/40);
@@ -550,16 +546,13 @@ private:
 class Osc
 {
 public:
-    Osc() {
-//        currentAngle = whiteNoise.nextFloat() * juce::MathConstants<double>::twoPi;
-    }
+    Osc() {}
     ~Osc() { DBG("Osc's destructor called."); }
     Osc(const Osc &) = delete;
     void setWaveform (WAVEFORM waveform) {
         this->waveform = waveform;
     }
     void setSampleRate (double sampleRate) {
-//        this->sampleRate = sampleRate;
         reciprocal_sampleRate = 1.0 / sampleRate;
     }
     void setAngle(double angle) {
@@ -570,10 +563,10 @@ public:
         {
             return 0.0;
         }
-        auto angleDelta = freq * juce::MathConstants<double>::twoPi * reciprocal_sampleRate;
+        auto angleDelta = freq * TWO_PI * reciprocal_sampleRate;
         currentAngle += angleDelta;
-        if(currentAngle > juce::MathConstants<double>::twoPi) {
-            currentAngle -= juce::MathConstants<double>::twoPi;
+        if(currentAngle > TWO_PI) {
+            currentAngle -= TWO_PI;
             currentRandomValue = 0.0;
         }
         auto angle = currentAngle + angleShift;
@@ -582,18 +575,18 @@ public:
 //                return std::sin(angle);
                 return wavetable.getSineValue(angle);
             case WAVEFORM::Triangle:
-//                return angle >= juce::MathConstants<double>::pi ?
-//                    angle / juce::MathConstants<double>::twoPi * 4.0 - 1.0 :
-//                    angle / juce::MathConstants<double>::twoPi - 4.0 + 3.0;
+//                return angle >= PI ?
+//                    angle / TWO_PI * 4.0 - 1.0 :
+//                    angle / TWO_PI - 4.0 + 3.0;
                 return wavetable.getSlopedVariableTriangleValue(freq, angle, edge);
             case WAVEFORM::SawUp:
-//                return angle / juce::MathConstants<double>::twoPi * 2.0 - 1.0;
+//                return angle / TWO_PI * 2.0 - 1.0;
                 return wavetable.getSawUpValue(freq, angle);
             case WAVEFORM::SawDown:
-//                return angle / juce::MathConstants<double>::twoPi * -2.0 + 1.0;
+//                return angle / TWO_PI * -2.0 + 1.0;
                 return wavetable.getSawDownValue(freq, angle);
             case WAVEFORM::Square:
-//                return angle < juce::MathConstants<double>::pi ? 1.0 : -1.0;
+//                return angle < PI ? 1.0 : -1.0;
                 return wavetable.getPulseValue(freq, angle, edge);
             case WAVEFORM::Random:
                 if(currentRandomValue == 0.0) {
@@ -632,14 +625,13 @@ private:
     double pink[7]{};
     juce::Random whiteNoise;
     WAVEFORM waveform = WAVEFORM::Sine;
-//    double sampleRate = 0.0;
     double reciprocal_sampleRate = -1;
 };
 
 //==============================================================================
 namespace {
 const int MAX_NUM_OSC = 4;
-const double GAIN_AT_CENTER = std::cos(juce::MathConstants<double>::halfPi/2);
+const double GAIN_AT_CENTER = std::cos(HALF_PI/2);
 }
 class MultiOsc
 {
@@ -692,16 +684,16 @@ private:
             auto panMin = std::max(-1.0, pan - spread);
             if (numOsc == 1) {
                 double p = (panMin + panMax) * 0.5;
-                double theta = (p + 1) * 0.5 * juce::MathConstants<double>::halfPi;
+                double theta = (p + 1) * 0.5 * HALF_PI;
                 pans[0][0] = std::cos(theta);
                 pans[0][1] = std::sin(theta);
             } else {
-              auto by_intervals = 1.0 / (numOsc - 1);
+              auto reciprocal_intervals = 1.0 / (numOsc - 1);
               for (int i = 0; i < numOsc; ++i) {
-                double p = panMin * (numOsc - 1 - i) * by_intervals + panMax * i * by_intervals;
+                double p = panMin * (numOsc - 1 - i) * reciprocal_intervals + panMax * i * reciprocal_intervals;
                 jassert(p >= -1);
                 jassert(p <= 1);
-                double theta = (p + 1) * 0.5 * juce::MathConstants<double>::halfPi;
+                double theta = (p + 1) * 0.5 * HALF_PI;
                 pans[i][0] = std::cos(theta);
                 pans[i][1] = std::sin(theta);
               }
@@ -709,7 +701,7 @@ private:
         }
         if(numOsc != currentNumOsc) {
             for(int i = 0; i < numOsc; ++i) {
-                angleShifts[i] = juce::MathConstants<double>::pi * i / numOsc;
+                angleShifts[i] = PI * i / numOsc;
             }
         }
         currentNumOsc = numOsc;
