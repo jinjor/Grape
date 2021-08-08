@@ -16,11 +16,8 @@ jobs:
       - name: Cache Benchmark library
         uses: actions/cache@v2
         with:
-          path: |
-            release-build/libs/benchmark
-            release-build/src/CMakeFiles/GrapePlugin.dir/__/libs/JUCE
-            release-build/src/CMakeFiles/GrapePlugin_VST3.dir/__/libs/JUCE
-          key: ${{ runner.os }}-googlebenchmark-JUCE
+          path: release-build
+          key: ${{ runner.os }}-release-build
       - name: Build and run benchmark
         run: ./release-build.sh
       - name: Store benchmark result
