@@ -629,7 +629,7 @@ private:
 
 //==============================================================================
 namespace {
-const int MAX_NUM_OSC = 4;
+constexpr int MAX_NUM_OSC = 4;
 const double GAIN_AT_CENTER = std::cos(HALF_PI/2);
 }
 class MultiOsc
@@ -649,9 +649,9 @@ public:
         }
     }
     void step(double numOsc, double pan, double detune, double spread, double freq, double normalizedAngleShift, double edge, double* outout) {
-//        if(numOsc == 1) {
-//            outout[0] = outout[1] = oscs[0].step(freq, normalizedAngleShift, edge) * GAIN_AT_CENTER;
-//        } else {
+       if(numOsc == 1) {
+           outout[0] = outout[1] = oscs[0].step(freq, normalizedAngleShift, edge) * GAIN_AT_CENTER;
+       } else {
             setUnison(numOsc, pan, detune, spread);
             outout[0] = 0;
             outout[1] = 0;
@@ -660,7 +660,7 @@ public:
                 outout[0] += value * pans[i][0];
                 outout[1] += value * pans[i][1];
             }
-//        }
+       }
     }
 private:
     Osc oscs[MAX_NUM_OSC];
