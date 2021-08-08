@@ -672,10 +672,11 @@ private:
     double currentDetune = 1;
     double currentSpread = 1;
     void setUnison(int numOsc, double pan, double detune, double spread) {
-        if(detune != currentDetune || numOsc != currentNumOsc) {
+        if (detune != currentDetune || numOsc != currentNumOsc) {
+            auto reciprocal_intervals = 1.0 / (numOsc - 1);
             for(int i = 0; i < numOsc; ++i) {
-                double detuneValue = numOsc == 1 ? 0 : -detune + (detune * 2) / (numOsc - 1) * i;
-                detunes[i] = std::pow(2, detuneValue / 20);// TODO: ?
+                double detuneValue = numOsc == 1 ? 0 : -detune + (detune * 2) * reciprocal_intervals * i;
+                detunes[i] = std::pow(2, detuneValue * 0.05);// TODO: ?
             }
         }
         if(pan != currentPan || spread != currentSpread || numOsc != currentNumOsc) {
