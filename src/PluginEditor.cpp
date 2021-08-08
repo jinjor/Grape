@@ -1,80 +1,91 @@
-#include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "Voice.h"
+
 #include "Params.h"
+#include "PluginProcessor.h"
 #include "StyleConstants.h"
+#include "Voice.h"
 
 using namespace styles;
 
 //==============================================================================
-GrapeAudioProcessorEditor::GrapeAudioProcessorEditor (GrapeAudioProcessor& p)
-: AudioProcessorEditor (&p)
-, audioProcessor (p)
-, controlComponent { ControlComponent(p.controlItemParams) }
-, voiceComponent (p.voiceParams, p.controlItemParams)
-, analyserToggle(&analyserMode)
-, analyserWindow(&analyserMode, &p.latestDataProvider, &p.monoStack, p.envelopeParams, p.oscParams, p.filterParams, p.modEnvParams)
-, statusComponent (&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider)
-, masterComponent (p.globalParams)
-, oscComponents { OscComponent(0, p.oscParams[0], p.controlItemParams), OscComponent(1, p.oscParams[1], p.controlItemParams), OscComponent(2, p.oscParams[2], p.controlItemParams) }
-, envelopeComponents { EnvelopeComponent(0, p.envelopeParams[0]), EnvelopeComponent(1, p.envelopeParams[1]) }
-, filterComponents { FilterComponent(0, p.filterParams[0], p.controlItemParams), FilterComponent(1, p.filterParams[1], p.controlItemParams) }
-, lfoComponents { LfoComponent(0, p.lfoParams[0], p.controlItemParams), LfoComponent(1, p.lfoParams[1], p.controlItemParams), LfoComponent(2, p.lfoParams[2], p.controlItemParams) }
-, modEnvComponents { ModEnvComponent(0, p.modEnvParams[0]), ModEnvComponent(1, p.modEnvParams[1]), ModEnvComponent(2, p.modEnvParams[2]) }
-, delayComponent { DelayComponent(p.delayParams, p.controlItemParams) }
-{
+GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
+    : AudioProcessorEditor(&p),
+      audioProcessor(p),
+      controlComponent{ControlComponent(p.controlItemParams)},
+      voiceComponent(p.voiceParams, p.controlItemParams),
+      analyserToggle(&analyserMode),
+      analyserWindow(&analyserMode,
+                     &p.latestDataProvider,
+                     &p.monoStack,
+                     p.envelopeParams,
+                     p.oscParams,
+                     p.filterParams,
+                     p.modEnvParams),
+      statusComponent(&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider),
+      masterComponent(p.globalParams),
+      oscComponents{OscComponent(0, p.oscParams[0], p.controlItemParams),
+                    OscComponent(1, p.oscParams[1], p.controlItemParams),
+                    OscComponent(2, p.oscParams[2], p.controlItemParams)},
+      envelopeComponents{EnvelopeComponent(0, p.envelopeParams[0]), EnvelopeComponent(1, p.envelopeParams[1])},
+      filterComponents{FilterComponent(0, p.filterParams[0], p.controlItemParams),
+                       FilterComponent(1, p.filterParams[1], p.controlItemParams)},
+      lfoComponents{LfoComponent(0, p.lfoParams[0], p.controlItemParams),
+                    LfoComponent(1, p.lfoParams[1], p.controlItemParams),
+                    LfoComponent(2, p.lfoParams[2], p.controlItemParams)},
+      modEnvComponents{ModEnvComponent(0, p.modEnvParams[0]),
+                       ModEnvComponent(1, p.modEnvParams[1]),
+                       ModEnvComponent(2, p.modEnvParams[2])},
+      delayComponent{DelayComponent(p.delayParams, p.controlItemParams)} {
     getLookAndFeel().setColour(juce::Label::textColourId, colour::TEXT);
-    
-    addAndMakeVisible (voiceComponent);
-    addAndMakeVisible (analyserToggle);
-    addAndMakeVisible (analyserWindow);
-    addAndMakeVisible (statusComponent);
-    addAndMakeVisible (masterComponent);
-    addAndMakeVisible (oscComponents[0]);
-    addAndMakeVisible (oscComponents[1]);
-    addAndMakeVisible (oscComponents[2]);
-    addAndMakeVisible (envelopeComponents[0]);
-    addAndMakeVisible (envelopeComponents[1]);
-    addAndMakeVisible (filterComponents[0]);
-    addAndMakeVisible (filterComponents[1]);
-    addAndMakeVisible (lfoComponents[0]);
-    addAndMakeVisible (lfoComponents[1]);
-    addAndMakeVisible (lfoComponents[2]);
-    addAndMakeVisible (modEnvComponents[0]);
-    addAndMakeVisible (modEnvComponents[1]);
-    addAndMakeVisible (modEnvComponents[2]);
-    addAndMakeVisible (delayComponent);
-    addAndMakeVisible (controlComponent);
-    setSize (1024, 768);
+
+    addAndMakeVisible(voiceComponent);
+    addAndMakeVisible(analyserToggle);
+    addAndMakeVisible(analyserWindow);
+    addAndMakeVisible(statusComponent);
+    addAndMakeVisible(masterComponent);
+    addAndMakeVisible(oscComponents[0]);
+    addAndMakeVisible(oscComponents[1]);
+    addAndMakeVisible(oscComponents[2]);
+    addAndMakeVisible(envelopeComponents[0]);
+    addAndMakeVisible(envelopeComponents[1]);
+    addAndMakeVisible(filterComponents[0]);
+    addAndMakeVisible(filterComponents[1]);
+    addAndMakeVisible(lfoComponents[0]);
+    addAndMakeVisible(lfoComponents[1]);
+    addAndMakeVisible(lfoComponents[2]);
+    addAndMakeVisible(modEnvComponents[0]);
+    addAndMakeVisible(modEnvComponents[1]);
+    addAndMakeVisible(modEnvComponents[2]);
+    addAndMakeVisible(delayComponent);
+    addAndMakeVisible(controlComponent);
+    setSize(1024, 768);
 }
 
-GrapeAudioProcessorEditor::~GrapeAudioProcessorEditor()
-{
-}
+GrapeAudioProcessorEditor::~GrapeAudioProcessorEditor() {}
 
 //==============================================================================
-void GrapeAudioProcessorEditor::paint (juce::Graphics& g)
-{
+void GrapeAudioProcessorEditor::paint(juce::Graphics &g) {
     juce::Rectangle<int> bounds = getLocalBounds();
     auto height = bounds.getHeight();
     auto upperArea = bounds.removeFromTop(height * 0.12);
     auto middleArea = bounds.removeFromTop(bounds.getHeight() * 2 / 5);
-    
+
     g.fillAll(colour::BACKGROUND);
     juce::Path p;
-    p.addLineSegment(juce::Line<float>(0, upperArea.getBottom() - 0.5, upperArea.getWidth(), upperArea.getBottom() - 0.5), 1.0);
-    p.addLineSegment(juce::Line<float>(0, middleArea.getBottom() - 0.5, middleArea.getWidth(), middleArea.getBottom() - 0.5), 1.0);
-    g.setColour (juce::Colour(20,20,20));
+    p.addLineSegment(
+        juce::Line<float>(0, upperArea.getBottom() - 0.5, upperArea.getWidth(), upperArea.getBottom() - 0.5), 1.0);
+    p.addLineSegment(
+        juce::Line<float>(0, middleArea.getBottom() - 0.5, middleArea.getWidth(), middleArea.getBottom() - 0.5), 1.0);
+    g.setColour(juce::Colour(20, 20, 20));
     g.strokePath(p, juce::PathStrokeType(0.5));
 }
 
-void GrapeAudioProcessorEditor::resized()
-{
+void GrapeAudioProcessorEditor::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-        
+
     auto width = bounds.getWidth();
     auto height = bounds.getHeight();
-    
+
     auto upperArea = bounds.removeFromTop(height * 0.12).reduced(6, 2);
     {
         auto upperLeftArea = upperArea.removeFromLeft(width * 0.36);
@@ -100,17 +111,17 @@ void GrapeAudioProcessorEditor::resized()
             masterComponent.setBounds(area.reduced(PANEL_MARGIN));
         }
     }
-    
+
     auto middleArea = bounds.removeFromTop(bounds.getHeight() * 2 / 5).reduced(6, 2);
     auto middleHeight = middleArea.getHeight();
     auto lowerArea = bounds.reduced(6, 2);
-    
+
     auto leftArea = middleArea.removeFromLeft(width * 0.35);
     auto centreArea = middleArea.removeFromLeft(width * 0.35);
     auto rightArea = middleArea;
     {
         juce::Rectangle<int> leftUpperArea = leftArea.removeFromTop(middleHeight / 2);
-        
+
         auto env0Area = leftUpperArea.removeFromLeft(leftUpperArea.getWidth() / 2);
         auto env1Area = leftUpperArea;
         envelopeComponents[0].setBounds(env0Area.reduced(PANEL_MARGIN));

@@ -1,25 +1,25 @@
 #pragma once
 
 #include <JuceHeader.h>
+
+#include "Components.h"
 #include "PluginProcessor.h"
 #include "Voice.h"
-#include "Components.h"
 
 //==============================================================================
-class GrapeAudioProcessorEditor  : public juce::AudioProcessorEditor
-{
+class GrapeAudioProcessorEditor : public juce::AudioProcessorEditor {
 public:
-    GrapeAudioProcessorEditor (GrapeAudioProcessor&);
+    GrapeAudioProcessorEditor(GrapeAudioProcessor &);
     ~GrapeAudioProcessorEditor() override;
 
     //==============================================================================
-    void paint (juce::Graphics&) override;
+    void paint(juce::Graphics &) override;
     void resized() override;
 
 private:
-    GrapeAudioProcessor& audioProcessor;
+    GrapeAudioProcessor &audioProcessor;
     ANALYSER_MODE analyserMode = ANALYSER_MODE::Spectrum;
-    
+
     ControlComponent controlComponent;
     VoiceComponent voiceComponent;
     AnalyserToggle analyserToggle;
@@ -33,5 +33,5 @@ private:
     ModEnvComponent modEnvComponents[NUM_MODENV];
     DelayComponent delayComponent;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GrapeAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GrapeAudioProcessorEditor)
 };

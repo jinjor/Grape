@@ -31,7 +31,11 @@
       "-DJUCE_BUILD_EXTRAS=ON",
       "-DJUCE_COPY_PLUGIN_AFTER_BUILD=ON"
     ],
-    "cmake.preferredGenerators": ["Ninja", "Unix Makefiles"]
+    "clang-format.executable": "/usr/local/bin/clang-format",
+    "[cpp]": {
+      "editor.formatOnSave": true,
+      "editor.defaultFormatter": "xaver.clang-format"
+    }
   },
   "launch": {
     "configurations": [

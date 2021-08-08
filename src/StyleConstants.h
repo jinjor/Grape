@@ -19,7 +19,7 @@ const juce::Colour CONTROLLED = juce::Colour(170, 170, 170);
 const juce::Colour ANALYSER_LINE = juce::Colour(100, 190, 140);
 const juce::Colour ANALYSER_LINE2 = juce::Colour(60, 100, 150);
 const juce::Colour PIT = juce::Colour(0, 0, 0);
-} // namespace colour
+}  // namespace colour
 // font
 constexpr float PANEL_NAME_FONT_SIZE = 15.0f;
 constexpr float PARAM_LABEL_FONT_SIZE = 14.0f;
@@ -38,4 +38,4 @@ constexpr float LOCAL_MARGIN = 2.0f;
 constexpr float LABEL_HEIGHT = 20.0f;
 constexpr float COMBO_BOX_HEIGHT = 28.0f;
 constexpr float SLIDER_WIDTH = 60.0f;
-}
+}  // namespace styles
