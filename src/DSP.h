@@ -172,6 +172,8 @@ enum class ADSR_PHASE {
     SUSTAIN,
     RELEASE,
 };
+static constexpr int ADSR_BASE = 0;
+static constexpr int ADSR_PEAK = 1;
 class Adsr {
 public:
     Adsr(){};
@@ -180,8 +182,6 @@ public:
     double getValue() { return tvalue.value; }
     bool isActive() { return phase != ADSR_PHASE::WAIT; }
     void setParams(double a, double h, double d, double s, double r) {
-        base = 0;
-        peak = 1;
         attack = a;
         hold = h;
         decay = d;
@@ -190,14 +190,14 @@ public:
     }
     void doAttack(double sampleRate) {
         phase = ADSR_PHASE::ATTACK;
-        tvalue.linear(attack, peak, sampleRate);
+        tvalue.linear(attack, ADSR_PEAK, sampleRate);
     }
     void doRelease(double sampleRate) {
         phase = ADSR_PHASE::RELEASE;
-        tvalue.exponential(release, base, sampleRate);
+        tvalue.exponential(release, ADSR_BASE, sampleRate);
     }
     void forceStop() {
-        tvalue.init(0);
+        tvalue.init(ADSR_BASE);
         phase = ADSR_PHASE::WAIT;
     }
     void step(double sampleRate) {
