@@ -110,7 +110,7 @@ void OscParams::saveParameters(juce::XmlElement& xml) {
 void OscParams::loadParameters(juce::XmlElement& xml) {
     *Enabled = xml.getIntAttribute(Enabled->paramID, 0);
     *Waveform = xml.getIntAttribute(Waveform->paramID, 0);
-    *Edge = xml.getIntAttribute(Edge->paramID, 0.0);
+    *Edge = (float)xml.getDoubleAttribute(Edge->paramID, 0.0);
     *Octave = xml.getIntAttribute(Octave->paramID, 0);
     *Coarse = xml.getIntAttribute(Coarse->paramID, 0);
     *Unison = xml.getIntAttribute(Unison->paramID, 1);
