@@ -174,6 +174,7 @@ enum class ADSR_PHASE {
 };
 static constexpr int ADSR_BASE = 0;
 static constexpr int ADSR_PEAK = 1;
+static constexpr double ADSR_STOP_THRESHOLD = 0.005;
 class Adsr {
 public:
     Adsr(){};
@@ -217,9 +218,16 @@ public:
                     tvalue.exponential(decay, sustain, sampleRate);
                 }
                 //                jassert(tvalue.value == peak);
+                if (tvalue.value < ADSR_STOP_THRESHOLD) {
+                    forceStop();
+                }
                 break;
             }
             case ADSR_PHASE::DECAY: {
+                if (tvalue.value < ADSR_STOP_THRESHOLD) {
+                    forceStop();
+                    break;
+                }
                 if (tvalue.step()) {
                     phase = ADSR_PHASE::SUSTAIN;
                 }
@@ -227,12 +235,20 @@ public:
                 break;
             }
             case ADSR_PHASE::SUSTAIN: {
+                if (tvalue.value < ADSR_STOP_THRESHOLD) {
+                    forceStop();
+                    break;
+                }
                 //                jassert(tvalue.value == sustain);
                 break;
             }
             case ADSR_PHASE::RELEASE: {
+                if (tvalue.value < ADSR_STOP_THRESHOLD) {
+                    forceStop();
+                    break;
+                }
                 if (tvalue.step()) {
-                    phase = ADSR_PHASE::WAIT;
+                    forceStop();
                 }
                 //                jassert(tvalue.value >= base);
                 break;
