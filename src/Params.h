@@ -158,6 +158,7 @@ public:
     juce::AudioParameterFloat* Pan;
     juce::AudioParameterFloat* Expression;
     juce::AudioParameterFloat* MasterVolume;
+    juce::AudioParameterFloat* MidiVolume;
 
     GlobalParams();
     GlobalParams(const GlobalParams&) = delete;
