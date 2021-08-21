@@ -330,7 +330,7 @@ MasterComponent::MasterComponent(GlobalParams& params)
     panSlider.addListener(this);
     addAndMakeVisible(panSlider);
 
-    volumeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+    volumeSlider.setLookAndFeel(&grapeLookAndFeel);
     volumeSlider.setRange(params.MasterVolume->range.start, params.MasterVolume->range.end, 0.01);
     volumeSlider.setValue(params.MasterVolume->get(), juce::dontSendNotification);
     volumeSlider.setPopupDisplayEnabled(true, true, nullptr);

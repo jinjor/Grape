@@ -289,9 +289,10 @@ public:
         auto *rightOut = buffer.getWritePointer(1, startSample);
 
         auto delayEnabled = delayParams.Enabled->get();
-        auto masterVolume = globalParams.MasterVolume->get();
+        auto expression = globalParams.Expression->get();
+        auto masterVolume = globalParams.MasterVolume->get() * globalParams.MidiVolume->get();
         for (int i = 0; i < numSamples; ++i) {
-            double sample[2]{leftIn[i], rightIn[i]};
+            double sample[2]{leftIn[i] * expression, rightIn[i] * expression};
 
             // Delay
             if (delayEnabled) {
@@ -312,7 +313,7 @@ public:
         // predefined
         switch (number) {
             case 7:
-                *globalParams.MasterVolume = normalizedValue;
+                *globalParams.MidiVolume = normalizedValue;
                 return;
             case 10:
                 *globalParams.Pan = normalizedValue * 2 - 1.0;

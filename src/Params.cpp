@@ -11,24 +11,28 @@ GlobalParams::GlobalParams() {
     Expression = new juce::AudioParameterFloat(idPrefix + "EXPRESSION", namePrefix + "Expression", 0.0f, 1.0f, 1.0f);
     MasterVolume =
         new juce::AudioParameterFloat(idPrefix + "MASTER_VOLUME", namePrefix + "Master Volume", 0.0f, 1.0f, 1.0f);
+    MidiVolume = new juce::AudioParameterFloat(idPrefix + "MIDI_VOLUME", namePrefix + "Midi Volume", 0.0f, 1.0f, 1.0f);
 }
 void GlobalParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Pitch);
     processor.addParameter(Pan);
     processor.addParameter(Expression);
     processor.addParameter(MasterVolume);
+    processor.addParameter(MidiVolume);
 }
 void GlobalParams::saveParameters(juce::XmlElement& xml) {
-    xml.setAttribute(Pitch->paramID, (double)Pitch->get());
+    // xml.setAttribute(Pitch->paramID, (double)Pitch->get());
     xml.setAttribute(Pan->paramID, (double)Pan->get());
-    xml.setAttribute(Expression->paramID, (double)Expression->get());
+    // xml.setAttribute(Expression->paramID, (double)Expression->get());
     xml.setAttribute(MasterVolume->paramID, (double)MasterVolume->get());
+    // xml.setAttribute(MidiVolume->paramID, (double)MidiVolume->get());
 }
 void GlobalParams::loadParameters(juce::XmlElement& xml) {
     *Pitch = (float)xml.getDoubleAttribute(Pitch->paramID, 0);
     *Pan = (float)xml.getDoubleAttribute(Pan->paramID, 0);
     *Expression = (float)xml.getDoubleAttribute(Expression->paramID, 1.0);
     *MasterVolume = (float)xml.getDoubleAttribute(MasterVolume->paramID, 1.0);
+    *MidiVolume = (float)xml.getDoubleAttribute(MidiVolume->paramID, 1.0);
 }
 
 //==============================================================================
