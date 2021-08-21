@@ -35,7 +35,7 @@ constexpr float PANEL_NAME_HEIGHT = 26.0f;
 constexpr float PANEL_MARGIN = 2.0f;
 constexpr float LOCAL_MARGIN = 2.0f;
 constexpr float LABEL_HEIGHT = 20.0f;
-constexpr float COMBO_BOX_HEIGHT = 28.0f;
+constexpr float COMBO_BOX_HEIGHT = 30.0f;
 constexpr float SLIDER_WIDTH = 60.0f;
 constexpr float KNOB_HEIGHT = 44.0f;
 }  // namespace styles
