@@ -59,6 +59,9 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     addAndMakeVisible(delayComponent);
     addAndMakeVisible(controlComponent);
     setSize(1024, 768);
+#if JUCE_DEBUG
+    setResizable(true, true);  // for debug
+#endif
 }
 
 GrapeAudioProcessorEditor::~GrapeAudioProcessorEditor() {}
