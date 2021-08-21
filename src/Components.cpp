@@ -2382,22 +2382,23 @@ AnalyserWindow::~AnalyserWindow() {
 
 void AnalyserWindow::resized() {}
 void AnalyserWindow::timerCallback() {
+    stopTimer();
     bool shouldRepaint = false;
 
     switch (*analyserMode) {
         case ANALYSER_MODE::Spectrum: {
             lastAnalyserMode = ANALYSER_MODE::Spectrum;
             if (fftConsumer.ready) {
-                drawNextFrameOfSpectrum();
+                auto hasData = drawNextFrameOfSpectrum();
                 fftConsumer.ready = false;
                 readyToDrawFrame = true;
-                shouldRepaint = true;
+                shouldRepaint = shouldRepaint || hasData;
             }
             if (levelConsumer.ready) {
-                drawNextFrameOfLevel();
+                auto hasData = drawNextFrameOfLevel();
                 levelConsumer.ready = false;
                 //        readyToDrawFrame = true;
-                shouldRepaint = true;
+                shouldRepaint = shouldRepaint || hasData;
             }
             break;
         }
@@ -2569,15 +2570,23 @@ void AnalyserWindow::timerCallback() {
             break;
         }
     }
+    startTimerHz(30.0f);
     if (shouldRepaint) {
         repaint();
     }
 }
 
-void AnalyserWindow::drawNextFrameOfSpectrum() {
+bool AnalyserWindow::drawNextFrameOfSpectrum() {
+    bool hasData = false;
     for (int i = 0; i < fftSize; i++) {
         fftData[i] = (fftData[i] + fftData[i + fftSize]) * 0.5f;
+        if (fftData[i] != 0.0f) {
+            hasData = true;
+        }
         fftData[i + fftSize] = 0;
+    }
+    if (!hasData) {
+        return false;
     }
     window.multiplyWithWindowingTable(fftData, fftSize);
     forwardFFT.performFrequencyOnlyForwardTransform(fftData);
@@ -2597,19 +2606,25 @@ void AnalyserWindow::drawNextFrameOfSpectrum() {
                                 1.0f);
         scopeData[i] = level;
     }
+    return true;
 }
-void AnalyserWindow::drawNextFrameOfLevel() {
+bool AnalyserWindow::drawNextFrameOfLevel() {
     auto mindB = -100.0f;
     auto maxdB = 0.0f;
+    bool hasData = false;
     for (int i = 0; i < 2; i++) {
         auto* data = i == 0 ? levelConsumer.destinationL : levelConsumer.destinationR;
         auto db = calcCurrentLevel(levelConsumer.numSamples, data);
         currentLevel[i] = juce::jmap(db, mindB, maxdB, 0.0f, 1.0f);
+        if (currentLevel[i] > mindB) {
+            hasData = true;
+        }
         if (db > 0) {
             (i == 0 ? overflowedLevelL : overflowedLevelR) = db;
             (i == 0 ? overflowWarningL : overflowWarningR) = 30 * 1.2;
         }
     }
+    return hasData;
 }
 void AnalyserWindow::paint(juce::Graphics& g) {
     g.fillAll(juce::Colours::black);

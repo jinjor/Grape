@@ -562,8 +562,8 @@ private:
 
     // methods
     virtual void timerCallback() override;
-    void drawNextFrameOfSpectrum();
-    void drawNextFrameOfLevel();
+    bool drawNextFrameOfSpectrum();
+    bool drawNextFrameOfLevel();
     void paintSpectrum(
         juce::Graphics& g, juce::Colour colour, int offsetX, int offsetY, int width, int height, float* scopeData);
     void paintLevel(juce::Graphics& g, int offsetX, int offsetY, int width, int height, float level);
