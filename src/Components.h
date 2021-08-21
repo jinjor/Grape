@@ -275,6 +275,7 @@ private:
     HeaderComponent header;
 
     juce::Component body;
+    juce::Component targetSelector;
 
     juce::ComboBox targetTypeSelector;
     juce::ComboBox targetOscSelector;
@@ -320,6 +321,7 @@ private:
     HeaderComponent header;
 
     juce::Component body;
+    juce::Component targetSelector;
 
     juce::ComboBox targetTypeSelector;
     juce::ComboBox targetOscSelector;
