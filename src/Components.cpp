@@ -1004,10 +1004,10 @@ DelayComponent::DelayComponent(DelayParams& params, std::array<ControlItemParams
     initSkewFromMid(timeRSlider, params.TimeR, 0.01, 0.4f, " sec", nullptr, this, body);
     initEnum(timeSyncLSlider, params.TimeSyncL, DELAY_TIME_SYNC_NAMES, this, body);
     initEnum(timeSyncRSlider, params.TimeSyncR, DELAY_TIME_SYNC_NAMES, this, body);
-    initSkewFromMid(lowFreqSlider, params.TimeL, 1.0, 2000.0f, " Hz", nullptr, this, body);
-    initSkewFromMid(highFreqSlider, params.TimeL, 1.0, 2000.0f, " Hz", nullptr, this, body);
+    initSkewFromMid(lowFreqSlider, params.LowFreq, 1.0, 2000.0f, " Hz", nullptr, this, body);
+    initSkewFromMid(highFreqSlider, params.HighFreq, 1.0, 2000.0f, " Hz", nullptr, this, body);
     auto formatFeedback = [](double gain) { return juce::String(gain * 100, 0) + " %"; };
-    initSkewFromMid(feedbackSlider, params.TimeL, 0.01, 0.4f, nullptr, std::move(formatFeedback), this, body);
+    initSkewFromMid(feedbackSlider, params.Feedback, 0.01, 0.4f, nullptr, std::move(formatFeedback), this, body);
     initLinear(mixSlider, params.Mix, 0.01, this, body);
 
     initLabel(typeLabel, "Type", body);

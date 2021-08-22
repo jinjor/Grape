@@ -88,6 +88,7 @@ protected:
         slider.setLookAndFeel(&grapeLookAndFeel);
         slider.setRange(param->range.start, param->range.end, step > 0 ? step : param->range.interval);
         slider.setValue(param->get(), juce::dontSendNotification);
+        slider.setSkewFactorFromMidPoint(midValue);
         slider.setPopupDisplayEnabled(true, true, nullptr);
         slider.setScrollWheelEnabled(false);
         if (unit != nullptr) {
