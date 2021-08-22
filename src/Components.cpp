@@ -221,7 +221,7 @@ MasterComponent::MasterComponent(GlobalParams& params)
     addAndMakeVisible(header);
 
     initLinear(panSlider, params.Pan, 0.01, this, *this);
-    initLinear(volumeSlider, params.Pan, 0.01, this, *this);
+    initLinear(volumeSlider, params.MasterVolume, 0.01, this, *this);
     initLabel(panLabel, "Pan", *this);
     initLabel(volumeLabel, "Volume", *this);
 
