@@ -2,51 +2,10 @@
 
 #include <JuceHeader.h>
 
+#include <utility>
+
 #include "Params.h"
-#include "StyleConstants.h"
 
-using namespace styles;
-
-namespace {
-
-void consumeLabeledKnob(juce::Rectangle<int>& parentArea, juce::Label& label, juce::Slider& knob) {
-    auto area = parentArea.removeFromLeft(SLIDER_WIDTH);
-    label.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
-    knob.setBounds(area.removeFromTop(KNOB_HEIGHT).reduced(LOCAL_MARGIN));
-}
-void consumeLabeledKnob(juce::Rectangle<int>& parentArea,
-                        juce::Label& label,
-                        juce::Slider& knob1,
-                        juce::Slider& knob2) {
-    auto area = parentArea.removeFromLeft(SLIDER_WIDTH);
-    label.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
-    auto knobBounds = area.removeFromTop(KNOB_HEIGHT).reduced(LOCAL_MARGIN);
-    knob1.setBounds(knobBounds);
-    knob2.setBounds(knobBounds);
-}
-void consumeLabeledKnob(juce::Rectangle<int>& parentArea,
-                        juce::Label& label1,
-                        juce::Slider& knob1,
-                        juce::Label& label2,
-                        juce::Slider& knob2) {
-    auto area1 = parentArea.removeFromLeft(SLIDER_WIDTH);
-    auto area2 = area1;
-    consumeLabeledKnob(area1, label1, knob1);
-    consumeLabeledKnob(area2, label2, knob2);
-}
-void consumeLabeledComboBox(juce::Rectangle<int>& parentArea, int width, juce::Label& label, juce::Component& box) {
-    auto area = parentArea.removeFromLeft(width);
-    label.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
-    box.setBounds(area.removeFromTop(COMBO_BOX_HEIGHT).reduced(LOCAL_MARGIN));
-}
-void consumeKeyValueText(
-    juce::Rectangle<int>& parentArea, int height, int width, juce::Label& keyLabel, juce::Label& valueLabel) {
-    auto area = parentArea.removeFromTop(height);
-    keyLabel.setBounds(area.removeFromLeft(width).reduced(LOCAL_MARGIN));
-    valueLabel.setBounds(area.reduced(LOCAL_MARGIN));
-}
-
-}  // namespace
 
 //==============================================================================
 float calcCurrentLevel(int numSamples, float* data) {
@@ -59,7 +18,7 @@ float calcCurrentLevel(int numSamples, float* data) {
 
 //==============================================================================
 HeaderComponent::HeaderComponent(std::string name, bool hasEnableButton)
-    : enabledButton("Enabled"), name(name), hasEnableButton(hasEnableButton) {
+    : enabledButton("Enabled"), name(std::move(name)), hasEnableButton(hasEnableButton) {
     addAndMakeVisible(enabledButton);
     enabledButton.setEnabled(hasEnableButton);
 }
@@ -98,55 +57,15 @@ VoiceComponent::VoiceComponent(VoiceParams& params, std::array<ControlItemParams
                            juce::Slider::TextEntryBoxPosition::NoTextBox),
       pitchBendRangeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                            juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
-    modeSelector.setLookAndFeel(&grapeLookAndFeel);
-    modeSelector.addItemList(params.Mode->getAllValueStrings(), 1);
-    modeSelector.setSelectedItemIndex(params.Mode->getIndex(), juce::dontSendNotification);
-    modeSelector.setJustificationType(juce::Justification::centred);
-    modeSelector.addListener(this);
-    addAndMakeVisible(modeSelector);
-
-    portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
-    portamentoTimeSlider.setRange(
-        params.PortamentoTime->range.start, params.PortamentoTime->range.end, params.PortamentoTime->range.interval);
-    portamentoTimeSlider.setSkewFactorFromMidPoint(0.1);
-    portamentoTimeSlider.setValue(params.PortamentoTime->get(), juce::dontSendNotification);
-    portamentoTimeSlider.setPopupDisplayEnabled(true, true, nullptr);
-    portamentoTimeSlider.setScrollWheelEnabled(false);
-    portamentoTimeSlider.setTextValueSuffix(" sec");
-    portamentoTimeSlider.addListener(this);
-    addAndMakeVisible(portamentoTimeSlider);
-
-    pitchBendRangeSlider.setLookAndFeel(&grapeLookAndFeel);
-    pitchBendRangeSlider.setRange(
-        params.PitchBendRange->getRange().getStart(), params.PitchBendRange->getRange().getEnd(), 1);
-    pitchBendRangeSlider.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
-    pitchBendRangeSlider.setPopupDisplayEnabled(true, true, nullptr);
-    pitchBendRangeSlider.setScrollWheelEnabled(false);
-    pitchBendRangeSlider.addListener(this);
-    addAndMakeVisible(pitchBendRangeSlider);
-
-    modeLabel.setFont(paramLabelFont);
-    modeLabel.setText("Mode", juce::dontSendNotification);
-    modeLabel.setJustificationType(juce::Justification::centred);
-    modeLabel.setEditable(false, false, false);
-    addAndMakeVisible(modeLabel);
-
-    portamentoTimeLabel.setFont(paramLabelFont);
-    portamentoTimeLabel.setText("Glide Time", juce::dontSendNotification);
-    portamentoTimeLabel.setJustificationType(juce::Justification::centred);
-    portamentoTimeLabel.setEditable(false, false, false);
-    addAndMakeVisible(portamentoTimeLabel);
-
-    pitchBendRangeLabel.setFont(paramLabelFont);
-    pitchBendRangeLabel.setText("PB Range", juce::dontSendNotification);
-    pitchBendRangeLabel.setJustificationType(juce::Justification::centred);
-    pitchBendRangeLabel.setEditable(false, false, false);
-    addAndMakeVisible(pitchBendRangeLabel);
+    initChoice(modeSelector, params.Mode, this, *this);
+    initLinear(portamentoTimeSlider, params.PortamentoTime, -1, " sec", nullptr, this, *this);
+    initLinear(pitchBendRangeSlider, params.PitchBendRange, this, *this);
+    initLabel(modeLabel, "Mode", *this);
+    initLabel(portamentoTimeLabel, "Glide Time", *this);
+    initLabel(pitchBendRangeLabel, "PB Range", *this);
 
     startTimerHz(30.0f);
 }
@@ -217,47 +136,15 @@ StatusComponent::StatusComponent(int* polyphony,
     : polyphony(polyphony), timeConsumptionState(timeConsumptionState), latestDataProvider(latestDataProvider) {
     latestDataProvider->addConsumer(&levelConsumer);
 
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-    juce::Font paramValueLabelFont =
-        juce::Font(PARAM_VALUE_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
+    initStatusValue(volumeValueLabel, "0.0dB", *this);
+    initStatusValue(polyphonyValueLabel, std::to_string(*polyphony), *this);
+    initStatusValue(timeConsumptionValueLabel,
+                    std::to_string(juce::roundToInt(timeConsumptionState->currentTimeConsumptionRate * 100)) + "%",
+                    *this);
 
-    volumeValueLabel.setFont(paramValueLabelFont);
-    volumeValueLabel.setText("0.0dB", juce::dontSendNotification);
-    volumeValueLabel.setJustificationType(juce::Justification::left);
-    volumeValueLabel.setEditable(false, false, false);
-    addAndMakeVisible(volumeValueLabel);
-
-    polyphonyValueLabel.setFont(paramValueLabelFont);
-    polyphonyValueLabel.setText(juce::String(*polyphony), juce::dontSendNotification);
-    polyphonyValueLabel.setJustificationType(juce::Justification::left);
-    polyphonyValueLabel.setEditable(false, false, false);
-    addAndMakeVisible(polyphonyValueLabel);
-
-    timeConsumptionValueLabel.setFont(paramValueLabelFont);
-    timeConsumptionValueLabel.setText(
-        juce::String(juce::roundToInt(timeConsumptionState->currentTimeConsumptionRate * 100)) + "%",
-        juce::dontSendNotification);
-    timeConsumptionValueLabel.setJustificationType(juce::Justification::left);
-    timeConsumptionValueLabel.setEditable(false, false, false);
-    addAndMakeVisible(timeConsumptionValueLabel);
-
-    volumeLabel.setFont(paramLabelFont);
-    volumeLabel.setText("Peak:", juce::dontSendNotification);
-    volumeLabel.setJustificationType(juce::Justification::right);
-    volumeLabel.setEditable(false, false, false);
-    addAndMakeVisible(volumeLabel);
-
-    polyphonyLabel.setFont(paramLabelFont);
-    polyphonyLabel.setText("Polyphony:", juce::dontSendNotification);
-    polyphonyLabel.setJustificationType(juce::Justification::right);
-    polyphonyLabel.setEditable(false, false, false);
-    addAndMakeVisible(polyphonyLabel);
-
-    timeConsumptionLabel.setFont(paramLabelFont);
-    timeConsumptionLabel.setText("Busyness:", juce::dontSendNotification);
-    timeConsumptionLabel.setJustificationType(juce::Justification::right);
-    timeConsumptionLabel.setEditable(false, false, false);
-    addAndMakeVisible(timeConsumptionLabel);
+    initStatusKey(volumeLabel, "Peak", *this);
+    initStatusKey(polyphonyLabel, "Polyphony", *this);
+    initStatusKey(timeConsumptionLabel, "Busyness", *this);
 
     startTimerHz(4.0f);
 }
@@ -331,41 +218,13 @@ MasterComponent::MasterComponent(GlobalParams& params)
       panSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox),
       volumeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    juce::Font panelNameFont = juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold");
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
-    panSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-    panSlider.setRange(params.Pan->range.start, params.Pan->range.end, 0.01);
-    panSlider.setValue(params.Pan->get(), juce::dontSendNotification);
-    panSlider.setPopupDisplayEnabled(true, true, nullptr);
-    panSlider.setScrollWheelEnabled(false);
-    panSlider.addListener(this);
-    addAndMakeVisible(panSlider);
-
-    volumeSlider.setLookAndFeel(&grapeLookAndFeel);
-    volumeSlider.setRange(params.MasterVolume->range.start, params.MasterVolume->range.end, 0.01);
-    volumeSlider.setValue(params.MasterVolume->get(), juce::dontSendNotification);
-    volumeSlider.setPopupDisplayEnabled(true, true, nullptr);
-    volumeSlider.setScrollWheelEnabled(false);
-    //    volumeSlider.textFromValueFunction = [](double gain){ return
-    //    juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
-    volumeSlider.addListener(this);
-    addAndMakeVisible(volumeSlider);
-
-    panLabel.setFont(paramLabelFont);
-    panLabel.setText("Pan", juce::dontSendNotification);
-    panLabel.setJustificationType(juce::Justification::centred);
-    panLabel.setEditable(false, false, false);
-    addAndMakeVisible(panLabel);
-
-    volumeLabel.setFont(paramLabelFont);
-    volumeLabel.setText("Volume", juce::dontSendNotification);
-    volumeLabel.setJustificationType(juce::Justification::centred);
-    volumeLabel.setEditable(false, false, false);
-    addAndMakeVisible(volumeLabel);
+    initLinear(panSlider, params.Pan, 0.01, this, *this);
+    initLinear(volumeSlider, params.Pan, 0.01, this, *this);
+    initLabel(panLabel, "Pan", *this);
+    initLabel(volumeLabel, "Volume", *this);
 
     startTimerHz(30.0f);
 }
@@ -417,139 +276,30 @@ OscComponent::OscComponent(int index, OscParams& params, std::array<ControlItemP
                    juce::Slider::TextEntryBoxPosition::NoTextBox),
       gainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                  juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
     header.enabledButton.addListener(this);
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
-    envelopeSelector.setLookAndFeel(&grapeLookAndFeel);
-    envelopeSelector.addItemList(params.Envelope->getAllValueStrings(), 1);
-    envelopeSelector.setSelectedItemIndex(params.Envelope->getIndex(), juce::dontSendNotification);
-    envelopeSelector.setJustificationType(juce::Justification::centred);
-    envelopeSelector.addListener(this);
-    body.addAndMakeVisible(envelopeSelector);
-
-    waveformSelector.setLookAndFeel(&grapeLookAndFeel);
-    waveformSelector.addItemList(params.Waveform->getAllValueStrings(), 1);
-    waveformSelector.setSelectedItemIndex(params.Waveform->getIndex(), juce::dontSendNotification);
-    waveformSelector.setJustificationType(juce::Justification::centred);
-    waveformSelector.addListener(this);
-    body.addAndMakeVisible(waveformSelector);
-
-    edgeSlider.setLookAndFeel(&grapeLookAndFeel);
-    edgeSlider.setRange(params.Edge->range.start, params.Edge->range.end, 0.01);
-    edgeSlider.setValue(params.Edge->get(), juce::dontSendNotification);
-    edgeSlider.setPopupDisplayEnabled(true, true, nullptr);
-    edgeSlider.setScrollWheelEnabled(false);
-    edgeSlider.addListener(this);
-    body.addAndMakeVisible(edgeSlider);
-
-    octaveSlider.setLookAndFeel(&grapeLookAndFeel);
-    octaveSlider.setRange(params.Octave->getRange().getStart(), params.Octave->getRange().getEnd(), 1);
-    octaveSlider.setValue(params.Octave->get(), juce::dontSendNotification);
-    octaveSlider.setPopupDisplayEnabled(true, true, nullptr);
-    octaveSlider.setScrollWheelEnabled(false);
-    octaveSlider.addListener(this);
-    body.addAndMakeVisible(octaveSlider);
-
-    coarseSlider.setLookAndFeel(&grapeLookAndFeel);
-    coarseSlider.setRange(params.Coarse->getRange().getStart(), params.Coarse->getRange().getEnd(), 1);
-    coarseSlider.setValue(params.Coarse->get(), juce::dontSendNotification);
-    coarseSlider.setPopupDisplayEnabled(true, true, nullptr);
-    coarseSlider.setScrollWheelEnabled(false);
-    coarseSlider.addListener(this);
-    body.addAndMakeVisible(coarseSlider);
-
-    unisonSlider.setLookAndFeel(&grapeLookAndFeel);
-    unisonSlider.setRange(params.Unison->getRange().getStart(), params.Unison->getRange().getEnd(), 1);
-    unisonSlider.setValue(params.Unison->get(), juce::dontSendNotification);
-    unisonSlider.setPopupDisplayEnabled(true, true, nullptr);
-    unisonSlider.setScrollWheelEnabled(false);
-    unisonSlider.addListener(this);
-    body.addAndMakeVisible(unisonSlider);
-
-    detuneSlider.setLookAndFeel(&grapeLookAndFeel);
-    detuneSlider.setRange(params.Detune->range.start, params.Detune->range.end, 0.01);
-    detuneSlider.setValue(params.Detune->get(), juce::dontSendNotification);
-    detuneSlider.setPopupDisplayEnabled(true, true, nullptr);
-    detuneSlider.setScrollWheelEnabled(false);
-    detuneSlider.addListener(this);
-    body.addAndMakeVisible(detuneSlider);
-
-    spreadSlider.setLookAndFeel(&grapeLookAndFeel);
-    spreadSlider.setRange(params.Spread->range.start, params.Spread->range.end, 0.01);
-    spreadSlider.setValue(params.Spread->get(), juce::dontSendNotification);
-    spreadSlider.setPopupDisplayEnabled(true, true, nullptr);
-    spreadSlider.setScrollWheelEnabled(false);
-    spreadSlider.addListener(this);
-    body.addAndMakeVisible(spreadSlider);
-
-    gainSlider.setLookAndFeel(&grapeLookAndFeel);
-    gainSlider.setRange(params.Gain->range.start, params.Gain->range.end, params.Gain->range.interval);
-    gainSlider.setValue(params.Gain->get(), juce::dontSendNotification);
-    gainSlider.setPopupDisplayEnabled(true, true, nullptr);
-    gainSlider.setScrollWheelEnabled(false);
-    gainSlider.setSkewFactorFromMidPoint(1.0);
-    gainSlider.textFromValueFunction = [](double gain) {
-        return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB";
-    };
-    gainSlider.addListener(this);
-    body.addAndMakeVisible(gainSlider);
-
-    envelopeLabel.setFont(paramLabelFont);
-    envelopeLabel.setText("Amp Env", juce::dontSendNotification);
-    envelopeLabel.setJustificationType(juce::Justification::centred);
-    envelopeLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(envelopeLabel);
-
-    waveformLabel.setFont(paramLabelFont);
-    waveformLabel.setText("Waveform", juce::dontSendNotification);
-    waveformLabel.setJustificationType(juce::Justification::centred);
-    waveformLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(waveformLabel);
-
-    edgeLabel.setFont(paramLabelFont);
-    edgeLabel.setText("Edge", juce::dontSendNotification);
-    edgeLabel.setJustificationType(juce::Justification::centred);
-    edgeLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(edgeLabel);
-
-    octaveLabel.setFont(paramLabelFont);
-    octaveLabel.setText("Octave", juce::dontSendNotification);
-    octaveLabel.setJustificationType(juce::Justification::centred);
-    octaveLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(octaveLabel);
-
-    coarseLabel.setFont(paramLabelFont);
-    coarseLabel.setText("Semitone", juce::dontSendNotification);
-    coarseLabel.setJustificationType(juce::Justification::centred);
-    coarseLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(coarseLabel);
-
-    unisonLabel.setFont(paramLabelFont);
-    unisonLabel.setText("Unison", juce::dontSendNotification);
-    unisonLabel.setJustificationType(juce::Justification::centred);
-    unisonLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(unisonLabel);
-
-    detuneLabel.setFont(paramLabelFont);
-    detuneLabel.setText("Detune", juce::dontSendNotification);
-    detuneLabel.setJustificationType(juce::Justification::centred);
-    detuneLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(detuneLabel);
-
-    spreadLabel.setFont(paramLabelFont);
-    spreadLabel.setText("Spread", juce::dontSendNotification);
-    spreadLabel.setJustificationType(juce::Justification::centred);
-    spreadLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(spreadLabel);
-
-    gainLabel.setFont(paramLabelFont);
-    gainLabel.setText("Gain", juce::dontSendNotification);
-    gainLabel.setJustificationType(juce::Justification::centred);
-    gainLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(gainLabel);
+    initChoice(envelopeSelector, params.Envelope, this, body);
+    initChoice(waveformSelector, params.Waveform, this, body);
+    initLinear(edgeSlider, params.Edge, 0.01, this, body);
+    initLinear(octaveSlider, params.Octave, this, body);
+    initLinear(coarseSlider, params.Coarse, this, body);
+    initLinear(unisonSlider, params.Unison, this, body);
+    initLinear(detuneSlider, params.Detune, 0.01, this, body);
+    initLinear(spreadSlider, params.Spread, 0.01, this, body);
+    auto formatGain = [](double gain) { return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
+    initSkewFromMid(gainSlider, params.Gain, -1, 1.0, nullptr, std::move(formatGain), this, body);
+    initLabel(envelopeLabel, "Amp Env", body);
+    initLabel(waveformLabel, "Waveform", body);
+    initLabel(edgeLabel, "Edge", body);
+    initLabel(octaveLabel, "Octave", body);
+    initLabel(coarseLabel, "Semitone", body);
+    initLabel(unisonLabel, "Unison", body);
+    initLabel(coarseLabel, "Semitone", body);
+    initLabel(detuneLabel, "Detune", body);
+    initLabel(spreadLabel, "Spread", body);
+    initLabel(gainLabel, "Gain", body);
 
     body.setEnabled(params.Enabled->get());
     addAndMakeVisible(body);
@@ -696,76 +446,17 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams& params)
                     juce::Slider::TextEntryBoxPosition::NoTextBox),
       releaseSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                     juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    juce::Font panelNameFont = juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold");
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
-    attackSlider.setLookAndFeel(&grapeLookAndFeel);
-    attackSlider.setRange(params.Attack->range.start, params.Attack->range.end, 0.001);
-    attackSlider.setSkewFactorFromMidPoint(0.2);
-    attackSlider.setValue(params.Attack->get(), juce::dontSendNotification);
-    attackSlider.setPopupDisplayEnabled(true, true, nullptr);
-    attackSlider.setScrollWheelEnabled(false);
-    attackSlider.setTextValueSuffix(" sec");
-    attackSlider.addListener(this);
-    addAndMakeVisible(attackSlider);
-
-    decaySlider.setLookAndFeel(&grapeLookAndFeel);
-    decaySlider.setRange(params.Decay->range.start, params.Decay->range.end, 0.01);
-    decaySlider.setSkewFactorFromMidPoint(0.4);
-    decaySlider.setValue(params.Decay->get(), juce::dontSendNotification);
-    decaySlider.setPopupDisplayEnabled(true, true, nullptr);
-    decaySlider.setScrollWheelEnabled(false);
-    decaySlider.setTextValueSuffix(" sec");
-    decaySlider.addListener(this);
-    addAndMakeVisible(decaySlider);
-
-    sustainSlider.setLookAndFeel(&grapeLookAndFeel);
-    sustainSlider.setRange(params.Sustain->range.start, params.Sustain->range.end, 0.01);
-    sustainSlider.setValue(params.Sustain->get(), juce::dontSendNotification);
-    sustainSlider.setPopupDisplayEnabled(true, true, nullptr);
-    sustainSlider.setScrollWheelEnabled(false);
-    //    sustainSlider.textFromValueFunction = [](double gain){ return
-    //    juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
-    sustainSlider.textFromValueFunction = [](double gain) { return juce::String(gain * 100, 0) + " %"; };
-    sustainSlider.addListener(this);
-    addAndMakeVisible(sustainSlider);
-
-    releaseSlider.setLookAndFeel(&grapeLookAndFeel);
-    releaseSlider.setRange(params.Release->range.start, params.Release->range.end, 0.01);
-    releaseSlider.setSkewFactorFromMidPoint(0.4);
-    releaseSlider.setValue(params.Release->get(), juce::dontSendNotification);
-    releaseSlider.setPopupDisplayEnabled(true, true, nullptr);
-    releaseSlider.setScrollWheelEnabled(false);
-    releaseSlider.setTextValueSuffix(" sec");
-    releaseSlider.addListener(this);
-    addAndMakeVisible(releaseSlider);
-
-    attackLabel.setFont(paramLabelFont);
-    attackLabel.setText("Attack", juce::dontSendNotification);
-    attackLabel.setJustificationType(juce::Justification::centred);
-    attackLabel.setEditable(false, false, false);
-    addAndMakeVisible(attackLabel);
-
-    decayLabel.setFont(paramLabelFont);
-    decayLabel.setText("Decay", juce::dontSendNotification);
-    decayLabel.setJustificationType(juce::Justification::centred);
-    decayLabel.setEditable(false, false, false);
-    addAndMakeVisible(decayLabel);
-
-    sustainLabel.setFont(paramLabelFont);
-    sustainLabel.setText("Sustain", juce::dontSendNotification);
-    sustainLabel.setJustificationType(juce::Justification::centred);
-    sustainLabel.setEditable(false, false, false);
-    addAndMakeVisible(sustainLabel);
-
-    releaseLabel.setFont(paramLabelFont);
-    releaseLabel.setText("Release", juce::dontSendNotification);
-    releaseLabel.setJustificationType(juce::Justification::centred);
-    releaseLabel.setEditable(false, false, false);
-    addAndMakeVisible(releaseLabel);
+    initSkewFromMid(attackSlider, params.Attack, 0.001, 0.2, " sec", nullptr, this, *this);
+    initSkewFromMid(decaySlider, params.Decay, 0.01, 0.4, " sec", nullptr, this, *this);
+    initLinearPercent(sustainSlider, params.Sustain, 0.01, this, *this);
+    initSkewFromMid(releaseSlider, params.Release, 0.01, 0.4, " sec", nullptr, this, *this);
+    initLabel(attackLabel, "Attack", *this);
+    initLabel(decayLabel, "Decay", *this);
+    initLabel(sustainLabel, "Sustain", *this);
+    initLabel(releaseLabel, "Release", *this);
 
     startTimerHz(30.0f);
 }
@@ -822,111 +513,31 @@ FilterComponent::FilterComponent(int index,
       qSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox),
       gainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                  juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
     addAndMakeVisible(header);
 
-    targetSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetSelector.addItemList(params.Target->getAllValueStrings(), 1);
-    targetSelector.setSelectedItemIndex(params.Target->getIndex(), juce::dontSendNotification);
-    targetSelector.setJustificationType(juce::Justification::centred);
-    targetSelector.addListener(this);
-    body.addAndMakeVisible(targetSelector);
-
-    typeSelector.setLookAndFeel(&grapeLookAndFeel);
-    typeSelector.addItemList(params.Type->getAllValueStrings(), 1);
-    typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
-    typeSelector.setJustificationType(juce::Justification::centred);
-    typeSelector.addListener(this);
-    body.addAndMakeVisible(typeSelector);
-
-    freqTypeSelector.setLookAndFeel(&grapeLookAndFeel);
-    freqTypeSelector.addItemList(params.FreqType->getAllValueStrings(), 1);
-    freqTypeSelector.setSelectedItemIndex(params.FreqType->getIndex(), juce::dontSendNotification);
-    freqTypeSelector.setJustificationType(juce::Justification::centred);
-    freqTypeSelector.addListener(this);
-    body.addAndMakeVisible(freqTypeSelector);
-
-    hzSlider.setLookAndFeel(&grapeLookAndFeel);
-    hzSlider.setRange(params.Hz->range.start, params.Hz->range.end, params.Hz->range.interval);
-    hzSlider.setSkewFactorFromMidPoint(2000.0f);
-    hzSlider.setValue(params.Hz->get(), juce::dontSendNotification);
-    hzSlider.setPopupDisplayEnabled(true, true, nullptr);
-    hzSlider.setScrollWheelEnabled(false);
-    hzSlider.setTextValueSuffix(" Hz");
-    hzSlider.addListener(this);
-    body.addAndMakeVisible(hzSlider);
-
-    semitoneSlider.setLookAndFeel(&grapeLookAndFeel);
-    semitoneSlider.setRange(params.Semitone->getRange().getStart(), params.Semitone->getRange().getEnd(), 1);
-    semitoneSlider.setValue(params.Semitone->get(), juce::dontSendNotification);
-    semitoneSlider.setPopupDisplayEnabled(true, true, nullptr);
-    semitoneSlider.setScrollWheelEnabled(false);
-    semitoneSlider.textFromValueFunction = [](double value) -> std::string {
+    initChoice(targetSelector, params.Target, this, body);
+    initChoice(typeSelector, params.Type, this, body);
+    initChoice(freqTypeSelector, params.FreqType, this, body);
+    initSkewFromMid(hzSlider, params.Hz, -1, 2000.0f, " Hz", nullptr, this, body);
+    auto formatSemitone = [](double value) -> std::string {
         int cent = value;
         int centAbs = std::abs(cent);
         int oct = centAbs / 12;
         int octFrac = centAbs % 12;
         return (cent == 0 ? " " : cent > 0 ? "+" : "-") + std::to_string(oct) + ":" + std::to_string(octFrac) + " oct";
     };
-    semitoneSlider.addListener(this);
-    body.addAndMakeVisible(semitoneSlider);
-
-    qSlider.setLookAndFeel(&grapeLookAndFeel);
-    qSlider.setRange(params.Q->range.start, params.Q->range.end, 0.01);
-    qSlider.setSkewFactorFromMidPoint(1.0f);
-    qSlider.setValue(params.Q->get(), juce::dontSendNotification);
-    qSlider.setPopupDisplayEnabled(true, true, nullptr);
-    qSlider.setScrollWheelEnabled(false);
-    qSlider.addListener(this);
-    body.addAndMakeVisible(qSlider);
-
-    gainSlider.setLookAndFeel(&grapeLookAndFeel);
-    gainSlider.setRange(params.Gain->range.start, params.Gain->range.end, 0.01);
-    gainSlider.setValue(params.Gain->get(), juce::dontSendNotification);
-    gainSlider.setPopupDisplayEnabled(true, true, nullptr);
-    gainSlider.setScrollWheelEnabled(false);
-    gainSlider.addListener(this);
-    body.addAndMakeVisible(gainSlider);
-
-    targetLabel.setFont(paramLabelFont);
-    targetLabel.setText("OSC", juce::dontSendNotification);
-    targetLabel.setJustificationType(juce::Justification::centred);
-    targetLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(targetLabel);
-
-    typeLabel.setFont(paramLabelFont);
-    typeLabel.setText("Type", juce::dontSendNotification);
-    typeLabel.setJustificationType(juce::Justification::centred);
-    typeLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(typeLabel);
-
-    freqTypeLabel.setFont(paramLabelFont);
-    freqTypeLabel.setText("Freq Type", juce::dontSendNotification);
-    freqTypeLabel.setJustificationType(juce::Justification::centred);
-    freqTypeLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(freqTypeLabel);
-
-    freqLabel.setFont(paramLabelFont);
-    freqLabel.setText("Freq", juce::dontSendNotification);
-    freqLabel.setJustificationType(juce::Justification::centred);
-    freqLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(freqLabel);
-
-    qLabel.setFont(paramLabelFont);
-    qLabel.setText("Q", juce::dontSendNotification);
-    qLabel.setJustificationType(juce::Justification::centred);
-    qLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(qLabel);
-
-    gainLabel.setFont(paramLabelFont);
-    gainLabel.setText("Gain", juce::dontSendNotification);
-    gainLabel.setJustificationType(juce::Justification::centred);
-    gainLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(gainLabel);
+    initLinear(semitoneSlider, params.Semitone, 0.01, nullptr, std::move(formatSemitone), this, body);
+    initLinear(qSlider, params.Q, 0.01, this, body);
+    initLinear(gainSlider, params.Gain, 0.01, " dB", nullptr, this, body);
+    initLabel(targetLabel, "OSC", body);
+    initLabel(typeLabel, "Type", body);
+    initLabel(freqTypeLabel, "Freq Type", body);
+    initLabel(freqLabel, "Freq", body);
+    initLabel(qLabel, "Q", body);
+    initLabel(gainLabel, "Gain", body);
 
     addAndMakeVisible(body);
 
@@ -1049,113 +660,26 @@ LfoComponent::LfoComponent(int index, LfoParams& params, std::array<ControlItemP
                      juce::Slider::TextEntryBoxPosition::NoTextBox),
       amountSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
     addAndMakeVisible(header);
 
-    targetTypeSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetTypeSelector.addItemList(params.TargetType->getAllValueStrings(), 1);
-    targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
-    targetTypeSelector.setJustificationType(juce::Justification::centred);
-    targetTypeSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetTypeSelector);
+    initChoice(targetTypeSelector, params.TargetType, this, targetSelector);
+    initChoice(targetOscSelector, params.TargetOsc, this, targetSelector);
+    initChoice(targetFilterSelector, params.TargetFilter, this, targetSelector);
+    initChoice(targetOscParamSelector, params.TargetOscParam, this, targetSelector);
+    initChoice(targetFilterParamSelector, params.TargetFilterParam, this, targetSelector);
+    initChoice(waveformSelector, params.Waveform, this, body);
+    initSkewFromMid(slowFreqSlider, params.SlowFreq, -1, 1.0, " Hz", nullptr, this, body);
+    initSkewFromMid(fastFreqSlider, params.FastFreq, -1, 1.0, " x", nullptr, this, body);
+    initLinear(amountSlider, params.Amount, 0.01, this, body);
 
-    targetOscSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscSelector.addItemList(params.TargetOsc->getAllValueStrings(), 1);
-    targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
-    targetOscSelector.setJustificationType(juce::Justification::centred);
-    targetOscSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetOscSelector);
-
-    targetFilterSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterSelector.addItemList(params.TargetFilter->getAllValueStrings(), 1);
-    targetFilterSelector.setSelectedItemIndex(params.TargetFilter->getIndex(), juce::dontSendNotification);
-    targetFilterSelector.setJustificationType(juce::Justification::centred);
-    targetFilterSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetFilterSelector);
-
-    targetOscParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscParamSelector.addItemList(params.TargetOscParam->getAllValueStrings(), 1);
-    targetOscParamSelector.setSelectedItemIndex(params.TargetOscParam->getIndex(), juce::dontSendNotification);
-    targetOscParamSelector.setJustificationType(juce::Justification::centred);
-    targetOscParamSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetOscParamSelector);
-
-    targetFilterParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterParamSelector.addItemList(params.TargetFilterParam->getAllValueStrings(), 1);
-    targetFilterParamSelector.setSelectedItemIndex(params.TargetFilterParam->getIndex(), juce::dontSendNotification);
-    targetFilterParamSelector.setJustificationType(juce::Justification::centred);
-    targetFilterParamSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetFilterParamSelector);
-
-    waveformSelector.setLookAndFeel(&grapeLookAndFeel);
-    waveformSelector.addItemList(params.Waveform->getAllValueStrings(), 1);
-    waveformSelector.setSelectedItemIndex(params.Waveform->getIndex(), juce::dontSendNotification);
-    waveformSelector.setJustificationType(juce::Justification::centred);
-    waveformSelector.addListener(this);
-    body.addAndMakeVisible(waveformSelector);
-
-    slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
-    slowFreqSlider.setRange(params.SlowFreq->range.start, params.SlowFreq->range.end, params.SlowFreq->range.interval);
-    slowFreqSlider.setSkewFactorFromMidPoint(4.0f);
-    slowFreqSlider.setValue(params.SlowFreq->get(), juce::dontSendNotification);
-    slowFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
-    slowFreqSlider.setScrollWheelEnabled(false);
-    slowFreqSlider.setTextValueSuffix(" Hz");
-    slowFreqSlider.addListener(this);
-    body.addAndMakeVisible(slowFreqSlider);
-
-    fastFreqSlider.setLookAndFeel(&grapeLookAndFeel);
-    fastFreqSlider.setRange(params.FastFreq->range.start, params.FastFreq->range.end, params.FastFreq->range.interval);
-    fastFreqSlider.setSkewFactorFromMidPoint(1.0f);
-    fastFreqSlider.setValue(params.FastFreq->get(), juce::dontSendNotification);
-    fastFreqSlider.setSkewFactorFromMidPoint(1.0);
-    fastFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
-    fastFreqSlider.setScrollWheelEnabled(false);
-    fastFreqSlider.setTextValueSuffix(" x");
-    fastFreqSlider.addListener(this);
-    body.addAndMakeVisible(fastFreqSlider);
-
-    amountSlider.setLookAndFeel(&grapeLookAndFeel);
-    amountSlider.setRange(params.Amount->range.start, params.Amount->range.end, 0.01);
-    amountSlider.setValue(params.Amount->get(), juce::dontSendNotification);
-    amountSlider.setPopupDisplayEnabled(true, true, nullptr);
-    amountSlider.setScrollWheelEnabled(false);
-    amountSlider.addListener(this);
-    body.addAndMakeVisible(amountSlider);
-
-    targetLabel.setFont(paramLabelFont);
-    targetLabel.setText("Destination", juce::dontSendNotification);
-    targetLabel.setJustificationType(juce::Justification::centred);
-    targetLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(targetLabel);
-
-    typeLabel.setFont(paramLabelFont);
-    typeLabel.setText("Type", juce::dontSendNotification);
-    typeLabel.setJustificationType(juce::Justification::centred);
-    typeLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(typeLabel);
-
-    waveformLabel.setFont(paramLabelFont);
-    waveformLabel.setText("Waveform", juce::dontSendNotification);
-    waveformLabel.setJustificationType(juce::Justification::centred);
-    waveformLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(waveformLabel);
-
-    freqLabel.setFont(paramLabelFont);
-    freqLabel.setText("Freq", juce::dontSendNotification);
-    freqLabel.setJustificationType(juce::Justification::centred);
-    freqLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(freqLabel);
-
-    amountLabel.setFont(paramLabelFont);
-    amountLabel.setText("Amount", juce::dontSendNotification);
-    amountLabel.setJustificationType(juce::Justification::centred);
-    amountLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(amountLabel);
+    initLabel(targetLabel, "Destination", body);
+    initLabel(typeLabel, "Type", body);
+    initLabel(waveformLabel, "Waveform", body);
+    initLabel(freqLabel, "Freq", body);
+    initLabel(amountLabel, "Amount", body);
 
     body.addAndMakeVisible(targetSelector);
     addAndMakeVisible(body);
@@ -1314,151 +838,33 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams& params)
                    juce::Slider::TextEntryBoxPosition::NoTextBox),
       decaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                   juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
     addAndMakeVisible(header);
 
-    targetTypeSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetTypeSelector.addItemList(params.TargetType->getAllValueStrings(), 1);
-    targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
-    targetTypeSelector.setJustificationType(juce::Justification::centred);
-    targetTypeSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetTypeSelector);
-
-    targetOscSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscSelector.addItemList(params.TargetOsc->getAllValueStrings(), 1);
-    targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
-    targetOscSelector.setJustificationType(juce::Justification::centred);
-    targetOscSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetOscSelector);
-
-    targetFilterSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterSelector.addItemList(params.TargetFilter->getAllValueStrings(), 1);
-    targetFilterSelector.setSelectedItemIndex(params.TargetFilter->getIndex(), juce::dontSendNotification);
-    targetFilterSelector.setJustificationType(juce::Justification::centred);
-    targetFilterSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetFilterSelector);
-
-    targetLfoSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetLfoSelector.addItemList(params.TargetLfo->getAllValueStrings(), 1);
-    targetLfoSelector.setSelectedItemIndex(params.TargetLfo->getIndex(), juce::dontSendNotification);
-    targetLfoSelector.setJustificationType(juce::Justification::centred);
-    targetLfoSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetLfoSelector);
-
-    targetOscParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscParamSelector.addItemList(params.TargetOscParam->getAllValueStrings(), 1);
-    targetOscParamSelector.setSelectedItemIndex(params.TargetOscParam->getIndex(), juce::dontSendNotification);
-    targetOscParamSelector.setJustificationType(juce::Justification::centred);
-    targetOscParamSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetOscParamSelector);
-
-    targetFilterParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterParamSelector.addItemList(params.TargetFilterParam->getAllValueStrings(), 1);
-    targetFilterParamSelector.setSelectedItemIndex(params.TargetFilterParam->getIndex(), juce::dontSendNotification);
-    targetFilterParamSelector.setJustificationType(juce::Justification::centred);
-    targetFilterParamSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetFilterParamSelector);
-
-    targetLfoParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetLfoParamSelector.addItemList(params.TargetLfoParam->getAllValueStrings(), 1);
-    targetLfoParamSelector.setSelectedItemIndex(params.TargetLfoParam->getIndex(), juce::dontSendNotification);
-    targetLfoParamSelector.setJustificationType(juce::Justification::centred);
-    targetLfoParamSelector.addListener(this);
-    targetSelector.addAndMakeVisible(targetLfoParamSelector);
-
-    fadeSelector.setLookAndFeel(&grapeLookAndFeel);
-    fadeSelector.addItemList(params.Fade->getAllValueStrings(), 1);
-    fadeSelector.setSelectedItemIndex(params.Fade->getIndex(), juce::dontSendNotification);
-    fadeSelector.setJustificationType(juce::Justification::centred);
-    fadeSelector.addListener(this);
-    body.addAndMakeVisible(fadeSelector);
-
-    peakFreqSlider.setLookAndFeel(&grapeLookAndFeel);
-    peakFreqSlider.setRange(params.PeakFreq->range.start, params.PeakFreq->range.end, 0.01);
-    peakFreqSlider.setValue(params.PeakFreq->get(), juce::dontSendNotification);
-    peakFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
-    peakFreqSlider.setScrollWheelEnabled(false);
-    peakFreqSlider.textFromValueFunction = [](double oct) -> juce::String {
+    initChoice(targetTypeSelector, params.TargetType, this, targetSelector);
+    initChoice(targetOscSelector, params.TargetOsc, this, targetSelector);
+    initChoice(targetFilterSelector, params.TargetFilter, this, targetSelector);
+    initChoice(targetLfoSelector, params.TargetLfo, this, targetSelector);
+    initChoice(targetOscParamSelector, params.TargetOscParam, this, targetSelector);
+    initChoice(targetFilterParamSelector, params.TargetFilterParam, this, targetSelector);
+    initChoice(targetLfoParamSelector, params.TargetLfoParam, this, targetSelector);
+    initChoice(fadeSelector, params.Fade, this, body);
+    auto formatPeakFreq = [](double oct) -> juce::String {
         return (oct == 0 ? " " : oct > 0 ? "+" : "-") + juce::String(std::abs(oct), 2) + " oct";
     };
-    peakFreqSlider.addListener(this);
-    body.addAndMakeVisible(peakFreqSlider);
-
-    waitSlider.setLookAndFeel(&grapeLookAndFeel);
-    waitSlider.setRange(params.Wait->range.start, params.Wait->range.end, 0.01);
-    waitSlider.setSkewFactorFromMidPoint(0.2f);
-    waitSlider.setValue(params.Wait->get(), juce::dontSendNotification);
-    waitSlider.setPopupDisplayEnabled(true, true, nullptr);
-    waitSlider.setScrollWheelEnabled(false);
-    waitSlider.setTextValueSuffix(" sec");
-    waitSlider.addListener(this);
-    body.addAndMakeVisible(waitSlider);
-
-    attackSlider.setLookAndFeel(&grapeLookAndFeel);
-    attackSlider.setRange(params.Attack->range.start, params.Attack->range.end, 0.001);
-    attackSlider.setSkewFactorFromMidPoint(0.2f);
-    attackSlider.setValue(params.Attack->get(), juce::dontSendNotification);
-    attackSlider.setPopupDisplayEnabled(true, true, nullptr);
-    attackSlider.setScrollWheelEnabled(false);
-    attackSlider.setTextValueSuffix(" sec");
-    attackSlider.addListener(this);
-    body.addAndMakeVisible(attackSlider);
-
-    decaySlider.setLookAndFeel(&grapeLookAndFeel);
-    decaySlider.setRange(params.Decay->range.start, params.Decay->range.end, 0.01);
-    decaySlider.setSkewFactorFromMidPoint(0.4f);
-    decaySlider.setValue(params.Decay->get(), juce::dontSendNotification);
-    decaySlider.setPopupDisplayEnabled(true, true, nullptr);
-    decaySlider.setScrollWheelEnabled(false);
-    decaySlider.setTextValueSuffix(" sec");
-    decaySlider.addListener(this);
-    body.addAndMakeVisible(decaySlider);
-
-    targetLabel.setFont(paramLabelFont);
-    targetLabel.setText("Destination", juce::dontSendNotification);
-    targetLabel.setJustificationType(juce::Justification::centred);
-    targetLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(targetLabel);
-
-    typeLabel.setFont(paramLabelFont);
-    typeLabel.setText("Type", juce::dontSendNotification);
-    typeLabel.setJustificationType(juce::Justification::centred);
-    typeLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(typeLabel);
-
-    fadeLabel.setFont(paramLabelFont);
-    fadeLabel.setText("Fade", juce::dontSendNotification);
-    fadeLabel.setJustificationType(juce::Justification::centred);
-    fadeLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(fadeLabel);
-
-    peakFreqLabel.setFont(paramLabelFont);
-    peakFreqLabel.setText("Peak Freq", juce::dontSendNotification);
-    peakFreqLabel.setJustificationType(juce::Justification::centred);
-    peakFreqLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(peakFreqLabel);
-
-    waitLabel.setFont(paramLabelFont);
-    waitLabel.setText("Wait", juce::dontSendNotification);
-    waitLabel.setJustificationType(juce::Justification::centred);
-    waitLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(waitLabel);
-
-    attackLabel.setFont(paramLabelFont);
-    attackLabel.setText("Attack", juce::dontSendNotification);
-    attackLabel.setJustificationType(juce::Justification::centred);
-    attackLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(attackLabel);
-
-    decayLabel.setFont(paramLabelFont);
-    decayLabel.setText("Decay", juce::dontSendNotification);
-    decayLabel.setJustificationType(juce::Justification::centred);
-    decayLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(decayLabel);
+    initLinear(peakFreqSlider, params.PeakFreq, 0.01, nullptr, std::move(formatPeakFreq), this, body);
+    initSkewFromMid(waitSlider, params.Wait, 0.01, 0.2f, " sec", nullptr, this, body);
+    initSkewFromMid(attackSlider, params.Attack, 0.001, 0.2f, " sec", nullptr, this, body);
+    initSkewFromMid(decaySlider, params.Decay, 0.01, 0.4f, " sec", nullptr, this, body);
+    initLabel(targetLabel, "Destination", body);
+    initLabel(typeLabel, "Type", body);
+    initLabel(fadeLabel, "Fade", body);
+    initLabel(peakFreqLabel, "Peak Freq", body);
+    initLabel(waitLabel, "Wait", body);
+    initLabel(attackLabel, "Attack", body);
+    initLabel(decayLabel, "Decay", body);
 
     body.addAndMakeVisible(targetSelector);
     addAndMakeVisible(body);
@@ -1640,150 +1046,31 @@ DelayComponent::DelayComponent(DelayParams& params, std::array<ControlItemParams
                      juce::Slider::TextEntryBoxPosition::NoTextBox),
       mixSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                 juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
     addAndMakeVisible(header);
 
-    typeSelector.setLookAndFeel(&grapeLookAndFeel);
-    typeSelector.addItemList(params.Type->getAllValueStrings(), 1);
-    typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
-    typeSelector.setJustificationType(juce::Justification::centred);
-    typeSelector.addListener(this);
-    body.addAndMakeVisible(typeSelector);
+    initChoice(typeSelector, params.Type, this, body);
+    initChoice(syncSelector, params.Sync, this, body);
+    initSkewFromMid(timeLSlider, params.TimeL, 0.01, 0.4f, " sec", nullptr, this, body);
+    initSkewFromMid(timeRSlider, params.TimeR, 0.01, 0.4f, " sec", nullptr, this, body);
+    initEnum(timeSyncLSlider, params.TimeSyncL, DELAY_TIME_SYNC_NAMES, this, body);
+    initEnum(timeSyncRSlider, params.TimeSyncR, DELAY_TIME_SYNC_NAMES, this, body);
+    initSkewFromMid(lowFreqSlider, params.TimeL, 1.0, 2000.0f, " Hz", nullptr, this, body);
+    initSkewFromMid(highFreqSlider, params.TimeL, 1.0, 2000.0f, " Hz", nullptr, this, body);
+    auto formatFeedback = [](double gain) { return juce::String(gain * 100, 0) + " %"; };
+    initSkewFromMid(feedbackSlider, params.TimeL, 0.01, 0.4f, nullptr, std::move(formatFeedback), this, body);
+    initLinear(mixSlider, params.Mix, 0.01, this, body);
 
-    syncSelector.setLookAndFeel(&grapeLookAndFeel);
-    syncSelector.addItemList(params.Sync->getAllValueStrings(), 1);
-    syncSelector.setSelectedItemIndex(params.Sync->get(), juce::dontSendNotification);
-    syncSelector.setJustificationType(juce::Justification::centred);
-    syncSelector.addListener(this);
-    body.addAndMakeVisible(syncSelector);
-
-    timeLSlider.setLookAndFeel(&grapeLookAndFeel);
-    timeLSlider.setRange(params.TimeL->range.start, params.TimeL->range.end, 0.01);
-    timeLSlider.setSkewFactorFromMidPoint(0.4f);
-    timeLSlider.setValue(params.TimeL->get(), juce::dontSendNotification);
-    timeLSlider.setPopupDisplayEnabled(true, true, nullptr);
-    timeLSlider.setScrollWheelEnabled(false);
-    timeLSlider.setTextValueSuffix(" sec");
-    timeLSlider.addListener(this);
-    body.addAndMakeVisible(timeLSlider);
-
-    timeRSlider.setLookAndFeel(&grapeLookAndFeel);
-    timeRSlider.setRange(params.TimeR->range.start, params.TimeR->range.end, 0.01);
-    timeRSlider.setSkewFactorFromMidPoint(0.4f);
-    timeRSlider.setValue(params.TimeR->get(), juce::dontSendNotification);
-    timeRSlider.setPopupDisplayEnabled(true, true, nullptr);
-    timeRSlider.setScrollWheelEnabled(false);
-    timeRSlider.setTextValueSuffix(" sec");
-    timeRSlider.addListener(this);
-    body.addAndMakeVisible(timeRSlider);
-
-    timeSyncLSlider.setLookAndFeel(&grapeLookAndFeel);
-    timeSyncLSlider.setRange(0, DELAY_TIME_SYNC_NAMES.size() - 1, 1);
-    timeSyncLSlider.setValue(params.TimeSyncL->getIndex(), juce::dontSendNotification);
-    timeSyncLSlider.setPopupDisplayEnabled(true, true, nullptr);
-    timeSyncLSlider.setScrollWheelEnabled(false);
-    timeSyncLSlider.textFromValueFunction = [](double index) { return DELAY_TIME_SYNC_NAMES[index]; };
-    timeSyncLSlider.addListener(this);
-    body.addAndMakeVisible(timeSyncLSlider);
-
-    timeSyncRSlider.setLookAndFeel(&grapeLookAndFeel);
-    timeSyncRSlider.setRange(0, DELAY_TIME_SYNC_NAMES.size() - 1, 1);
-    timeSyncRSlider.setValue(params.TimeSyncR->getIndex(), juce::dontSendNotification);
-    timeSyncRSlider.setPopupDisplayEnabled(true, true, nullptr);
-    timeSyncRSlider.setScrollWheelEnabled(false);
-    timeSyncRSlider.textFromValueFunction = [](double index) { return DELAY_TIME_SYNC_NAMES[index]; };
-    timeSyncRSlider.addListener(this);
-    body.addAndMakeVisible(timeSyncRSlider);
-
-    lowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
-    lowFreqSlider.setRange(params.LowFreq->range.start, params.LowFreq->range.end, 1.0);
-    lowFreqSlider.setSkewFactorFromMidPoint(2000.0f);
-    lowFreqSlider.setValue(params.LowFreq->get(), juce::dontSendNotification);
-    lowFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
-    lowFreqSlider.setScrollWheelEnabled(false);
-    lowFreqSlider.setTextValueSuffix(" Hz");
-    lowFreqSlider.addListener(this);
-    body.addAndMakeVisible(lowFreqSlider);
-
-    highFreqSlider.setLookAndFeel(&grapeLookAndFeel);
-    highFreqSlider.setRange(params.HighFreq->range.start, params.HighFreq->range.end, 1.0);
-    highFreqSlider.setSkewFactorFromMidPoint(2000.0f);
-    highFreqSlider.setValue(params.HighFreq->get(), juce::dontSendNotification);
-    highFreqSlider.setPopupDisplayEnabled(true, true, nullptr);
-    highFreqSlider.setScrollWheelEnabled(false);
-    highFreqSlider.setTextValueSuffix(" Hz");
-    highFreqSlider.addListener(this);
-    body.addAndMakeVisible(highFreqSlider);
-
-    feedbackSlider.setLookAndFeel(&grapeLookAndFeel);
-    feedbackSlider.setRange(params.Feedback->range.start, params.Feedback->range.end, 0.01);
-    feedbackSlider.setSkewFactorFromMidPoint(0.4f);
-    feedbackSlider.setValue(params.Feedback->get(), juce::dontSendNotification);
-    feedbackSlider.setPopupDisplayEnabled(true, true, nullptr);
-    feedbackSlider.setScrollWheelEnabled(false);
-    feedbackSlider.textFromValueFunction = [](double gain) { return juce::String(gain * 100, 0) + " %"; };
-    feedbackSlider.addListener(this);
-    body.addAndMakeVisible(feedbackSlider);
-
-    mixSlider.setLookAndFeel(&grapeLookAndFeel);
-    mixSlider.setRange(params.Mix->range.start, params.Mix->range.end, 0.01);
-    mixSlider.setValue(params.Mix->get(), juce::dontSendNotification);
-    mixSlider.setPopupDisplayEnabled(true, true, nullptr);
-    mixSlider.setScrollWheelEnabled(false);
-    mixSlider.addListener(this);
-    body.addAndMakeVisible(mixSlider);
-
-    typeLabel.setFont(paramLabelFont);
-    typeLabel.setText("Type", juce::dontSendNotification);
-    typeLabel.setJustificationType(juce::Justification::centred);
-    typeLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(typeLabel);
-
-    syncLabel.setFont(paramLabelFont);
-    syncLabel.setText("Sync", juce::dontSendNotification);
-    syncLabel.setJustificationType(juce::Justification::centred);
-    syncLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(syncLabel);
-
-    timeLLabel.setFont(paramLabelFont);
-    timeLLabel.setText("Time L", juce::dontSendNotification);
-    timeLLabel.setJustificationType(juce::Justification::centred);
-    timeLLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(timeLLabel);
-
-    timeRLabel.setFont(paramLabelFont);
-    timeRLabel.setText("Time R", juce::dontSendNotification);
-    timeRLabel.setJustificationType(juce::Justification::centred);
-    timeRLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(timeRLabel);
-
-    lowFreqLabel.setFont(paramLabelFont);
-    lowFreqLabel.setText("Lo Cut", juce::dontSendNotification);
-    lowFreqLabel.setJustificationType(juce::Justification::centred);
-    lowFreqLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(lowFreqLabel);
-
-    highFreqLabel.setFont(paramLabelFont);
-    highFreqLabel.setText("Hi Cut", juce::dontSendNotification);
-    highFreqLabel.setJustificationType(juce::Justification::centred);
-    highFreqLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(highFreqLabel);
-
-    feedbackLabel.setFont(paramLabelFont);
-    feedbackLabel.setText("Feedback", juce::dontSendNotification);
-    feedbackLabel.setJustificationType(juce::Justification::centred);
-    feedbackLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(feedbackLabel);
-
-    mixLabel.setFont(paramLabelFont);
-    mixLabel.setText("Mix", juce::dontSendNotification);
-    mixLabel.setJustificationType(juce::Justification::centred);
-    mixLabel.setEditable(false, false, false);
-    body.addAndMakeVisible(mixLabel);
+    initLabel(typeLabel, "Type", body);
+    initLabel(syncLabel, "Sync", body);
+    initLabel(timeLLabel, "Time L", body);
+    initLabel(timeRLabel, "Time R", body);
+    initLabel(lowFreqLabel, "Lo Cut", body);
+    initLabel(highFreqLabel, "Hi Cut", body);
+    initLabel(feedbackLabel, "Feedback", body);
+    initLabel(mixLabel, "Mix", body);
 
     addAndMakeVisible(body);
 
@@ -1900,70 +1187,15 @@ ControlItemComponent::ControlItemComponent(ControlItemParams& params)
       targetOscParamSelector("TargetOscParam"),
       targetFilterParamSelector("TargetFilterParam"),
       targetMiscParamSelector("TargetMiscParam") {
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
-    numberSelector.setLookAndFeel(&grapeLookAndFeel);
-    numberSelector.addItemList(params.Number->getAllValueStrings(), 1);
-    numberSelector.setSelectedItemIndex(params.Number->getIndex(), juce::dontSendNotification);
-    numberSelector.setJustificationType(juce::Justification::centred);
-    numberSelector.addListener(this);
-    addAndMakeVisible(numberSelector);
-
-    targetTypeSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetTypeSelector.addItemList(params.TargetType->getAllValueStrings(), 1);
-    targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
-    targetTypeSelector.setJustificationType(juce::Justification::centred);
-    targetTypeSelector.addListener(this);
-    addAndMakeVisible(targetTypeSelector);
-
-    targetOscSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscSelector.addItemList(params.TargetOsc->getAllValueStrings(), 1);
-    targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
-    targetOscSelector.setJustificationType(juce::Justification::centred);
-    targetOscSelector.addListener(this);
-    addAndMakeVisible(targetOscSelector);
-
-    targetFilterSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterSelector.addItemList(params.TargetFilter->getAllValueStrings(), 1);
-    targetFilterSelector.setSelectedItemIndex(params.TargetFilter->getIndex(), juce::dontSendNotification);
-    targetFilterSelector.setJustificationType(juce::Justification::centred);
-    targetFilterSelector.addListener(this);
-    addAndMakeVisible(targetFilterSelector);
-
-    targetLfoSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetLfoSelector.addItemList(params.TargetLfo->getAllValueStrings(), 1);
-    targetLfoSelector.setSelectedItemIndex(params.TargetLfo->getIndex(), juce::dontSendNotification);
-    targetLfoSelector.setJustificationType(juce::Justification::centred);
-    targetLfoSelector.addListener(this);
-    addAndMakeVisible(targetLfoSelector);
-
-    targetOscParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetOscParamSelector.addItemList(params.TargetOscParam->getAllValueStrings(), 1);
-    targetOscParamSelector.setSelectedItemIndex(params.TargetOscParam->getIndex(), juce::dontSendNotification);
-    targetOscParamSelector.setJustificationType(juce::Justification::centred);
-    targetOscParamSelector.addListener(this);
-    addAndMakeVisible(targetOscParamSelector);
-
-    targetFilterParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetFilterParamSelector.addItemList(params.TargetFilterParam->getAllValueStrings(), 1);
-    targetFilterParamSelector.setSelectedItemIndex(params.TargetFilterParam->getIndex(), juce::dontSendNotification);
-    targetFilterParamSelector.setJustificationType(juce::Justification::centred);
-    targetFilterParamSelector.addListener(this);
-    addAndMakeVisible(targetFilterParamSelector);
-
-    targetLfoParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetLfoParamSelector.addItemList(params.TargetLfoParam->getAllValueStrings(), 1);
-    targetLfoParamSelector.setSelectedItemIndex(params.TargetLfoParam->getIndex(), juce::dontSendNotification);
-    targetLfoParamSelector.setJustificationType(juce::Justification::centred);
-    targetLfoParamSelector.addListener(this);
-    addAndMakeVisible(targetLfoParamSelector);
-
-    targetMiscParamSelector.setLookAndFeel(&grapeLookAndFeel);
-    targetMiscParamSelector.addItemList(params.TargetMiscParam->getAllValueStrings(), 1);
-    targetMiscParamSelector.setSelectedItemIndex(params.TargetMiscParam->getIndex(), juce::dontSendNotification);
-    targetMiscParamSelector.setJustificationType(juce::Justification::centred);
-    targetMiscParamSelector.addListener(this);
-    addAndMakeVisible(targetMiscParamSelector);
+    initChoice(numberSelector, params.Number, this, *this);
+    initChoice(targetTypeSelector, params.TargetType, this, *this);
+    initChoice(targetOscSelector, params.TargetOsc, this, *this);
+    initChoice(targetFilterSelector, params.TargetFilter, this, *this);
+    initChoice(targetLfoSelector, params.TargetLfo, this, *this);
+    initChoice(targetOscParamSelector, params.TargetOscParam, this, *this);
+    initChoice(targetFilterParamSelector, params.TargetFilterParam, this, *this);
+    initChoice(targetLfoParamSelector, params.TargetLfoParam, this, *this);
+    initChoice(targetMiscParamSelector, params.TargetMiscParam, this, *this);
 
     startTimerHz(30.0f);
 }
@@ -2091,22 +1323,11 @@ ControlComponent::ControlComponent(std::array<ControlItemParams, NUM_CONTROL>& p
                             ControlItemComponent(params[3]),
                             ControlItemComponent(params[4]),
                             ControlItemComponent(params[5])} {
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
-    numberLabel.setFont(paramLabelFont);
-    numberLabel.setText("CC", juce::dontSendNotification);
-    numberLabel.setJustificationType(juce::Justification::centred);
-    numberLabel.setEditable(false, false, false);
-    addAndMakeVisible(numberLabel);
-
-    targetLabel.setFont(paramLabelFont);
-    targetLabel.setText("Destination", juce::dontSendNotification);
-    targetLabel.setJustificationType(juce::Justification::centred);
-    targetLabel.setEditable(false, false, false);
-    addAndMakeVisible(targetLabel);
+    initLabel(numberLabel, "CC", *this);
+    initLabel(targetLabel, "Destination", *this);
 
     for (int i = 0; i < NUM_CONTROL; i++) {
         addAndMakeVisible(controlItemComponents[i]);
@@ -2135,13 +1356,7 @@ void ControlComponent::resized() {
 
 //==============================================================================
 AnalyserToggleItem::AnalyserToggleItem(std::string name) {
-    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
-
-    nameLabel.setFont(paramLabelFont);
-    nameLabel.setText(name, juce::dontSendNotification);
-    nameLabel.setJustificationType(juce::Justification::right);
-    nameLabel.setInterceptsMouseClicks(false, false);
-    addAndMakeVisible(nameLabel);
+    initLabel(nameLabel, PARAM_LABEL_FONT_SIZE, "Regular", juce::Justification::right, std::move(name), *this);
 }
 AnalyserToggleItem::~AnalyserToggleItem() {}
 void AnalyserToggleItem::paint(juce::Graphics& g) {

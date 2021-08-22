@@ -5,8 +5,215 @@
 #include "LookAndFeel.h"
 #include "Params.h"
 #include "PluginProcessor.h"
+#include "StyleConstants.h"
+
+using namespace styles;
 
 enum class ANALYSER_MODE { Spectrum, Envelope, Filter };
+
+//==============================================================================
+class ComponentHelper {
+protected:
+    GrapeLookAndFeel grapeLookAndFeel;
+    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
+    juce::Font paramLabelFont = juce::Font(PARAM_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
+    juce::Font paramValueLabelFont =
+        juce::Font(PARAM_VALUE_LABEL_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Regular");
+
+    void initLabel(juce::Label& label,
+                   int fontSize,
+                   std::string&& typeFaceStyle,
+                   juce::Justification justification,
+                   std::string&& text,
+                   juce::Component& parent) {
+        juce::Font paramLabelFont = juce::Font(fontSize, juce::Font::plain).withTypefaceStyle(typeFaceStyle);
+
+        label.setFont(paramLabelFont);
+        label.setText(text, juce::dontSendNotification);
+        label.setJustificationType(justification);
+        label.setInterceptsMouseClicks(false, false);
+        parent.addAndMakeVisible(label);
+    }
+    void initLabel(juce::Label& label, std::string&& text, juce::Component& parent) {
+        label.setFont(paramLabelFont);
+        label.setText(text, juce::dontSendNotification);
+        label.setJustificationType(juce::Justification::centred);
+        label.setEditable(false, false, false);
+        parent.addAndMakeVisible(label);
+    }
+    void initStatusValue(juce::Label& label, std::string&& text, juce::Component& parent) {
+        label.setFont(paramValueLabelFont);
+        label.setText(text, juce::dontSendNotification);
+        label.setJustificationType(juce::Justification::left);
+        label.setEditable(false, false, false);
+        parent.addAndMakeVisible(label);
+    }
+    void initStatusKey(juce::Label& label, std::string&& text, juce::Component& parent) {
+        label.setFont(paramLabelFont);
+        label.setText(text + ":", juce::dontSendNotification);
+        label.setJustificationType(juce::Justification::right);
+        label.setEditable(false, false, false);
+        parent.addAndMakeVisible(label);
+    }
+    void initChoice(juce::ComboBox& box,
+                    juce::AudioParameterChoice* param,
+                    juce::ComboBox::Listener* listener,
+                    juce::Component& parent) {
+        box.setLookAndFeel(&grapeLookAndFeel);
+        box.addItemList(param->getAllValueStrings(), 1);
+        box.setSelectedItemIndex(param->getIndex(), juce::dontSendNotification);
+        box.setJustificationType(juce::Justification::centred);
+        box.addListener(listener);
+        parent.addAndMakeVisible(box);
+    }
+    void initChoice(juce::ComboBox& box,
+                    juce::AudioParameterBool* param,
+                    juce::ComboBox::Listener* listener,
+                    juce::Component& parent) {
+        box.setLookAndFeel(&grapeLookAndFeel);
+        box.addItemList(param->getAllValueStrings(), 1);
+        box.setSelectedItemIndex(param->get(), juce::dontSendNotification);
+        box.setJustificationType(juce::Justification::centred);
+        box.addListener(listener);
+        parent.addAndMakeVisible(box);
+    }
+    void initSkewFromMid(juce::Slider& slider,
+                         juce::AudioParameterFloat* param,
+                         float step,
+                         float midValue,
+                         const char* unit,
+                         std::function<juce::String(double)>&& format,
+                         juce::Slider::Listener* listener,
+                         juce::Component& parent) {
+        slider.setLookAndFeel(&grapeLookAndFeel);
+        slider.setRange(param->range.start, param->range.end, step > 0 ? step : param->range.interval);
+        slider.setValue(param->get(), juce::dontSendNotification);
+        slider.setPopupDisplayEnabled(true, true, nullptr);
+        slider.setScrollWheelEnabled(false);
+        if (unit != nullptr) {
+            slider.setTextValueSuffix(unit);
+        }
+        if (format != nullptr) {
+            slider.textFromValueFunction = format;
+        }
+        slider.addListener(listener);
+        parent.addAndMakeVisible(slider);
+    }
+    void initLinear(juce::Slider& slider,
+                    juce::AudioParameterFloat* param,
+                    float step,
+                    const char* unit,
+                    std::function<juce::String(double)>&& format,
+                    juce::Slider::Listener* listener,
+                    juce::Component& parent) {
+        slider.setLookAndFeel(&grapeLookAndFeel);
+        slider.setRange(param->range.start, param->range.end, step > 0 ? step : param->range.interval);
+        slider.setValue(param->get(), juce::dontSendNotification);
+        slider.setPopupDisplayEnabled(true, true, nullptr);
+        slider.setScrollWheelEnabled(false);
+        if (unit != nullptr) {
+            slider.setTextValueSuffix(unit);
+        }
+        if (format != nullptr) {
+            slider.textFromValueFunction = format;
+        }
+        slider.addListener(listener);
+        parent.addAndMakeVisible(slider);
+    }
+    void initLinear(juce::Slider& slider,
+                    juce::AudioParameterInt* param,
+                    float step,
+                    const char* unit,
+                    std::function<juce::String(double)>&& format,
+                    juce::Slider::Listener* listener,
+                    juce::Component& parent) {
+        slider.setLookAndFeel(&grapeLookAndFeel);
+        slider.setRange(param->getRange().getStart(), param->getRange().getEnd(), step);
+        slider.setValue(param->get(), juce::dontSendNotification);
+        slider.setPopupDisplayEnabled(true, true, nullptr);
+        slider.setScrollWheelEnabled(false);
+        if (unit != nullptr) {
+            slider.setTextValueSuffix(unit);
+        }
+        if (format != nullptr) {
+            slider.textFromValueFunction = format;
+        }
+        slider.addListener(listener);
+        parent.addAndMakeVisible(slider);
+    }
+    void initLinear(juce::Slider& slider,
+                    juce::AudioParameterFloat* param,
+                    float step,
+                    juce::Slider::Listener* listener,
+                    juce::Component& parent) {
+        initLinear(slider, param, step, nullptr, nullptr, listener, parent);
+    }
+    void initLinear(juce::Slider& slider,
+                    juce::AudioParameterInt* param,
+                    juce::Slider::Listener* listener,
+                    juce::Component& parent) {
+        initLinear(slider, param, 1, nullptr, nullptr, listener, parent);
+    }
+    void initLinearPercent(juce::Slider& slider,
+                           juce::AudioParameterFloat* param,
+                           float step,
+                           juce::Slider::Listener* listener,
+                           juce::Component& parent) {
+        auto f = [](double gain) { return juce::String(gain * 100, 0) + " %"; };
+        initLinear(slider, param, step, nullptr, std::move(f), listener, parent);
+    }
+    void initEnum(juce::Slider& slider,
+                  juce::AudioParameterChoice* param,
+                  const juce::StringArray& values,
+                  juce::Slider::Listener* listener,
+                  juce::Component& parent) {
+        slider.setLookAndFeel(&grapeLookAndFeel);
+        slider.setRange(0, values.size() - 1, 1);
+        slider.setValue(param->getIndex(), juce::dontSendNotification);
+        slider.setPopupDisplayEnabled(true, true, nullptr);
+        slider.setScrollWheelEnabled(false);
+        slider.textFromValueFunction = [values](double index) { return values[index]; };
+        slider.addListener(listener);
+        parent.addAndMakeVisible(slider);
+    }
+
+    void consumeLabeledKnob(juce::Rectangle<int>& parentArea, juce::Label& label, juce::Slider& knob) {
+        auto area = parentArea.removeFromLeft(SLIDER_WIDTH);
+        label.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        knob.setBounds(area.removeFromTop(KNOB_HEIGHT).reduced(LOCAL_MARGIN));
+    }
+    void consumeLabeledKnob(juce::Rectangle<int>& parentArea,
+                            juce::Label& label,
+                            juce::Slider& knob1,
+                            juce::Slider& knob2) {
+        auto area = parentArea.removeFromLeft(SLIDER_WIDTH);
+        label.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        auto knobBounds = area.removeFromTop(KNOB_HEIGHT).reduced(LOCAL_MARGIN);
+        knob1.setBounds(knobBounds);
+        knob2.setBounds(knobBounds);
+    }
+    void consumeLabeledKnob(juce::Rectangle<int>& parentArea,
+                            juce::Label& label1,
+                            juce::Slider& knob1,
+                            juce::Label& label2,
+                            juce::Slider& knob2) {
+        auto area1 = parentArea.removeFromLeft(SLIDER_WIDTH);
+        auto area2 = area1;
+        consumeLabeledKnob(area1, label1, knob1);
+        consumeLabeledKnob(area2, label2, knob2);
+    }
+    void consumeLabeledComboBox(juce::Rectangle<int>& parentArea, int width, juce::Label& label, juce::Component& box) {
+        auto area = parentArea.removeFromLeft(width);
+        label.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
+        box.setBounds(area.removeFromTop(COMBO_BOX_HEIGHT).reduced(LOCAL_MARGIN));
+    }
+    void consumeKeyValueText(
+        juce::Rectangle<int>& parentArea, int height, int width, juce::Label& keyLabel, juce::Label& valueLabel) {
+        auto area = parentArea.removeFromTop(height);
+        keyLabel.setBounds(area.removeFromLeft(width).reduced(LOCAL_MARGIN));
+        valueLabel.setBounds(area.reduced(LOCAL_MARGIN));
+    }
+};
 
 //==============================================================================
 class HeaderComponent : public juce::Component {
@@ -24,7 +231,11 @@ private:
 };
 
 //==============================================================================
-class VoiceComponent : public juce::Component, juce::ComboBox::Listener, juce::Slider::Listener, private juce::Timer {
+class VoiceComponent : public juce::Component,
+                       juce::ComboBox::Listener,
+                       juce::Slider::Listener,
+                       private juce::Timer,
+                       ComponentHelper {
 public:
     VoiceComponent(VoiceParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~VoiceComponent();
@@ -37,8 +248,6 @@ private:
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
-    GrapeLookAndFeel grapeLookAndFeel;
-    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
 
     VoiceParams& params;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
@@ -55,7 +264,7 @@ private:
 };
 
 //==============================================================================
-class StatusComponent : public juce::Component, private juce::Timer {
+class StatusComponent : public juce::Component, private juce::Timer, ComponentHelper {
 public:
     StatusComponent(int* polyphony, TimeConsumptionState* timeConsumptionState, LatestDataProvider* latestDataProvider);
     virtual ~StatusComponent();
@@ -66,7 +275,6 @@ public:
 
 private:
     virtual void timerCallback() override;
-    GrapeLookAndFeel grapeLookAndFeel;
     int* polyphony;
     TimeConsumptionState* timeConsumptionState;
     LatestDataProvider* latestDataProvider;
@@ -87,7 +295,7 @@ private:
 };
 
 //==============================================================================
-class MasterComponent : public juce::Component, juce::Slider::Listener, private juce::Timer {
+class MasterComponent : public juce::Component, juce::Slider::Listener, private juce::Timer, ComponentHelper {
 public:
     MasterComponent(GlobalParams& params);
     virtual ~MasterComponent();
@@ -100,9 +308,6 @@ public:
 private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
-
-    GrapeLookAndFeel grapeLookAndFeel;
-    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
 
     GlobalParams& params;
 
@@ -120,7 +325,8 @@ class OscComponent : public juce::Component,
                      juce::ToggleButton::Listener,
                      juce::ComboBox::Listener,
                      juce::Slider::Listener,
-                     private juce::Timer {
+                     private juce::Timer,
+                     ComponentHelper {
 public:
     OscComponent(int index, OscParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~OscComponent();
@@ -136,9 +342,6 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     int index;
-
-    GrapeLookAndFeel grapeLookAndFeel;
-    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
 
     OscParams& params;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
@@ -168,7 +371,7 @@ private:
 };
 
 //==============================================================================
-class EnvelopeComponent : public juce::Component, juce::Slider::Listener, private juce::Timer {
+class EnvelopeComponent : public juce::Component, juce::Slider::Listener, private juce::Timer, ComponentHelper {
 public:
     EnvelopeComponent(int index, EnvelopeParams& params);
     virtual ~EnvelopeComponent();
@@ -182,7 +385,6 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     int index;
-    GrapeLookAndFeel grapeLookAndFeel;
     EnvelopeParams& params;
 
     HeaderComponent header;
@@ -203,7 +405,8 @@ class FilterComponent : public juce::Component,
                         juce::ToggleButton::Listener,
                         juce::ComboBox::Listener,
                         juce::Slider::Listener,
-                        private juce::Timer {
+                        private juce::Timer,
+                        ComponentHelper {
 public:
     FilterComponent(int index, FilterParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~FilterComponent();
@@ -219,8 +422,6 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     int index;
-    GrapeLookAndFeel grapeLookAndFeel;
-    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
 
     FilterParams& params;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
@@ -250,7 +451,8 @@ class LfoComponent : public juce::Component,
                      juce::ToggleButton::Listener,
                      juce::ComboBox::Listener,
                      juce::Slider::Listener,
-                     private juce::Timer {
+                     private juce::Timer,
+                     ComponentHelper {
 public:
     LfoComponent(int index, LfoParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~LfoComponent();
@@ -266,8 +468,6 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     int index;
-    GrapeLookAndFeel grapeLookAndFeel;
-    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
 
     LfoParams& params;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
@@ -299,7 +499,8 @@ class ModEnvComponent : public juce::Component,
                         juce::ToggleButton::Listener,
                         juce::ComboBox::Listener,
                         juce::Slider::Listener,
-                        private juce::Timer {
+                        private juce::Timer,
+                        ComponentHelper {
 public:
     ModEnvComponent(int index, ModEnvParams& params);
     virtual ~ModEnvComponent();
@@ -315,7 +516,7 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     int index;
-    GrapeLookAndFeel grapeLookAndFeel;
+
     ModEnvParams& params;
 
     HeaderComponent header;
@@ -350,7 +551,8 @@ class DelayComponent : public juce::Component,
                        juce::ToggleButton::Listener,
                        juce::ComboBox::Listener,
                        juce::Slider::Listener,
-                       private juce::Timer {
+                       private juce::Timer,
+                       ComponentHelper {
 public:
     DelayComponent(DelayParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~DelayComponent();
@@ -365,9 +567,6 @@ private:
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
-
-    GrapeLookAndFeel grapeLookAndFeel;
-    GrapeLookAndFeel grapeLookAndFeelControlled = GrapeLookAndFeel(true);
 
     DelayParams& params;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
@@ -398,7 +597,7 @@ private:
 };
 
 //==============================================================================
-class AnalyserToggleItem : public juce::Component {
+class AnalyserToggleItem : public juce::Component, private ComponentHelper {
 public:
     AnalyserToggleItem(std::string name);
     virtual ~AnalyserToggleItem();
@@ -581,7 +780,7 @@ private:
 };
 
 //==============================================================================
-class ControlItemComponent : public juce::Component, private juce::ComboBox::Listener, juce::Timer {
+class ControlItemComponent : public juce::Component, private juce::ComboBox::Listener, juce::Timer, ComponentHelper {
 public:
     ControlItemComponent(ControlItemParams& params);
     virtual ~ControlItemComponent();
@@ -594,7 +793,6 @@ private:
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void timerCallback() override;
 
-    GrapeLookAndFeel grapeLookAndFeel;
     ControlItemParams& params;
 
     juce::ComboBox numberSelector;
@@ -612,7 +810,7 @@ private:
 };
 
 //==============================================================================
-class ControlComponent : public juce::Component {
+class ControlComponent : public juce::Component, private ComponentHelper {
 public:
     ControlComponent(std::array<ControlItemParams, NUM_CONTROL>& params);
     virtual ~ControlComponent();
@@ -623,8 +821,6 @@ public:
     virtual void resized() override;
 
 private:
-    GrapeLookAndFeel grapeLookAndFeel;
-
     HeaderComponent header;
     juce::Label numberLabel;
     juce::Label targetLabel;
