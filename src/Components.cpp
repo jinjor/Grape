@@ -529,7 +529,7 @@ FilterComponent::FilterComponent(int index,
         return (cent == 0 ? " " : cent > 0 ? "+" : "-") + std::to_string(oct) + ":" + std::to_string(octFrac) + " oct";
     };
     initLinear(semitoneSlider, params.Semitone, 0.01, nullptr, std::move(formatSemitone), this, body);
-    initLinear(qSlider, params.Q, 0.01, this, body);
+    initSkewFromMid(qSlider, params.Q, 0.01, 1.0, nullptr, nullptr, this, body);
     initLinear(gainSlider, params.Gain, 0.01, " dB", nullptr, this, body);
     initLabel(targetLabel, "OSC", body);
     initLabel(typeLabel, "Type", body);
