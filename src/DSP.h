@@ -11,12 +11,28 @@ using namespace math_constants;
 class Wavetable {
 public:
     const int *lookup = reinterpret_cast<const int *>(BinaryData::lookup);
+    const float *white = reinterpret_cast<const float *>(BinaryData::white);
+    const float *pink = reinterpret_cast<const float *>(BinaryData::pink);
     const float *sine = reinterpret_cast<const float *>(BinaryData::sine);
     const float *saw = reinterpret_cast<const float *>(BinaryData::saw);            // 128 variations
     const float *parabola = reinterpret_cast<const float *>(BinaryData::parabola);  // 128 variations
     Wavetable(){};
     ~Wavetable(){};
     Wavetable(const Wavetable &) = delete;
+    double getWhiteNoiseValue() {
+        auto value = white[noiseIndex++];
+        if (noiseIndex >= 4096) {
+            noiseIndex = 0;
+        }
+        return value;
+    }
+    double getPinkNoiseValue() {
+        auto value = pink[noiseIndex++];
+        if (noiseIndex >= 4096) {
+            noiseIndex = 0;
+        }
+        return value;
+    }
     double getSineValue(double normalizedAngle) {
         normalizedAngle = std::fmod(normalizedAngle, 1.0);
         return getValue(sine, normalizedAngle);
@@ -56,6 +72,7 @@ public:
     }
 
 private:
+    int noiseIndex = 0;
     double getValue(const float *partial, float normalizedAngle) {
         float indexFloat = normalizedAngle * 4095;
         int index = indexFloat;
@@ -589,28 +606,29 @@ public:
                 }
                 return currentRandomValue;
             case WAVEFORM::Pink: {
-                auto white = (whiteNoise.nextDouble() * 2.0 - 1.0) * 0.5;
-                bool eco = true;
-                if (eco) {
-                    pink[0] = 0.99765 * pink[0] + white * 0.0990460;
-                    pink[1] = 0.96300 * pink[1] + white * 0.2965164;
-                    pink[2] = 0.57000 * pink[2] + white * 1.0526913;
-                    auto value = pink[0] + pink[1] + pink[2] + white * 0.1848;
-                    return value;
-                } else {
-                    pink[0] = 0.99886 * pink[0] + white * 0.0555179;
-                    pink[1] = 0.99332 * pink[1] + white * 0.0750759;
-                    pink[2] = 0.96900 * pink[2] + white * 0.1538520;
-                    pink[3] = 0.86650 * pink[3] + white * 0.3104856;
-                    pink[4] = 0.55000 * pink[4] + white * 0.5329522;
-                    pink[5] = -0.7616 * pink[5] - white * 0.0168980;
-                    auto value = pink[0] + pink[1] + pink[2] + pink[3] + pink[4] + pink[5] + pink[6] + white * 0.5362;
-                    pink[6] = white * 0.115926;
-                    return value;
-                }
+                // auto white = (whiteNoise.nextDouble() * 2.0 - 1.0) * 0.5;
+                // bool eco = true;
+                // if (eco) {
+                //     pink[0] = 0.99765 * pink[0] + white * 0.0990460;
+                //     pink[1] = 0.96300 * pink[1] + white * 0.2965164;
+                //     pink[2] = 0.57000 * pink[2] + white * 1.0526913;
+                //     auto value = pink[0] + pink[1] + pink[2] + white * 0.1848;
+                //     return value;
+                // } else {
+                //     pink[0] = 0.99886 * pink[0] + white * 0.0555179;
+                //     pink[1] = 0.99332 * pink[1] + white * 0.0750759;
+                //     pink[2] = 0.96900 * pink[2] + white * 0.1538520;
+                //     pink[3] = 0.86650 * pink[3] + white * 0.3104856;
+                //     pink[4] = 0.55000 * pink[4] + white * 0.5329522;
+                //     pink[5] = -0.7616 * pink[5] - white * 0.0168980;
+                //     auto value = pink[0] + pink[1] + pink[2] + pink[3] + pink[4] + pink[5] + pink[6] + white *
+                //     0.5362; pink[6] = white * 0.115926; return value;
+                // }
+                return wavetable.getPinkNoiseValue();
             }
             case WAVEFORM::White:
-                return whiteNoise.nextDouble() * 2.0 - 1.0;
+                // return whiteNoise.nextDouble() * 2.0 - 1.0;
+                return wavetable.getWhiteNoiseValue();
         }
     }
 
