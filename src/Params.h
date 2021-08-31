@@ -166,6 +166,19 @@ public:
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
 
+    float pitch;
+    float pan;
+    float expression;
+    float masterVolume;
+    float midiVolume;
+    void freeze() {
+        pitch = Pitch->get();
+        pan = Pan->get();
+        expression = Expression->get();
+        masterVolume = MasterVolume->get();
+        midiVolume = MidiVolume->get();
+    }
+
 private:
 };
 
@@ -181,6 +194,15 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
+
+    int mode;
+    float portamentoTime;
+    int pitchBendRange;
+    void freeze() {
+        mode = Mode->getIndex();
+        portamentoTime = PortamentoTime->get();
+        pitchBendRange = PitchBendRange->get();
+    }
 
 private:
 };
@@ -204,6 +226,29 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
+
+    bool enabled;
+    int waveform;
+    float edge;
+    int octave;
+    int coarse;
+    int unison;
+    float detune;
+    float spread;
+    float gain;
+    int envelope;
+    void freeze() {
+        enabled = Enabled->get();
+        waveform = Waveform->getIndex();
+        edge = Edge->get();
+        octave = Octave->get();
+        coarse = Coarse->get();
+        unison = Unison->get();
+        detune = Detune->get();
+        spread = Spread->get();
+        gain = Gain->get();
+        envelope = Envelope->getIndex();
+    }
 
 private:
     OscParams(){};
@@ -256,6 +301,24 @@ public:
                 return false;
         }
     }
+    bool enabled;
+    int target;
+    int type;
+    int freqType;
+    float hz;
+    int semitone;
+    float q;
+    float gain;
+    void freeze() {
+        enabled = Enabled->get();
+        target = Target->getIndex();
+        type = Type->getIndex();
+        freqType = FreqType->getIndex();
+        hz = Hz->get();
+        semitone = Semitone->get();
+        q = Q->get();
+        gain = Gain->get();
+    }
 
 private:
     FilterParams(){};
@@ -296,6 +359,31 @@ public:
         return false;
     }
 
+    bool enabled;
+    int targetType;
+    int targetOsc;
+    int targetFilter;
+    int targetOscParam;
+    int targetFilterParam;
+    int waveform;
+    float slowFreq;
+    float fastFreq;
+    float amount;
+    bool shouldUseFastFreqFreezed;
+    void freeze() {
+        enabled = Enabled->get();
+        targetType = TargetType->getIndex();
+        targetOsc = TargetOsc->getIndex();
+        targetFilter = TargetFilter->getIndex();
+        targetOscParam = TargetOscParam->getIndex();
+        targetFilterParam = TargetFilterParam->getIndex();
+        waveform = Waveform->getIndex();
+        slowFreq = SlowFreq->get();
+        fastFreq = FastFreq->get();
+        amount = Amount->get();
+        shouldUseFastFreqFreezed = shouldUseFastFreq();
+    }
+
 private:
     LfoParams(){};
 };
@@ -334,6 +422,35 @@ public:
                 static_cast<MODENV_TARGET_LFO_PARAM>(TargetLfoParam->getIndex()) == MODENV_TARGET_LFO_PARAM::Freq);
     }
     bool shouldUseHold() { return !isTargetFreq() && static_cast<MODENV_FADE>(Fade->getIndex()) == MODENV_FADE::In; }
+
+    bool enabled;
+    int targetType;
+    int targetOsc;
+    int targetFilter;
+    int targetLfo;
+    int targetOscParam;
+    int targetFilterParam;
+    int targetLfoParam;
+    int fade;
+    float peakFreq;
+    float wait;
+    float attack;
+    float decay;
+    void freeze() {
+        enabled = Enabled->get();
+        targetType = TargetType->getIndex();
+        targetOsc = TargetOsc->getIndex();
+        targetFilter = TargetFilter->getIndex();
+        targetLfo = TargetLfo->getIndex();
+        targetOscParam = TargetOscParam->getIndex();
+        targetFilterParam = TargetFilterParam->getIndex();
+        targetLfoParam = TargetLfoParam->getIndex();
+        fade = Fade->getIndex();
+        peakFreq = PeakFreq->get();
+        wait = Wait->get();
+        attack = Attack->get();
+        decay = Decay->get();
+    }
 
 private:
     ModEnvParams(){};
