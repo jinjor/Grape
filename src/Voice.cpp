@@ -193,28 +193,52 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
             case MODENV_TARGET_TYPE::OSC: {
                 int targetIndex = params.TargetOsc->getIndex();
                 auto targetParam = static_cast<MODENV_TARGET_OSC_PARAM>(params.TargetOscParam->getIndex());
-                for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                    if (targetIndex == oscIndex || targetIndex == NUM_OSC) {
-                        switch (targetParam) {
-                            case MODENV_TARGET_OSC_PARAM::Freq: {
-                                modifiers.octShift[oscIndex] += params.PeakFreq->get() * modEnvValue;
-                                break;
+                switch (targetParam) {
+                    case MODENV_TARGET_OSC_PARAM::Freq: {
+                        auto v = params.PeakFreq->get() * modEnvValue;
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.octShift[oscIndex] += v;
                             }
-                            case MODENV_TARGET_OSC_PARAM::Edge: {
-                                modifiers.edgeRatio[oscIndex] *= modEnvValue;
-                                break;
-                            }
-                            case MODENV_TARGET_OSC_PARAM::Detune: {
-                                auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
-                                modifiers.detuneRatio[oscIndex] *= isFadeIn ? 1 - modEnvValue : modEnvValue;
-                                break;
-                            }
-                            case MODENV_TARGET_OSC_PARAM::Spread: {
-                                auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
-                                modifiers.spreadRatio[oscIndex] *= isFadeIn ? 1 - modEnvValue : modEnvValue;
-                                break;
-                            }
+                        } else {
+                            modifiers.octShift[targetIndex] += v;
                         }
+                        break;
+                    }
+                    case MODENV_TARGET_OSC_PARAM::Edge: {
+                        auto v = modEnvValue;
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.edgeRatio[oscIndex] *= v;
+                            }
+                        } else {
+                            modifiers.edgeRatio[targetIndex] *= v;
+                        }
+                        break;
+                    }
+                    case MODENV_TARGET_OSC_PARAM::Detune: {
+                        auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
+                        auto v = isFadeIn ? 1 - modEnvValue : modEnvValue;
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.detuneRatio[oscIndex] *= v;
+                            }
+                        } else {
+                            modifiers.detuneRatio[targetIndex] *= v;
+                        }
+                        break;
+                    }
+                    case MODENV_TARGET_OSC_PARAM::Spread: {
+                        auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
+                        auto v = isFadeIn ? 1 - modEnvValue : modEnvValue;
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.spreadRatio[oscIndex] *= v;
+                            }
+                        } else {
+                            modifiers.spreadRatio[targetIndex] *= v;
+                        }
+                        break;
                     }
                 }
                 break;
@@ -222,19 +246,29 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
             case MODENV_TARGET_TYPE::Filter: {
                 int targetIndex = params.TargetFilter->getIndex();
                 auto targetParam = static_cast<MODENV_TARGET_FILTER_PARAM>(params.TargetFilterParam->getIndex());
-                for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-                    if (targetIndex == filterIndex || targetIndex == NUM_FILTER) {
-                        switch (targetParam) {
-                            case MODENV_TARGET_FILTER_PARAM::Freq: {
-                                modifiers.filterOctShift[filterIndex] += params.PeakFreq->get() * modEnvValue;
-                                break;
+                switch (targetParam) {
+                    case MODENV_TARGET_FILTER_PARAM::Freq: {
+                        auto v = params.PeakFreq->get() * modEnvValue;
+                        if (targetIndex == NUM_FILTER) {
+                            for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+                                modifiers.filterOctShift[filterIndex] += v;
                             }
-                            case MODENV_TARGET_FILTER_PARAM::Q: {
-                                auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
-                                modifiers.filterQExp[filterIndex] *= isFadeIn ? 1 - modEnvValue : modEnvValue;
-                                break;
-                            }
+                        } else {
+                            modifiers.filterOctShift[targetIndex] += v;
                         }
+                        break;
+                    }
+                    case MODENV_TARGET_FILTER_PARAM::Q: {
+                        auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
+                        auto v = isFadeIn ? 1 - modEnvValue : modEnvValue;
+                        if (targetIndex == NUM_FILTER) {
+                            for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+                                modifiers.filterQExp[filterIndex] *= v;
+                            }
+                        } else {
+                            modifiers.filterQExp[targetIndex] *= v;
+                        }
+                        break;
                     }
                 }
                 break;
@@ -242,19 +276,29 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
             case MODENV_TARGET_TYPE::LFO: {
                 int targetIndex = params.TargetLfo->getIndex();
                 auto targetParam = static_cast<MODENV_TARGET_LFO_PARAM>(params.TargetLfoParam->getIndex());
-                for (int lfoIndex = 0; lfoIndex < NUM_LFO; ++lfoIndex) {
-                    if (targetIndex == lfoIndex || targetIndex == NUM_LFO) {
-                        switch (targetParam) {
-                            case MODENV_TARGET_LFO_PARAM::Freq: {
-                                modifiers.lfoOctShift[lfoIndex] += params.PeakFreq->get() * modEnvValue;
-                                break;
+                switch (targetParam) {
+                    case MODENV_TARGET_LFO_PARAM::Freq: {
+                        auto v = params.PeakFreq->get() * modEnvValue;
+                        if (targetIndex == NUM_LFO) {
+                            for (int lfoIndex = 0; lfoIndex < NUM_LFO; ++lfoIndex) {
+                                modifiers.lfoOctShift[lfoIndex] += v;
                             }
-                            case MODENV_TARGET_LFO_PARAM::Amount: {
-                                auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
-                                modifiers.lfoAmountGain[lfoIndex] *= isFadeIn ? 1 - modEnvValue : modEnvValue;
-                                break;
-                            }
+                        } else {
+                            modifiers.lfoOctShift[targetIndex] += v;
                         }
+                        break;
+                    }
+                    case MODENV_TARGET_LFO_PARAM::Amount: {
+                        auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
+                        auto v = isFadeIn ? 1 - modEnvValue : modEnvValue;
+                        if (targetIndex == NUM_LFO) {
+                            for (int lfoIndex = 0; lfoIndex < NUM_LFO; ++lfoIndex) {
+                                modifiers.lfoAmountGain[lfoIndex] *= v;
+                            }
+                        } else {
+                            modifiers.lfoAmountGain[targetIndex] *= v;
+                        }
+                        break;
                     }
                 }
                 break;
@@ -288,35 +332,73 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
             case LFO_TARGET_TYPE::OSC: {
                 int targetIndex = params.TargetOsc->getIndex();
                 auto param = static_cast<LFO_TARGET_OSC_PARAM>(params.TargetOscParam->getIndex());
-                for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                    if (targetIndex == oscIndex || targetIndex == NUM_OSC) {
-                        switch (param) {
-                            case LFO_TARGET_OSC_PARAM::Vibrato: {
-                                jassert(lfoValue <= 1.1);
-                                modifiers.octShift[oscIndex] += lfoValue * lfoAmount * RECIPROCAL_12;
-                                break;
+                switch (param) {
+                    case LFO_TARGET_OSC_PARAM::Vibrato: {
+                        jassert(lfoValue <= 1.1);
+                        auto v = lfoValue * lfoAmount * RECIPROCAL_12;
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.octShift[oscIndex] += v;
                             }
-                            case LFO_TARGET_OSC_PARAM::Tremolo: {
-                                modifiers.gain[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
-                                break;
-                            }
-                            case LFO_TARGET_OSC_PARAM::Edge: {
-                                modifiers.edgeRatio[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
-                                break;
-                            }
-                            case LFO_TARGET_OSC_PARAM::FM: {
-                                modifiers.normalizedAngleShift[oscIndex] += lfoValue * lfoAmount;
-                                break;
-                            }
-                            case LFO_TARGET_OSC_PARAM::AM: {
-                                modifiers.gain[oscIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
-                                break;
-                            }
-                            case LFO_TARGET_OSC_PARAM::Pan: {
-                                modifiers.panMod[oscIndex] += lfoValue * lfoAmount;
-                                break;
-                            }
+                        } else {
+                            modifiers.octShift[targetIndex] += v;
                         }
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::Tremolo: {
+                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.gain[oscIndex] *= v;
+                            }
+                        } else {
+                            modifiers.gain[targetIndex] *= v;
+                        }
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::Edge: {
+                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.edgeRatio[oscIndex] *= v;
+                            }
+                        } else {
+                            modifiers.edgeRatio[targetIndex] *= v;
+                        }
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::FM: {
+                        auto v = lfoValue * lfoAmount;
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.normalizedAngleShift[oscIndex] += v;
+                            }
+                        } else {
+                            modifiers.normalizedAngleShift[targetIndex] += v;
+                        }
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::AM: {
+                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.gain[oscIndex] *= v;
+                            }
+                        } else {
+                            modifiers.gain[targetIndex] *= v;
+                        }
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::Pan: {
+                        auto v = lfoValue * lfoAmount;
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.panMod[oscIndex] += v;
+                            }
+                        } else {
+                            modifiers.panMod[targetIndex] += v;
+                        }
+                        break;
                     }
                 }
                 break;
@@ -324,18 +406,28 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
             case LFO_TARGET_TYPE::Filter: {
                 int targetIndex = params.TargetFilter->getIndex();
                 auto param = static_cast<LFO_TARGET_FILTER_PARAM>(params.TargetFilterParam->getIndex());
-                for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-                    if (targetIndex == filterIndex || targetIndex == NUM_FILTER) {
-                        switch (param) {
-                            case LFO_TARGET_FILTER_PARAM::Freq: {
-                                modifiers.filterOctShift[filterIndex] += lfoValue * lfoAmount;
-                                break;
+                switch (param) {
+                    case LFO_TARGET_FILTER_PARAM::Freq: {
+                        auto v = lfoValue * lfoAmount;
+                        if (targetIndex == NUM_FILTER) {
+                            for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+                                modifiers.filterOctShift[filterIndex] += v;
                             }
-                            case LFO_TARGET_FILTER_PARAM::Q: {
-                                modifiers.filterQExp[filterIndex] *= 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
-                                break;
-                            }
+                        } else {
+                            modifiers.filterOctShift[targetIndex] += v;
                         }
+                        break;
+                    }
+                    case LFO_TARGET_FILTER_PARAM::Q: {
+                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                        if (targetIndex == NUM_FILTER) {
+                            for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+                                modifiers.filterQExp[filterIndex] *= v;
+                            }
+                        } else {
+                            modifiers.filterQExp[targetIndex] *= v;
+                        }
+                        break;
                     }
                 }
                 break;
