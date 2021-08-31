@@ -269,14 +269,14 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         }
         double lfoValue;
         double freq;
-        if (lfoParams[i].shouldUseFastFreq()) {
-            int target = lfoParams[i].TargetOsc->getIndex();
+        if (params.shouldUseFastFreq()) {
+            int target = params.TargetOsc->getIndex();
             auto shiftedNoteNumber = target == NUM_OSC ? midiNoteNumber : shiftedNoteNumbers[target];
             shiftedNoteNumber += modifiers.lfoOctShift[i];
             freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
-            freq *= lfoParams[i].FastFreq->get();
+            freq *= params.FastFreq->get();
         } else {
-            freq = lfoParams[i].SlowFreq->get();
+            freq = params.SlowFreq->get();
             if (modifiers.lfoOctShift[i] != 0.0) {
                 freq *= std::pow(2.0, modifiers.lfoOctShift[i]);
             }
@@ -373,31 +373,32 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         o[1] *= oscGain;
 
         for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-            if (!filterParams[filterIndex].Enabled->get()) {
+            auto &fp = filterParams[filterIndex];
+            if (!fp.Enabled->get()) {
                 continue;
             }
-            if (filterParams[filterIndex].Target->getIndex() == oscIndex) {
-                auto filterType = static_cast<FILTER_TYPE>(filterParams[filterIndex].Type->getIndex());
+            if (fp.Target->getIndex() == oscIndex) {
+                auto filterType = static_cast<FILTER_TYPE>(fp.Type->getIndex());
                 double freq;
-                switch (static_cast<FILTER_FREQ_TYPE>(filterParams[filterIndex].FreqType->getIndex())) {
+                switch (static_cast<FILTER_FREQ_TYPE>(fp.FreqType->getIndex())) {
                     case FILTER_FREQ_TYPE::Absolute: {
                         double noteShift = modifiers.filterOctShift[filterIndex] * 12;
-                        freq = shiftHertsByNotes(filterParams[filterIndex].Hz->get(), noteShift);
+                        freq = shiftHertsByNotes(fp.Hz->get(), noteShift);
                         break;
                     }
                     case FILTER_FREQ_TYPE::Relative: {
                         double shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
-                        shiftedNoteNumber += filterParams[filterIndex].Semitone->get();
+                        shiftedNoteNumber += fp.Semitone->get();
                         shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
                         freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
                         break;
                     }
                 }
-                auto q = filterParams[filterIndex].Q->get();
+                auto q = fp.Q->get();
                 if (modifiers.filterQExp[filterIndex] != 1.0) {
                     q = std::pow(q, modifiers.filterQExp[filterIndex]);
                 }
-                auto gain = filterParams[filterIndex].Gain->get();
+                auto gain = fp.Gain->get();
                 for (auto ch = 0; ch < numChannels; ++ch) {
                     o[ch] = filters[filterIndex].step(filterType, freq, q, gain, ch, o[ch]);
                 }
@@ -407,31 +408,32 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         out[1] += o[1];
     }
     for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-        if (!filterParams[filterIndex].Enabled->get()) {
+        auto &fp = filterParams[filterIndex];
+        if (!fp.Enabled->get()) {
             continue;
         }
-        if (filterParams[filterIndex].Target->getIndex() == NUM_OSC) {  // All
-            auto filterType = static_cast<FILTER_TYPE>(filterParams[filterIndex].Type->getIndex());
+        if (fp.Target->getIndex() == NUM_OSC) {  // All
+            auto filterType = static_cast<FILTER_TYPE>(fp.Type->getIndex());
             double freq;
-            switch (static_cast<FILTER_FREQ_TYPE>(filterParams[filterIndex].FreqType->getIndex())) {
+            switch (static_cast<FILTER_FREQ_TYPE>(fp.FreqType->getIndex())) {
                 case FILTER_FREQ_TYPE::Absolute: {
                     double noteShift = modifiers.filterOctShift[filterIndex] * 12;
-                    freq = shiftHertsByNotes(filterParams[filterIndex].Hz->get(), noteShift);
+                    freq = shiftHertsByNotes(fp.Hz->get(), noteShift);
                     break;
                 }
                 case FILTER_FREQ_TYPE::Relative: {
                     double shiftedNoteNumber = midiNoteNumber;
-                    shiftedNoteNumber += filterParams[filterIndex].Semitone->get();
+                    shiftedNoteNumber += fp.Semitone->get();
                     shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
                     freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
                     break;
                 }
             }
-            auto q = filterParams[filterIndex].Q->get();
+            auto q = fp.Q->get();
             if (modifiers.filterQExp[filterIndex] != 1.0) {
                 q = std::pow(q, modifiers.filterQExp[filterIndex]);
             }
-            auto gain = filterParams[filterIndex].Gain->get();
+            auto gain = fp.Gain->get();
             for (auto ch = 0; ch < numChannels; ++ch) {
                 out[ch] = filters[filterIndex].step(filterType, freq, q, gain, ch, out[ch]);
             }
