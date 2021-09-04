@@ -15,6 +15,28 @@ const int NUM_CONTROL = 6;
 const double A = 1.0 / 12.0;
 const double X = std::pow(2.0, 1.0 / 12.0);
 const double Y = 440.0 / std::pow(X, 69);
+
+void freezeParams(GlobalParams &globalParams,
+                  VoiceParams &voiceParams,
+                  std::array<OscParams, NUM_OSC> &oscParams,
+                  std::array<FilterParams, NUM_FILTER> &filterParams,
+                  std::array<LfoParams, NUM_LFO> &lfoParams,
+                  std::array<ModEnvParams, NUM_MODENV> &modEnvParams) {
+    globalParams.freeze();
+    voiceParams.freeze();
+    for (int i = 0; i < NUM_OSC; ++i) {
+        oscParams[i].freeze();
+    }
+    for (int i = 0; i < NUM_FILTER; ++i) {
+        filterParams[i].freeze();
+    }
+    for (int i = 0; i < NUM_LFO; ++i) {
+        lfoParams[i].freeze();
+    }
+    for (int i = 0; i < NUM_MODENV; ++i) {
+        modEnvParams[i].freeze();
+    }
+}
 }  // namespace
 
 //==============================================================================
@@ -188,6 +210,7 @@ public:
                      std::array<OscParams, NUM_OSC> &oscParams,
                      std::array<FilterParams, NUM_FILTER> &filterParams,
                      std::array<LfoParams, NUM_LFO> &lfoParams,
+                     std::array<ModEnvParams, NUM_MODENV> &modEnvParams,
                      DelayParams &delayParams)
         : currentPositionInfo(currentPositionInfo),
           monoStack(monoStack),
@@ -197,6 +220,7 @@ public:
           oscParams(oscParams),
           filterParams(filterParams),
           lfoParams(lfoParams),
+          modEnvParams(modEnvParams),
           delayParams(delayParams) {
         addSound(new GrapeSound());
     }
@@ -268,6 +292,7 @@ public:
         }
     }
     void renderVoices(juce::AudioBuffer<float> &buffer, int startSample, int numSamples) override {
+        freezeParams(globalParams, voiceParams, oscParams, filterParams, lfoParams, modEnvParams);
         juce::Synthesiser::renderVoices(buffer, startSample, numSamples);
 
         stereoDelay.setParams(getSampleRate(),
@@ -452,6 +477,7 @@ private:
     std::array<OscParams, NUM_OSC> &oscParams;
     std::array<FilterParams, NUM_FILTER> &filterParams;
     std::array<LfoParams, NUM_LFO> &lfoParams;
+    std::array<ModEnvParams, NUM_LFO> &modEnvParams;
     DelayParams &delayParams;
 
     StereoDelay stereoDelay;

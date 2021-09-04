@@ -39,6 +39,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
             oscParams,
             filterParams,
             lfoParams,
+            modEnvParams,
             delayParams) {
     *oscParams[0].Enabled = true;
 
