@@ -135,22 +135,6 @@ void GrapeVoice::renderNextBlock(juce::AudioBuffer<float> &outputBuffer, int sta
     }
 }
 void GrapeVoice::applyParamsBeforeLoop(double sampleRate) {
-    // TODO: move to renderVoices()
-    globalParams.freeze();
-    voiceParams.freeze();
-    for (int i = 0; i < NUM_OSC; ++i) {
-        oscParams[i].freeze();
-    }
-    for (int i = 0; i < NUM_FILTER; ++i) {
-        filterParams[i].freeze();
-    }
-    for (int i = 0; i < NUM_LFO; ++i) {
-        lfoParams[i].freeze();
-    }
-    for (int i = 0; i < NUM_MODENV; ++i) {
-        modEnvParams[i].freeze();
-    }
-
     for (int i = 0; i < NUM_OSC; ++i) {
         oscs[i].setSampleRate(sampleRate);
         oscs[i].setWaveform(OSC_WAVEFORM_VALUES[oscParams[i].Waveform->getIndex()]);
