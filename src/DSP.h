@@ -324,15 +324,7 @@ private:
     double currentFreq = 0.0;
     double currentQ = 0.0;
     double currentDbGain = 0.0;
-    int counter = 0;
     void setParams(FILTER_TYPE filterType, double freq, double q, double dbGain) {
-        if (currentFreq > 0) {
-            counter++;
-            if (counter < 32) {
-                return;
-            }
-            counter = 0;
-        }
         freq = std::min(sampleRate * 0.5 - 10, freq);
         if (filterType == currentFilterType && freq == currentFreq && q == currentQ && dbGain == currentDbGain) {
             return;
