@@ -301,10 +301,11 @@ public:
                 return false;
         }
     }
+    bool isFreqAbsolute() { return static_cast<FILTER_FREQ_TYPE>(FreqType->getIndex()) == FILTER_FREQ_TYPE::Absolute; }
     bool enabled;
     int target;
     int type;
-    int freqType;
+    int isFreqAbsoluteFreezed;
     float hz;
     int semitone;
     float q;
@@ -313,7 +314,7 @@ public:
         enabled = Enabled->get();
         target = Target->getIndex();
         type = Type->getIndex();
-        freqType = FreqType->getIndex();
+        isFreqAbsoluteFreezed = isFreqAbsolute();
         hz = Hz->get();
         semitone = Semitone->get();
         q = Q->get();

@@ -298,19 +298,14 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
             if (fp.target == oscIndex) {
                 auto filterType = static_cast<FILTER_TYPE>(fp.type);
                 double freq;
-                switch (static_cast<FILTER_FREQ_TYPE>(fp.freqType)) {
-                    case FILTER_FREQ_TYPE::Absolute: {
-                        double noteShift = modifiers.filterOctShift[filterIndex] * 12;
-                        freq = shiftHertsByNotes(fp.hz, noteShift);
-                        break;
-                    }
-                    case FILTER_FREQ_TYPE::Relative: {
-                        double shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
-                        shiftedNoteNumber += fp.semitone;
-                        shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
-                        freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
-                        break;
-                    }
+                if (fp.isFreqAbsoluteFreezed) {
+                    double noteShift = modifiers.filterOctShift[filterIndex] * 12;
+                    freq = shiftHertsByNotes(fp.hz, noteShift);
+                } else {
+                    double shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
+                    shiftedNoteNumber += fp.semitone;
+                    shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
+                    freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
                 }
                 auto q = fp.q;
                 if (modifiers.filterQExp[filterIndex] != 1.0) {
@@ -333,19 +328,12 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         if (fp.target == NUM_OSC) {  // All
             auto filterType = static_cast<FILTER_TYPE>(fp.type);
             double freq;
-            switch (static_cast<FILTER_FREQ_TYPE>(fp.freqType)) {
-                case FILTER_FREQ_TYPE::Absolute: {
-                    double noteShift = modifiers.filterOctShift[filterIndex] * 12;
-                    freq = shiftHertsByNotes(fp.hz, noteShift);
-                    break;
-                }
-                case FILTER_FREQ_TYPE::Relative: {
-                    double shiftedNoteNumber = midiNoteNumber;
-                    shiftedNoteNumber += fp.semitone;
-                    shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
-                    freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
-                    break;
-                }
+            if (fp.isFreqAbsoluteFreezed) {
+                double noteShift = modifiers.filterOctShift[filterIndex] * 12;
+                freq = shiftHertsByNotes(fp.hz, noteShift);
+            } else {
+                double shiftedNoteNumber = midiNoteNumber + fp.semitone + modifiers.filterOctShift[filterIndex] * 12;
+                freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
             }
             auto q = fp.q;
             if (modifiers.filterQExp[filterIndex] != 1.0) {
