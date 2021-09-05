@@ -196,18 +196,14 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         if (!params.enabled) {
             continue;
         }
-        double lfoValue;
-        double freq;
-        if (params.shouldUseFastFreqFreezed) {
-            int target = params.targetOsc;
-            auto shiftedNoteNumber = target == NUM_OSC ? midiNoteNumber : shiftedNoteNumbers[target];
-            shiftedNoteNumber += modifiers.lfoOctShift[i];
-            freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
-            freq *= params.fastFreq;
-        } else {
+        if (!params.shouldUseFastFreqFreezed) {
             continue;
         }
-        lfoValue = lfos[i].step(freq, 0.0, 0.0);
+        int target = params.targetOsc;
+        auto shiftedNoteNumber = target == NUM_OSC ? midiNoteNumber : shiftedNoteNumbers[target];
+        shiftedNoteNumber += modifiers.lfoOctShift[i];
+        double freq = getMidiNoteInHertzDouble(shiftedNoteNumber) * params.fastFreq;
+        double lfoValue = lfos[i].step(freq, 0.0, 0.0);
         auto lfoAmount = params.amount * modifiers.lfoAmountGain[i];
         auto targetType = static_cast<LFO_TARGET_TYPE>(params.targetType);
         switch (targetType) {
@@ -215,14 +211,8 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
                 int targetIndex = params.targetOsc;
                 auto param = static_cast<LFO_TARGET_OSC_PARAM>(params.targetOscParam);
                 switch (param) {
-                    case LFO_TARGET_OSC_PARAM::Vibrato: {
-                        jassertfalse;
-                        break;
-                    }
-                    case LFO_TARGET_OSC_PARAM::Tremolo: {
-                        jassertfalse;
-                        break;
-                    }
+                    case LFO_TARGET_OSC_PARAM::Vibrato:
+                    case LFO_TARGET_OSC_PARAM::Tremolo:
                     case LFO_TARGET_OSC_PARAM::Edge: {
                         jassertfalse;
                         break;
@@ -260,10 +250,7 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
                 int targetIndex = params.targetFilter;
                 auto param = static_cast<LFO_TARGET_FILTER_PARAM>(params.targetFilterParam);
                 switch (param) {
-                    case LFO_TARGET_FILTER_PARAM::Freq: {
-                        jassertfalse;
-                        break;
-                    }
+                    case LFO_TARGET_FILTER_PARAM::Freq:
                     case LFO_TARGET_FILTER_PARAM::Q: {
                         jassertfalse;
                         break;
@@ -390,17 +377,14 @@ void GrapeVoice::updateModifiersByLfo(Modifiers &modifiers) {
         if (!params.enabled) {
             continue;
         }
-        double lfoValue;
-        double freq;
         if (params.shouldUseFastFreqFreezed) {
             continue;
-        } else {
-            freq = params.slowFreq;
-            if (modifiers.lfoOctShift[i] != 0.0) {
-                freq *= std::pow(2.0, modifiers.lfoOctShift[i]);
-            }
         }
-        lfoValue = lfos[i].step(freq, 0.0, 0.0);
+        double freq = params.slowFreq;
+        if (modifiers.lfoOctShift[i] != 0.0) {
+            freq *= std::pow(2.0, modifiers.lfoOctShift[i]);
+        }
+        double lfoValue = lfos[i].step(freq, 0.0, 0.0);
         auto lfoAmount = params.amount * modifiers.lfoAmountGain[i];
         auto targetType = static_cast<LFO_TARGET_TYPE>(params.targetType);
         switch (targetType) {
@@ -442,10 +426,7 @@ void GrapeVoice::updateModifiersByLfo(Modifiers &modifiers) {
                         }
                         break;
                     }
-                    case LFO_TARGET_OSC_PARAM::FM: {
-                        jassertfalse;
-                        break;
-                    }
+                    case LFO_TARGET_OSC_PARAM::FM:
                     case LFO_TARGET_OSC_PARAM::AM: {
                         jassertfalse;
                         break;
