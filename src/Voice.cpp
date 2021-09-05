@@ -152,6 +152,7 @@ void GrapeVoice::applyParamsBeforeLoop(double sampleRate) {
     for (int i = 0; i < NUM_LFO; ++i) {
         lfos[i].setSampleRate(sampleRate);
         lfos[i].setWaveform(LFO_WAVEFORM_VALUES[lfoParams[i].Waveform->getIndex()]);
+        lfos[i].setRough(!lfoParams[i].shouldUseFastFreq());
     }
     for (int i = 0; i < NUM_MODENV; ++i) {
         if (modEnvParams[i].shouldUseHold()) {

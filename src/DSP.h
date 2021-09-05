@@ -17,21 +17,21 @@ public:
     Wavetable(){};
     ~Wavetable(){};
     Wavetable(const Wavetable &) = delete;
-    double getSineValue(double normalizedAngle) {
+    double getSineValue(double normalizedAngle, bool rough) {
         normalizedAngle = std::fmod(normalizedAngle, 1.0);
-        return getValue(sine, normalizedAngle);
+        return getValue(sine, normalizedAngle, rough);
     }
-    double getSawDownValue(double freq, double normalizedAngle) {
-        normalizedAngle = std::fmod(normalizedAngle, 1.0);
-        const float *partial = getPartial(saw, freq);
-        return getValue(partial, normalizedAngle);
-    }
-    double getSawUpValue(double freq, double normalizedAngle) {
+    double getSawDownValue(double freq, double normalizedAngle, bool rough) {
         normalizedAngle = std::fmod(normalizedAngle, 1.0);
         const float *partial = getPartial(saw, freq);
-        return getValueReverse(partial, normalizedAngle);
+        return getValue(partial, normalizedAngle, rough);
     }
-    double getPulseValue(double freq, double normalizedAngle, double edge) {
+    double getSawUpValue(double freq, double normalizedAngle, bool rough) {
+        normalizedAngle = std::fmod(normalizedAngle, 1.0);
+        const float *partial = getPartial(saw, freq);
+        return getValueReverse(partial, normalizedAngle, rough);
+    }
+    double getPulseValue(double freq, double normalizedAngle, double edge, bool rough) {
         double phaseShift = (1.0 - edge * 0.99) * 0.5;
         jassert(phaseShift > 0.0);
         jassert(phaseShift <= 0.5);
@@ -39,12 +39,12 @@ public:
         float pos1 = normalizedAngle;
         float pos2 = std::fmod(pos1 + phaseShift, 1.0f);
         const float *partial = getPartial(saw, freq);
-        return getValue(partial, pos1) + getValueReverse(partial, pos2) + (1.0 - 2 * phaseShift);
+        return getValue(partial, pos1, rough) + getValueReverse(partial, pos2, rough) + (1.0 - 2 * phaseShift);
     }
-    double getTriangleValue(double freq, double normalizedAngle) {
-        return getSlopedVariableTriangleValue(freq, normalizedAngle, 0.5);
+    double getTriangleValue(double freq, double normalizedAngle, bool rough) {
+        return getSlopedVariableTriangleValue(freq, normalizedAngle, 0.5, rough);
     }
-    double getSlopedVariableTriangleValue(double freq, double normalizedAngle, double edge) {
+    double getSlopedVariableTriangleValue(double freq, double normalizedAngle, double edge, bool rough) {
         double phaseShift = (1.0 - edge * 0.9) * 0.5;
         jassert(phaseShift > 0.0);
         jassert(phaseShift <= 0.5);
@@ -52,19 +52,26 @@ public:
         float pos1 = normalizedAngle;
         float pos2 = std::fmod(pos1 + phaseShift, 1.0f);
         const float *partial = getPartial(parabola, freq);
-        return (getValue(partial, pos1) - getValue(partial, pos2)) / (8 * (phaseShift - phaseShift * phaseShift));
+        return (getValue(partial, pos1, rough) - getValue(partial, pos2, rough)) /
+               (8 * (phaseShift - phaseShift * phaseShift));
     }
 
 private:
-    double getValue(const float *partial, float normalizedAngle) {
+    double getValue(const float *partial, float normalizedAngle, bool rough) {
         float indexFloat = normalizedAngle * 4095;
         int index = indexFloat;
+        if (rough) {
+            return partial[index];
+        }
         float fragment = indexFloat - index;
         return partial[index] * (1 - fragment) + partial[index + 1] * fragment;
     }
-    double getValueReverse(const float *partial, float normalizedAngle) {
+    double getValueReverse(const float *partial, float normalizedAngle, bool rough) {
         float indexFloat = normalizedAngle * 4095;
         int index = indexFloat;
+        if (rough) {
+            return partial[4095 - index];
+        }
         float fragment = indexFloat - index;
         return partial[4095 - index] * (1 - fragment) + partial[4095 - index - 1] * fragment;
     }
@@ -559,6 +566,7 @@ public:
     Osc() {}
     ~Osc() { DBG("Osc's destructor called."); }
     Osc(const Osc &) = delete;
+    void setRough(bool rough) { this->rough = rough; }
     void setWaveform(WAVEFORM waveform) { this->waveform = waveform; }
     void setSampleRate(double sampleRate) { reciprocal_sampleRate = 1.0 / sampleRate; }
     void setNormalizedAngle(double normalizedAngle) { currentNormalizedAngle = normalizedAngle; }
@@ -576,21 +584,21 @@ public:
         switch (waveform) {
             case WAVEFORM::Sine:
                 //                return std::sin(angle);
-                return wavetable.getSineValue(normalizedAngle);
+                return wavetable.getSineValue(normalizedAngle, rough);
             case WAVEFORM::Triangle:
                 //                return angle >= PI ?
                 //                    angle / TWO_PI * 4.0 - 1.0 :
                 //                    angle / TWO_PI - 4.0 + 3.0;
-                return wavetable.getSlopedVariableTriangleValue(freq, normalizedAngle, edge);
+                return wavetable.getSlopedVariableTriangleValue(freq, normalizedAngle, edge, rough);
             case WAVEFORM::SawUp:
                 //                return angle / TWO_PI * 2.0 - 1.0;
-                return wavetable.getSawUpValue(freq, normalizedAngle);
+                return wavetable.getSawUpValue(freq, normalizedAngle, rough);
             case WAVEFORM::SawDown:
                 //                return angle / TWO_PI * -2.0 + 1.0;
-                return wavetable.getSawDownValue(freq, normalizedAngle);
+                return wavetable.getSawDownValue(freq, normalizedAngle, rough);
             case WAVEFORM::Square:
                 //                return angle < PI ? 1.0 : -1.0;
-                return wavetable.getPulseValue(freq, normalizedAngle, edge);
+                return wavetable.getPulseValue(freq, normalizedAngle, edge, rough);
             case WAVEFORM::Random:
                 if (currentRandomValue == 0.0) {
                     currentRandomValue = whiteNoise.nextDouble() * 2.0 - 1.0;
@@ -624,6 +632,7 @@ public:
 
 private:
     Wavetable wavetable;
+    bool rough = false;
     double currentNormalizedAngle = 0.0;
     double currentRandomValue = 0.0;
     double pink[7]{};
