@@ -305,7 +305,7 @@ public:
     bool enabled;
     int target;
     int type;
-    int isFreqAbsoluteFreezed;
+    bool isFreqAbsoluteFreezed;
     float hz;
     int semitone;
     float q;
