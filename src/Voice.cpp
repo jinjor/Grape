@@ -533,8 +533,7 @@ void GrapeVoice::updateModifiersByModEnv(Modifiers &modifiers, double sampleRate
                         break;
                     }
                     case MODENV_TARGET_OSC_PARAM::Detune: {
-                        auto isFadeIn = static_cast<MODENV_FADE>(params.fade) == MODENV_FADE::In;
-                        auto v = isFadeIn ? 1 - modEnvValue : modEnvValue;
+                        auto v = params.fadeIn ? 1 - modEnvValue : modEnvValue;
                         if (targetIndex == NUM_OSC) {
                             for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
                                 modifiers.detuneRatio[oscIndex] *= v;
@@ -545,8 +544,7 @@ void GrapeVoice::updateModifiersByModEnv(Modifiers &modifiers, double sampleRate
                         break;
                     }
                     case MODENV_TARGET_OSC_PARAM::Spread: {
-                        auto isFadeIn = static_cast<MODENV_FADE>(params.fade) == MODENV_FADE::In;
-                        auto v = isFadeIn ? 1 - modEnvValue : modEnvValue;
+                        auto v = params.fadeIn ? 1 - modEnvValue : modEnvValue;
                         if (targetIndex == NUM_OSC) {
                             for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
                                 modifiers.spreadRatio[oscIndex] *= v;
@@ -575,8 +573,7 @@ void GrapeVoice::updateModifiersByModEnv(Modifiers &modifiers, double sampleRate
                         break;
                     }
                     case MODENV_TARGET_FILTER_PARAM::Q: {
-                        auto isFadeIn = static_cast<MODENV_FADE>(params.fade) == MODENV_FADE::In;
-                        auto v = isFadeIn ? 1 - modEnvValue : modEnvValue;
+                        auto v = params.fadeIn ? 1 - modEnvValue : modEnvValue;
                         if (targetIndex == NUM_FILTER) {
                             for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
                                 modifiers.filterQExp[filterIndex] *= v;
@@ -605,8 +602,7 @@ void GrapeVoice::updateModifiersByModEnv(Modifiers &modifiers, double sampleRate
                         break;
                     }
                     case MODENV_TARGET_LFO_PARAM::Amount: {
-                        auto isFadeIn = static_cast<MODENV_FADE>(params.fade) == MODENV_FADE::In;
-                        auto v = isFadeIn ? 1 - modEnvValue : modEnvValue;
+                        auto v = params.fadeIn ? 1 - modEnvValue : modEnvValue;
                         if (targetIndex == NUM_LFO) {
                             for (int lfoIndex = 0; lfoIndex < NUM_LFO; ++lfoIndex) {
                                 modifiers.lfoAmountGain[lfoIndex] *= v;

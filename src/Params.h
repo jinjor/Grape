@@ -421,7 +421,8 @@ public:
                (targetType == MODENV_TARGET_TYPE::LFO &&
                 static_cast<MODENV_TARGET_LFO_PARAM>(TargetLfoParam->getIndex()) == MODENV_TARGET_LFO_PARAM::Freq);
     }
-    bool shouldUseHold() { return !isTargetFreq() && static_cast<MODENV_FADE>(Fade->getIndex()) == MODENV_FADE::In; }
+    bool shouldUseHold() { return !isTargetFreq() && isFadeIn(); }
+    bool isFadeIn() { return static_cast<MODENV_FADE>(Fade->getIndex()) == MODENV_FADE::In; }
 
     bool enabled;
     int targetType;
@@ -431,7 +432,7 @@ public:
     int targetOscParam;
     int targetFilterParam;
     int targetLfoParam;
-    int fade;
+    bool fadeIn;
     float peakFreq;
     float wait;
     float attack;
@@ -445,7 +446,7 @@ public:
         targetOscParam = TargetOscParam->getIndex();
         targetFilterParam = TargetFilterParam->getIndex();
         targetLfoParam = TargetLfoParam->getIndex();
-        fade = Fade->getIndex();
+        fadeIn = isFadeIn();
         peakFreq = PeakFreq->get();
         wait = Wait->get();
         attack = Attack->get();
