@@ -15,6 +15,8 @@ const int NUM_CONTROL = 6;
 const double A = 1.0 / 12.0;
 const double X = std::pow(2.0, 1.0 / 12.0);
 const double Y = 440.0 / std::pow(X, 69);
+const int CONTROL_INTERVAL = 32;
+const double CONTROL_RATE = 1.0 / CONTROL_INTERVAL;
 
 void freezeParams(GlobalParams &globalParams,
                   VoiceParams &voiceParams,
@@ -190,13 +192,16 @@ private:
     TransitiveValue smoothNote;
     TransitiveValue smoothVelocity;
     bool stolen = false;
-    bool isActive();
+    int stepCounter = 0;
+    Modifiers controlModifiers = Modifiers{};
     SparseLog sparseLog = SparseLog(10000);
     double getMidiNoteInHertzDouble(double noteNumber) {
         return 440.0 * std::pow(2.0, (noteNumber - 69) * A);
         //        return Y * std::pow(X, noteNumber);// こっちの方がパフォーマンス悪かった
     }
     double shiftHertsByNotes(double herts, double notes) { return herts * std::pow(2.0, notes * A); }
+    void updateModifiersByLfo(Modifiers &modifiers);
+    void updateModifiersByModEnv(Modifiers &modifiers, double sampleRate);
 };
 
 //==============================================================================

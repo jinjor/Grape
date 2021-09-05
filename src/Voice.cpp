@@ -80,6 +80,7 @@ void GrapeVoice::startNote(int midiNoteNumber,
             }
             modEnvs[i].doAttack(sampleRate);
         }
+        stepCounter = 0;
     }
 }
 void GrapeVoice::stopNote(float velocity, bool allowTailOff) {
@@ -150,7 +151,7 @@ void GrapeVoice::applyParamsBeforeLoop(double sampleRate) {
         filters[i].setSampleRate(sampleRate);
     }
     for (int i = 0; i < NUM_LFO; ++i) {
-        lfos[i].setSampleRate(sampleRate);
+        lfos[i].setSampleRate(lfoParams[i].shouldUseFastFreq() ? sampleRate : sampleRate * CONTROL_RATE);
         lfos[i].setWaveform(LFO_WAVEFORM_VALUES[lfoParams[i].Waveform->getIndex()]);
     }
     for (int i = 0; i < NUM_MODENV; ++i) {
@@ -174,13 +175,328 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         }
         shiftedNoteNumbers[i] += oscParams[i].octave * 12 + oscParams[i].coarse;
     }
-    auto modifiers = Modifiers{};
-
     for (int i = 0; i < NUM_ENVELOPE; ++i) {
         adsr[i].step(sampleRate);
     }
 
-    // ---------------- MODENV ----------------
+    if (stepCounter == 0) {
+        controlModifiers = Modifiers{};
+        updateModifiersByModEnv(controlModifiers, sampleRate * CONTROL_RATE);
+        updateModifiersByLfo(controlModifiers);
+    }
+    stepCounter++;
+    if (stepCounter >= CONTROL_INTERVAL) {
+        stepCounter = 0;
+    }
+
+    auto modifiers = controlModifiers;  // copy;
+
+    for (int i = 0; i < NUM_LFO; ++i) {
+        auto &params = lfoParams[i];
+        if (!params.enabled) {
+            continue;
+        }
+        double lfoValue;
+        double freq;
+        if (params.shouldUseFastFreqFreezed) {
+            int target = params.targetOsc;
+            auto shiftedNoteNumber = target == NUM_OSC ? midiNoteNumber : shiftedNoteNumbers[target];
+            shiftedNoteNumber += modifiers.lfoOctShift[i];
+            freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
+            freq *= params.fastFreq;
+        } else {
+            continue;
+        }
+        lfoValue = lfos[i].step(freq, 0.0, 0.0);
+        auto lfoAmount = params.amount * modifiers.lfoAmountGain[i];
+        auto targetType = static_cast<LFO_TARGET_TYPE>(params.targetType);
+        switch (targetType) {
+            case LFO_TARGET_TYPE::OSC: {
+                int targetIndex = params.targetOsc;
+                auto param = static_cast<LFO_TARGET_OSC_PARAM>(params.targetOscParam);
+                switch (param) {
+                    case LFO_TARGET_OSC_PARAM::Vibrato: {
+                        jassertfalse;
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::Tremolo: {
+                        jassertfalse;
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::Edge: {
+                        jassertfalse;
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::FM: {
+                        auto v = lfoValue * lfoAmount;
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.normalizedAngleShift[oscIndex] += v;
+                            }
+                        } else {
+                            modifiers.normalizedAngleShift[targetIndex] += v;
+                        }
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::AM: {
+                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.gain[oscIndex] *= v;
+                            }
+                        } else {
+                            modifiers.gain[targetIndex] *= v;
+                        }
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::Pan: {
+                        jassertfalse;
+                        break;
+                    }
+                }
+                break;
+            }
+            case LFO_TARGET_TYPE::Filter: {
+                int targetIndex = params.targetFilter;
+                auto param = static_cast<LFO_TARGET_FILTER_PARAM>(params.targetFilterParam);
+                switch (param) {
+                    case LFO_TARGET_FILTER_PARAM::Freq: {
+                        jassertfalse;
+                        break;
+                    }
+                    case LFO_TARGET_FILTER_PARAM::Q: {
+                        jassertfalse;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    bool active = false;
+    auto panBase = globalParams.pan;
+    auto panModAmp = std::min(1.0 - panBase, 1.0 + panBase);
+    // ---------------- OSC with Envelope and Filter ----------------
+    for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+        auto &p = oscParams[oscIndex];
+        if (!p.enabled) {
+            continue;
+        }
+        int envelopeIndex = p.envelope;
+        if (!adsr[envelopeIndex].isActive()) {
+            continue;
+        }
+        active = true;
+
+        auto freq = getMidiNoteInHertzDouble(shiftedNoteNumbers[oscIndex] + modifiers.octShift[oscIndex] * 12);
+        auto edge = p.edge * modifiers.edgeRatio[oscIndex];
+        auto pan = panBase + panModAmp * modifiers.panMod[oscIndex];
+        auto detune = p.detune * modifiers.detuneRatio[oscIndex];
+        auto spread = p.spread * modifiers.spreadRatio[oscIndex];
+        jassert(pan >= -1);
+        jassert(pan <= 1);
+
+        double o[2]{0, 0};
+        oscs[oscIndex].step(p.unison, pan, detune, spread, freq, modifiers.normalizedAngleShift[oscIndex], edge, o);
+        auto oscGain = adsr[envelopeIndex].getValue() * modifiers.gain[oscIndex] * p.gain;
+        o[0] *= oscGain;
+        o[1] *= oscGain;
+
+        for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+            auto &fp = filterParams[filterIndex];
+            if (!fp.enabled) {
+                continue;
+            }
+            if (fp.target == oscIndex) {
+                auto filterType = static_cast<FILTER_TYPE>(fp.type);
+                double freq;
+                switch (static_cast<FILTER_FREQ_TYPE>(fp.freqType)) {
+                    case FILTER_FREQ_TYPE::Absolute: {
+                        double noteShift = modifiers.filterOctShift[filterIndex] * 12;
+                        freq = shiftHertsByNotes(fp.hz, noteShift);
+                        break;
+                    }
+                    case FILTER_FREQ_TYPE::Relative: {
+                        double shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
+                        shiftedNoteNumber += fp.semitone;
+                        shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
+                        freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
+                        break;
+                    }
+                }
+                auto q = fp.q;
+                if (modifiers.filterQExp[filterIndex] != 1.0) {
+                    q = std::pow(q, modifiers.filterQExp[filterIndex]);
+                }
+                auto gain = fp.gain;
+                for (auto ch = 0; ch < numChannels; ++ch) {
+                    o[ch] = filters[filterIndex].step(filterType, freq, q, gain, ch, o[ch]);
+                }
+            }
+        }
+        out[0] += o[0];
+        out[1] += o[1];
+    }
+    for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+        auto &fp = filterParams[filterIndex];
+        if (!fp.enabled) {
+            continue;
+        }
+        if (fp.target == NUM_OSC) {  // All
+            auto filterType = static_cast<FILTER_TYPE>(fp.type);
+            double freq;
+            switch (static_cast<FILTER_FREQ_TYPE>(fp.freqType)) {
+                case FILTER_FREQ_TYPE::Absolute: {
+                    double noteShift = modifiers.filterOctShift[filterIndex] * 12;
+                    freq = shiftHertsByNotes(fp.hz, noteShift);
+                    break;
+                }
+                case FILTER_FREQ_TYPE::Relative: {
+                    double shiftedNoteNumber = midiNoteNumber;
+                    shiftedNoteNumber += fp.semitone;
+                    shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
+                    freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
+                    break;
+                }
+            }
+            auto q = fp.q;
+            if (modifiers.filterQExp[filterIndex] != 1.0) {
+                q = std::pow(q, modifiers.filterQExp[filterIndex]);
+            }
+            auto gain = fp.gain;
+            for (auto ch = 0; ch < numChannels; ++ch) {
+                out[ch] = filters[filterIndex].step(filterType, freq, q, gain, ch, out[ch]);
+            }
+        }
+    }
+    auto finalGain = 0.3 * smoothVelocity.value;
+    for (auto ch = 0; ch < numChannels; ++ch) {
+        out[ch] *= finalGain;
+    }
+    return active;
+    // for (auto ch = 0; ch < numChannels; ++ch) {
+    //     outputBuffer.addSample (ch, startSample, out[ch]);
+    // }
+    // ++startSample;
+    // if(!active) {
+    //     clearCurrentNote();
+    //     break;
+    // }
+}
+void GrapeVoice::updateModifiersByLfo(Modifiers &modifiers) {
+    for (int i = 0; i < NUM_LFO; ++i) {
+        auto &params = lfoParams[i];
+        if (!params.enabled) {
+            continue;
+        }
+        double lfoValue;
+        double freq;
+        if (params.shouldUseFastFreqFreezed) {
+            continue;
+        } else {
+            freq = params.slowFreq;
+            if (modifiers.lfoOctShift[i] != 0.0) {
+                freq *= std::pow(2.0, modifiers.lfoOctShift[i]);
+            }
+        }
+        lfoValue = lfos[i].step(freq, 0.0, 0.0);
+        auto lfoAmount = params.amount * modifiers.lfoAmountGain[i];
+        auto targetType = static_cast<LFO_TARGET_TYPE>(params.targetType);
+        switch (targetType) {
+            case LFO_TARGET_TYPE::OSC: {
+                int targetIndex = params.targetOsc;
+                auto param = static_cast<LFO_TARGET_OSC_PARAM>(params.targetOscParam);
+                switch (param) {
+                    case LFO_TARGET_OSC_PARAM::Vibrato: {
+                        jassert(lfoValue <= 1.1);
+                        auto v = lfoValue * lfoAmount * RECIPROCAL_12;
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.octShift[oscIndex] += v;
+                            }
+                        } else {
+                            modifiers.octShift[targetIndex] += v;
+                        }
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::Tremolo: {
+                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.gain[oscIndex] *= v;
+                            }
+                        } else {
+                            modifiers.gain[targetIndex] *= v;
+                        }
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::Edge: {
+                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.edgeRatio[oscIndex] *= v;
+                            }
+                        } else {
+                            modifiers.edgeRatio[targetIndex] *= v;
+                        }
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::FM: {
+                        jassertfalse;
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::AM: {
+                        jassertfalse;
+                        break;
+                    }
+                    case LFO_TARGET_OSC_PARAM::Pan: {
+                        auto v = lfoValue * lfoAmount;
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.panMod[oscIndex] += v;
+                            }
+                        } else {
+                            modifiers.panMod[targetIndex] += v;
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+            case LFO_TARGET_TYPE::Filter: {
+                int targetIndex = params.targetFilter;
+                auto param = static_cast<LFO_TARGET_FILTER_PARAM>(params.targetFilterParam);
+                switch (param) {
+                    case LFO_TARGET_FILTER_PARAM::Freq: {
+                        auto v = lfoValue * lfoAmount;
+                        if (targetIndex == NUM_FILTER) {
+                            for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+                                modifiers.filterOctShift[filterIndex] += v;
+                            }
+                        } else {
+                            modifiers.filterOctShift[targetIndex] += v;
+                        }
+                        break;
+                    }
+                    case LFO_TARGET_FILTER_PARAM::Q: {
+                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
+                        if (targetIndex == NUM_FILTER) {
+                            for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+                                modifiers.filterQExp[filterIndex] *= v;
+                            }
+                        } else {
+                            modifiers.filterQExp[targetIndex] *= v;
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+}
+void GrapeVoice::updateModifiersByModEnv(Modifiers &modifiers, double sampleRate) {
     for (int i = 0; i < NUM_MODENV; ++i) {
         auto &params = modEnvParams[i];
         if (!params.enabled) {
@@ -305,242 +621,4 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
             }
         }
     }
-    // ---------------- LFO ----------------
-    for (int i = 0; i < NUM_LFO; ++i) {
-        auto &params = lfoParams[i];
-        if (!params.enabled) {
-            continue;
-        }
-        double lfoValue;
-        double freq;
-        if (params.shouldUseFastFreqFreezed) {
-            int target = params.targetOsc;
-            auto shiftedNoteNumber = target == NUM_OSC ? midiNoteNumber : shiftedNoteNumbers[target];
-            shiftedNoteNumber += modifiers.lfoOctShift[i];
-            freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
-            freq *= params.fastFreq;
-        } else {
-            freq = params.slowFreq;
-            if (modifiers.lfoOctShift[i] != 0.0) {
-                freq *= std::pow(2.0, modifiers.lfoOctShift[i]);
-            }
-        }
-        lfoValue = lfos[i].step(freq, 0.0, 0.0);
-        auto lfoAmount = params.amount * modifiers.lfoAmountGain[i];
-        auto targetType = static_cast<LFO_TARGET_TYPE>(params.targetType);
-        switch (targetType) {
-            case LFO_TARGET_TYPE::OSC: {
-                int targetIndex = params.targetOsc;
-                auto param = static_cast<LFO_TARGET_OSC_PARAM>(params.targetOscParam);
-                switch (param) {
-                    case LFO_TARGET_OSC_PARAM::Vibrato: {
-                        jassert(lfoValue <= 1.1);
-                        auto v = lfoValue * lfoAmount * RECIPROCAL_12;
-                        if (targetIndex == NUM_OSC) {
-                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                                modifiers.octShift[oscIndex] += v;
-                            }
-                        } else {
-                            modifiers.octShift[targetIndex] += v;
-                        }
-                        break;
-                    }
-                    case LFO_TARGET_OSC_PARAM::Tremolo: {
-                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
-                        if (targetIndex == NUM_OSC) {
-                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                                modifiers.gain[oscIndex] *= v;
-                            }
-                        } else {
-                            modifiers.gain[targetIndex] *= v;
-                        }
-                        break;
-                    }
-                    case LFO_TARGET_OSC_PARAM::Edge: {
-                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
-                        if (targetIndex == NUM_OSC) {
-                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                                modifiers.edgeRatio[oscIndex] *= v;
-                            }
-                        } else {
-                            modifiers.edgeRatio[targetIndex] *= v;
-                        }
-                        break;
-                    }
-                    case LFO_TARGET_OSC_PARAM::FM: {
-                        auto v = lfoValue * lfoAmount;
-                        if (targetIndex == NUM_OSC) {
-                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                                modifiers.normalizedAngleShift[oscIndex] += v;
-                            }
-                        } else {
-                            modifiers.normalizedAngleShift[targetIndex] += v;
-                        }
-                        break;
-                    }
-                    case LFO_TARGET_OSC_PARAM::AM: {
-                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
-                        if (targetIndex == NUM_OSC) {
-                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                                modifiers.gain[oscIndex] *= v;
-                            }
-                        } else {
-                            modifiers.gain[targetIndex] *= v;
-                        }
-                        break;
-                    }
-                    case LFO_TARGET_OSC_PARAM::Pan: {
-                        auto v = lfoValue * lfoAmount;
-                        if (targetIndex == NUM_OSC) {
-                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                                modifiers.panMod[oscIndex] += v;
-                            }
-                        } else {
-                            modifiers.panMod[targetIndex] += v;
-                        }
-                        break;
-                    }
-                }
-                break;
-            }
-            case LFO_TARGET_TYPE::Filter: {
-                int targetIndex = params.targetFilter;
-                auto param = static_cast<LFO_TARGET_FILTER_PARAM>(params.targetFilterParam);
-                switch (param) {
-                    case LFO_TARGET_FILTER_PARAM::Freq: {
-                        auto v = lfoValue * lfoAmount;
-                        if (targetIndex == NUM_FILTER) {
-                            for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-                                modifiers.filterOctShift[filterIndex] += v;
-                            }
-                        } else {
-                            modifiers.filterOctShift[targetIndex] += v;
-                        }
-                        break;
-                    }
-                    case LFO_TARGET_FILTER_PARAM::Q: {
-                        auto v = 1 - ((lfoValue + 1) * 0.5 * lfoAmount);
-                        if (targetIndex == NUM_FILTER) {
-                            for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-                                modifiers.filterQExp[filterIndex] *= v;
-                            }
-                        } else {
-                            modifiers.filterQExp[targetIndex] *= v;
-                        }
-                        break;
-                    }
-                }
-                break;
-            }
-        }
-    }
-    bool active = false;
-    auto panBase = globalParams.pan;
-    auto panModAmp = std::min(1.0 - panBase, 1.0 + panBase);
-    // ---------------- OSC with Envelope and Filter ----------------
-    for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-        auto &p = oscParams[oscIndex];
-        if (!p.enabled) {
-            continue;
-        }
-        int envelopeIndex = p.envelope;
-        if (!adsr[envelopeIndex].isActive()) {
-            continue;
-        }
-        active = true;
-
-        auto freq = getMidiNoteInHertzDouble(shiftedNoteNumbers[oscIndex] + modifiers.octShift[oscIndex] * 12);
-        auto edge = p.edge * modifiers.edgeRatio[oscIndex];
-        auto pan = panBase + panModAmp * modifiers.panMod[oscIndex];
-        auto detune = p.detune * modifiers.detuneRatio[oscIndex];
-        auto spread = p.spread * modifiers.spreadRatio[oscIndex];
-        jassert(pan >= -1);
-        jassert(pan <= 1);
-
-        double o[2]{0, 0};
-        oscs[oscIndex].step(p.unison, pan, detune, spread, freq, modifiers.normalizedAngleShift[oscIndex], edge, o);
-        auto oscGain = adsr[envelopeIndex].getValue() * modifiers.gain[oscIndex] * p.gain;
-        o[0] *= oscGain;
-        o[1] *= oscGain;
-
-        for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-            auto &fp = filterParams[filterIndex];
-            if (!fp.enabled) {
-                continue;
-            }
-            if (fp.target == oscIndex) {
-                auto filterType = static_cast<FILTER_TYPE>(fp.type);
-                double freq;
-                switch (static_cast<FILTER_FREQ_TYPE>(fp.freqType)) {
-                    case FILTER_FREQ_TYPE::Absolute: {
-                        double noteShift = modifiers.filterOctShift[filterIndex] * 12;
-                        freq = shiftHertsByNotes(fp.hz, noteShift);
-                        break;
-                    }
-                    case FILTER_FREQ_TYPE::Relative: {
-                        double shiftedNoteNumber = shiftedNoteNumbers[oscIndex];
-                        shiftedNoteNumber += fp.semitone;
-                        shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
-                        freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
-                        break;
-                    }
-                }
-                auto q = fp.q;
-                if (modifiers.filterQExp[filterIndex] != 1.0) {
-                    q = std::pow(q, modifiers.filterQExp[filterIndex]);
-                }
-                auto gain = fp.gain;
-                for (auto ch = 0; ch < numChannels; ++ch) {
-                    o[ch] = filters[filterIndex].step(filterType, freq, q, gain, ch, o[ch]);
-                }
-            }
-        }
-        out[0] += o[0];
-        out[1] += o[1];
-    }
-    for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-        auto &fp = filterParams[filterIndex];
-        if (!fp.enabled) {
-            continue;
-        }
-        if (fp.target == NUM_OSC) {  // All
-            auto filterType = static_cast<FILTER_TYPE>(fp.type);
-            double freq;
-            switch (static_cast<FILTER_FREQ_TYPE>(fp.freqType)) {
-                case FILTER_FREQ_TYPE::Absolute: {
-                    double noteShift = modifiers.filterOctShift[filterIndex] * 12;
-                    freq = shiftHertsByNotes(fp.hz, noteShift);
-                    break;
-                }
-                case FILTER_FREQ_TYPE::Relative: {
-                    double shiftedNoteNumber = midiNoteNumber;
-                    shiftedNoteNumber += fp.semitone;
-                    shiftedNoteNumber += modifiers.filterOctShift[filterIndex] * 12;
-                    freq = getMidiNoteInHertzDouble(shiftedNoteNumber);
-                    break;
-                }
-            }
-            auto q = fp.q;
-            if (modifiers.filterQExp[filterIndex] != 1.0) {
-                q = std::pow(q, modifiers.filterQExp[filterIndex]);
-            }
-            auto gain = fp.gain;
-            for (auto ch = 0; ch < numChannels; ++ch) {
-                out[ch] = filters[filterIndex].step(filterType, freq, q, gain, ch, out[ch]);
-            }
-        }
-    }
-    auto finalGain = 0.3 * smoothVelocity.value;
-    for (auto ch = 0; ch < numChannels; ++ch) {
-        out[ch] *= finalGain;
-    }
-    return active;
-    // for (auto ch = 0; ch < numChannels; ++ch) {
-    //     outputBuffer.addSample (ch, startSample, out[ch]);
-    // }
-    // ++startSample;
-    // if(!active) {
-    //     clearCurrentNote();
-    //     break;
-    // }
 }
