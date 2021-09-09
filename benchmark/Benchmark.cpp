@@ -40,8 +40,16 @@ static void doStepLoop(benchmark::State& state, Params& p) {
     double out[2]{0, 0};
 
     GrapeSound sound = GrapeSound();
+
+    freezeParams(p.globalParams,
+                 p.voiceParams,
+                 p.oscParams,
+                 p.envelopeParams,
+                 p.filterParams,
+                 p.lfoParams,
+                 p.modEnvParams,
+                 p.delayParams);
     voice.startNote(60, 1.0, &sound, 8192);
-    freezeParams(p.globalParams, p.voiceParams, p.oscParams, p.filterParams, p.lfoParams, p.modEnvParams);
     voice.applyParamsBeforeLoop(sampleRate);
     for (auto _ : state) {
         voice.step(out, sampleRate, numChannels);

@@ -37,6 +37,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
             globalParams,
             voiceParams,
             oscParams,
+            envelopeParams,
             filterParams,
             lfoParams,
             modEnvParams,
@@ -187,7 +188,7 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     }
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
     double startMillis = juce::Time::getMillisecondCounterHiRes();
-    synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+    synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());  // don't upcast
     double endMillis = juce::Time::getMillisecondCounterHiRes();
     timeConsumptionState.push(getSampleRate(), buffer.getNumSamples(), (endMillis - startMillis) / 1000);
 

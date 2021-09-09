@@ -21,13 +21,18 @@ const double CONTROL_RATE = 1.0 / CONTROL_INTERVAL;
 void freezeParams(GlobalParams &globalParams,
                   VoiceParams &voiceParams,
                   std::array<OscParams, NUM_OSC> &oscParams,
+                  std::array<EnvelopeParams, NUM_ENVELOPE> &envelopeParams,
                   std::array<FilterParams, NUM_FILTER> &filterParams,
                   std::array<LfoParams, NUM_LFO> &lfoParams,
-                  std::array<ModEnvParams, NUM_MODENV> &modEnvParams) {
+                  std::array<ModEnvParams, NUM_MODENV> &modEnvParams,
+                  DelayParams &delayParams) {
     globalParams.freeze();
     voiceParams.freeze();
     for (int i = 0; i < NUM_OSC; ++i) {
         oscParams[i].freeze();
+    }
+    for (int i = 0; i < NUM_ENVELOPE; ++i) {
+        envelopeParams[i].freeze();
     }
     for (int i = 0; i < NUM_FILTER; ++i) {
         filterParams[i].freeze();
@@ -38,6 +43,7 @@ void freezeParams(GlobalParams &globalParams,
     for (int i = 0; i < NUM_MODENV; ++i) {
         modEnvParams[i].freeze();
     }
+    delayParams.freeze();
 }
 }  // namespace
 
@@ -213,6 +219,7 @@ public:
                      GlobalParams &globalParams,
                      VoiceParams &voiceParams,
                      std::array<OscParams, NUM_OSC> &oscParams,
+                     std::array<EnvelopeParams, NUM_ENVELOPE> &envelopeParams,
                      std::array<FilterParams, NUM_FILTER> &filterParams,
                      std::array<LfoParams, NUM_LFO> &lfoParams,
                      std::array<ModEnvParams, NUM_MODENV> &modEnvParams,
@@ -223,6 +230,7 @@ public:
           globalParams(globalParams),
           voiceParams(voiceParams),
           oscParams(oscParams),
+          envelopeParams(envelopeParams),
           filterParams(filterParams),
           lfoParams(lfoParams),
           modEnvParams(modEnvParams),
@@ -230,6 +238,14 @@ public:
         addSound(new GrapeSound());
     }
     ~GrapeSynthesiser() {}
+    virtual void renderNextBlock(AudioBuffer<float> &outputAudio,
+                                 const MidiBuffer &inputMidi,
+                                 int startSample,
+                                 int numSamples) {
+        freezeParams(
+            globalParams, voiceParams, oscParams, envelopeParams, filterParams, lfoParams, modEnvParams, delayParams);
+        juce::Synthesiser::renderNextBlock(outputAudio, inputMidi, startSample, numSamples);
+    }
     virtual void handleMidiEvent(const juce::MidiMessage &m) override {
         const int channel = m.getChannel();
         if (m.isNoteOn()) {
@@ -297,7 +313,6 @@ public:
         }
     }
     void renderVoices(juce::AudioBuffer<float> &buffer, int startSample, int numSamples) override {
-        freezeParams(globalParams, voiceParams, oscParams, filterParams, lfoParams, modEnvParams);
         juce::Synthesiser::renderVoices(buffer, startSample, numSamples);
 
         stereoDelay.setParams(getSampleRate(),
@@ -344,120 +359,136 @@ public:
         switch (number) {
             case 7:
                 *globalParams.MidiVolume = normalizedValue;
-                return;
+                globalParams.freeze();
+                break;
             case 10:
                 *globalParams.Pan = normalizedValue * 2 - 1.0;
-                return;
+                globalParams.freeze();
+                break;
             case 11:
                 *globalParams.Expression = normalizedValue;
-                return;
-        }
-
-        // custom
-        for (int i = 0; i < NUM_CONTROL; ++i) {
-            auto params = &controlItemParams[i];
-            if (number != CONTROL_NUMBER_VALUES[params->Number->getIndex()]) {
-                continue;
-            }
-            auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
-            switch (targetType) {
-                case CONTROL_TARGET_TYPE::OSC: {
-                    int targetIndex = params->TargetOsc->getIndex();
-                    auto targetParam = static_cast<CONTROL_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
-                    for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-                        if (targetIndex == oscIndex) {
-                            auto &params = oscParams[oscIndex];
-                            switch (targetParam) {
-                                case CONTROL_TARGET_OSC_PARAM::Edge: {
-                                    *params.Edge = normalizedValue;
-                                    break;
-                                }
-                                case CONTROL_TARGET_OSC_PARAM::Detune: {
-                                    *params.Detune = normalizedValue;
-                                    break;
-                                }
-                                case CONTROL_TARGET_OSC_PARAM::Spread: {
-                                    *params.Spread = normalizedValue;
-                                    break;
-                                }
-                                case CONTROL_TARGET_OSC_PARAM::Gain: {
-                                    *params.Gain = params.Gain->range.convertFrom0to1(normalizedValue);
-                                    break;
-                                }
-                            }
-                        }
+                globalParams.freeze();
+                break;
+            default: {
+                // custom
+                for (int i = 0; i < NUM_CONTROL; ++i) {
+                    auto params = &controlItemParams[i];
+                    if (number != CONTROL_NUMBER_VALUES[params->Number->getIndex()]) {
+                        continue;
                     }
-                    break;
-                }
-                case CONTROL_TARGET_TYPE::Filter: {
-                    int targetIndex = params->TargetFilter->getIndex();
-                    auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
-                    for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-                        if (targetIndex == filterIndex) {
-                            auto &params = filterParams[filterIndex];
-                            switch (targetParam) {
-                                case CONTROL_TARGET_FILTER_PARAM::Freq: {
-                                    switch (static_cast<FILTER_FREQ_TYPE>(params.FreqType->getIndex())) {
-                                        case FILTER_FREQ_TYPE::Absolute: {
-                                            *params.Hz = params.Hz->range.convertFrom0to1(normalizedValue);
+                    auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
+                    switch (targetType) {
+                        case CONTROL_TARGET_TYPE::OSC: {
+                            int targetIndex = params->TargetOsc->getIndex();
+                            auto targetParam =
+                                static_cast<CONTROL_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                if (targetIndex == oscIndex) {
+                                    auto &params = oscParams[oscIndex];
+                                    switch (targetParam) {
+                                        case CONTROL_TARGET_OSC_PARAM::Edge: {
+                                            *params.Edge = normalizedValue;
                                             break;
                                         }
-                                        case FILTER_FREQ_TYPE::Relative: {
-                                            auto range = params.Semitone->getRange();
-                                            *params.Semitone = normalizedValue * (range.getEnd() - range.getStart()) +
-                                                               range.getStart();
+                                        case CONTROL_TARGET_OSC_PARAM::Detune: {
+                                            *params.Detune = normalizedValue;
+                                            break;
+                                        }
+                                        case CONTROL_TARGET_OSC_PARAM::Spread: {
+                                            *params.Spread = normalizedValue;
+                                            break;
+                                        }
+                                        case CONTROL_TARGET_OSC_PARAM::Gain: {
+                                            *params.Gain = params.Gain->range.convertFrom0to1(normalizedValue);
                                             break;
                                         }
                                     }
-                                    break;
-                                }
-                                case CONTROL_TARGET_FILTER_PARAM::Q: {
-                                    *params.Q = params.Q->range.convertFrom0to1(normalizedValue);
-                                    break;
+                                    params.freeze();
                                 }
                             }
+                            break;
                         }
-                    }
-                    break;
-                }
-                case CONTROL_TARGET_TYPE::LFO: {
-                    int targetIndex = params->TargetLfo->getIndex();
-                    auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
-                    for (int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
-                        if (targetIndex == lfoIndex) {
-                            auto &params = lfoParams[lfoIndex];
-                            switch (targetParam) {
-                                case CONTROL_TARGET_LFO_PARAM::Freq: {
-                                    if (params.shouldUseFastFreq()) {
-                                        *params.FastFreq = params.FastFreq->range.convertFrom0to1(normalizedValue);
-                                    } else {
-                                        *params.SlowFreq = params.SlowFreq->range.convertFrom0to1(normalizedValue);
+                        case CONTROL_TARGET_TYPE::Filter: {
+                            int targetIndex = params->TargetFilter->getIndex();
+                            auto targetParam =
+                                static_cast<CONTROL_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
+                            for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
+                                if (targetIndex == filterIndex) {
+                                    auto &params = filterParams[filterIndex];
+                                    switch (targetParam) {
+                                        case CONTROL_TARGET_FILTER_PARAM::Freq: {
+                                            switch (static_cast<FILTER_FREQ_TYPE>(params.FreqType->getIndex())) {
+                                                case FILTER_FREQ_TYPE::Absolute: {
+                                                    *params.Hz = params.Hz->range.convertFrom0to1(normalizedValue);
+                                                    break;
+                                                }
+                                                case FILTER_FREQ_TYPE::Relative: {
+                                                    auto range = params.Semitone->getRange();
+                                                    *params.Semitone =
+                                                        normalizedValue * (range.getEnd() - range.getStart()) +
+                                                        range.getStart();
+                                                    break;
+                                                }
+                                            }
+                                            break;
+                                        }
+                                        case CONTROL_TARGET_FILTER_PARAM::Q: {
+                                            *params.Q = params.Q->range.convertFrom0to1(normalizedValue);
+                                            break;
+                                        }
                                     }
+                                    params.freeze();
+                                }
+                            }
+                            break;
+                        }
+                        case CONTROL_TARGET_TYPE::LFO: {
+                            int targetIndex = params->TargetLfo->getIndex();
+                            auto targetParam =
+                                static_cast<CONTROL_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
+                            for (int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
+                                if (targetIndex == lfoIndex) {
+                                    auto &params = lfoParams[lfoIndex];
+                                    switch (targetParam) {
+                                        case CONTROL_TARGET_LFO_PARAM::Freq: {
+                                            if (params.shouldUseFastFreq()) {
+                                                *params.FastFreq =
+                                                    params.FastFreq->range.convertFrom0to1(normalizedValue);
+                                            } else {
+                                                *params.SlowFreq =
+                                                    params.SlowFreq->range.convertFrom0to1(normalizedValue);
+                                            }
+                                            break;
+                                        }
+                                        case CONTROL_TARGET_LFO_PARAM::Amount: {
+                                            *params.Amount = normalizedValue;
+                                            break;
+                                        }
+                                    }
+                                    params.freeze();
+                                }
+                            }
+                            break;
+                        }
+                        case CONTROL_TARGET_TYPE::Master: {
+                            auto targetParam =
+                                static_cast<CONTROL_TARGET_MISC_PARAM>(params->TargetMiscParam->getIndex());
+                            switch (targetParam) {
+                                case CONTROL_TARGET_MISC_PARAM::PortamentoTime: {
+                                    *voiceParams.PortamentoTime =
+                                        voiceParams.PortamentoTime->range.convertFrom0to1(normalizedValue);
+                                    voiceParams.freeze();
                                     break;
                                 }
-                                case CONTROL_TARGET_LFO_PARAM::Amount: {
-                                    *params.Amount = normalizedValue;
+                                case CONTROL_TARGET_MISC_PARAM::DelayMix: {
+                                    *delayParams.Mix = normalizedValue;
+                                    // delayParams.freeze();
                                     break;
                                 }
                             }
-                        }
-                    }
-                    break;
-                }
-                case CONTROL_TARGET_TYPE::Master: {
-                    auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(params->TargetMiscParam->getIndex());
-                    switch (targetParam) {
-                        case CONTROL_TARGET_MISC_PARAM::PortamentoTime: {
-                            *voiceParams.PortamentoTime =
-                                voiceParams.PortamentoTime->range.convertFrom0to1(normalizedValue);
-                            break;
-                        }
-                        case CONTROL_TARGET_MISC_PARAM::DelayMix: {
-                            *delayParams.Mix = normalizedValue;
                             break;
                         }
                     }
-                    break;
                 }
             }
         }
@@ -465,6 +496,7 @@ public:
     void pitchWheelMoved(int value) {
         value -= 8192;
         *globalParams.Pitch = value >= 0 ? value / 8191.0 : value / 8192.0;
+        globalParams.freeze();
     }
 
 private:
@@ -476,6 +508,7 @@ private:
     GlobalParams &globalParams;
     VoiceParams &voiceParams;
     std::array<OscParams, NUM_OSC> &oscParams;
+    std::array<EnvelopeParams, NUM_ENVELOPE> &envelopeParams;
     std::array<FilterParams, NUM_FILTER> &filterParams;
     std::array<LfoParams, NUM_LFO> &lfoParams;
     std::array<ModEnvParams, NUM_LFO> &modEnvParams;

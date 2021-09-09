@@ -269,6 +269,17 @@ public:
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
 
+    float attack;
+    float decay;
+    float sustain;
+    float release;
+    void freeze() {
+        attack = Attack->get();
+        decay = Decay->get();
+        sustain = Sustain->get();
+        release = Release->get();
+    }
+
 private:
     EnvelopeParams(){};
 };
@@ -477,6 +488,31 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
+
+    bool enabled;
+    int type;
+    bool sync;
+    float timeL;
+    float timeR;
+    int timeSyncL;
+    int timeSyncR;
+    float lowFreq;
+    float highFreq;
+    float feedback;
+    float mix;
+    void freeze() {
+        enabled = Enabled->get();
+        type = Type->getIndex();
+        sync = Sync->get();
+        timeL = TimeL->get();
+        timeR = TimeR->get();
+        timeSyncL = TimeSyncL->getIndex();
+        timeSyncR = TimeSyncR->getIndex();
+        lowFreq = LowFreq->get();
+        highFreq = HighFreq->get();
+        feedback = Feedback->get();
+        mix = Mix->get();
+    }
 
 private:
 };
