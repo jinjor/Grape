@@ -366,22 +366,22 @@ public:
                     auto targetParam = static_cast<CONTROL_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
                     for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
                         if (targetIndex == oscIndex) {
+                            auto &params = oscParams[oscIndex];
                             switch (targetParam) {
                                 case CONTROL_TARGET_OSC_PARAM::Edge: {
-                                    *oscParams[oscIndex].Edge = normalizedValue;
+                                    *params.Edge = normalizedValue;
                                     break;
                                 }
                                 case CONTROL_TARGET_OSC_PARAM::Detune: {
-                                    *oscParams[oscIndex].Detune = normalizedValue;
+                                    *params.Detune = normalizedValue;
                                     break;
                                 }
                                 case CONTROL_TARGET_OSC_PARAM::Spread: {
-                                    *oscParams[oscIndex].Spread = normalizedValue;
+                                    *params.Spread = normalizedValue;
                                     break;
                                 }
                                 case CONTROL_TARGET_OSC_PARAM::Gain: {
-                                    *oscParams[oscIndex].Gain =
-                                        oscParams[oscIndex].Gain->range.convertFrom0to1(normalizedValue);
+                                    *params.Gain = params.Gain->range.convertFrom0to1(normalizedValue);
                                     break;
                                 }
                             }
@@ -394,28 +394,25 @@ public:
                     auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
                     for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
                         if (targetIndex == filterIndex) {
+                            auto &params = filterParams[filterIndex];
                             switch (targetParam) {
                                 case CONTROL_TARGET_FILTER_PARAM::Freq: {
-                                    switch (
-                                        static_cast<FILTER_FREQ_TYPE>(filterParams[filterIndex].FreqType->getIndex())) {
+                                    switch (static_cast<FILTER_FREQ_TYPE>(params.FreqType->getIndex())) {
                                         case FILTER_FREQ_TYPE::Absolute: {
-                                            *filterParams[filterIndex].Hz =
-                                                filterParams[filterIndex].Hz->range.convertFrom0to1(normalizedValue);
+                                            *params.Hz = params.Hz->range.convertFrom0to1(normalizedValue);
                                             break;
                                         }
                                         case FILTER_FREQ_TYPE::Relative: {
-                                            auto range = filterParams[filterIndex].Semitone->getRange();
-                                            *filterParams[filterIndex].Semitone =
-                                                normalizedValue * (range.getEnd() - range.getStart()) +
-                                                range.getStart();
+                                            auto range = params.Semitone->getRange();
+                                            *params.Semitone = normalizedValue * (range.getEnd() - range.getStart()) +
+                                                               range.getStart();
                                             break;
                                         }
                                     }
                                     break;
                                 }
                                 case CONTROL_TARGET_FILTER_PARAM::Q: {
-                                    *filterParams[filterIndex].Q =
-                                        filterParams[filterIndex].Q->range.convertFrom0to1(normalizedValue);
+                                    *params.Q = params.Q->range.convertFrom0to1(normalizedValue);
                                     break;
                                 }
                             }
@@ -428,19 +425,18 @@ public:
                     auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
                     for (int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
                         if (targetIndex == lfoIndex) {
+                            auto &params = lfoParams[lfoIndex];
                             switch (targetParam) {
                                 case CONTROL_TARGET_LFO_PARAM::Freq: {
-                                    if (lfoParams[lfoIndex].shouldUseFastFreq()) {
-                                        *lfoParams[lfoIndex].FastFreq =
-                                            lfoParams[lfoIndex].FastFreq->range.convertFrom0to1(normalizedValue);
+                                    if (params.shouldUseFastFreq()) {
+                                        *params.FastFreq = params.FastFreq->range.convertFrom0to1(normalizedValue);
                                     } else {
-                                        *lfoParams[lfoIndex].SlowFreq =
-                                            lfoParams[lfoIndex].SlowFreq->range.convertFrom0to1(normalizedValue);
+                                        *params.SlowFreq = params.SlowFreq->range.convertFrom0to1(normalizedValue);
                                     }
                                     break;
                                 }
                                 case CONTROL_TARGET_LFO_PARAM::Amount: {
-                                    *lfoParams[lfoIndex].Amount = normalizedValue;
+                                    *params.Amount = normalizedValue;
                                     break;
                                 }
                             }
