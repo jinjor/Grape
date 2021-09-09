@@ -166,6 +166,10 @@ public:
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
 
+    void setMidiVolumeFromControl(double normalizedValue) { *MidiVolume = normalizedValue; }
+    void setPanFromControl(double normalizedValue) { *Pan = normalizedValue * 2 - 1.0; }
+    void setExpressionFromControl(double normalizedValue) { *Expression = normalizedValue; }
+
     float pitch;
     float pan;
     float expression;
@@ -194,6 +198,10 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
+
+    void setPortamentoTimeFromControl(double normalizedValue) {
+        *PortamentoTime = PortamentoTime->range.convertFrom0to1(normalizedValue);
+    }
 
     bool isMonoMode;
     float portamentoTime;
@@ -226,6 +234,11 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
+
+    void setEdgeFromControl(double normalizedValue) { *Edge = normalizedValue; }
+    void setDetuneFromControl(double normalizedValue) { *Detune = normalizedValue; }
+    void setSpreadFromControl(double normalizedValue) { *Spread = normalizedValue; }
+    void setGainFromControl(double normalizedValue) { *Gain = Gain->range.convertFrom0to1(normalizedValue); }
 
     bool enabled;
     WAVEFORM waveform;
@@ -313,6 +326,14 @@ public:
         }
     }
     bool isFreqAbsolute() { return static_cast<FILTER_FREQ_TYPE>(FreqType->getIndex()) == FILTER_FREQ_TYPE::Absolute; }
+
+    void setHzFromControl(double normalizedValue) { *Hz = Hz->range.convertFrom0to1(normalizedValue); }
+    void setSemitoneFromControl(double normalizedValue) {
+        auto range = Semitone->getRange();
+        *Semitone = normalizedValue * (range.getEnd() - range.getStart()) + range.getStart();
+    }
+    void setQFromControl(double normalizedValue) { *Q = Q->range.convertFrom0to1(normalizedValue); }
+
     bool enabled;
     int target;
     FILTER_TYPE type;
@@ -370,6 +391,14 @@ public:
         }
         return false;
     }
+
+    void setFastFreqFromControl(double normalizedValue) {
+        *FastFreq = FastFreq->range.convertFrom0to1(normalizedValue);
+    }
+    void setSlowFreqFromControl(double normalizedValue) {
+        *SlowFreq = SlowFreq->range.convertFrom0to1(normalizedValue);
+    }
+    void setAmountFromControl(double normalizedValue) { *Amount = normalizedValue; }
 
     bool enabled;
     LFO_TARGET_TYPE targetType;
@@ -488,6 +517,8 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
+
+    void setMixFromControl(double normalizedValue) { *Mix = normalizedValue; }
 
     bool enabled;
     DELAY_TYPE type;

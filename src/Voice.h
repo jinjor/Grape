@@ -369,15 +369,15 @@ public:
         // predefined
         switch (number) {
             case 7:
-                *globalParams.MidiVolume = normalizedValue;
+                globalParams.setMidiVolumeFromControl(normalizedValue);
                 globalParams.freeze();
                 break;
             case 10:
-                *globalParams.Pan = normalizedValue * 2 - 1.0;
+                globalParams.setPanFromControl(normalizedValue);
                 globalParams.freeze();
                 break;
             case 11:
-                *globalParams.Expression = normalizedValue;
+                globalParams.setExpressionFromControl(normalizedValue);
                 globalParams.freeze();
                 break;
             default: {
@@ -396,23 +396,26 @@ public:
                                     auto &params = oscParams[oscIndex];
                                     switch (targetParam) {
                                         case CONTROL_TARGET_OSC_PARAM::Edge: {
-                                            *params.Edge = normalizedValue;
+                                            params.setEdgeFromControl(normalizedValue);
+                                            params.freeze();
                                             break;
                                         }
                                         case CONTROL_TARGET_OSC_PARAM::Detune: {
-                                            *params.Detune = normalizedValue;
+                                            params.setDetuneFromControl(normalizedValue);
+                                            params.freeze();
                                             break;
                                         }
                                         case CONTROL_TARGET_OSC_PARAM::Spread: {
-                                            *params.Spread = normalizedValue;
+                                            params.setSpreadFromControl(normalizedValue);
+                                            params.freeze();
                                             break;
                                         }
                                         case CONTROL_TARGET_OSC_PARAM::Gain: {
-                                            *params.Gain = params.Gain->range.convertFrom0to1(normalizedValue);
+                                            params.setGainFromControl(normalizedValue);
+                                            params.freeze();
                                             break;
                                         }
                                     }
-                                    params.freeze();
                                 }
                             }
                             break;
@@ -426,21 +429,20 @@ public:
                                     switch (targetParam) {
                                         case CONTROL_TARGET_FILTER_PARAM::Freq: {
                                             if (params.isFreqAbsoluteFreezed) {
-                                                *params.Hz = params.Hz->range.convertFrom0to1(normalizedValue);
+                                                params.setHzFromControl(normalizedValue);
+                                                params.freeze();
                                             } else {
-                                                auto range = params.Semitone->getRange();
-                                                *params.Semitone =
-                                                    normalizedValue * (range.getEnd() - range.getStart()) +
-                                                    range.getStart();
+                                                params.setSemitoneFromControl(normalizedValue);
+                                                params.freeze();
                                             }
                                             break;
                                         }
                                         case CONTROL_TARGET_FILTER_PARAM::Q: {
-                                            *params.Q = params.Q->range.convertFrom0to1(normalizedValue);
+                                            params.setQFromControl(normalizedValue);
+                                            params.freeze();
                                             break;
                                         }
                                     }
-                                    params.freeze();
                                 }
                             }
                             break;
@@ -453,21 +455,21 @@ public:
                                     auto &params = lfoParams[lfoIndex];
                                     switch (targetParam) {
                                         case CONTROL_TARGET_LFO_PARAM::Freq: {
-                                            if (params.shouldUseFastFreq()) {
-                                                *params.FastFreq =
-                                                    params.FastFreq->range.convertFrom0to1(normalizedValue);
+                                            if (params.shouldUseFastFreqFreezed) {
+                                                params.setFastFreqFromControl(normalizedValue);
+                                                params.freeze();
                                             } else {
-                                                *params.SlowFreq =
-                                                    params.SlowFreq->range.convertFrom0to1(normalizedValue);
+                                                params.setSlowFreqFromControl(normalizedValue);
+                                                params.freeze();
                                             }
                                             break;
                                         }
                                         case CONTROL_TARGET_LFO_PARAM::Amount: {
-                                            *params.Amount = normalizedValue;
+                                            params.setAmountFromControl(normalizedValue);
+                                            params.freeze();
                                             break;
                                         }
                                     }
-                                    params.freeze();
                                 }
                             }
                             break;
@@ -475,13 +477,12 @@ public:
                         case CONTROL_TARGET_TYPE::Master: {
                             switch (params.targetMiscParam) {
                                 case CONTROL_TARGET_MISC_PARAM::PortamentoTime: {
-                                    *voiceParams.PortamentoTime =
-                                        voiceParams.PortamentoTime->range.convertFrom0to1(normalizedValue);
+                                    voiceParams.setPortamentoTimeFromControl(normalizedValue);
                                     voiceParams.freeze();
                                     break;
                                 }
                                 case CONTROL_TARGET_MISC_PARAM::DelayMix: {
-                                    *delayParams.Mix = normalizedValue;
+                                    delayParams.setMixFromControl(normalizedValue);
                                     delayParams.freeze();
                                     break;
                                 }
