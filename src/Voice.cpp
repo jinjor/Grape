@@ -161,7 +161,7 @@ void GrapeVoice::applyParamsBeforeLoop(double sampleRate) {
         if (modEnvParams[i].shouldUseHold()) {
             modEnvs[i].setParams(0.0, modEnvParams[i].Wait->get(), modEnvParams[i].Decay->get(), 0.0, 0.0);
         } else {
-            modEnvs[i].setParams(envelopeParams[i].Attack->get(), 0.0, modEnvParams[i].Decay->get(), 0.0, 0.0);
+            modEnvs[i].setParams(modEnvParams[i].Attack->get(), 0.0, modEnvParams[i].Decay->get(), 0.0, 0.0);
         }
     }
 }
