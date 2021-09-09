@@ -53,6 +53,8 @@ void GrapeVoice::startNote(int midiNoteNumber,
         }
         stolen = false;
 
+        auto fixedSampleRate = sampleRate * CONTROL_RATE;  // for control
+
         for (int i = 0; i < NUM_OSC; ++i) {
             if (!stolen) {
                 //                oscs[i].setAngle(0.0);
@@ -64,7 +66,7 @@ void GrapeVoice::startNote(int midiNoteNumber,
                               envelopeParams[i].Decay->get(),
                               envelopeParams[i].Sustain->get(),
                               envelopeParams[i].Release->get());
-            adsr[i].doAttack(sampleRate);
+            adsr[i].doAttack(fixedSampleRate);
         }
         for (int i = 0; i < NUM_FILTER; ++i) {
             filters[i].initializePastData();
@@ -78,7 +80,7 @@ void GrapeVoice::startNote(int midiNoteNumber,
             } else {
                 modEnvs[i].setParams(modEnvParams[i].Attack->get(), 0.0, modEnvParams[i].Decay->get(), 0.0, 0.0);
             }
-            modEnvs[i].doAttack(sampleRate);
+            modEnvs[i].doAttack(fixedSampleRate);
         }
         stepCounter = 0;
     }
@@ -88,8 +90,9 @@ void GrapeVoice::stopNote(float velocity, bool allowTailOff) {
     if (GrapeSound *playingSound = dynamic_cast<GrapeSound *>(getCurrentlyPlayingSound().get())) {
         if (allowTailOff) {
             auto sampleRate = getSampleRate();
+            auto fixedSampleRate = sampleRate * CONTROL_RATE;  // for control
             for (int i = 0; i < NUM_ENVELOPE; ++i) {
-                adsr[i].doRelease(sampleRate);
+                adsr[i].doRelease(fixedSampleRate);
             }
         } else {
             stolen = true;
@@ -175,13 +178,14 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         }
         shiftedNoteNumbers[i] += oscParams[i].octave * 12 + oscParams[i].coarse;
     }
-    for (int i = 0; i < NUM_ENVELOPE; ++i) {
-        adsr[i].step(sampleRate);
-    }
 
     if (stepCounter == 0) {
+        auto fixedSampleRate = sampleRate * CONTROL_RATE;
+        for (int i = 0; i < NUM_ENVELOPE; ++i) {
+            adsr[i].step(fixedSampleRate);
+        }
         controlModifiers = Modifiers{};
-        updateModifiersByModEnv(controlModifiers, sampleRate * CONTROL_RATE);
+        updateModifiersByModEnv(controlModifiers, fixedSampleRate);
         updateModifiersByLfo(controlModifiers);
     }
     stepCounter++;

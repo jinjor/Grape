@@ -15,7 +15,7 @@ const int NUM_CONTROL = 6;
 const double A = 1.0 / 12.0;
 const double X = std::pow(2.0, 1.0 / 12.0);
 const double Y = 440.0 / std::pow(X, 69);
-const int CONTROL_INTERVAL = 32;
+const int CONTROL_INTERVAL = 16;
 const double CONTROL_RATE = 1.0 / CONTROL_INTERVAL;
 
 void freezeParams(GlobalParams &globalParams,
