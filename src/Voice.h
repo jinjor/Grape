@@ -482,7 +482,7 @@ public:
                                 }
                                 case CONTROL_TARGET_MISC_PARAM::DelayMix: {
                                     *delayParams.Mix = normalizedValue;
-                                    // delayParams.freeze();
+                                    delayParams.freeze();
                                     break;
                                 }
                             }
