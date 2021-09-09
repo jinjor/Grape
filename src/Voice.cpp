@@ -61,11 +61,8 @@ void GrapeVoice::startNote(int midiNoteNumber,
             }
         }
         for (int i = 0; i < NUM_ENVELOPE; ++i) {
-            adsr[i].setParams(envelopeParams[i].Attack->get(),
-                              0.0,
-                              envelopeParams[i].Decay->get(),
-                              envelopeParams[i].Sustain->get(),
-                              envelopeParams[i].Release->get());
+            auto &params = envelopeParams[i];
+            adsr[i].setParams(params.attack, 0.0, params.decay, params.sustain, params.release);
             adsr[i].doAttack(fixedSampleRate);
         }
         for (int i = 0; i < NUM_FILTER; ++i) {
@@ -75,10 +72,11 @@ void GrapeVoice::startNote(int midiNoteNumber,
             lfos[i].setNormalizedAngle(0.0);
         }
         for (int i = 0; i < NUM_MODENV; ++i) {
-            if (modEnvParams[i].shouldUseHold()) {
-                modEnvs[i].setParams(0.0, modEnvParams[i].Wait->get(), modEnvParams[i].Decay->get(), 0.0, 0.0);
+            auto &params = modEnvParams[i];
+            if (params.shouldUseHold()) {
+                modEnvs[i].setParams(0.0, params.wait, params.decay, 0.0, 0.0);
             } else {
-                modEnvs[i].setParams(modEnvParams[i].Attack->get(), 0.0, modEnvParams[i].Decay->get(), 0.0, 0.0);
+                modEnvs[i].setParams(params.attack, 0.0, params.decay, 0.0, 0.0);
             }
             modEnvs[i].doAttack(fixedSampleRate);
         }
@@ -141,27 +139,26 @@ void GrapeVoice::renderNextBlock(juce::AudioBuffer<float> &outputBuffer, int sta
 void GrapeVoice::applyParamsBeforeLoop(double sampleRate) {
     for (int i = 0; i < NUM_OSC; ++i) {
         oscs[i].setSampleRate(sampleRate);
-        oscs[i].setWaveform(OSC_WAVEFORM_VALUES[oscParams[i].Waveform->getIndex()]);
+        oscs[i].setWaveform(OSC_WAVEFORM_VALUES[oscParams[i].waveform]);
     }
     for (int i = 0; i < NUM_ENVELOPE; ++i) {
-        adsr[i].setParams(envelopeParams[i].Attack->get(),
-                          0.0,
-                          envelopeParams[i].Decay->get(),
-                          envelopeParams[i].Sustain->get(),
-                          envelopeParams[i].Release->get());
+        auto &params = envelopeParams[i];
+        adsr[i].setParams(params.attack, 0.0, params.decay, params.sustain, params.release);
     }
     for (int i = 0; i < NUM_FILTER; ++i) {
         filters[i].setSampleRate(sampleRate);
     }
     for (int i = 0; i < NUM_LFO; ++i) {
-        lfos[i].setSampleRate(lfoParams[i].shouldUseFastFreq() ? sampleRate : sampleRate * CONTROL_RATE);
-        lfos[i].setWaveform(LFO_WAVEFORM_VALUES[lfoParams[i].Waveform->getIndex()]);
+        auto &params = lfoParams[i];
+        lfos[i].setSampleRate(params.shouldUseFastFreqFreezed ? sampleRate : sampleRate * CONTROL_RATE);
+        lfos[i].setWaveform(LFO_WAVEFORM_VALUES[params.waveform]);
     }
     for (int i = 0; i < NUM_MODENV; ++i) {
-        if (modEnvParams[i].shouldUseHold()) {
-            modEnvs[i].setParams(0.0, modEnvParams[i].Wait->get(), modEnvParams[i].Decay->get(), 0.0, 0.0);
+        auto &params = modEnvParams[i];
+        if (params.shouldUseHold()) {
+            modEnvs[i].setParams(0.0, params.wait, params.decay, 0.0, 0.0);
         } else {
-            modEnvs[i].setParams(modEnvParams[i].Attack->get(), 0.0, modEnvParams[i].Decay->get(), 0.0, 0.0);
+            modEnvs[i].setParams(params.attack, 0.0, params.decay, 0.0, 0.0);
         }
     }
 }
