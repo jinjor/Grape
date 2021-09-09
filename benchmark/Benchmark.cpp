@@ -26,14 +26,16 @@ static void doStepLoop(benchmark::State& state, Params& p) {
     juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo{};
     juce::AudioBuffer<float> buf{};
 
-    GrapeVoice voice{&currentPositionInfo,
-                     p.globalParams,
-                     p.voiceParams,
-                     p.oscParams,
-                     p.envelopeParams,
-                     p.filterParams,
-                     p.lfoParams,
-                     p.modEnvParams};
+    GrapeVoice voice{
+        &currentPositionInfo,
+        p.globalParams,
+        p.voiceParams,
+        p.oscParams,
+        p.envelopeParams,
+        p.filterParams,
+        p.lfoParams,
+        p.modEnvParams,
+    };
 
     auto numChannels = 2;
     auto sampleRate = 48000;
@@ -48,7 +50,8 @@ static void doStepLoop(benchmark::State& state, Params& p) {
                  p.filterParams,
                  p.lfoParams,
                  p.modEnvParams,
-                 p.delayParams);
+                 p.delayParams,
+                 p.controlItemParams);
     voice.startNote(60, 1.0, &sound, 8192);
     voice.applyParamsBeforeLoop(sampleRate);
     for (auto _ : state) {

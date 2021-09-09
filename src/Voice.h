@@ -25,7 +25,8 @@ void freezeParams(GlobalParams &globalParams,
                   std::array<FilterParams, NUM_FILTER> &filterParams,
                   std::array<LfoParams, NUM_LFO> &lfoParams,
                   std::array<ModEnvParams, NUM_MODENV> &modEnvParams,
-                  DelayParams &delayParams) {
+                  DelayParams &delayParams,
+                  std::array<ControlItemParams, NUM_CONTROL> &controlItemParams) {
     globalParams.freeze();
     voiceParams.freeze();
     for (int i = 0; i < NUM_OSC; ++i) {
@@ -44,6 +45,9 @@ void freezeParams(GlobalParams &globalParams,
         modEnvParams[i].freeze();
     }
     delayParams.freeze();
+    for (int i = 0; i < NUM_CONTROL; ++i) {
+        controlItemParams[i].freeze();
+    }
 }
 }  // namespace
 
@@ -242,8 +246,15 @@ public:
                                  const MidiBuffer &inputMidi,
                                  int startSample,
                                  int numSamples) {
-        freezeParams(
-            globalParams, voiceParams, oscParams, envelopeParams, filterParams, lfoParams, modEnvParams, delayParams);
+        freezeParams(globalParams,
+                     voiceParams,
+                     oscParams,
+                     envelopeParams,
+                     filterParams,
+                     lfoParams,
+                     modEnvParams,
+                     delayParams,
+                     controlItemParams);
         juce::Synthesiser::renderNextBlock(outputAudio, inputMidi, startSample, numSamples);
     }
     virtual void handleMidiEvent(const juce::MidiMessage &m) override {
@@ -256,7 +267,7 @@ public:
                     if (GrapeVoice *voice = dynamic_cast<GrapeVoice *>(voices[0])) {
                         bool playingNotesExist = monoStack->latestNoteNumber != 0;
                         monoStack->push(midiNoteNumber, velocity);
-                        if (static_cast<VOICE_MODE>(voiceParams.Mode->getIndex()) == VOICE_MODE::Mono) {
+                        if (voiceParams.isMonoMode) {
                             jassert(getNumVoices() == 1);
                             if (voice->isPlayingChannel(channel) && playingNotesExist) {
                                 voice->glide(midiNoteNumber, velocity);
@@ -277,7 +288,7 @@ public:
                             return;
                         }
                         bool playingNotesExist = monoStack->latestNoteNumber != 0;
-                        if (static_cast<VOICE_MODE>(voiceParams.Mode->getIndex()) == VOICE_MODE::Mono) {
+                        if (voiceParams.isMonoMode) {
                             jassert(getNumVoices() == 1);
                             if (voice->isPlayingChannel(channel) && playingNotesExist) {
                                 auto velocity = monoStack->getVelocity(monoStack->latestNoteNumber);
@@ -317,25 +328,25 @@ public:
 
         stereoDelay.setParams(getSampleRate(),
                               currentPositionInfo->bpm,
-                              static_cast<DELAY_TYPE>(delayParams.Type->getIndex()),
-                              delayParams.Sync->get(),
-                              delayParams.TimeL->get(),
-                              delayParams.TimeR->get(),
-                              DELAY_TIME_SYNC_VALUES[delayParams.TimeSyncL->getIndex()],
-                              DELAY_TIME_SYNC_VALUES[delayParams.TimeSyncR->getIndex()],
-                              delayParams.LowFreq->get(),
-                              delayParams.HighFreq->get(),
-                              delayParams.Feedback->get(),
-                              delayParams.Mix->get());
+                              delayParams.type,
+                              delayParams.sync,
+                              delayParams.timeL,
+                              delayParams.timeR,
+                              delayParams.timeSyncL,
+                              delayParams.timeSyncR,
+                              delayParams.lowFreq,
+                              delayParams.highFreq,
+                              delayParams.feedback,
+                              delayParams.mix);
 
         auto *leftIn = buffer.getReadPointer(0, startSample);
         auto *rightIn = buffer.getReadPointer(1, startSample);
         auto *leftOut = buffer.getWritePointer(0, startSample);
         auto *rightOut = buffer.getWritePointer(1, startSample);
 
-        auto delayEnabled = delayParams.Enabled->get();
-        auto expression = globalParams.Expression->get();
-        auto masterVolume = globalParams.MasterVolume->get() * globalParams.MidiVolume->get();
+        auto delayEnabled = delayParams.enabled;
+        auto expression = globalParams.expression;
+        auto masterVolume = globalParams.masterVolume * globalParams.midiVolume;
         for (int i = 0; i < numSamples; ++i) {
             double sample[2]{leftIn[i] * expression, rightIn[i] * expression};
 
@@ -372,16 +383,14 @@ public:
             default: {
                 // custom
                 for (int i = 0; i < NUM_CONTROL; ++i) {
-                    auto params = &controlItemParams[i];
-                    if (number != CONTROL_NUMBER_VALUES[params->Number->getIndex()]) {
+                    auto &params = controlItemParams[i];
+                    if (number != params.number) {
                         continue;
                     }
-                    auto targetType = static_cast<CONTROL_TARGET_TYPE>(params->TargetType->getIndex());
-                    switch (targetType) {
+                    switch (params.targetType) {
                         case CONTROL_TARGET_TYPE::OSC: {
-                            int targetIndex = params->TargetOsc->getIndex();
-                            auto targetParam =
-                                static_cast<CONTROL_TARGET_OSC_PARAM>(params->TargetOscParam->getIndex());
+                            int targetIndex = params.targetOsc;
+                            auto targetParam = params.targetOscParam;
                             for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
                                 if (targetIndex == oscIndex) {
                                     auto &params = oscParams[oscIndex];
@@ -409,26 +418,20 @@ public:
                             break;
                         }
                         case CONTROL_TARGET_TYPE::Filter: {
-                            int targetIndex = params->TargetFilter->getIndex();
-                            auto targetParam =
-                                static_cast<CONTROL_TARGET_FILTER_PARAM>(params->TargetFilterParam->getIndex());
+                            int targetIndex = params.targetFilter;
+                            auto targetParam = params.targetFilterParam;
                             for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
                                 if (targetIndex == filterIndex) {
                                     auto &params = filterParams[filterIndex];
                                     switch (targetParam) {
                                         case CONTROL_TARGET_FILTER_PARAM::Freq: {
-                                            switch (static_cast<FILTER_FREQ_TYPE>(params.FreqType->getIndex())) {
-                                                case FILTER_FREQ_TYPE::Absolute: {
-                                                    *params.Hz = params.Hz->range.convertFrom0to1(normalizedValue);
-                                                    break;
-                                                }
-                                                case FILTER_FREQ_TYPE::Relative: {
-                                                    auto range = params.Semitone->getRange();
-                                                    *params.Semitone =
-                                                        normalizedValue * (range.getEnd() - range.getStart()) +
-                                                        range.getStart();
-                                                    break;
-                                                }
+                                            if (params.isFreqAbsoluteFreezed) {
+                                                *params.Hz = params.Hz->range.convertFrom0to1(normalizedValue);
+                                            } else {
+                                                auto range = params.Semitone->getRange();
+                                                *params.Semitone =
+                                                    normalizedValue * (range.getEnd() - range.getStart()) +
+                                                    range.getStart();
                                             }
                                             break;
                                         }
@@ -443,9 +446,8 @@ public:
                             break;
                         }
                         case CONTROL_TARGET_TYPE::LFO: {
-                            int targetIndex = params->TargetLfo->getIndex();
-                            auto targetParam =
-                                static_cast<CONTROL_TARGET_LFO_PARAM>(params->TargetLfoParam->getIndex());
+                            int targetIndex = params.targetLfo;
+                            auto targetParam = params.targetLfoParam;
                             for (int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
                                 if (targetIndex == lfoIndex) {
                                     auto &params = lfoParams[lfoIndex];
@@ -471,9 +473,7 @@ public:
                             break;
                         }
                         case CONTROL_TARGET_TYPE::Master: {
-                            auto targetParam =
-                                static_cast<CONTROL_TARGET_MISC_PARAM>(params->TargetMiscParam->getIndex());
-                            switch (targetParam) {
+                            switch (params.targetMiscParam) {
                                 case CONTROL_TARGET_MISC_PARAM::PortamentoTime: {
                                     *voiceParams.PortamentoTime =
                                         voiceParams.PortamentoTime->range.convertFrom0to1(normalizedValue);
