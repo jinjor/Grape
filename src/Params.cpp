@@ -2,6 +2,16 @@
 
 #include "Voice.h"
 
+namespace {
+juce::NormalisableRange<float> rangeWithSkewForCentre(float rangeStart,
+                                                      float rangeEnd,
+                                                      float intervalValue,
+                                                      float centrePointValue) {
+    auto range = juce::NormalisableRange(rangeStart, rangeEnd, intervalValue);
+    range.setSkewForCentre(centrePointValue);
+    return range;
+}
+}  // namespace
 //==============================================================================
 GlobalParams::GlobalParams() {
     std::string idPrefix = "GLOBAL_";
@@ -41,12 +51,10 @@ VoiceParams::VoiceParams() {
     std::string namePrefix = "Voice ";
     Mode = new juce::AudioParameterChoice(
         idPrefix + "MODE", namePrefix + "Mode", VOICE_MODE_NAMES, VOICE_MODE_NAMES.indexOf("Poly"));
-    {
-        auto range = juce::NormalisableRange(0.001f, 1.0f, 0.001f);
-        range.setSkewForCentre(0.1f);
-        PortamentoTime =
-            new juce::AudioParameterFloat(idPrefix + "PORTAMENTO_TIME", namePrefix + "Portamento Time", range, 0.02f);
-    }
+    PortamentoTime = new juce::AudioParameterFloat(idPrefix + "PORTAMENTO_TIME",
+                                                   namePrefix + "Portamento Time",
+                                                   rangeWithSkewForCentre(0.001f, 1.0f, 0.001f, 0.1f),
+                                                   0.02f);
     PitchBendRange =
         new juce::AudioParameterInt(idPrefix + "PITCH_BEND_RANGE", namePrefix + "Pitch-Bend Range", 1, 12, 2);
 }
@@ -79,11 +87,8 @@ OscParams::OscParams(int index) {
     Unison = new juce::AudioParameterInt(idPrefix + "UNISON", namePrefix + "Unison", 1, 4, 1);
     Detune = new juce::AudioParameterFloat(idPrefix + "DETUNE", namePrefix + "Detune", 0.0f, 1.0f, 0.0f);
     Spread = new juce::AudioParameterFloat(idPrefix + "SPREAD", namePrefix + "Spread", 0.0f, 1.0f, 0.0f);
-    {
-        auto range = juce::NormalisableRange(0.0f, 4.0f, 0.01f);
-        range.setSkewForCentre(1.0f);
-        Gain = new juce::AudioParameterFloat(idPrefix + "GAIN", namePrefix + "Gain", range, 1.0f);
-    }
+    Gain = new juce::AudioParameterFloat(
+        idPrefix + "GAIN", namePrefix + "Gain", rangeWithSkewForCentre(0.0f, 4.0f, 0.01f, 1.0f), 1.0f);
     Envelope = new juce::AudioParameterChoice(
         idPrefix + "ENVELOPE", namePrefix + "Envelope", OSC_ENV_NAMES, OSC_ENV_NAMES.indexOf("1"));
 }
@@ -165,11 +170,8 @@ FilterParams::FilterParams(int index) {
                                               namePrefix + "Freq Type",
                                               FILTER_FREQ_TYPE_NAMES,
                                               FILTER_FREQ_TYPE_NAMES.indexOf("Abs"));
-    {
-        auto range = juce::NormalisableRange(30.0f, 20000.0f, 0.01f);
-        range.setSkewForCentre(2000.0f);
-        Hz = new juce::AudioParameterFloat(idPrefix + "HZ", namePrefix + "Hz", range, 4000.0f);
-    }
+    Hz = new juce::AudioParameterFloat(
+        idPrefix + "HZ", namePrefix + "Hz", rangeWithSkewForCentre(30.0f, 20000.0f, 0.01f, 2000.0f), 4000.0f);
     Semitone = new juce::AudioParameterInt(idPrefix + "SEMITONE", namePrefix + "Semitone", -48, 48, 0);
     Q = new juce::AudioParameterFloat(idPrefix + "Q", namePrefix + "Q", 0.01f, 100.0f, 1.0f);
     Gain = new juce::AudioParameterFloat(idPrefix + "GAIN", namePrefix + "Gain", -20.0f, 20.0f, 0.0f);
@@ -230,16 +232,10 @@ LfoParams::LfoParams(int index) {
                                                        LFO_TARGET_FILTER_PARAM_NAMES.indexOf("Freq"));
     Waveform = new juce::AudioParameterChoice(
         idPrefix + "WAVEFORM", namePrefix + "Waveform", LFO_WAVEFORM_NAMES, LFO_WAVEFORM_NAMES.indexOf("Sine"));
-    {
-        auto range = juce::NormalisableRange(0.0f, 100.0f, 0.01f);
-        range.setSkewForCentre(4.0f);
-        SlowFreq = new juce::AudioParameterFloat(idPrefix + "SLOW_FREQ", namePrefix + "Slow Freq", range, 4.0f);
-    }
-    {
-        auto range = juce::NormalisableRange(0.01f, 100.0f, 0.01f);
-        range.setSkewForCentre(1.0f);
-        FastFreq = new juce::AudioParameterFloat(idPrefix + "FAST_FREQ", namePrefix + "Fast Freq", range, 1.0f);
-    }
+    SlowFreq = new juce::AudioParameterFloat(
+        idPrefix + "SLOW_FREQ", namePrefix + "Slow Freq", rangeWithSkewForCentre(0.0f, 100.0f, 0.01f, 4.0f), 4.0f);
+    FastFreq = new juce::AudioParameterFloat(
+        idPrefix + "FAST_FREQ", namePrefix + "Fast Freq", rangeWithSkewForCentre(0.01f, 100.0f, 0.01f, 1.0f), 1.0f);
     Amount = new juce::AudioParameterFloat(idPrefix + "AMOUNT", namePrefix + "Amount", 0.0f, 1.0f, 0.2f);
 }
 void LfoParams::addAllParameters(juce::AudioProcessor& processor) {
