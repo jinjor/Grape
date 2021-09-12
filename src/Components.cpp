@@ -60,7 +60,7 @@ VoiceComponent::VoiceComponent(VoiceParams& params, std::array<ControlItemParams
     addAndMakeVisible(header);
 
     initChoice(modeSelector, params.Mode, this, *this);
-    initLinear(portamentoTimeSlider, params.PortamentoTime, -1, " sec", nullptr, this, *this);
+    initLinear(portamentoTimeSlider, params.PortamentoTime, 0.001, " sec", nullptr, this, *this);
     initLinear(pitchBendRangeSlider, params.PitchBendRange, this, *this);
     initLabel(modeLabel, "Mode", *this);
     initLabel(portamentoTimeLabel, "Glide Time", *this);
@@ -288,7 +288,7 @@ OscComponent::OscComponent(int index, OscParams& params, std::array<ControlItemP
     initLinear(detuneSlider, params.Detune, 0.01, this, body);
     initLinear(spreadSlider, params.Spread, 0.01, this, body);
     auto formatGain = [](double gain) { return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
-    initSkewFromMid(gainSlider, params.Gain, -1, 1.0, nullptr, std::move(formatGain), this, body);
+    initSkewFromMid(gainSlider, params.Gain, 0.01f, 1.0, nullptr, std::move(formatGain), this, body);
     initLabel(envelopeLabel, "Amp Env", body);
     initLabel(waveformLabel, "Waveform", body);
     initLabel(edgeLabel, "Edge", body);
@@ -520,7 +520,7 @@ FilterComponent::FilterComponent(int index,
     initChoice(targetSelector, params.Target, this, body);
     initChoice(typeSelector, params.Type, this, body);
     initChoice(freqTypeSelector, params.FreqType, this, body);
-    initSkewFromMid(hzSlider, params.Hz, -1, 2000.0f, " Hz", nullptr, this, body);
+    initSkewFromMid(hzSlider, params.Hz, 0.01f, 2000.0f, " Hz", nullptr, this, body);
     auto formatSemitone = [](double value) -> std::string {
         int cent = value;
         int centAbs = std::abs(cent);
@@ -670,8 +670,8 @@ LfoComponent::LfoComponent(int index, LfoParams& params, std::array<ControlItemP
     initChoice(targetOscParamSelector, params.TargetOscParam, this, targetSelector);
     initChoice(targetFilterParamSelector, params.TargetFilterParam, this, targetSelector);
     initChoice(waveformSelector, params.Waveform, this, body);
-    initSkewFromMid(slowFreqSlider, params.SlowFreq, -1, 1.0, " Hz", nullptr, this, body);
-    initSkewFromMid(fastFreqSlider, params.FastFreq, -1, 1.0, " x", nullptr, this, body);
+    initSkewFromMid(slowFreqSlider, params.SlowFreq, 0.01f, 1.0, " Hz", nullptr, this, body);
+    initSkewFromMid(fastFreqSlider, params.FastFreq, 0.01f, 1.0, " x", nullptr, this, body);
     initLinear(amountSlider, params.Amount, 0.01, this, body);
 
     initLabel(targetLabel, "Destination", body);

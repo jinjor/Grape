@@ -86,7 +86,7 @@ protected:
                          juce::Slider::Listener* listener,
                          juce::Component& parent) {
         slider.setLookAndFeel(&grapeLookAndFeel);
-        slider.setRange(param->range.start, param->range.end, step > 0 ? step : param->range.interval);
+        slider.setRange(param->range.start, param->range.end, step);
         slider.setValue(param->get(), juce::dontSendNotification);
         slider.setSkewFactorFromMidPoint(midValue);
         slider.setPopupDisplayEnabled(true, true, nullptr);
@@ -108,7 +108,7 @@ protected:
                     juce::Slider::Listener* listener,
                     juce::Component& parent) {
         slider.setLookAndFeel(&grapeLookAndFeel);
-        slider.setRange(param->range.start, param->range.end, step > 0 ? step : param->range.interval);
+        slider.setRange(param->range.start, param->range.end, step);
         slider.setValue(param->get(), juce::dontSendNotification);
         slider.setPopupDisplayEnabled(true, true, nullptr);
         slider.setScrollWheelEnabled(false);
