@@ -167,7 +167,7 @@ public:
     virtual void loadParameters(juce::XmlElement& xml) override;
 
     void setMidiVolumeFromControl(double normalizedValue) { *MidiVolume = normalizedValue; }
-    void setPanFromControl(double normalizedValue) { *Pan = normalizedValue * 2 - 1.0; }
+    void setPanFromControl(double normalizedValue) { *Pan = Pan->range.convertFrom0to1(normalizedValue); }
     void setExpressionFromControl(double normalizedValue) { *Expression = normalizedValue; }
 
     float pitch;
@@ -329,8 +329,7 @@ public:
 
     void setHzFromControl(double normalizedValue) { *Hz = Hz->range.convertFrom0to1(normalizedValue); }
     void setSemitoneFromControl(double normalizedValue) {
-        auto range = Semitone->getRange();
-        *Semitone = normalizedValue * (range.getEnd() - range.getStart()) + range.getStart();
+        *Semitone = Semitone->getNormalisableRange().convertFrom0to1(normalizedValue);
     }
     void setQFromControl(double normalizedValue) { *Q = Q->range.convertFrom0to1(normalizedValue); }
 
