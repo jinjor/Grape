@@ -240,6 +240,26 @@ public:
     void setSpreadFromControl(double normalizedValue) { *Spread = normalizedValue; }
     void setGainFromControl(double normalizedValue) { *Gain = Gain->range.convertFrom0to1(normalizedValue); }
 
+    WAVEFORM getWaveForm() { return OSC_WAVEFORM_VALUES[Waveform->getIndex()]; }
+    bool hasEdge() {
+        switch (getWaveForm()) {
+            case WAVEFORM::Square:
+            case WAVEFORM::Triangle:
+                return true;
+            default:
+                return false;
+        }
+    }
+    bool isNoise() {
+        switch (getWaveForm()) {
+            case WAVEFORM::White:
+            case WAVEFORM::Pink:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     bool enabled;
     WAVEFORM waveform;
     float edge;
@@ -252,7 +272,7 @@ public:
     int envelope;
     void freeze() {
         enabled = Enabled->get();
-        waveform = OSC_WAVEFORM_VALUES[Waveform->getIndex()];
+        waveform = getWaveForm();
         edge = Edge->get();
         octave = Octave->get();
         coarse = Coarse->get();

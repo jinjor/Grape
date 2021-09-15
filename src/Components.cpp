@@ -354,12 +354,12 @@ void OscComponent::timerCallback() {
     detuneSlider.setValue(params.Detune->get(), juce::dontSendNotification);
     spreadSlider.setValue(params.Spread->get(), juce::dontSendNotification);
     gainSlider.setValue(params.Gain->get(), juce::dontSendNotification);
-    auto hasEdge = OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::Square ||
-                   OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::Triangle;
+
+    auto hasEdge = params.hasEdge();
     edgeLabel.setEnabled(hasEdge);
     edgeSlider.setEnabled(hasEdge);
-    auto isNoise = OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::White ||
-                   OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::Pink;
+
+    auto isNoise = params.isNoise();
     unisonLabel.setEnabled(!isNoise);
     unisonSlider.setEnabled(!isNoise);
     detuneLabel.setEnabled(!isNoise);
