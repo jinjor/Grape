@@ -217,9 +217,12 @@ protected:
 };
 
 //==============================================================================
+
+enum class HEADER_CHECK { Hidden, Disabled, Enabled };
+
 class HeaderComponent : public juce::Component {
 public:
-    HeaderComponent(std::string name, bool hasEnableButton);
+    HeaderComponent(std::string name, HEADER_CHECK check);
     virtual ~HeaderComponent();
     HeaderComponent(const HeaderComponent&) = delete;
     juce::ToggleButton enabledButton;
@@ -228,7 +231,7 @@ public:
 
 private:
     std::string name;
-    bool hasEnableButton;
+    HEADER_CHECK check;
 };
 
 //==============================================================================

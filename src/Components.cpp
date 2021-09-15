@@ -16,14 +16,16 @@ float calcCurrentLevel(int numSamples, float* data) {
 }
 
 //==============================================================================
-HeaderComponent::HeaderComponent(std::string name, bool hasEnableButton)
-    : enabledButton("Enabled"), name(std::move(name)), hasEnableButton(hasEnableButton) {
-    addAndMakeVisible(enabledButton);
-    enabledButton.setEnabled(hasEnableButton);
+HeaderComponent::HeaderComponent(std::string name, HEADER_CHECK check)
+    : enabledButton("Enabled"), name(std::move(name)), check(check) {
+    if (check != HEADER_CHECK::Hidden) {
+        addAndMakeVisible(enabledButton);
+        enabledButton.setEnabled(check == HEADER_CHECK::Enabled);
+    }
 }
 HeaderComponent::~HeaderComponent() {}
 void HeaderComponent::paint(juce::Graphics& g) {
-    juce::Rectangle<int> bounds = getLocalBounds();
+    auto bounds = getLocalBounds();
     g.setColour(colour::PANEL_NAME_BACKGROUND);
     g.fillRect(bounds);
 
@@ -33,10 +35,11 @@ void HeaderComponent::paint(juce::Graphics& g) {
     juce::Path p;
     ga.createPath(p);
     auto pathBounds = p.getBounds();
-    p.applyTransform(juce::AffineTransform()
-                         .rotated(-juce::MathConstants<float>::halfPi, 0, 0)
-                         .translated(pathBounds.getHeight() / 2 + bounds.getWidth() / 2,
-                                     pathBounds.getWidth() + PANEL_NAME_HEIGHT + 2.0));
+    p.applyTransform(
+        juce::AffineTransform()
+            .rotated(-juce::MathConstants<float>::halfPi, 0, 0)
+            .translated(pathBounds.getHeight() / 2 + bounds.getWidth() / 2,
+                        pathBounds.getWidth() + (check == HEADER_CHECK::Hidden ? 8.0 : PANEL_NAME_HEIGHT) + 2.0));
     g.setColour(colour::TEXT);
     g.fillPath(p);
 }
@@ -50,7 +53,7 @@ void HeaderComponent::resized() {
 VoiceComponent::VoiceComponent(VoiceParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
     : params(params),
       controlItemParams(controlItemParams),
-      header("VOICE", false),
+      header("VOICE", HEADER_CHECK::Hidden),
       modeSelector("Mode"),
       portamentoTimeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                            juce::Slider::TextEntryBoxPosition::NoTextBox),
@@ -196,7 +199,7 @@ void StatusComponent::timerCallback() {
 //==============================================================================
 MasterComponent::MasterComponent(GlobalParams& params)
     : params(params),
-      header("MASTER", false),
+      header("MASTER", HEADER_CHECK::Hidden),
       panSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox),
       volumeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox) {
@@ -241,7 +244,7 @@ OscComponent::OscComponent(int index, OscParams& params, std::array<ControlItemP
     : index(index),
       params(params),
       controlItemParams(controlItemParams),
-      header("OSC " + std::to_string(index + 1), true),
+      header("OSC " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       envelopeSelector("Envelope"),
       waveformSelector("Waveform"),
       edgeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -388,7 +391,7 @@ void OscComponent::timerCallback() {
 EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams& params)
     : index(index),
       params(params),
-      header("AMP ENV " + std::to_string(index + 1), false),
+      header("AMP ENV " + std::to_string(index + 1), HEADER_CHECK::Disabled),
       attackSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox),
       decaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -454,7 +457,7 @@ FilterComponent::FilterComponent(int index,
     : index(index),
       params(params),
       controlItemParams(controlItemParams),
-      header("FILTER " + std::to_string(index + 1), true),
+      header("FILTER " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       targetSelector("Target"),
       typeSelector("Type"),
       freqTypeSelector("Type"),
@@ -577,7 +580,7 @@ LfoComponent::LfoComponent(int index, LfoParams& params, std::array<ControlItemP
     : index(index),
       params(params),
       controlItemParams(controlItemParams),
-      header("LFO " + std::to_string(index + 1), true),
+      header("LFO " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       targetTypeSelector("TargetType"),
       targetOscSelector("TargetOsc"),
       targetFilterSelector("TargetFilter"),
@@ -719,7 +722,7 @@ void LfoComponent::timerCallback() {
 ModEnvComponent::ModEnvComponent(int index, ModEnvParams& params)
     : index(index),
       params(params),
-      header("MOD ENV " + std::to_string(index + 1), true),
+      header("MOD ENV " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       targetTypeSelector("TargetType"),
       targetOscSelector("TargetOsc"),
       targetFilterSelector("TargetFilter"),
@@ -883,7 +886,7 @@ void ModEnvComponent::timerCallback() {
 DelayComponent::DelayComponent(DelayParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
     : params(params),
       controlItemParams(controlItemParams),
-      header("DELAY", true),
+      header("DELAY", HEADER_CHECK::Enabled),
       typeSelector("Type"),
       timeLSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                   juce::Slider::TextEntryBoxPosition::NoTextBox),
@@ -1120,7 +1123,7 @@ void ControlItemComponent::timerCallback() {
 
 //==============================================================================
 ControlComponent::ControlComponent(std::array<ControlItemParams, NUM_CONTROL>& params)
-    : header("CONTROLS", false),
+    : header("CONTROLS", HEADER_CHECK::Disabled),
       controlItemComponents{ControlItemComponent(params[0]),
                             ControlItemComponent(params[1]),
                             ControlItemComponent(params[2]),
