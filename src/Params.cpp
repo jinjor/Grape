@@ -386,8 +386,7 @@ DelayParams::DelayParams() {
         idPrefix + "LOW_FREQ", namePrefix + "LowFfreq", rangeWithSkewForCentre(10.0f, 20000.0f, 2000.0f), 10.0f);
     HighFreq = new juce::AudioParameterFloat(
         idPrefix + "HIGH_FREQ", namePrefix + "HighFreq", rangeWithSkewForCentre(10.0f, 20000.0f, 2000.0f), 20000.0f);
-    Feedback = new juce::AudioParameterFloat(
-        idPrefix + "FEEDBACK", namePrefix + "Feedback", rangeWithSkewForCentre(0.0f, 1.0f, 0.4f), 0.3f);
+    Feedback = new juce::AudioParameterFloat(idPrefix + "FEEDBACK", namePrefix + "Feedback", 0.0f, 1.0f, 0.3f);
     Mix = new juce::AudioParameterFloat(idPrefix + "MIX", namePrefix + "Mix", 0.0f, 1.0f, 0.3f);
 }
 void DelayParams::addAllParameters(juce::AudioProcessor& processor) {

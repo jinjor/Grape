@@ -1006,8 +1006,7 @@ DelayComponent::DelayComponent(DelayParams& params, std::array<ControlItemParams
     initEnum(timeSyncRSlider, params.TimeSyncR, this, body);
     initSkewFromMid(lowFreqSlider, params.LowFreq, 1.0, " Hz", nullptr, this, body);
     initSkewFromMid(highFreqSlider, params.HighFreq, 1.0, " Hz", nullptr, this, body);
-    auto formatFeedback = [](double gain) { return juce::String(gain * 100, 0) + " %"; };
-    initSkewFromMid(feedbackSlider, params.Feedback, 0.01, nullptr, std::move(formatFeedback), this, body);
+    initLinearPercent(feedbackSlider, params.Feedback, 0.01, this, body);
     initLinear(mixSlider, params.Mix, 0.01, this, body);
 
     initLabel(typeLabel, "Type", body);
