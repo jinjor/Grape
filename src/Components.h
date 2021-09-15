@@ -80,15 +80,15 @@ protected:
     void initSkewFromMid(juce::Slider& slider,
                          juce::AudioParameterFloat* param,
                          float step,
-                         float midValue,
                          const char* unit,
                          std::function<juce::String(double)>&& format,
                          juce::Slider::Listener* listener,
                          juce::Component& parent) {
         slider.setLookAndFeel(&grapeLookAndFeel);
-        slider.setRange(param->range.start, param->range.end, step);
+        auto nrange = NormalisableRange<double>{
+            param->range.start, param->range.end, step, param->range.skew, param->range.symmetricSkew};
+        slider.setNormalisableRange(nrange);
         slider.setValue(param->get(), juce::dontSendNotification);
-        slider.setSkewFactorFromMidPoint(midValue);
         slider.setPopupDisplayEnabled(true, true, nullptr);
         slider.setScrollWheelEnabled(false);
         if (unit != nullptr) {

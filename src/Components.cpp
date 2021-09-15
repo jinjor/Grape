@@ -288,7 +288,7 @@ OscComponent::OscComponent(int index, OscParams& params, std::array<ControlItemP
     initLinear(detuneSlider, params.Detune, 0.01, this, body);
     initLinear(spreadSlider, params.Spread, 0.01, this, body);
     auto formatGain = [](double gain) { return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
-    initSkewFromMid(gainSlider, params.Gain, 0.01f, 1.0, nullptr, std::move(formatGain), this, body);
+    initSkewFromMid(gainSlider, params.Gain, 0.01f, nullptr, std::move(formatGain), this, body);
     initLabel(envelopeLabel, "Amp Env", body);
     initLabel(waveformLabel, "Waveform", body);
     initLabel(edgeLabel, "Edge", body);
@@ -448,10 +448,10 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams& params)
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
-    initSkewFromMid(attackSlider, params.Attack, 0.001, 0.2, " sec", nullptr, this, *this);
-    initSkewFromMid(decaySlider, params.Decay, 0.01, 0.4, " sec", nullptr, this, *this);
+    initSkewFromMid(attackSlider, params.Attack, 0.001, " sec", nullptr, this, *this);
+    initSkewFromMid(decaySlider, params.Decay, 0.01, " sec", nullptr, this, *this);
     initLinearPercent(sustainSlider, params.Sustain, 0.01, this, *this);
-    initSkewFromMid(releaseSlider, params.Release, 0.01, 0.4, " sec", nullptr, this, *this);
+    initSkewFromMid(releaseSlider, params.Release, 0.01, " sec", nullptr, this, *this);
     initLabel(attackLabel, "Attack", *this);
     initLabel(decayLabel, "Decay", *this);
     initLabel(sustainLabel, "Sustain", *this);
@@ -520,7 +520,7 @@ FilterComponent::FilterComponent(int index,
     initChoice(targetSelector, params.Target, this, body);
     initChoice(typeSelector, params.Type, this, body);
     initChoice(freqTypeSelector, params.FreqType, this, body);
-    initSkewFromMid(hzSlider, params.Hz, 0.01f, 2000.0f, " Hz", nullptr, this, body);
+    initSkewFromMid(hzSlider, params.Hz, 0.01f, " Hz", nullptr, this, body);
     auto formatSemitone = [](double value) -> std::string {
         int cent = value;
         int centAbs = std::abs(cent);
@@ -529,7 +529,7 @@ FilterComponent::FilterComponent(int index,
         return (cent == 0 ? " " : cent > 0 ? "+" : "-") + std::to_string(oct) + ":" + std::to_string(octFrac) + " oct";
     };
     initLinear(semitoneSlider, params.Semitone, 0.01, nullptr, std::move(formatSemitone), this, body);
-    initSkewFromMid(qSlider, params.Q, 0.01, 1.0, nullptr, nullptr, this, body);
+    initSkewFromMid(qSlider, params.Q, 0.01, nullptr, nullptr, this, body);
     initLinear(gainSlider, params.Gain, 0.01, " dB", nullptr, this, body);
     initLabel(targetLabel, "OSC", body);
     initLabel(typeLabel, "Type", body);
@@ -670,8 +670,8 @@ LfoComponent::LfoComponent(int index, LfoParams& params, std::array<ControlItemP
     initChoice(targetOscParamSelector, params.TargetOscParam, this, targetSelector);
     initChoice(targetFilterParamSelector, params.TargetFilterParam, this, targetSelector);
     initChoice(waveformSelector, params.Waveform, this, body);
-    initSkewFromMid(slowFreqSlider, params.SlowFreq, 0.01f, 1.0, " Hz", nullptr, this, body);
-    initSkewFromMid(fastFreqSlider, params.FastFreq, 0.01f, 1.0, " x", nullptr, this, body);
+    initSkewFromMid(slowFreqSlider, params.SlowFreq, 0.01f, " Hz", nullptr, this, body);
+    initSkewFromMid(fastFreqSlider, params.FastFreq, 0.01f, " x", nullptr, this, body);
     initLinear(amountSlider, params.Amount, 0.01, this, body);
 
     initLabel(targetLabel, "Destination", body);
@@ -842,9 +842,9 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams& params)
         return (oct == 0 ? " " : oct > 0 ? "+" : "-") + juce::String(std::abs(oct), 2) + " oct";
     };
     initLinear(peakFreqSlider, params.PeakFreq, 0.01, nullptr, std::move(formatPeakFreq), this, body);
-    initSkewFromMid(waitSlider, params.Wait, 0.01, 0.2f, " sec", nullptr, this, body);
-    initSkewFromMid(attackSlider, params.Attack, 0.001, 0.2f, " sec", nullptr, this, body);
-    initSkewFromMid(decaySlider, params.Decay, 0.01, 0.4f, " sec", nullptr, this, body);
+    initSkewFromMid(waitSlider, params.Wait, 0.01, " sec", nullptr, this, body);
+    initSkewFromMid(attackSlider, params.Attack, 0.001, " sec", nullptr, this, body);
+    initSkewFromMid(decaySlider, params.Decay, 0.01, " sec", nullptr, this, body);
     initLabel(targetLabel, "Destination", body);
     initLabel(typeLabel, "Type", body);
     initLabel(fadeLabel, "Fade", body);
@@ -1000,14 +1000,14 @@ DelayComponent::DelayComponent(DelayParams& params, std::array<ControlItemParams
 
     initChoice(typeSelector, params.Type, this, body);
     initChoice(syncSelector, params.Sync, this, body);
-    initSkewFromMid(timeLSlider, params.TimeL, 0.01, 0.4f, " sec", nullptr, this, body);
-    initSkewFromMid(timeRSlider, params.TimeR, 0.01, 0.4f, " sec", nullptr, this, body);
+    initSkewFromMid(timeLSlider, params.TimeL, 0.01, " sec", nullptr, this, body);
+    initSkewFromMid(timeRSlider, params.TimeR, 0.01, " sec", nullptr, this, body);
     initEnum(timeSyncLSlider, params.TimeSyncL, DELAY_TIME_SYNC_NAMES, this, body);
     initEnum(timeSyncRSlider, params.TimeSyncR, DELAY_TIME_SYNC_NAMES, this, body);
-    initSkewFromMid(lowFreqSlider, params.LowFreq, 1.0, 2000.0f, " Hz", nullptr, this, body);
-    initSkewFromMid(highFreqSlider, params.HighFreq, 1.0, 2000.0f, " Hz", nullptr, this, body);
+    initSkewFromMid(lowFreqSlider, params.LowFreq, 1.0, " Hz", nullptr, this, body);
+    initSkewFromMid(highFreqSlider, params.HighFreq, 1.0, " Hz", nullptr, this, body);
     auto formatFeedback = [](double gain) { return juce::String(gain * 100, 0) + " %"; };
-    initSkewFromMid(feedbackSlider, params.Feedback, 0.01, 0.4f, nullptr, std::move(formatFeedback), this, body);
+    initSkewFromMid(feedbackSlider, params.Feedback, 0.01, nullptr, std::move(formatFeedback), this, body);
     initLinear(mixSlider, params.Mix, 0.01, this, body);
 
     initLabel(typeLabel, "Type", body);
