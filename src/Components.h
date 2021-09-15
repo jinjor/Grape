@@ -165,9 +165,9 @@ protected:
     }
     void initEnum(juce::Slider& slider,
                   juce::AudioParameterChoice* param,
-                  const juce::StringArray& values,
                   juce::Slider::Listener* listener,
                   juce::Component& parent) {
+        const juce::StringArray& values = param->getAllValueStrings();
         slider.setLookAndFeel(&grapeLookAndFeel);
         slider.setRange(0, values.size() - 1, 1);
         slider.setValue(param->getIndex(), juce::dontSendNotification);

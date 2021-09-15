@@ -1002,8 +1002,8 @@ DelayComponent::DelayComponent(DelayParams& params, std::array<ControlItemParams
     initChoice(syncSelector, params.Sync, this, body);
     initSkewFromMid(timeLSlider, params.TimeL, 0.01, " sec", nullptr, this, body);
     initSkewFromMid(timeRSlider, params.TimeR, 0.01, " sec", nullptr, this, body);
-    initEnum(timeSyncLSlider, params.TimeSyncL, DELAY_TIME_SYNC_NAMES, this, body);
-    initEnum(timeSyncRSlider, params.TimeSyncR, DELAY_TIME_SYNC_NAMES, this, body);
+    initEnum(timeSyncLSlider, params.TimeSyncL, this, body);
+    initEnum(timeSyncRSlider, params.TimeSyncR, this, body);
     initSkewFromMid(lowFreqSlider, params.LowFreq, 1.0, " Hz", nullptr, this, body);
     initSkewFromMid(highFreqSlider, params.HighFreq, 1.0, " Hz", nullptr, this, body);
     auto formatFeedback = [](double gain) { return juce::String(gain * 100, 0) + " %"; };
