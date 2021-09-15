@@ -74,13 +74,22 @@ void GrapeAudioProcessorEditor::paint(juce::Graphics &g) {
     auto middleArea = bounds.removeFromTop(bounds.getHeight() * 2 / 5);
 
     g.fillAll(colour::BACKGROUND);
-    juce::Path p;
-    p.addLineSegment(
-        juce::Line<float>(0, upperArea.getBottom() - 0.5, upperArea.getWidth(), upperArea.getBottom() - 0.5), 1.0);
-    p.addLineSegment(
-        juce::Line<float>(0, middleArea.getBottom() - 0.5, middleArea.getWidth(), middleArea.getBottom() - 0.5), 1.0);
-    g.setColour(juce::Colour(20, 20, 20));
-    g.strokePath(p, juce::PathStrokeType(0.5));
+
+    auto areas = std::array{upperArea, middleArea};
+    for (auto &area : areas) {
+        {
+            juce::Path p;
+            p.addLineSegment(juce::Line<float>(0, area.getBottom() - 0.5, area.getWidth(), area.getBottom() - 0.5), 0);
+            g.setColour(juce::Colour(10, 10, 10));
+            g.strokePath(p, juce::PathStrokeType(1));
+        }
+        {
+            juce::Path p;
+            p.addLineSegment(juce::Line<float>(0, area.getBottom() + 0.5, area.getWidth(), area.getBottom() + 0.5), 0);
+            g.setColour(juce::Colour(60, 60, 60));
+            g.strokePath(p, juce::PathStrokeType(1));
+        }
+    }
 }
 
 void GrapeAudioProcessorEditor::resized() {
