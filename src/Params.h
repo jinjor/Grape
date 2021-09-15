@@ -565,6 +565,30 @@ public:
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
 
+    bool isControlling(CONTROL_TARGET_OSC_PARAM param, int index) {
+        return Number->getIndex() > 0 &&
+               static_cast<CONTROL_TARGET_TYPE>(TargetType->getIndex()) == CONTROL_TARGET_TYPE::OSC &&
+               TargetOsc->getIndex() == index &&
+               static_cast<CONTROL_TARGET_OSC_PARAM>(TargetOscParam->getIndex()) == param;
+    }
+    bool isControlling(CONTROL_TARGET_FILTER_PARAM param, int index) {
+        return Number->getIndex() > 0 &&
+               static_cast<CONTROL_TARGET_TYPE>(TargetType->getIndex()) == CONTROL_TARGET_TYPE::Filter &&
+               TargetFilter->getIndex() == index &&
+               static_cast<CONTROL_TARGET_FILTER_PARAM>(TargetFilterParam->getIndex()) == param;
+    }
+    bool isControlling(CONTROL_TARGET_LFO_PARAM param, int index) {
+        return Number->getIndex() > 0 &&
+               static_cast<CONTROL_TARGET_TYPE>(TargetType->getIndex()) == CONTROL_TARGET_TYPE::LFO &&
+               TargetLfo->getIndex() == index &&
+               static_cast<CONTROL_TARGET_LFO_PARAM>(TargetLfoParam->getIndex()) == param;
+    }
+    bool isControlling(CONTROL_TARGET_MISC_PARAM param) {
+        return Number->getIndex() > 0 &&
+               static_cast<CONTROL_TARGET_TYPE>(TargetType->getIndex()) == CONTROL_TARGET_TYPE::Master &&
+               static_cast<CONTROL_TARGET_MISC_PARAM>(TargetMiscParam->getIndex()) == param;
+    }
+
     int number;
     CONTROL_TARGET_TYPE targetType;
     int targetOsc;

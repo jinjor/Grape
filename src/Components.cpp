@@ -105,25 +105,8 @@ void VoiceComponent::timerCallback() {
 
     portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {
-        if (p.Number->getIndex() <= 0) {
-            continue;
-        }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
-        switch (targetType) {
-            case CONTROL_TARGET_TYPE::Master: {
-                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(p.TargetMiscParam->getIndex());
-                switch (targetParam) {
-                    case CONTROL_TARGET_MISC_PARAM::PortamentoTime: {
-                        portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                        break;
-                    }
-                    default:
-                        break;
-                }
-                break;
-            }
-            default:
-                break;
+        if (p.isControlling(CONTROL_TARGET_MISC_PARAM::PortamentoTime)) {
+            portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }
     }
 }
@@ -389,45 +372,14 @@ void OscComponent::timerCallback() {
     spreadSlider.setLookAndFeel(&grapeLookAndFeel);
     gainSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {
-        if (p.Number->getIndex() <= 0) {
-            continue;
-        }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
-        switch (targetType) {
-            case CONTROL_TARGET_TYPE::OSC: {
-                int targetIndex = p.TargetOsc->getIndex();
-                auto targetParam = static_cast<CONTROL_TARGET_OSC_PARAM>(p.TargetOscParam->getIndex());
-                if (targetIndex == index) {
-                    switch (targetParam) {
-                        case CONTROL_TARGET_OSC_PARAM::Edge: {
-                            edgeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                        case CONTROL_TARGET_OSC_PARAM::Detune: {
-                            detuneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                        case CONTROL_TARGET_OSC_PARAM::Spread: {
-                            spreadSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                            //                        case
-                            //                        CONTROL_TARGET_OSC_PARAM::Pan:
-                            //                        {
-                            ////
-                            /// panSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            //                            break;
-                            //                        }
-                        case CONTROL_TARGET_OSC_PARAM::Gain: {
-                            gainSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-            default:
-                break;
+        if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Edge, index)) {
+            edgeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+        } else if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Detune, index)) {
+            detuneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+        } else if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Spread, index)) {
+            spreadSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+        } else if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Gain, index)) {
+            gainSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }
     }
 }
@@ -612,31 +564,11 @@ void FilterComponent::timerCallback() {
     semitoneSlider.setLookAndFeel(&grapeLookAndFeel);
     qSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {
-        if (p.Number->getIndex() <= 0) {
-            continue;
-        }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
-        switch (targetType) {
-            case CONTROL_TARGET_TYPE::Filter: {
-                int targetIndex = p.TargetFilter->getIndex();
-                auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(p.TargetFilterParam->getIndex());
-                if (targetIndex == index) {
-                    switch (targetParam) {
-                        case CONTROL_TARGET_FILTER_PARAM::Freq: {
-                            hzSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            semitoneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                        case CONTROL_TARGET_FILTER_PARAM::Q: {
-                            qSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-            default:
-                break;
+        if (p.isControlling(CONTROL_TARGET_FILTER_PARAM::Freq, index)) {
+            hzSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+            semitoneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+        } else if (p.isControlling(CONTROL_TARGET_FILTER_PARAM::Q, index)) {
+            qSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }
     }
 }
@@ -778,31 +710,11 @@ void LfoComponent::timerCallback() {
     slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     amountSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {
-        if (p.Number->getIndex() <= 0) {
-            continue;
-        }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
-        switch (targetType) {
-            case CONTROL_TARGET_TYPE::LFO: {
-                int targetIndex = p.TargetLfo->getIndex();
-                auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(p.TargetLfoParam->getIndex());
-                if (targetIndex == index) {
-                    switch (targetParam) {
-                        case CONTROL_TARGET_LFO_PARAM::Freq: {
-                            fastFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            slowFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                        case CONTROL_TARGET_LFO_PARAM::Amount: {
-                            amountSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-            default:
-                break;
+        if (p.isControlling(CONTROL_TARGET_LFO_PARAM::Freq, index)) {
+            fastFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+            slowFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+        } else if (p.isControlling(CONTROL_TARGET_LFO_PARAM::Amount, index)) {
+            amountSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }
     }
 }
@@ -1100,25 +1012,8 @@ void DelayComponent::timerCallback() {
 
     mixSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {
-        if (p.Number->getIndex() <= 0) {
-            continue;
-        }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
-        switch (targetType) {
-            case CONTROL_TARGET_TYPE::Master: {
-                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(p.TargetMiscParam->getIndex());
-                switch (targetParam) {
-                    case CONTROL_TARGET_MISC_PARAM::DelayMix: {
-                        mixSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                        break;
-                    }
-                    default:
-                        break;
-                }
-                break;
-            }
-            default:
-                break;
+        if (p.isControlling(CONTROL_TARGET_MISC_PARAM::DelayMix)) {
+            mixSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }
     }
 }
