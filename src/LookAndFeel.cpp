@@ -223,8 +223,6 @@ void GrapeLookAndFeel::drawPopupMenuItem(juce::Graphics& g,
             r.removeFromLeft(juce::roundToInt(maxFontHeight * 0.5f));
         } else if (isTicked) {
             auto tick = getTickShape(1.0f);
-            //            g.fillPath (tick, tick.getTransformToScaleToFit (iconArea.reduced (iconArea.getWidth() / 5,
-            //            0).toFloat(), true));
             g.fillPath(tick,
                        tick.getTransformToScaleToFit(iconArea.reduced(iconArea.getWidth() / 3, 0).toFloat(), true));
         }
