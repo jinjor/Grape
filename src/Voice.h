@@ -267,7 +267,7 @@ public:
                     if (GrapeVoice *voice = dynamic_cast<GrapeVoice *>(voices[0])) {
                         bool playingNotesExist = monoStack->latestNoteNumber != 0;
                         monoStack->push(midiNoteNumber, velocity);
-                        if (voiceParams.isMonoMode) {
+                        if (voiceParams.isMonoModeFreezed) {
                             jassert(getNumVoices() == 1);
                             if (voice->isPlayingChannel(channel) && playingNotesExist) {
                                 voice->glide(midiNoteNumber, velocity);
@@ -288,7 +288,7 @@ public:
                             return;
                         }
                         bool playingNotesExist = monoStack->latestNoteNumber != 0;
-                        if (voiceParams.isMonoMode) {
+                        if (voiceParams.isMonoModeFreezed) {
                             jassert(getNumVoices() == 1);
                             if (voice->isPlayingChannel(channel) && playingNotesExist) {
                                 auto velocity = monoStack->getVelocity(monoStack->latestNoteNumber);

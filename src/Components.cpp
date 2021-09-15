@@ -99,31 +99,14 @@ void VoiceComponent::timerCallback() {
     portamentoTimeSlider.setValue(params.PortamentoTime->get(), juce::dontSendNotification);
     pitchBendRangeSlider.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
 
-    auto isMono = static_cast<VOICE_MODE>(params.Mode->getIndex()) == VOICE_MODE::Mono;
+    auto isMono = params.isMonoMode();
     portamentoTimeLabel.setEnabled(isMono);
     portamentoTimeSlider.setEnabled(isMono);
 
     portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {
-        if (p.Number->getIndex() <= 0) {
-            continue;
-        }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
-        switch (targetType) {
-            case CONTROL_TARGET_TYPE::Master: {
-                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(p.TargetMiscParam->getIndex());
-                switch (targetParam) {
-                    case CONTROL_TARGET_MISC_PARAM::PortamentoTime: {
-                        portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                        break;
-                    }
-                    default:
-                        break;
-                }
-                break;
-            }
-            default:
-                break;
+        if (p.isControlling(CONTROL_TARGET_MISC_PARAM::PortamentoTime)) {
+            portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }
     }
 }
@@ -288,7 +271,7 @@ OscComponent::OscComponent(int index, OscParams& params, std::array<ControlItemP
     initLinear(detuneSlider, params.Detune, 0.01, this, body);
     initLinear(spreadSlider, params.Spread, 0.01, this, body);
     auto formatGain = [](double gain) { return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
-    initSkewFromMid(gainSlider, params.Gain, 0.01f, 1.0, nullptr, std::move(formatGain), this, body);
+    initSkewFromMid(gainSlider, params.Gain, 0.01f, nullptr, std::move(formatGain), this, body);
     initLabel(envelopeLabel, "Amp Env", body);
     initLabel(waveformLabel, "Waveform", body);
     initLabel(edgeLabel, "Edge", body);
@@ -371,12 +354,12 @@ void OscComponent::timerCallback() {
     detuneSlider.setValue(params.Detune->get(), juce::dontSendNotification);
     spreadSlider.setValue(params.Spread->get(), juce::dontSendNotification);
     gainSlider.setValue(params.Gain->get(), juce::dontSendNotification);
-    auto hasEdge = OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::Square ||
-                   OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::Triangle;
+
+    auto hasEdge = params.hasEdge();
     edgeLabel.setEnabled(hasEdge);
     edgeSlider.setEnabled(hasEdge);
-    auto isNoise = OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::White ||
-                   OSC_WAVEFORM_VALUES[params.Waveform->getIndex()] == WAVEFORM::Pink;
+
+    auto isNoise = params.isNoise();
     unisonLabel.setEnabled(!isNoise);
     unisonSlider.setEnabled(!isNoise);
     detuneLabel.setEnabled(!isNoise);
@@ -389,45 +372,14 @@ void OscComponent::timerCallback() {
     spreadSlider.setLookAndFeel(&grapeLookAndFeel);
     gainSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {
-        if (p.Number->getIndex() <= 0) {
-            continue;
-        }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
-        switch (targetType) {
-            case CONTROL_TARGET_TYPE::OSC: {
-                int targetIndex = p.TargetOsc->getIndex();
-                auto targetParam = static_cast<CONTROL_TARGET_OSC_PARAM>(p.TargetOscParam->getIndex());
-                if (targetIndex == index) {
-                    switch (targetParam) {
-                        case CONTROL_TARGET_OSC_PARAM::Edge: {
-                            edgeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                        case CONTROL_TARGET_OSC_PARAM::Detune: {
-                            detuneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                        case CONTROL_TARGET_OSC_PARAM::Spread: {
-                            spreadSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                            //                        case
-                            //                        CONTROL_TARGET_OSC_PARAM::Pan:
-                            //                        {
-                            ////
-                            /// panSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            //                            break;
-                            //                        }
-                        case CONTROL_TARGET_OSC_PARAM::Gain: {
-                            gainSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-            default:
-                break;
+        if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Edge, index)) {
+            edgeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+        } else if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Detune, index)) {
+            detuneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+        } else if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Spread, index)) {
+            spreadSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+        } else if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Gain, index)) {
+            gainSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }
     }
 }
@@ -448,10 +400,10 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams& params)
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
-    initSkewFromMid(attackSlider, params.Attack, 0.001, 0.2, " sec", nullptr, this, *this);
-    initSkewFromMid(decaySlider, params.Decay, 0.01, 0.4, " sec", nullptr, this, *this);
+    initSkewFromMid(attackSlider, params.Attack, 0.001, " sec", nullptr, this, *this);
+    initSkewFromMid(decaySlider, params.Decay, 0.01, " sec", nullptr, this, *this);
     initLinearPercent(sustainSlider, params.Sustain, 0.01, this, *this);
-    initSkewFromMid(releaseSlider, params.Release, 0.01, 0.4, " sec", nullptr, this, *this);
+    initSkewFromMid(releaseSlider, params.Release, 0.01, " sec", nullptr, this, *this);
     initLabel(attackLabel, "Attack", *this);
     initLabel(decayLabel, "Decay", *this);
     initLabel(sustainLabel, "Sustain", *this);
@@ -520,7 +472,7 @@ FilterComponent::FilterComponent(int index,
     initChoice(targetSelector, params.Target, this, body);
     initChoice(typeSelector, params.Type, this, body);
     initChoice(freqTypeSelector, params.FreqType, this, body);
-    initSkewFromMid(hzSlider, params.Hz, 0.01f, 2000.0f, " Hz", nullptr, this, body);
+    initSkewFromMid(hzSlider, params.Hz, 0.01f, " Hz", nullptr, this, body);
     auto formatSemitone = [](double value) -> std::string {
         int cent = value;
         int centAbs = std::abs(cent);
@@ -529,7 +481,7 @@ FilterComponent::FilterComponent(int index,
         return (cent == 0 ? " " : cent > 0 ? "+" : "-") + std::to_string(oct) + ":" + std::to_string(octFrac) + " oct";
     };
     initLinear(semitoneSlider, params.Semitone, 0.01, nullptr, std::move(formatSemitone), this, body);
-    initSkewFromMid(qSlider, params.Q, 0.01, 1.0, nullptr, nullptr, this, body);
+    initSkewFromMid(qSlider, params.Q, 0.01, nullptr, nullptr, this, body);
     initLinear(gainSlider, params.Gain, 0.01, " dB", nullptr, this, body);
     initLabel(targetLabel, "OSC", body);
     initLabel(typeLabel, "Type", body);
@@ -600,9 +552,8 @@ void FilterComponent::timerCallback() {
     semitoneSlider.setValue(params.Semitone->get(), juce::dontSendNotification);
     qSlider.setValue(params.Q->get(), juce::dontSendNotification);
 
-    auto freqType = static_cast<FILTER_FREQ_TYPE>(params.FreqType->getIndex());
-    hzSlider.setVisible(freqType == FILTER_FREQ_TYPE::Absolute);
-    semitoneSlider.setVisible(freqType == FILTER_FREQ_TYPE::Relative);
+    hzSlider.setVisible(params.isFreqAbsolute());
+    semitoneSlider.setVisible(!params.isFreqAbsolute());
 
     auto hasGain = params.hasGain();
     gainLabel.setEnabled(hasGain);
@@ -612,31 +563,11 @@ void FilterComponent::timerCallback() {
     semitoneSlider.setLookAndFeel(&grapeLookAndFeel);
     qSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {
-        if (p.Number->getIndex() <= 0) {
-            continue;
-        }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
-        switch (targetType) {
-            case CONTROL_TARGET_TYPE::Filter: {
-                int targetIndex = p.TargetFilter->getIndex();
-                auto targetParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(p.TargetFilterParam->getIndex());
-                if (targetIndex == index) {
-                    switch (targetParam) {
-                        case CONTROL_TARGET_FILTER_PARAM::Freq: {
-                            hzSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            semitoneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                        case CONTROL_TARGET_FILTER_PARAM::Q: {
-                            qSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-            default:
-                break;
+        if (p.isControlling(CONTROL_TARGET_FILTER_PARAM::Freq, index)) {
+            hzSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+            semitoneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+        } else if (p.isControlling(CONTROL_TARGET_FILTER_PARAM::Q, index)) {
+            qSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }
     }
 }
@@ -670,8 +601,8 @@ LfoComponent::LfoComponent(int index, LfoParams& params, std::array<ControlItemP
     initChoice(targetOscParamSelector, params.TargetOscParam, this, targetSelector);
     initChoice(targetFilterParamSelector, params.TargetFilterParam, this, targetSelector);
     initChoice(waveformSelector, params.Waveform, this, body);
-    initSkewFromMid(slowFreqSlider, params.SlowFreq, 0.01f, 1.0, " Hz", nullptr, this, body);
-    initSkewFromMid(fastFreqSlider, params.FastFreq, 0.01f, 1.0, " x", nullptr, this, body);
+    initSkewFromMid(slowFreqSlider, params.SlowFreq, 0.01f, " Hz", nullptr, this, body);
+    initSkewFromMid(fastFreqSlider, params.FastFreq, 0.01f, " x", nullptr, this, body);
     initLinear(amountSlider, params.Amount, 0.01, this, body);
 
     initLabel(targetLabel, "Destination", body);
@@ -761,16 +692,13 @@ void LfoComponent::timerCallback() {
     fastFreqSlider.setValue(params.FastFreq->get(), juce::dontSendNotification);
     amountSlider.setValue(params.Amount->get(), juce::dontSendNotification);
 
-    auto targetType = static_cast<LFO_TARGET_TYPE>(params.TargetType->getIndex());
+    auto targetType = params.getTargetType();
     targetOscSelector.setVisible(targetType == LFO_TARGET_TYPE::OSC);
     targetOscParamSelector.setVisible(targetType == LFO_TARGET_TYPE::OSC);
     targetFilterSelector.setVisible(targetType == LFO_TARGET_TYPE::Filter);
     targetFilterParamSelector.setVisible(targetType == LFO_TARGET_TYPE::Filter);
 
-    auto shouldUseFastFreq =
-        static_cast<LFO_TARGET_TYPE>(params.TargetType->getIndex()) == LFO_TARGET_TYPE::OSC &&
-        (static_cast<LFO_TARGET_OSC_PARAM>(params.TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::FM ||
-         static_cast<LFO_TARGET_OSC_PARAM>(params.TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::AM);
+    auto shouldUseFastFreq = params.shouldUseFastFreq();
     fastFreqSlider.setVisible(shouldUseFastFreq);
     slowFreqSlider.setVisible(!shouldUseFastFreq);
 
@@ -778,31 +706,11 @@ void LfoComponent::timerCallback() {
     slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     amountSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {
-        if (p.Number->getIndex() <= 0) {
-            continue;
-        }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
-        switch (targetType) {
-            case CONTROL_TARGET_TYPE::LFO: {
-                int targetIndex = p.TargetLfo->getIndex();
-                auto targetParam = static_cast<CONTROL_TARGET_LFO_PARAM>(p.TargetLfoParam->getIndex());
-                if (targetIndex == index) {
-                    switch (targetParam) {
-                        case CONTROL_TARGET_LFO_PARAM::Freq: {
-                            fastFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            slowFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                        case CONTROL_TARGET_LFO_PARAM::Amount: {
-                            amountSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-            default:
-                break;
+        if (p.isControlling(CONTROL_TARGET_LFO_PARAM::Freq, index)) {
+            fastFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+            slowFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+        } else if (p.isControlling(CONTROL_TARGET_LFO_PARAM::Amount, index)) {
+            amountSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }
     }
 }
@@ -842,9 +750,9 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams& params)
         return (oct == 0 ? " " : oct > 0 ? "+" : "-") + juce::String(std::abs(oct), 2) + " oct";
     };
     initLinear(peakFreqSlider, params.PeakFreq, 0.01, nullptr, std::move(formatPeakFreq), this, body);
-    initSkewFromMid(waitSlider, params.Wait, 0.01, 0.2f, " sec", nullptr, this, body);
-    initSkewFromMid(attackSlider, params.Attack, 0.001, 0.2f, " sec", nullptr, this, body);
-    initSkewFromMid(decaySlider, params.Decay, 0.01, 0.4f, " sec", nullptr, this, body);
+    initSkewFromMid(waitSlider, params.Wait, 0.01, " sec", nullptr, this, body);
+    initSkewFromMid(attackSlider, params.Attack, 0.001, " sec", nullptr, this, body);
+    initSkewFromMid(decaySlider, params.Decay, 0.01, " sec", nullptr, this, body);
     initLabel(targetLabel, "Destination", body);
     initLabel(typeLabel, "Type", body);
     initLabel(fadeLabel, "Fade", body);
@@ -951,7 +859,7 @@ void ModEnvComponent::timerCallback() {
     attackSlider.setValue(params.Attack->get(), juce::dontSendNotification);
     decaySlider.setValue(params.Decay->get(), juce::dontSendNotification);
 
-    auto targetType = static_cast<MODENV_TARGET_TYPE>(params.TargetType->getIndex());
+    auto targetType = params.getTargetType();
     targetOscSelector.setVisible(targetType == MODENV_TARGET_TYPE::OSC);
     targetOscParamSelector.setVisible(targetType == MODENV_TARGET_TYPE::OSC);
     targetFilterSelector.setVisible(targetType == MODENV_TARGET_TYPE::Filter);
@@ -960,7 +868,7 @@ void ModEnvComponent::timerCallback() {
     targetLfoParamSelector.setVisible(targetType == MODENV_TARGET_TYPE::LFO);
 
     auto isTargetFreq = params.isTargetFreq();
-    auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
+    auto isFadeIn = params.isFadeIn();
     peakFreqLabel.setVisible(isTargetFreq);
     peakFreqSlider.setVisible(isTargetFreq);
     fadeLabel.setVisible(!isTargetFreq);
@@ -1000,14 +908,13 @@ DelayComponent::DelayComponent(DelayParams& params, std::array<ControlItemParams
 
     initChoice(typeSelector, params.Type, this, body);
     initChoice(syncSelector, params.Sync, this, body);
-    initSkewFromMid(timeLSlider, params.TimeL, 0.01, 0.4f, " sec", nullptr, this, body);
-    initSkewFromMid(timeRSlider, params.TimeR, 0.01, 0.4f, " sec", nullptr, this, body);
-    initEnum(timeSyncLSlider, params.TimeSyncL, DELAY_TIME_SYNC_NAMES, this, body);
-    initEnum(timeSyncRSlider, params.TimeSyncR, DELAY_TIME_SYNC_NAMES, this, body);
-    initSkewFromMid(lowFreqSlider, params.LowFreq, 1.0, 2000.0f, " Hz", nullptr, this, body);
-    initSkewFromMid(highFreqSlider, params.HighFreq, 1.0, 2000.0f, " Hz", nullptr, this, body);
-    auto formatFeedback = [](double gain) { return juce::String(gain * 100, 0) + " %"; };
-    initSkewFromMid(feedbackSlider, params.Feedback, 0.01, 0.4f, nullptr, std::move(formatFeedback), this, body);
+    initSkewFromMid(timeLSlider, params.TimeL, 0.01, " sec", nullptr, this, body);
+    initSkewFromMid(timeRSlider, params.TimeR, 0.01, " sec", nullptr, this, body);
+    initEnum(timeSyncLSlider, params.TimeSyncL, this, body);
+    initEnum(timeSyncRSlider, params.TimeSyncR, this, body);
+    initSkewFromMid(lowFreqSlider, params.LowFreq, 1.0, " Hz", nullptr, this, body);
+    initSkewFromMid(highFreqSlider, params.HighFreq, 1.0, " Hz", nullptr, this, body);
+    initLinearPercent(feedbackSlider, params.Feedback, 0.01, this, body);
     initLinear(mixSlider, params.Mix, 0.01, this, body);
 
     initLabel(typeLabel, "Type", body);
@@ -1101,25 +1008,8 @@ void DelayComponent::timerCallback() {
 
     mixSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {
-        if (p.Number->getIndex() <= 0) {
-            continue;
-        }
-        auto targetType = static_cast<CONTROL_TARGET_TYPE>(p.TargetType->getIndex());
-        switch (targetType) {
-            case CONTROL_TARGET_TYPE::Master: {
-                auto targetParam = static_cast<CONTROL_TARGET_MISC_PARAM>(p.TargetMiscParam->getIndex());
-                switch (targetParam) {
-                    case CONTROL_TARGET_MISC_PARAM::DelayMix: {
-                        mixSlider.setLookAndFeel(&grapeLookAndFeelControlled);
-                        break;
-                    }
-                    default:
-                        break;
-                }
-                break;
-            }
-            default:
-                break;
+        if (p.isControlling(CONTROL_TARGET_MISC_PARAM::DelayMix)) {
+            mixSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }
     }
 }
@@ -1218,7 +1108,7 @@ void ControlItemComponent::timerCallback() {
     targetLfoParamSelector.setEnabled(enabled);
     targetMiscParamSelector.setEnabled(enabled);
 
-    auto targetType = static_cast<CONTROL_TARGET_TYPE>(params.TargetType->getIndex());
+    auto targetType = params.getTargetType();
     targetOscSelector.setVisible(targetType == CONTROL_TARGET_TYPE::OSC);
     targetOscParamSelector.setVisible(targetType == CONTROL_TARGET_TYPE::OSC);
     targetFilterSelector.setVisible(targetType == CONTROL_TARGET_TYPE::Filter);
@@ -1458,8 +1348,7 @@ void AnalyserWindow::timerCallback() {
                     auto value = 0.0f;
                     if (modEnvParams[i].Enabled->get()) {
                         value = modEnvs[i].getValue();
-                        if (!modEnvParams[i].isTargetFreq() &&
-                            static_cast<MODENV_FADE>(modEnvParams[i].Fade->getIndex()) == MODENV_FADE::In) {
+                        if (!modEnvParams[i].isTargetFreq() && modEnvParams[i].isFadeIn()) {
                             value = 1 - value;
                         }
                     }
@@ -1490,10 +1379,10 @@ void AnalyserWindow::timerCallback() {
                 relNoteNumber = newNoteNumber;
             }
             for (int i = 0; i < NUM_FILTER; ++i) {
-                auto filterType = static_cast<FILTER_TYPE>(filterParams[i].Type->getIndex());
+                auto filterType = filterParams[i].getType();
                 double freq;
                 bool isRel = false;
-                switch (static_cast<FILTER_FREQ_TYPE>(filterParams[i].FreqType->getIndex())) {
+                switch (filterParams[i].getFreqType()) {
                     case FILTER_FREQ_TYPE::Absolute: {
                         freq = filterParams[i].Hz->get();
                         break;
@@ -1656,8 +1545,7 @@ void AnalyserWindow::paint(juce::Graphics& g) {
                         continue;
                     }
                     auto spectrumWidth = displayBounds.getWidth();
-                    bool isRel = static_cast<FILTER_FREQ_TYPE>(filterParams[i].FreqType->getIndex()) ==
-                                 FILTER_FREQ_TYPE::Relative;
+                    bool isRel = !filterParams[i].isFreqAbsolute();
                     juce::Colour colour = isRel ? colour::ANALYSER_LINE2 : colour::ANALYSER_LINE;
                     paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForFilter[i][0]);
                 }

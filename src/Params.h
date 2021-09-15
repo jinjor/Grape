@@ -199,15 +199,18 @@ public:
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
 
+    VOICE_MODE getMode() { return static_cast<VOICE_MODE>(Mode->getIndex()); }
     void setPortamentoTimeFromControl(double normalizedValue) {
         *PortamentoTime = PortamentoTime->range.convertFrom0to1(normalizedValue);
     }
 
-    bool isMonoMode;
+    bool isMonoMode() { return getMode() == VOICE_MODE::Mono; }
+
+    bool isMonoModeFreezed;
     float portamentoTime;
     int pitchBendRange;
     void freeze() {
-        isMonoMode = static_cast<VOICE_MODE>(Mode->getIndex()) == VOICE_MODE::Mono;
+        isMonoModeFreezed = isMonoMode();
         portamentoTime = PortamentoTime->get();
         pitchBendRange = PitchBendRange->get();
     }
@@ -240,6 +243,26 @@ public:
     void setSpreadFromControl(double normalizedValue) { *Spread = normalizedValue; }
     void setGainFromControl(double normalizedValue) { *Gain = Gain->range.convertFrom0to1(normalizedValue); }
 
+    WAVEFORM getWaveForm() { return OSC_WAVEFORM_VALUES[Waveform->getIndex()]; }
+    bool hasEdge() {
+        switch (getWaveForm()) {
+            case WAVEFORM::Square:
+            case WAVEFORM::Triangle:
+                return true;
+            default:
+                return false;
+        }
+    }
+    bool isNoise() {
+        switch (getWaveForm()) {
+            case WAVEFORM::White:
+            case WAVEFORM::Pink:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     bool enabled;
     WAVEFORM waveform;
     float edge;
@@ -252,7 +275,7 @@ public:
     int envelope;
     void freeze() {
         enabled = Enabled->get();
-        waveform = OSC_WAVEFORM_VALUES[Waveform->getIndex()];
+        waveform = getWaveForm();
         edge = Edge->get();
         octave = Octave->get();
         coarse = Coarse->get();
@@ -315,8 +338,12 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
+
+    FILTER_TYPE getType() { return static_cast<FILTER_TYPE>(Type->getIndex()); }
+    FILTER_FREQ_TYPE getFreqType() { return static_cast<FILTER_FREQ_TYPE>(FreqType->getIndex()); }
+
     bool hasGain() {
-        switch (static_cast<FILTER_TYPE>(Type->getIndex())) {
+        switch (getType()) {
             case FILTER_TYPE::Peaking:
             case FILTER_TYPE::LowShelf:
             case FILTER_TYPE::HighShelf:
@@ -325,7 +352,7 @@ public:
                 return false;
         }
     }
-    bool isFreqAbsolute() { return static_cast<FILTER_FREQ_TYPE>(FreqType->getIndex()) == FILTER_FREQ_TYPE::Absolute; }
+    bool isFreqAbsolute() { return getFreqType() == FILTER_FREQ_TYPE::Absolute; }
 
     void setHzFromControl(double normalizedValue) { *Hz = Hz->range.convertFrom0to1(normalizedValue); }
     void setSemitoneFromControl(double normalizedValue) {
@@ -344,7 +371,7 @@ public:
     void freeze() {
         enabled = Enabled->get();
         target = Target->getIndex();
-        type = static_cast<FILTER_TYPE>(Type->getIndex());
+        type = getType();
         isFreqAbsoluteFreezed = isFreqAbsolute();
         hz = Hz->get();
         semitone = Semitone->get();
@@ -376,16 +403,21 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
+
+    WAVEFORM getWaveform() { return LFO_WAVEFORM_VALUES[Waveform->getIndex()]; }
+    LFO_TARGET_TYPE getTargetType() { return static_cast<LFO_TARGET_TYPE>(TargetType->getIndex()); }
+    LFO_TARGET_OSC_PARAM getTargetOscParam() { return static_cast<LFO_TARGET_OSC_PARAM>(TargetOscParam->getIndex()); }
+    LFO_TARGET_FILTER_PARAM getTargetFilterParam() {
+        return static_cast<LFO_TARGET_FILTER_PARAM>(TargetFilterParam->getIndex());
+    }
     bool shouldUseFastFreq() {
-        if (static_cast<LFO_TARGET_TYPE>(TargetType->getIndex()) == LFO_TARGET_TYPE::OSC) {
-            auto targetOscParam = static_cast<LFO_TARGET_OSC_PARAM>(TargetOscParam->getIndex());
-            switch (targetOscParam) {
+        if (getTargetType() == LFO_TARGET_TYPE::OSC) {
+            switch (getTargetOscParam()) {
                 case LFO_TARGET_OSC_PARAM::FM:
                 case LFO_TARGET_OSC_PARAM::AM:
                     return true;
-                    break;
                 default:
-                    break;
+                    return false;
             }
         }
         return false;
@@ -412,12 +444,12 @@ public:
     bool shouldUseFastFreqFreezed;
     void freeze() {
         enabled = Enabled->get();
-        targetType = static_cast<LFO_TARGET_TYPE>(TargetType->getIndex());
+        targetType = getTargetType();
         targetOsc = TargetOsc->getIndex();
         targetFilter = TargetFilter->getIndex();
-        targetOscParam = static_cast<LFO_TARGET_OSC_PARAM>(TargetOscParam->getIndex());
-        targetFilterParam = static_cast<LFO_TARGET_FILTER_PARAM>(TargetFilterParam->getIndex());
-        waveform = LFO_WAVEFORM_VALUES[Waveform->getIndex()];
+        targetOscParam = getTargetOscParam();
+        targetFilterParam = getTargetFilterParam();
+        waveform = getWaveform();
         slowFreq = SlowFreq->get();
         fastFreq = FastFreq->get();
         amount = Amount->get();
@@ -451,15 +483,22 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
+
+    MODENV_TARGET_TYPE getTargetType() { return static_cast<MODENV_TARGET_TYPE>(TargetType->getIndex()); }
+    MODENV_TARGET_OSC_PARAM getTargetOscParam() {
+        return static_cast<MODENV_TARGET_OSC_PARAM>(TargetOscParam->getIndex());
+    }
+    MODENV_TARGET_FILTER_PARAM getTargetFilterParam() {
+        return static_cast<MODENV_TARGET_FILTER_PARAM>(TargetFilterParam->getIndex());
+    }
+    MODENV_TARGET_LFO_PARAM getTargetLfoParam() {
+        return static_cast<MODENV_TARGET_LFO_PARAM>(TargetLfoParam->getIndex());
+    }
     bool isTargetFreq() {
-        auto targetType = static_cast<MODENV_TARGET_TYPE>(TargetType->getIndex());
-        return (targetType == MODENV_TARGET_TYPE::OSC &&
-                static_cast<MODENV_TARGET_OSC_PARAM>(TargetOscParam->getIndex()) == MODENV_TARGET_OSC_PARAM::Freq) ||
-               (targetType == MODENV_TARGET_TYPE::Filter &&
-                static_cast<MODENV_TARGET_FILTER_PARAM>(TargetFilterParam->getIndex()) ==
-                    MODENV_TARGET_FILTER_PARAM::Freq) ||
-               (targetType == MODENV_TARGET_TYPE::LFO &&
-                static_cast<MODENV_TARGET_LFO_PARAM>(TargetLfoParam->getIndex()) == MODENV_TARGET_LFO_PARAM::Freq);
+        auto t = getTargetType();
+        return (t == MODENV_TARGET_TYPE::OSC && getTargetOscParam() == MODENV_TARGET_OSC_PARAM::Freq) ||
+               (t == MODENV_TARGET_TYPE::Filter && getTargetFilterParam() == MODENV_TARGET_FILTER_PARAM::Freq) ||
+               (t == MODENV_TARGET_TYPE::LFO && getTargetLfoParam() == MODENV_TARGET_LFO_PARAM::Freq);
     }
     bool shouldUseHold() { return !isTargetFreq() && isFadeIn(); }
     bool isFadeIn() { return static_cast<MODENV_FADE>(Fade->getIndex()) == MODENV_FADE::In; }
@@ -479,13 +518,13 @@ public:
     float decay;
     void freeze() {
         enabled = Enabled->get();
-        targetType = static_cast<MODENV_TARGET_TYPE>(TargetType->getIndex());
+        targetType = getTargetType();
         targetOsc = TargetOsc->getIndex();
         targetFilter = TargetFilter->getIndex();
         targetLfo = TargetLfo->getIndex();
-        targetOscParam = static_cast<MODENV_TARGET_OSC_PARAM>(TargetOscParam->getIndex());
-        targetFilterParam = static_cast<MODENV_TARGET_FILTER_PARAM>(TargetFilterParam->getIndex());
-        targetLfoParam = static_cast<MODENV_TARGET_LFO_PARAM>(TargetLfoParam->getIndex());
+        targetOscParam = getTargetOscParam();
+        targetFilterParam = getTargetFilterParam();
+        targetLfoParam = getTargetLfoParam();
         fadeIn = isFadeIn();
         peakFreq = PeakFreq->get();
         wait = Wait->get();
@@ -519,6 +558,10 @@ public:
 
     void setMixFromControl(double normalizedValue) { *Mix = normalizedValue; }
 
+    DELAY_TYPE getType() { return static_cast<DELAY_TYPE>(Type->getIndex()); }
+    double getTimeSyncL() { return DELAY_TIME_SYNC_VALUES[TimeSyncL->getIndex()]; }
+    double getTimeSyncR() { return DELAY_TIME_SYNC_VALUES[TimeSyncR->getIndex()]; }
+
     bool enabled;
     DELAY_TYPE type;
     bool sync;
@@ -532,12 +575,12 @@ public:
     float mix;
     void freeze() {
         enabled = Enabled->get();
-        type = static_cast<DELAY_TYPE>(Type->getIndex());
+        type = getType();
         sync = Sync->get();
         timeL = TimeL->get();
         timeR = TimeR->get();
-        timeSyncL = DELAY_TIME_SYNC_VALUES[TimeSyncL->getIndex()];
-        timeSyncR = DELAY_TIME_SYNC_VALUES[TimeSyncR->getIndex()];
+        timeSyncL = getTimeSyncL();
+        timeSyncR = getTimeSyncR();
         lowFreq = LowFreq->get();
         highFreq = HighFreq->get();
         feedback = Feedback->get();
@@ -565,6 +608,36 @@ public:
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
 
+    int getCcNumber() { return CONTROL_NUMBER_VALUES[Number->getIndex()]; }
+    CONTROL_TARGET_TYPE getTargetType() { return static_cast<CONTROL_TARGET_TYPE>(TargetType->getIndex()); }
+    CONTROL_TARGET_OSC_PARAM getTargetOscParam() {
+        return static_cast<CONTROL_TARGET_OSC_PARAM>(TargetOscParam->getIndex());
+    }
+    CONTROL_TARGET_FILTER_PARAM getTargetFilterParam() {
+        return static_cast<CONTROL_TARGET_FILTER_PARAM>(TargetFilterParam->getIndex());
+    }
+    CONTROL_TARGET_LFO_PARAM getTargetLfoParam() {
+        return static_cast<CONTROL_TARGET_LFO_PARAM>(TargetLfoParam->getIndex());
+    }
+    CONTROL_TARGET_MISC_PARAM getTargetMiscParam() {
+        return static_cast<CONTROL_TARGET_MISC_PARAM>(TargetMiscParam->getIndex());
+    }
+    bool isControlling(CONTROL_TARGET_OSC_PARAM param, int index) {
+        return getCcNumber() >= 0 && getTargetType() == CONTROL_TARGET_TYPE::OSC && TargetOsc->getIndex() == index &&
+               getTargetOscParam() == param;
+    }
+    bool isControlling(CONTROL_TARGET_FILTER_PARAM param, int index) {
+        return getCcNumber() >= 0 && getTargetType() == CONTROL_TARGET_TYPE::Filter &&
+               TargetFilter->getIndex() == index && getTargetFilterParam() == param;
+    }
+    bool isControlling(CONTROL_TARGET_LFO_PARAM param, int index) {
+        return getCcNumber() >= 0 && getTargetType() == CONTROL_TARGET_TYPE::LFO && TargetLfo->getIndex() == index &&
+               getTargetLfoParam() == param;
+    }
+    bool isControlling(CONTROL_TARGET_MISC_PARAM param) {
+        return getCcNumber() >= 0 && getTargetType() == CONTROL_TARGET_TYPE::Master && getTargetMiscParam() == param;
+    }
+
     int number;
     CONTROL_TARGET_TYPE targetType;
     int targetOsc;
@@ -575,15 +648,15 @@ public:
     CONTROL_TARGET_LFO_PARAM targetLfoParam;
     CONTROL_TARGET_MISC_PARAM targetMiscParam;
     void freeze() {
-        number = CONTROL_NUMBER_VALUES[Number->getIndex()];
-        targetType = static_cast<CONTROL_TARGET_TYPE>(TargetType->getIndex());
+        number = getCcNumber();
+        targetType = getTargetType();
         targetOsc = TargetOsc->getIndex();
         targetFilter = TargetFilter->getIndex();
         targetLfo = TargetLfo->getIndex();
-        targetOscParam = static_cast<CONTROL_TARGET_OSC_PARAM>(TargetOscParam->getIndex());
-        targetFilterParam = static_cast<CONTROL_TARGET_FILTER_PARAM>(TargetFilterParam->getIndex());
-        targetLfoParam = static_cast<CONTROL_TARGET_LFO_PARAM>(TargetLfoParam->getIndex());
-        targetMiscParam = static_cast<CONTROL_TARGET_MISC_PARAM>(TargetMiscParam->getIndex());
+        targetOscParam = getTargetOscParam();
+        targetFilterParam = getTargetFilterParam();
+        targetLfoParam = getTargetLfoParam();
+        targetMiscParam = getTargetMiscParam();
     }
 
 private:

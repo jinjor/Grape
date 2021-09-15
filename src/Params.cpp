@@ -130,10 +130,12 @@ void OscParams::loadParameters(juce::XmlElement& xml) {
 EnvelopeParams::EnvelopeParams(int index) {
     auto idPrefix = "ENV" + std::to_string(index) + "_";
     auto namePrefix = "Env" + std::to_string(index) + " ";
-    Attack = new juce::AudioParameterFloat(idPrefix + "ATTACK", "Attack", {0.001f, 1.0f, 0.001f}, 0.05f);
-    Decay = new juce::AudioParameterFloat(idPrefix + "DECAY", "Decay", 0.01f, 1.0f, 0.1f);
+    Attack =
+        new juce::AudioParameterFloat(idPrefix + "ATTACK", "Attack", rangeWithSkewForCentre(0.001f, 1.0f, 0.2f), 0.05f);
+    Decay = new juce::AudioParameterFloat(idPrefix + "DECAY", "Decay", rangeWithSkewForCentre(0.01f, 1.0f, 0.4f), 0.1f);
     Sustain = new juce::AudioParameterFloat(idPrefix + "SUSTAIN", "Sustain", 0.0f, 1.0f, 0.7f);
-    Release = new juce::AudioParameterFloat(idPrefix + "RELEASE", "Release", 0.01f, 1.0f, 0.1f);
+    Release =
+        new juce::AudioParameterFloat(idPrefix + "RELEASE", "Release", rangeWithSkewForCentre(0.01f, 1.0f, 0.4f), 0.1f);
 }
 void EnvelopeParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Attack);
@@ -170,7 +172,8 @@ FilterParams::FilterParams(int index) {
     Hz = new juce::AudioParameterFloat(
         idPrefix + "HZ", namePrefix + "Hz", rangeWithSkewForCentre(30.0f, 20000.0f, 2000.0f), 4000.0f);
     Semitone = new juce::AudioParameterInt(idPrefix + "SEMITONE", namePrefix + "Semitone", -48, 48, 0);
-    Q = new juce::AudioParameterFloat(idPrefix + "Q", namePrefix + "Q", 0.01f, 100.0f, 1.0f);
+    Q = new juce::AudioParameterFloat(
+        idPrefix + "Q", namePrefix + "Q", rangeWithSkewForCentre(0.01f, 100.0f, 1.0f), 1.0f);
     Gain = new juce::AudioParameterFloat(idPrefix + "GAIN", namePrefix + "Gain", -20.0f, 20.0f, 0.0f);
 }
 void FilterParams::addAllParameters(juce::AudioProcessor& processor) {
@@ -306,9 +309,12 @@ ModEnvParams::ModEnvParams(int index) {
     Fade = new juce::AudioParameterChoice(
         idPrefix + "FADE", namePrefix + "Fade", MODENV_FADE_NAMES, MODENV_FADE_NAMES.indexOf("In"));
     PeakFreq = new juce::AudioParameterFloat(idPrefix + "PEAK_FREQ", namePrefix + "Peak Freq", -8.0f, 8.0, 2.0f);
-    Wait = new juce::AudioParameterFloat(idPrefix + "WAIT", namePrefix + "Wait", 0.0f, 1.0f, 0.5f);
-    Attack = new juce::AudioParameterFloat(idPrefix + "ATTACK", namePrefix + "Attack", {0.0f, 1.0f, 0.001f}, 0.0f);
-    Decay = new juce::AudioParameterFloat(idPrefix + "DECAY", namePrefix + "Decay", 0.0f, 1.0f, 0.2f);
+    Wait = new juce::AudioParameterFloat(
+        idPrefix + "WAIT", namePrefix + "Wait", rangeWithSkewForCentre(0.0f, 1.0f, 0.2f), 0.5f);
+    Attack = new juce::AudioParameterFloat(
+        idPrefix + "ATTACK", namePrefix + "Attack", rangeWithSkewForCentre(0.0f, 1.0f, 0.2f), 0.0f);
+    Decay = new juce::AudioParameterFloat(
+        idPrefix + "DECAY", namePrefix + "Decay", rangeWithSkewForCentre(0.0f, 1.0f, 0.4f), 0.2f);
 }
 void ModEnvParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Enabled);
@@ -364,8 +370,10 @@ DelayParams::DelayParams() {
     Type = new juce::AudioParameterChoice(
         idPrefix + "TYPE", namePrefix + "Type", DELAY_TYPE_NAMES, DELAY_TYPE_NAMES.indexOf("Parallel"));
     Sync = new juce::AudioParameterBool(idPrefix + "SYNC", namePrefix + "Sync", false);
-    TimeL = new juce::AudioParameterFloat(idPrefix + "TIME_L", namePrefix + "TimeL", 0.01f, 1.0f, 0.3f);
-    TimeR = new juce::AudioParameterFloat(idPrefix + "TIME_R", namePrefix + "TimeR", 0.01f, 1.0f, 0.4f);
+    TimeL = new juce::AudioParameterFloat(
+        idPrefix + "TIME_L", namePrefix + "TimeL", rangeWithSkewForCentre(0.01f, 1.0f, 0.4f), 0.3f);
+    TimeR = new juce::AudioParameterFloat(
+        idPrefix + "TIME_R", namePrefix + "TimeR", rangeWithSkewForCentre(0.01f, 1.0f, 0.4f), 0.4f);
     TimeSyncL = new juce::AudioParameterChoice(idPrefix + "TIME_SYNC_L",
                                                namePrefix + "TimeSyncL",
                                                DELAY_TIME_SYNC_NAMES,
@@ -374,9 +382,10 @@ DelayParams::DelayParams() {
                                                namePrefix + "TimeSyncR",
                                                DELAY_TIME_SYNC_NAMES,
                                                DELAY_TIME_SYNC_NAMES.indexOf("1/8"));
-    LowFreq = new juce::AudioParameterFloat(idPrefix + "LOW_FREQ", namePrefix + "LowFfreq", 10.0f, 20000.0f, 10.0f);
-    HighFreq =
-        new juce::AudioParameterFloat(idPrefix + "HIGH_FREQ", namePrefix + "HighFreq", 10.0f, 20000.0f, 20000.0f);
+    LowFreq = new juce::AudioParameterFloat(
+        idPrefix + "LOW_FREQ", namePrefix + "LowFfreq", rangeWithSkewForCentre(10.0f, 20000.0f, 2000.0f), 10.0f);
+    HighFreq = new juce::AudioParameterFloat(
+        idPrefix + "HIGH_FREQ", namePrefix + "HighFreq", rangeWithSkewForCentre(10.0f, 20000.0f, 2000.0f), 20000.0f);
     Feedback = new juce::AudioParameterFloat(idPrefix + "FEEDBACK", namePrefix + "Feedback", 0.0f, 1.0f, 0.3f);
     Mix = new juce::AudioParameterFloat(idPrefix + "MIX", namePrefix + "Mix", 0.0f, 1.0f, 0.3f);
 }
