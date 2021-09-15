@@ -100,7 +100,7 @@ void GrapeLookAndFeel::drawComboBox(juce::Graphics& g,
             juce::Path p;
             auto bottom = reduced.getBottom() - 0.5;
             p.addLineSegment(juce::Line<float>(reduced.getX() - 0.5, bottom, reduced.getRight() + 0.5, bottom), 0);
-            g.setColour(colour::UNDERLINE);
+            g.setColour(colour::UNDERLINE.withAlpha(box.isEnabled() ? 1.0f : 0.3f));
             g.strokePath(p, juce::PathStrokeType(1));
         }
     }
