@@ -99,7 +99,7 @@ void VoiceComponent::timerCallback() {
     portamentoTimeSlider.setValue(params.PortamentoTime->get(), juce::dontSendNotification);
     pitchBendRangeSlider.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
 
-    auto isMono = static_cast<VOICE_MODE>(params.Mode->getIndex()) == VOICE_MODE::Mono;
+    auto isMono = params.isMonoMode();
     portamentoTimeLabel.setEnabled(isMono);
     portamentoTimeSlider.setEnabled(isMono);
 
@@ -552,9 +552,8 @@ void FilterComponent::timerCallback() {
     semitoneSlider.setValue(params.Semitone->get(), juce::dontSendNotification);
     qSlider.setValue(params.Q->get(), juce::dontSendNotification);
 
-    auto freqType = static_cast<FILTER_FREQ_TYPE>(params.FreqType->getIndex());
-    hzSlider.setVisible(freqType == FILTER_FREQ_TYPE::Absolute);
-    semitoneSlider.setVisible(freqType == FILTER_FREQ_TYPE::Relative);
+    hzSlider.setVisible(params.isFreqAbsolute());
+    semitoneSlider.setVisible(!params.isFreqAbsolute());
 
     auto hasGain = params.hasGain();
     gainLabel.setEnabled(hasGain);
@@ -693,16 +692,13 @@ void LfoComponent::timerCallback() {
     fastFreqSlider.setValue(params.FastFreq->get(), juce::dontSendNotification);
     amountSlider.setValue(params.Amount->get(), juce::dontSendNotification);
 
-    auto targetType = static_cast<LFO_TARGET_TYPE>(params.TargetType->getIndex());
+    auto targetType = params.getTargetType();
     targetOscSelector.setVisible(targetType == LFO_TARGET_TYPE::OSC);
     targetOscParamSelector.setVisible(targetType == LFO_TARGET_TYPE::OSC);
     targetFilterSelector.setVisible(targetType == LFO_TARGET_TYPE::Filter);
     targetFilterParamSelector.setVisible(targetType == LFO_TARGET_TYPE::Filter);
 
-    auto shouldUseFastFreq =
-        static_cast<LFO_TARGET_TYPE>(params.TargetType->getIndex()) == LFO_TARGET_TYPE::OSC &&
-        (static_cast<LFO_TARGET_OSC_PARAM>(params.TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::FM ||
-         static_cast<LFO_TARGET_OSC_PARAM>(params.TargetOscParam->getIndex()) == LFO_TARGET_OSC_PARAM::AM);
+    auto shouldUseFastFreq = params.shouldUseFastFreq();
     fastFreqSlider.setVisible(shouldUseFastFreq);
     slowFreqSlider.setVisible(!shouldUseFastFreq);
 
@@ -863,7 +859,7 @@ void ModEnvComponent::timerCallback() {
     attackSlider.setValue(params.Attack->get(), juce::dontSendNotification);
     decaySlider.setValue(params.Decay->get(), juce::dontSendNotification);
 
-    auto targetType = static_cast<MODENV_TARGET_TYPE>(params.TargetType->getIndex());
+    auto targetType = params.getTargetType();
     targetOscSelector.setVisible(targetType == MODENV_TARGET_TYPE::OSC);
     targetOscParamSelector.setVisible(targetType == MODENV_TARGET_TYPE::OSC);
     targetFilterSelector.setVisible(targetType == MODENV_TARGET_TYPE::Filter);
@@ -872,7 +868,7 @@ void ModEnvComponent::timerCallback() {
     targetLfoParamSelector.setVisible(targetType == MODENV_TARGET_TYPE::LFO);
 
     auto isTargetFreq = params.isTargetFreq();
-    auto isFadeIn = static_cast<MODENV_FADE>(params.Fade->getIndex()) == MODENV_FADE::In;
+    auto isFadeIn = params.isFadeIn();
     peakFreqLabel.setVisible(isTargetFreq);
     peakFreqSlider.setVisible(isTargetFreq);
     fadeLabel.setVisible(!isTargetFreq);
@@ -1112,7 +1108,7 @@ void ControlItemComponent::timerCallback() {
     targetLfoParamSelector.setEnabled(enabled);
     targetMiscParamSelector.setEnabled(enabled);
 
-    auto targetType = static_cast<CONTROL_TARGET_TYPE>(params.TargetType->getIndex());
+    auto targetType = params.getTargetType();
     targetOscSelector.setVisible(targetType == CONTROL_TARGET_TYPE::OSC);
     targetOscParamSelector.setVisible(targetType == CONTROL_TARGET_TYPE::OSC);
     targetFilterSelector.setVisible(targetType == CONTROL_TARGET_TYPE::Filter);
@@ -1352,8 +1348,7 @@ void AnalyserWindow::timerCallback() {
                     auto value = 0.0f;
                     if (modEnvParams[i].Enabled->get()) {
                         value = modEnvs[i].getValue();
-                        if (!modEnvParams[i].isTargetFreq() &&
-                            static_cast<MODENV_FADE>(modEnvParams[i].Fade->getIndex()) == MODENV_FADE::In) {
+                        if (!modEnvParams[i].isTargetFreq() && modEnvParams[i].isFadeIn()) {
                             value = 1 - value;
                         }
                     }
@@ -1384,10 +1379,10 @@ void AnalyserWindow::timerCallback() {
                 relNoteNumber = newNoteNumber;
             }
             for (int i = 0; i < NUM_FILTER; ++i) {
-                auto filterType = static_cast<FILTER_TYPE>(filterParams[i].Type->getIndex());
+                auto filterType = filterParams[i].getType();
                 double freq;
                 bool isRel = false;
-                switch (static_cast<FILTER_FREQ_TYPE>(filterParams[i].FreqType->getIndex())) {
+                switch (filterParams[i].getFreqType()) {
                     case FILTER_FREQ_TYPE::Absolute: {
                         freq = filterParams[i].Hz->get();
                         break;
@@ -1550,8 +1545,7 @@ void AnalyserWindow::paint(juce::Graphics& g) {
                         continue;
                     }
                     auto spectrumWidth = displayBounds.getWidth();
-                    bool isRel = static_cast<FILTER_FREQ_TYPE>(filterParams[i].FreqType->getIndex()) ==
-                                 FILTER_FREQ_TYPE::Relative;
+                    bool isRel = !filterParams[i].isFreqAbsolute();
                     juce::Colour colour = isRel ? colour::ANALYSER_LINE2 : colour::ANALYSER_LINE;
                     paintSpectrum(g, colour, offsetX, offsetY, spectrumWidth, height, &scopeDataForFilter[i][0]);
                 }
