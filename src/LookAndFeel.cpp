@@ -98,31 +98,14 @@ void GrapeLookAndFeel::drawComboBox(juce::Graphics& g,
         auto outlineColour = box.findColour(juce::ComboBox::outlineColourId);
         {
             juce::Path p;
-            p.addLineSegment(juce::Line(reduced.getTopLeft(), reduced.getTopRight()), 1);
-            g.setColour(outlineColour.withBrightness(0.25));
-            g.strokePath(p, juce::PathStrokeType(0.5));
-        }
-        {
-            juce::Path p;
-            p.addLineSegment(juce::Line(reduced.getTopRight(), reduced.getBottomRight()), 1);
-            g.setColour(outlineColour.withBrightness(0.08));
-            g.strokePath(p, juce::PathStrokeType(0.5));
-        }
-        {
-            juce::Path p;
-            p.addLineSegment(juce::Line(reduced.getBottomRight(), reduced.getBottomLeft()), 1);
-            g.setColour(outlineColour.withBrightness(0.08));
+            auto bottom = reduced.getBottom() - 0.5;
+            p.addLineSegment(juce::Line<float>(reduced.getX() - 0.5, bottom, reduced.getRight() + 0.5, bottom), 0);
+            g.setColour(colour::UNDERLINE);
             g.strokePath(p, juce::PathStrokeType(1));
-        }
-        {
-            juce::Path p;
-            p.addLineSegment(juce::Line(reduced.getBottomLeft(), reduced.getTopLeft()), 1);
-            g.setColour(outlineColour.withBrightness(0.25));
-            g.strokePath(p, juce::PathStrokeType(0.5));
         }
     }
     {
-        juce::Rectangle<float> arrowZone(width - ARROW_ZONE_WIDTH, 0, ARROW_ZONE_WIDTH - 6.0, height);
+        auto arrowZone = juce::Rectangle<float>(width - ARROW_ZONE_WIDTH, 0, ARROW_ZONE_WIDTH, height);
         juce::Path p;
         p.addTriangle(arrowZone.getCentreX() - 4,
                       arrowZone.getCentreY() - 2,
