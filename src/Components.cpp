@@ -1211,7 +1211,7 @@ AnalyserToggle::AnalyserToggle(ANALYSER_MODE* analyserMode)
 AnalyserToggle::~AnalyserToggle() {}
 void AnalyserToggle::paint(juce::Graphics& g) {}
 void AnalyserToggle::resized() {
-    juce::Rectangle<int> bounds = getLocalBounds().reduced(2, 4);
+    juce::Rectangle<int> bounds = getLocalBounds();
     spectrumToggle.setBounds(bounds.removeFromTop(25));
     envelopeToggle.setBounds(bounds.removeFromTop(25));
     filterToggle.setBounds(bounds.removeFromTop(25));
