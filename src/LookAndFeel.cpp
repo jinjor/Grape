@@ -25,18 +25,17 @@ void GrapeLookAndFeel::drawTickBox(juce::Graphics& g,
                                    const bool shouldDrawButtonAsHighlighted,
                                    const bool shouldDrawButtonAsDown) {
     juce::ignoreUnused(isEnabled, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
-    juce::Rectangle<float> tickBounds(x, y, w, h);
-    tickBounds = tickBounds.reduced(1);
-    auto reduced = tickBounds.reduced(0.5);
+    juce::Rectangle<float> bounds = component.getLocalBounds().toFloat();
+    auto reduced = bounds.reduced(0.5);
     if (isEnabled) {
         g.setColour(colour::PIT);
-        g.fillRect(tickBounds);
+        g.fillRect(bounds);
     }
     g.setColour(colour::BORDER.withBrightness(isEnabled ? 0.1 : 0.14));
     g.drawRect(reduced, 1.0f);
     if (ticked) {
         g.setColour(colour::SELECT);
-        g.fillRect(tickBounds.reduced(1.5f));
+        g.fillRect(bounds.reduced(1.5f));
     }
 }
 void GrapeLookAndFeel::drawRotarySlider(juce::Graphics& g,

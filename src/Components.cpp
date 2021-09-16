@@ -31,22 +31,21 @@ void HeaderComponent::paint(juce::Graphics& g) {
 
     juce::GlyphArrangement ga;
     juce::Font font = juce::Font(PANEL_NAME_FONT_SIZE, juce::Font::plain).withTypefaceStyle("Bold");
-    ga.addLineOfText(font, name, 0, 0);
+    ga.addFittedText(font, name, 0, 0, bounds.getHeight(), bounds.getWidth(), juce::Justification::right, 1);
     juce::Path p;
     ga.createPath(p);
-    auto pathBounds = p.getBounds();
+    auto pathBounds = ga.getBoundingBox(0, name.length(), true);
     p.applyTransform(
         juce::AffineTransform()
             .rotated(-juce::MathConstants<float>::halfPi, 0, 0)
-            .translated(pathBounds.getHeight() / 2 + bounds.getWidth() / 2,
-                        pathBounds.getWidth() + (check == HEADER_CHECK::Hidden ? 8.0 : PANEL_NAME_HEIGHT) + 2.0));
+            .translated(0, bounds.getHeight() + (check == HEADER_CHECK::Hidden ? 8.0 : PANEL_NAME_HEIGHT) + 1.0));
     g.setColour(colour::TEXT);
     g.fillPath(p);
 }
 void HeaderComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
     auto enabledButtonArea = bounds.removeFromTop(bounds.getWidth());
-    enabledButton.setBounds(enabledButtonArea.reduced(2.0));
+    enabledButton.setBounds(enabledButtonArea.reduced(6));
 }
 
 //==============================================================================
