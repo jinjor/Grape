@@ -106,18 +106,7 @@ public:
         stepAmount2 = 0;
         steps = sampleRate * duration;
     }
-    void exponential(double duration, double targetValue, double sampleRate) {
-        this->targetValue = targetValue;
-        if (duration == 0) {
-            end();
-            return;
-        }
-        type = TRANSITION_TYPE::EXPONENTIAL;
-        stepAmount1 = std::pow(0.37, 1.0 / sampleRate / duration);  // 63% 減衰する時間とする
-        stepAmount2 = 0;
-        steps = std::log(0.005) / std::log(stepAmount1);
-    }
-    void exponential2(double duration, double targetValue, double curveFactor, double sampleRate) {
+    void exponentialFinite(double duration, double targetValue, double curveFactor, double sampleRate) {
         if (curveFactor == 0.5) {
             return linear(duration, targetValue, sampleRate);
         }
@@ -136,6 +125,17 @@ public:
         stepAmount1 = a;
         stepAmount2 = b;
         steps = N;
+    }
+    void exponentialInfinite(double duration, double targetValue, double sampleRate) {
+        this->targetValue = targetValue;
+        if (duration == 0) {
+            end();
+            return;
+        }
+        type = TRANSITION_TYPE::EXPONENTIAL;
+        stepAmount1 = std::pow(0.37, 1.0 / sampleRate / duration);  // 63% 減衰する時間とする
+        stepAmount2 = 0;
+        steps = std::log(0.005) / std::log(stepAmount1);
     }
     bool step() {
         switch (type) {
@@ -227,11 +227,11 @@ public:
     }
     void doAttack(double sampleRate) {
         phase = ADSR_PHASE::ATTACK;
-        tvalue.exponential2(attack, ADSR_PEAK, attackCurve, sampleRate);
+        tvalue.exponentialFinite(attack, ADSR_PEAK, attackCurve, sampleRate);
     }
     void doRelease(double sampleRate) {
         phase = ADSR_PHASE::RELEASE;
-        tvalue.exponential(release, ADSR_BASE, sampleRate);
+        tvalue.exponentialInfinite(release, ADSR_BASE, sampleRate);
     }
     void forceStop() {
         tvalue.init(ADSR_BASE);
@@ -251,7 +251,7 @@ public:
             case ADSR_PHASE::HOLD: {
                 if (tvalue.step()) {
                     phase = ADSR_PHASE::DECAY;
-                    tvalue.exponential(decay, sustain, sampleRate);
+                    tvalue.exponentialInfinite(decay, sustain, sampleRate);
                 }
                 //                jassert(tvalue.value == peak);
                 if (tvalue.value < ADSR_STOP_THRESHOLD) {
