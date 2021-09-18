@@ -79,6 +79,7 @@ enum class TRANSITION_TYPE {
     NONE = 0,
     LINEAR,
     EXPONENTIAL,
+    EXPONENTIAL2,
 };
 class TransitiveValue {
 public:
@@ -90,7 +91,8 @@ public:
         this->value = value;
         type = TRANSITION_TYPE::NONE;
         targetValue = value;
-        stepAmount = 0;
+        stepAmount1 = 0;
+        stepAmount2 = 0;
         steps = 0;
     }
     void linear(double duration, double targetValue, double sampleRate) {
@@ -100,7 +102,8 @@ public:
             return;
         }
         type = TRANSITION_TYPE::LINEAR;
-        stepAmount = (targetValue - value) / sampleRate / duration;
+        stepAmount1 = (targetValue - value) / sampleRate / duration;
+        stepAmount2 = 0;
         steps = sampleRate * duration;
     }
     void exponential(double duration, double targetValue, double sampleRate) {
@@ -110,13 +113,34 @@ public:
             return;
         }
         type = TRANSITION_TYPE::EXPONENTIAL;
-        stepAmount = std::pow(0.37, 1.0 / sampleRate / duration);  // 63% 減衰する時間とする
-        steps = std::log(0.005) / std::log(stepAmount);
+        stepAmount1 = std::pow(0.37, 1.0 / sampleRate / duration);  // 63% 減衰する時間とする
+        stepAmount2 = 0;
+        steps = std::log(0.005) / std::log(stepAmount1);
+    }
+    void exponential2(double duration, double targetValue, double curveFactor, double sampleRate) {
+        if (curveFactor == 0.5) {
+            return linear(duration, targetValue, sampleRate);
+        }
+        jassert(curveFactor > 0);
+        jassert(curveFactor < 1);
+        this->targetValue = targetValue;
+        if (duration == 0) {
+            end();
+            return;
+        }
+        type = TRANSITION_TYPE::EXPONENTIAL2;
+        auto N = duration * sampleRate;
+        auto aN = std::pow((1 - curveFactor) / curveFactor, 2);
+        auto a = std::pow(aN, 1.0 / N);
+        auto b = (1 - a) / (1 - aN) * (targetValue - value * aN);
+        stepAmount1 = a;
+        stepAmount2 = b;
+        steps = N;
     }
     bool step() {
         switch (type) {
             case TRANSITION_TYPE::LINEAR: {
-                value += stepAmount;
+                value += stepAmount1;
                 if (steps <= 0) {
                     end();
                     return true;
@@ -125,7 +149,16 @@ public:
                 break;
             }
             case TRANSITION_TYPE::EXPONENTIAL: {
-                value = targetValue - (targetValue - value) * stepAmount;
+                value = targetValue - (targetValue - value) * stepAmount1;
+                if (steps <= 0) {
+                    end();
+                    return true;
+                }
+                steps--;
+                break;
+            }
+            case TRANSITION_TYPE::EXPONENTIAL2: {
+                value = value * stepAmount1 + stepAmount2;
                 if (steps <= 0) {
                     end();
                     return true;
@@ -141,14 +174,16 @@ public:
     void end() {
         type = TRANSITION_TYPE::NONE;
         value = targetValue;
-        stepAmount = 0;
+        stepAmount1 = 0;
+        stepAmount2 = 0;
         steps = 0;
     }
 
 private:
     TRANSITION_TYPE type = TRANSITION_TYPE::NONE;
     double targetValue = 0;
-    double stepAmount = 0;
+    double stepAmount1 = 0;
+    double stepAmount2 = 0;
     int steps = 0;
     double endThreshold = 0;
     double setTargetAtTime(double initialValue, double targetValue, double pos);
@@ -191,7 +226,8 @@ public:
     }
     void doAttack(double sampleRate) {
         phase = ADSR_PHASE::ATTACK;
-        tvalue.linear(attack, ADSR_PEAK, sampleRate);
+        // tvalue.linear(attack, ADSR_PEAK, sampleRate);
+        tvalue.exponential2(attack, ADSR_PEAK, 0.5, sampleRate);
     }
     void doRelease(double sampleRate) {
         phase = ADSR_PHASE::RELEASE;
