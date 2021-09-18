@@ -179,17 +179,21 @@ protected:
     }
 
     void consumeLabeledKnob(juce::Rectangle<int>& parentArea, juce::Label& label, juce::Slider& knob) {
+        parentArea.removeFromLeft(LOCAL_MARGIN);
         auto area = parentArea.removeFromLeft(SLIDER_WIDTH);
-        label.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
-        knob.setBounds(area.removeFromTop(KNOB_HEIGHT).reduced(LOCAL_MARGIN));
+        label.setBounds(area.removeFromTop(LABEL_HEIGHT));
+        area.removeFromTop(LOCAL_MARGIN);
+        knob.setBounds(area.removeFromTop(KNOB_HEIGHT));
     }
     void consumeLabeledKnob(juce::Rectangle<int>& parentArea,
                             juce::Label& label,
                             juce::Slider& knob1,
                             juce::Slider& knob2) {
+        parentArea.removeFromLeft(LOCAL_MARGIN);
         auto area = parentArea.removeFromLeft(SLIDER_WIDTH);
-        label.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
-        auto knobBounds = area.removeFromTop(KNOB_HEIGHT).reduced(LOCAL_MARGIN);
+        label.setBounds(area.removeFromTop(LABEL_HEIGHT));
+        area.removeFromTop(LOCAL_MARGIN);
+        auto knobBounds = area.removeFromTop(KNOB_HEIGHT);
         knob1.setBounds(knobBounds);
         knob2.setBounds(knobBounds);
     }
@@ -198,10 +202,9 @@ protected:
                             juce::Slider& knob1,
                             juce::Label& label2,
                             juce::Slider& knob2) {
-        auto area1 = parentArea.removeFromLeft(SLIDER_WIDTH);
-        auto area2 = area1;
-        consumeLabeledKnob(area1, label1, knob1);
-        consumeLabeledKnob(area2, label2, knob2);
+        auto copied = parentArea;
+        consumeLabeledKnob(parentArea, label1, knob1);
+        consumeLabeledKnob(copied, label2, knob2);
     }
     void consumeLabeledComboBox(juce::Rectangle<int>& parentArea, int width, juce::Label& label, juce::Component& box) {
         auto area = parentArea.removeFromLeft(width);
@@ -393,11 +396,13 @@ private:
 
     HeaderComponent header;
 
+    juce::Slider attackCurveSlider;
     juce::Slider attackSlider;
     juce::Slider decaySlider;
     juce::Slider sustainSlider;
     juce::Slider releaseSlider;
 
+    juce::Label attackCurveLabel;
     juce::Label attackLabel;
     juce::Label decayLabel;
     juce::Label sustainLabel;
@@ -705,17 +710,19 @@ private:
     public:
         SimpleAmpEnvParams() {}
         SimpleAmpEnvParams(EnvelopeParams& envelopeParams) {
+            ac = envelopeParams.AttackCurve->get();
             a = envelopeParams.Attack->get();
             d = envelopeParams.Decay->get();
             s = envelopeParams.Sustain->get();
             r = envelopeParams.Release->get();
         }
         SimpleAmpEnvParams(const SimpleAmpEnvParams&) = delete;
+        float ac = 0;
         float a = 0;
         float d = 0;
         float s = 0;
         float r = 0;
-        bool equals(SimpleAmpEnvParams& p) { return a == p.a && d == p.d && s == p.s && r == p.r; }
+        bool equals(SimpleAmpEnvParams& p) { return ac == p.ac && a == p.a && d == p.d && s == p.s && r == p.r; }
     };
     class SimpleModEnvParams {
     public:

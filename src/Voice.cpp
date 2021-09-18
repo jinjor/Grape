@@ -62,7 +62,7 @@ void GrapeVoice::startNote(int midiNoteNumber,
         }
         for (int i = 0; i < NUM_ENVELOPE; ++i) {
             auto &params = envelopeParams[i];
-            adsr[i].setParams(params.attack, 0.0, params.decay, params.sustain, params.release);
+            adsr[i].setParams(params.attackCurve, params.attack, 0.0, params.decay, params.sustain, params.release);
             adsr[i].doAttack(fixedSampleRate);
         }
         for (int i = 0; i < NUM_FILTER; ++i) {
@@ -74,9 +74,9 @@ void GrapeVoice::startNote(int midiNoteNumber,
         for (int i = 0; i < NUM_MODENV; ++i) {
             auto &params = modEnvParams[i];
             if (params.shouldUseHold()) {
-                modEnvs[i].setParams(0.0, params.wait, params.decay, 0.0, 0.0);
+                modEnvs[i].setParams(0.5, 0.0, params.wait, params.decay, 0.0, 0.0);
             } else {
-                modEnvs[i].setParams(params.attack, 0.0, params.decay, 0.0, 0.0);
+                modEnvs[i].setParams(0.5, params.attack, 0.0, params.decay, 0.0, 0.0);
             }
             modEnvs[i].doAttack(fixedSampleRate);
         }
@@ -143,7 +143,7 @@ void GrapeVoice::applyParamsBeforeLoop(double sampleRate) {
     }
     for (int i = 0; i < NUM_ENVELOPE; ++i) {
         auto &params = envelopeParams[i];
-        adsr[i].setParams(params.attack, 0.0, params.decay, params.sustain, params.release);
+        adsr[i].setParams(params.attackCurve, params.attack, 0.0, params.decay, params.sustain, params.release);
     }
     for (int i = 0; i < NUM_FILTER; ++i) {
         filters[i].setSampleRate(sampleRate);
@@ -156,9 +156,9 @@ void GrapeVoice::applyParamsBeforeLoop(double sampleRate) {
     for (int i = 0; i < NUM_MODENV; ++i) {
         auto &params = modEnvParams[i];
         if (params.shouldUseHold()) {
-            modEnvs[i].setParams(0.0, params.wait, params.decay, 0.0, 0.0);
+            modEnvs[i].setParams(0.5, 0.0, params.wait, params.decay, 0.0, 0.0);
         } else {
-            modEnvs[i].setParams(params.attack, 0.0, params.decay, 0.0, 0.0);
+            modEnvs[i].setParams(0.5, params.attack, 0.0, params.decay, 0.0, 0.0);
         }
     }
 }

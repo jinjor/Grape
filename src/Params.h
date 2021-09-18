@@ -293,6 +293,7 @@ private:
 //==============================================================================
 class EnvelopeParams : public SynthParametersBase {
 public:
+    juce::AudioParameterFloat* AttackCurve;
     juce::AudioParameterFloat* Attack;
     juce::AudioParameterFloat* Decay;
     juce::AudioParameterFloat* Sustain;
@@ -305,11 +306,13 @@ public:
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
 
+    float attackCurve;
     float attack;
     float decay;
     float sustain;
     float release;
     void freeze() {
+        attackCurve = AttackCurve->get();
         attack = Attack->get();
         decay = Decay->get();
         sustain = Sustain->get();

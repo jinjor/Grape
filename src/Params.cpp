@@ -130,6 +130,7 @@ void OscParams::loadParameters(juce::XmlElement& xml) {
 EnvelopeParams::EnvelopeParams(int index) {
     auto idPrefix = "ENV" + std::to_string(index) + "_";
     auto namePrefix = "Env" + std::to_string(index) + " ";
+    AttackCurve = new juce::AudioParameterFloat(idPrefix + "ATTACK_CURVE", "Attack Curve", 0.01, 0.99, 0.5f);
     Attack =
         new juce::AudioParameterFloat(idPrefix + "ATTACK", "Attack", rangeWithSkewForCentre(0.001f, 1.0f, 0.2f), 0.05f);
     Decay = new juce::AudioParameterFloat(idPrefix + "DECAY", "Decay", rangeWithSkewForCentre(0.01f, 1.0f, 0.4f), 0.1f);
@@ -138,18 +139,21 @@ EnvelopeParams::EnvelopeParams(int index) {
         new juce::AudioParameterFloat(idPrefix + "RELEASE", "Release", rangeWithSkewForCentre(0.01f, 1.0f, 0.4f), 0.1f);
 }
 void EnvelopeParams::addAllParameters(juce::AudioProcessor& processor) {
+    processor.addParameter(AttackCurve);
     processor.addParameter(Attack);
     processor.addParameter(Decay);
     processor.addParameter(Sustain);
     processor.addParameter(Release);
 }
 void EnvelopeParams::saveParameters(juce::XmlElement& xml) {
+    xml.setAttribute(AttackCurve->paramID, (double)AttackCurve->get());
     xml.setAttribute(Attack->paramID, (double)Attack->get());
     xml.setAttribute(Decay->paramID, (double)Decay->get());
     xml.setAttribute(Sustain->paramID, (double)Sustain->get());
     xml.setAttribute(Release->paramID, (double)Release->get());
 }
 void EnvelopeParams::loadParameters(juce::XmlElement& xml) {
+    *AttackCurve = (float)xml.getDoubleAttribute(AttackCurve->paramID, 0.5);
     *Attack = (float)xml.getDoubleAttribute(Attack->paramID, 0.01);
     *Decay = (float)xml.getDoubleAttribute(Decay->paramID, 0.01);
     *Sustain = (float)xml.getDoubleAttribute(Sustain->paramID, 1.0);
