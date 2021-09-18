@@ -217,7 +217,8 @@ public:
     Adsr(const Adsr &) = delete;
     double getValue() { return tvalue.value; }
     bool isActive() { return phase != ADSR_PHASE::WAIT; }
-    void setParams(double a, double h, double d, double s, double r) {
+    void setParams(double curve, double a, double h, double d, double s, double r) {
+        attackCurve = curve;
         attack = a;
         hold = h;
         decay = d;
@@ -226,8 +227,7 @@ public:
     }
     void doAttack(double sampleRate) {
         phase = ADSR_PHASE::ATTACK;
-        // tvalue.linear(attack, ADSR_PEAK, sampleRate);
-        tvalue.exponential2(attack, ADSR_PEAK, 0.5, sampleRate);
+        tvalue.exponential2(attack, ADSR_PEAK, attackCurve, sampleRate);
     }
     void doRelease(double sampleRate) {
         phase = ADSR_PHASE::RELEASE;
@@ -297,13 +297,14 @@ public:
     }
 
 private:
-    double attack;    // ms
-    double hold;      // ms
-    double decay;     // ms
-    double sustain;   // 0-1
-    double release;   // ms
-    double base = 0;  // 0-1
-    double peak = 1;  // 0-1
+    double attackCurve;  // 0-1
+    double attack;       // ms
+    double hold;         // ms
+    double decay;        // ms
+    double sustain;      // 0-1
+    double release;      // ms
+    double base = 0;     // 0-1
+    double peak = 1;     // 0-1
     ADSR_PHASE phase = phase = ADSR_PHASE::WAIT;
     TransitiveValue tvalue;
 };

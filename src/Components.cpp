@@ -390,7 +390,9 @@ void OscComponent::timerCallback() {
 EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams& params)
     : index(index),
       params(params),
-      header("AMP ENV " + std::to_string(index + 1), HEADER_CHECK::Disabled),
+      header("ENV " + std::to_string(index + 1), HEADER_CHECK::Hidden),
+      attackCurveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
+                        juce::Slider::TextEntryBoxPosition::NoTextBox),
       attackSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox),
       decaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -402,10 +404,12 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams& params)
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
+    initLinear(attackCurveSlider, params.AttackCurve, 0.01, this, *this);
     initSkewFromMid(attackSlider, params.Attack, 0.001, " sec", nullptr, this, *this);
     initSkewFromMid(decaySlider, params.Decay, 0.01, " sec", nullptr, this, *this);
     initLinearPercent(sustainSlider, params.Sustain, 0.01, this, *this);
     initSkewFromMid(releaseSlider, params.Release, 0.01, " sec", nullptr, this, *this);
+    initLabel(attackCurveLabel, "A. Curve", *this);
     initLabel(attackLabel, "Attack", *this);
     initLabel(decayLabel, "Decay", *this);
     initLabel(sustainLabel, "Sustain", *this);
@@ -423,16 +427,16 @@ void EnvelopeComponent::resized() {
     auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
     header.setBounds(headerArea);
 
-    auto bodyHeight = bounds.getHeight();
-    auto upperArea = bounds.removeFromTop(bodyHeight / 2);
-    auto& lowerArea = bounds;
-    consumeLabeledKnob(upperArea, attackLabel, attackSlider);
-    consumeLabeledKnob(upperArea, decayLabel, decaySlider);
-    consumeLabeledKnob(lowerArea, sustainLabel, sustainSlider);
-    consumeLabeledKnob(lowerArea, releaseLabel, releaseSlider);
+    consumeLabeledKnob(bounds, attackCurveLabel, attackCurveSlider);
+    consumeLabeledKnob(bounds, attackLabel, attackSlider);
+    consumeLabeledKnob(bounds, decayLabel, decaySlider);
+    consumeLabeledKnob(bounds, sustainLabel, sustainSlider);
+    consumeLabeledKnob(bounds, releaseLabel, releaseSlider);
 }
 void EnvelopeComponent::sliderValueChanged(juce::Slider* slider) {
-    if (slider == &attackSlider) {
+    if (slider == &attackCurveSlider) {
+        *params.AttackCurve = (float)attackCurveSlider.getValue();
+    } else if (slider == &attackSlider) {
         *params.Attack = (float)attackSlider.getValue();
     } else if (slider == &decaySlider) {
         *params.Decay = (float)decaySlider.getValue();
@@ -443,6 +447,7 @@ void EnvelopeComponent::sliderValueChanged(juce::Slider* slider) {
     }
 }
 void EnvelopeComponent::timerCallback() {
+    attackCurveSlider.setValue(params.AttackCurve->get(), juce::dontSendNotification);
     attackSlider.setValue(params.Attack->get(), juce::dontSendNotification);
     decaySlider.setValue(params.Decay->get(), juce::dontSendNotification);
     sustainSlider.setValue(params.Sustain->get(), juce::dontSendNotification);
@@ -513,7 +518,7 @@ void FilterComponent::resized() {
     auto& lowerArea = bounds;
     consumeLabeledComboBox(upperArea, 70, targetLabel, targetSelector);
     consumeLabeledComboBox(upperArea, 120, typeLabel, typeSelector);
-    consumeLabeledComboBox(lowerArea, 70, freqTypeLabel, freqTypeSelector);
+    consumeLabeledComboBox(lowerArea, 60, freqTypeLabel, freqTypeSelector);
     consumeLabeledKnob(lowerArea, freqLabel, hzSlider, semitoneSlider);
     consumeLabeledKnob(lowerArea, qLabel, qSlider);
     consumeLabeledKnob(lowerArea, gainLabel, gainSlider);
@@ -1122,7 +1127,7 @@ void ControlItemComponent::timerCallback() {
 
 //==============================================================================
 ControlComponent::ControlComponent(std::array<ControlItemParams, NUM_CONTROL>& params)
-    : header("CONTROLS", HEADER_CHECK::Disabled),
+    : header("CONTROLS", HEADER_CHECK::Hidden),
       controlItemComponents{ControlItemComponent(params[0]),
                             ControlItemComponent(params[1]),
                             ControlItemComponent(params[2]),
@@ -1316,7 +1321,8 @@ void AnalyserWindow::timerCallback() {
             auto maxSec = maxAD + maxR;
             auto sampleRate = (float)scopeSize / maxSec;
             for (int i = 0; i < NUM_ENVELOPE; i++) {
-                ampEnvs[i].setParams(envelopeParams[i].Attack->get(),
+                ampEnvs[i].setParams(envelopeParams[i].AttackCurve->get(),
+                                     envelopeParams[i].Attack->get(),
                                      0,
                                      envelopeParams[i].Decay->get(),
                                      envelopeParams[i].Sustain->get(),
@@ -1324,9 +1330,10 @@ void AnalyserWindow::timerCallback() {
             }
             for (int i = 0; i < NUM_MODENV; i++) {
                 if (modEnvParams[i].shouldUseHold()) {
-                    modEnvs[i].setParams(0.0, modEnvParams[i].Wait->get(), modEnvParams[i].Decay->get(), 0.0, 0.0);
+                    modEnvs[i].setParams(0.5, 0.0, modEnvParams[i].Wait->get(), modEnvParams[i].Decay->get(), 0.0, 0.0);
                 } else {
-                    modEnvs[i].setParams(modEnvParams[i].Attack->get(), 0.0, modEnvParams[i].Decay->get(), 0.0, 0.0);
+                    modEnvs[i].setParams(
+                        0.5, modEnvParams[i].Attack->get(), 0.0, modEnvParams[i].Decay->get(), 0.0, 0.0);
                 }
             }
             for (int i = 0; i < NUM_ENVELOPE; i++) {

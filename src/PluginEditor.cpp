@@ -104,7 +104,7 @@ void GrapeAudioProcessorEditor::resized() {
         auto upperRightArea = upperArea.removeFromRight(width * 0.36);
         {
             auto area = upperLeftArea.removeFromLeft(width * 0.24);
-            voiceComponent.setBounds(area);
+            voiceComponent.setBounds(area.reduced(PANEL_MARGIN));
         }
         {
             auto area = upperLeftArea;
@@ -133,11 +133,11 @@ void GrapeAudioProcessorEditor::resized() {
     auto rightArea = middleArea;
     {
         auto leftUpperArea = leftArea.removeFromTop(middleHeight / 2);
+        auto upperArea = leftUpperArea.removeFromTop(leftUpperArea.getHeight() * 0.5);
+        auto lowerArea = leftUpperArea;
 
-        auto env0Area = leftUpperArea.removeFromLeft(leftUpperArea.getWidth() / 2);
-        auto env1Area = leftUpperArea;
-        envelopeComponents[0].setBounds(env0Area.reduced(PANEL_MARGIN));
-        envelopeComponents[1].setBounds(env1Area.reduced(PANEL_MARGIN));
+        envelopeComponents[0].setBounds(upperArea.reduced(PANEL_MARGIN));
+        envelopeComponents[1].setBounds(lowerArea.reduced(PANEL_MARGIN));
     }
     {
         auto area = leftArea;
