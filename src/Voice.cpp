@@ -47,7 +47,7 @@ void GrapeVoice::startNote(int midiNoteNumber,
         auto sampleRate = getSampleRate();
         smoothNote.init(midiNoteNumber);
         if (stolen) {
-            smoothVelocity.exponential(0.01, velocity, sampleRate);
+            smoothVelocity.exponentialInfinite(0.01, velocity, sampleRate);
         } else {
             smoothVelocity.init(velocity);
         }
@@ -107,8 +107,8 @@ void GrapeVoice::stopNote(float velocity, bool allowTailOff) {
 void GrapeVoice::glide(int midiNoteNumber, float velocity) {
     auto sampleRate = getSampleRate();
     auto portamentTime = voiceParams.portamentoTime;
-    smoothNote.exponential(portamentTime, midiNoteNumber, sampleRate);
-    smoothVelocity.exponential(portamentTime, velocity, sampleRate);
+    smoothNote.exponentialInfinite(portamentTime, midiNoteNumber, sampleRate);
+    smoothVelocity.exponentialInfinite(portamentTime, velocity, sampleRate);
 }
 void GrapeVoice::renderNextBlock(juce::AudioBuffer<float> &outputBuffer, int startSample, int numSamples) {
     if (GrapeSound *playingSound = dynamic_cast<GrapeSound *>(getCurrentlyPlayingSound().get())) {
