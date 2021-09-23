@@ -75,6 +75,43 @@ private:
 };
 
 //==============================================================================
+class WaveShaper {
+public:
+    const float *dist1 = reinterpret_cast<const float *>(BinaryData::dist1);  // 128 variations
+    WaveShaper(){};
+    ~WaveShaper(){};
+    WaveShaper(const WaveShaper &) = delete;
+    double getDist1Value(double a, double x) {
+        if (x < -1.0) {
+            return -1.0;
+        }
+        if (x > 1.0) {
+            return 1.0;
+        }
+        const float *partial = getPartial(dist1, a);
+        auto y = getValue(partial, x);
+        // DBG("x: " << x << ", y: " << y);
+        return y;
+    }
+
+private:
+    double getValue(const float *partial, float x) {
+        jassert(x >= -1.0);
+        jassert(x <= 1.0);
+        float indexFloat = ((x + 1.0) * 0.5) * 4095;
+        int index = indexFloat;
+        float fragment = indexFloat - index;
+        return partial[index] * (1 - fragment) + partial[index + 1] * fragment;
+    }
+    const float *getPartial(const float *data, double a) {
+        jassert(a >= 0.0);
+        jassert(a <= 1.0);
+        int partialIndex = a * 127;
+        return &data[partialIndex * 4096];
+    }
+};
+
+//==============================================================================
 enum class TRANSITION_TYPE {
     NONE = 0,
     LINEAR,

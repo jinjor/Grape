@@ -344,11 +344,20 @@ public:
         auto *leftOut = buffer.getWritePointer(0, startSample);
         auto *rightOut = buffer.getWritePointer(1, startSample);
 
+        auto distortionEnabled = true;  // TODO
+        auto distortionAmount = 0.8;
+
         auto delayEnabled = delayParams.enabled;
         auto expression = globalParams.expression;
         auto masterVolume = globalParams.masterVolume * globalParams.midiVolume;
         for (int i = 0; i < numSamples; ++i) {
             double sample[2]{leftIn[i] * expression, rightIn[i] * expression};
+
+            // Distortion
+            if (distortionEnabled) {
+                sample[0] = waveShaper.getDist1Value(distortionAmount, sample[0]);
+                sample[1] = waveShaper.getDist1Value(distortionAmount, sample[1]);
+            }
 
             // Delay
             if (delayEnabled) {
@@ -516,4 +525,5 @@ private:
     DelayParams &delayParams;
 
     StereoDelay stereoDelay;
+    WaveShaper waveShaper;
 };

@@ -7,6 +7,7 @@ add_custom_command(
         parabola
         saw
         sine
+        dist1
     COMMAND wavetable-gen
     DEPENDS wavetable-gen
     VERBATIM)
@@ -17,6 +18,7 @@ add_custom_target(wavetables
         parabola
         saw
         sine
+        dist1
     VERBATIM)
 
 juce_add_binary_data(GrapePluginBinaries SOURCES 
@@ -24,5 +26,6 @@ juce_add_binary_data(GrapePluginBinaries SOURCES
     ${CMAKE_BUILD_DIR}/${CMAKE_CURRENT_BINARY_DIR}/parabola
     ${CMAKE_BUILD_DIR}/${CMAKE_CURRENT_BINARY_DIR}/saw
     ${CMAKE_BUILD_DIR}/${CMAKE_CURRENT_BINARY_DIR}/sine
+    ${CMAKE_BUILD_DIR}/${CMAKE_CURRENT_BINARY_DIR}/dist1
 )
 add_dependencies(GrapePluginBinaries wavetables)

@@ -3,7 +3,6 @@
 #include <fstream>
 #include <iostream>
 
-
 namespace {
 const int NUM_DIVISIONS = 4095;
 const int NUM_SAMPLES = NUM_DIVISIONS + 1;
@@ -14,6 +13,7 @@ const std::string LOOKUP_FILE = "lookup";
 const std::string SINE_FILE = "sine";
 const std::string SAW_FILE = "saw";
 const std::string PARABOLA_FILE = "parabola";
+const std::string DIST1_FILE = "dist1";
 }  // namespace
 
 int main() {
@@ -111,6 +111,22 @@ int main() {
         std::ofstream ofs(PARABOLA_FILE, std::ios::out | std::ios::binary);
         ofs.write(reinterpret_cast<const char*>(parabolaTable), 128 * NUM_SAMPLES * sizeof(float));
         delete[] parabolaTable;
+    }
+    {
+        std::cout << "generating waveshaper for distortion 1" << std::endl;
+        float* dist1Table = new float[128 * NUM_SAMPLES]();
+        for (int amount = 0; amount < 128; amount++) {
+            auto a = 1.0 / 129 * amount;
+            for (int i = 0; i < NUM_SAMPLES; i++) {
+                auto x = 2.0 / NUM_DIVISIONS * i - 1.0;
+                // auto y = x / (a * std::abs(x) - a + 1);
+                auto y = (1.0 + a) * x / (1.0 - a + 2.0 * a * std::abs(x));
+                dist1Table[amount * NUM_SAMPLES + i] = y;
+            }
+        }
+        std::ofstream ofs(DIST1_FILE, std::ios::out | std::ios::binary);
+        ofs.write(reinterpret_cast<const char*>(dist1Table), 128 * NUM_SAMPLES * sizeof(float));
+        delete[] dist1Table;
     }
     return 0;
 }
