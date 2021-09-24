@@ -120,7 +120,8 @@ int main() {
             for (int i = 0; i < NUM_SAMPLES; i++) {
                 auto x = 2.0 / NUM_DIVISIONS * i - 1.0;
                 // auto y = x / (a * std::abs(x) - a + 1);
-                auto y = (1.0 + a) * x / (1.0 - a + 2.0 * a * std::abs(x));
+                // auto y = (1.0 + a) * x / (1.0 - a + 2.0 * a * std::abs(x));
+                auto y = -a / 2.0 * x * x * x + (1.0 + a / 2.0) * x;
                 dist1Table[amount * NUM_SAMPLES + i] = y;
             }
         }

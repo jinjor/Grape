@@ -198,6 +198,7 @@ private:
     Filter filters[NUM_FILTER];
     Osc lfos[NUM_LFO];
     Adsr modEnvs[NUM_MODENV];
+    WaveShaper waveShaper;
 
     TransitiveValue smoothNote;
     TransitiveValue smoothVelocity;
@@ -344,7 +345,7 @@ public:
         auto *leftOut = buffer.getWritePointer(0, startSample);
         auto *rightOut = buffer.getWritePointer(1, startSample);
 
-        auto distortionEnabled = true;  // TODO
+        auto distortionEnabled = false;  // TODO
         auto distortionAmount = 0.8;
 
         auto delayEnabled = delayParams.enabled;

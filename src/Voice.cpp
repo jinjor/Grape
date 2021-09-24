@@ -287,6 +287,10 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         o[0] *= oscGain;
         o[1] *= oscGain;
 
+        auto distortionAmount = 1.0;
+        o[0] = waveShaper.getDist1Value(distortionAmount, o[0]);
+        o[1] = waveShaper.getDist1Value(distortionAmount, o[1]);
+
         for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
             auto &fp = filterParams[filterIndex];
             if (!fp.enabled) {
