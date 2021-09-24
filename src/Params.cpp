@@ -367,6 +367,26 @@ void ModEnvParams::loadParameters(juce::XmlElement& xml) {
 }
 
 //==============================================================================
+DistortionParams::DistortionParams() {
+    std::string idPrefix = "DISTORTION_";
+    std::string namePrefix = "Distortion ";
+    Enabled = new juce::AudioParameterBool(idPrefix + "ENABLED", namePrefix + "Enabled", false);
+    Amount = new juce::AudioParameterFloat(idPrefix + "AMOUNT", namePrefix + "Amount", 0.0f, 1.0f, 0.5f);
+}
+void DistortionParams::addAllParameters(juce::AudioProcessor& processor) {
+    processor.addParameter(Enabled);
+    processor.addParameter(Amount);
+}
+void DistortionParams::saveParameters(juce::XmlElement& xml) {
+    xml.setAttribute(Enabled->paramID, Enabled->get());
+    xml.setAttribute(Amount->paramID, (double)Amount->get());
+}
+void DistortionParams::loadParameters(juce::XmlElement& xml) {
+    *Enabled = xml.getBoolAttribute(Enabled->paramID, false);
+    *Amount = (float)xml.getDoubleAttribute(Amount->paramID, 0.01);
+}
+
+//==============================================================================
 DelayParams::DelayParams() {
     std::string idPrefix = "DELAY_";
     std::string namePrefix = "Delay ";

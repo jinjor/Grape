@@ -540,6 +540,27 @@ private:
 };
 
 //==============================================================================
+class DistortionParams : public SynthParametersBase {
+public:
+    juce::AudioParameterBool* Enabled;
+    juce::AudioParameterFloat* Amount;
+    DistortionParams();
+    DistortionParams(const DistortionParams&) = delete;
+    virtual void addAllParameters(juce::AudioProcessor& processor) override;
+    virtual void saveParameters(juce::XmlElement& xml) override;
+    virtual void loadParameters(juce::XmlElement& xml) override;
+
+    bool enabled;
+    float amount;
+    void freeze() {
+        enabled = Enabled->get();
+        amount = Amount->get();
+    }
+
+private:
+};
+
+//==============================================================================
 class DelayParams : public SynthParametersBase {
 public:
     juce::AudioParameterBool* Enabled;
