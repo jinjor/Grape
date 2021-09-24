@@ -16,7 +16,8 @@ GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo *currentPosition
                        std::array<EnvelopeParams, NUM_ENVELOPE> &envelopeParams,
                        std::array<FilterParams, NUM_FILTER> &filterParams,
                        std::array<LfoParams, NUM_LFO> &lfoParams,
-                       std::array<ModEnvParams, NUM_MODENV> &modEnvParams)
+                       std::array<ModEnvParams, NUM_MODENV> &modEnvParams,
+                       DistortionParams &distortionParams)
     : perf(juce::PerformanceCounter("voice cycle", 100000)),
       currentPositionInfo(currentPositionInfo),
       globalParams(globalParams),
@@ -26,6 +27,7 @@ GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo *currentPosition
       filterParams(filterParams),
       lfoParams(lfoParams),
       modEnvParams(modEnvParams),
+      distortionParams(distortionParams),
       oscs{MultiOsc(), MultiOsc(), MultiOsc()},
       adsr{Adsr(), Adsr()},
       filters{Filter(), Filter()},
@@ -287,9 +289,11 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         o[0] *= oscGain;
         o[1] *= oscGain;
 
-        // auto distortionAmount = 1.0;
-        // o[0] = waveShaper.getDist1Value(distortionAmount, o[0]);
-        // o[1] = waveShaper.getDist1Value(distortionAmount, o[1]);
+        if (distortionParams.enabled) {
+            auto distortionAmount = distortionParams.amount;
+            o[0] = waveShaper.getDist1Value(distortionAmount, o[0]);
+            o[1] = waveShaper.getDist1Value(distortionAmount, o[1]);
+        }
 
         for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
             auto &fp = filterParams[filterIndex];

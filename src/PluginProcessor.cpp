@@ -170,7 +170,8 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
                                       envelopeParams,
                                       filterParams,
                                       lfoParams,
-                                      modEnvParams));
+                                      modEnvParams,
+                                      distortionParams));
     } else if (voiceMode == VOICE_MODE::Poly && synth.getNumVoices() != numVoices) {
         synth.clearVoices();
         for (auto i = 0; i < numVoices; ++i) {
@@ -181,7 +182,8 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
                                           envelopeParams,
                                           filterParams,
                                           lfoParams,
-                                          modEnvParams));
+                                          modEnvParams,
+                                          distortionParams));
         }
     }
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);

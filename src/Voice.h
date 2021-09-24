@@ -168,7 +168,8 @@ public:
                std::array<EnvelopeParams, NUM_ENVELOPE> &envelopeParams,
                std::array<FilterParams, NUM_FILTER> &filterParams,
                std::array<LfoParams, NUM_LFO> &lfoParams,
-               std::array<ModEnvParams, NUM_MODENV> &modEnvParams);
+               std::array<ModEnvParams, NUM_MODENV> &modEnvParams,
+               DistortionParams &distortionParams);
     ~GrapeVoice();
     bool canPlaySound(juce::SynthesiserSound *sound) override;
     void startNote(int midiNoteNumber,
@@ -194,6 +195,7 @@ private:
     std::array<FilterParams, NUM_FILTER> &filterParams;
     std::array<LfoParams, NUM_LFO> &lfoParams;
     std::array<ModEnvParams, NUM_MODENV> &modEnvParams;
+    DistortionParams &distortionParams;
 
     MultiOsc oscs[NUM_OSC];
     Adsr adsr[NUM_ENVELOPE];
@@ -360,10 +362,10 @@ public:
             double sample[2]{leftIn[i] * expression, rightIn[i] * expression};
 
             // Distortion
-            if (distortionEnabled) {
-                sample[0] = waveShaper.getDist1Value(distortionAmount, sample[0]);
-                sample[1] = waveShaper.getDist1Value(distortionAmount, sample[1]);
-            }
+            // if (distortionEnabled) {
+            //     sample[0] = waveShaper.getDist1Value(distortionAmount, sample[0]);
+            //     sample[1] = waveShaper.getDist1Value(distortionAmount, sample[1]);
+            // }
 
             // Delay
             if (delayEnabled) {
