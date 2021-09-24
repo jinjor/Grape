@@ -1128,12 +1128,8 @@ void ControlItemComponent::timerCallback() {
 //==============================================================================
 ControlComponent::ControlComponent(std::array<ControlItemParams, NUM_CONTROL>& params)
     : header("CONTROLS", HEADER_CHECK::Hidden),
-      controlItemComponents{ControlItemComponent(params[0]),
-                            ControlItemComponent(params[1]),
-                            ControlItemComponent(params[2]),
-                            ControlItemComponent(params[3]),
-                            ControlItemComponent(params[4]),
-                            ControlItemComponent(params[5])} {
+      controlItemComponents{
+          ControlItemComponent(params[0]), ControlItemComponent(params[1]), ControlItemComponent(params[2])} {
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
