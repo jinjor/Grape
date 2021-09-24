@@ -31,6 +31,7 @@ private:
     FilterComponent filterComponents[NUM_FILTER];
     LfoComponent lfoComponents[NUM_LFO];
     ModEnvComponent modEnvComponents[NUM_MODENV];
+    DistortionComponent distortionComponent;
     DelayComponent delayComponent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GrapeAudioProcessorEditor)

@@ -887,6 +887,67 @@ void ModEnvComponent::timerCallback() {
 }
 
 //==============================================================================
+DistortionComponent::DistortionComponent(DistortionParams& params,
+                                         std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+    : params(params),
+      controlItemParams(controlItemParams),
+      header("DISTORTION", HEADER_CHECK::Enabled),
+      amountSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
+                   juce::Slider::TextEntryBoxPosition::NoTextBox) {
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
+    header.enabledButton.addListener(this);
+    addAndMakeVisible(header);
+
+    initLinear(amountSlider, params.Amount, 0.01, this, body);
+
+    initLabel(amountLabel, "Amount", body);
+
+    addAndMakeVisible(body);
+
+    startTimerHz(30.0f);
+}
+
+DistortionComponent::~DistortionComponent() {}
+
+void DistortionComponent::paint(juce::Graphics& g) {}
+
+void DistortionComponent::resized() {
+    juce::Rectangle<int> bounds = getLocalBounds();
+
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+
+    body.setBounds(bounds);
+    bounds = body.getLocalBounds();
+    consumeLabeledKnob(bounds, amountLabel, amountSlider);
+}
+void DistortionComponent::buttonClicked(juce::Button* button) {
+    if (button == &header.enabledButton) {
+        *params.Enabled = header.enabledButton.getToggleState();
+    }
+}
+void DistortionComponent::comboBoxChanged(juce::ComboBox* comboBox) {}
+void DistortionComponent::sliderValueChanged(juce::Slider* slider) {
+    if (slider == &amountSlider) {
+        *params.Amount = (float)amountSlider.getValue();
+    }
+}
+void DistortionComponent::timerCallback() {
+    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
+    body.setEnabled(params.Enabled->get());
+
+    amountSlider.setValue(params.Amount->get(), juce::dontSendNotification);
+
+    // amountSlider.setLookAndFeel(&grapeLookAndFeel);
+    // for (auto& p : controlItemParams) {
+    //     if (p.isControlling(CONTROL_TARGET_MISC_PARAM::DistortionAmount)) {
+    //         amountSlider.setLookAndFeel(&grapeLookAndFeelControlled);
+    //     }
+    // }
+}
+
+//==============================================================================
 DelayComponent::DelayComponent(DelayParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
     : params(params),
       controlItemParams(controlItemParams),

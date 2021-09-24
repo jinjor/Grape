@@ -556,6 +556,40 @@ private:
 };
 
 //==============================================================================
+class DistortionComponent : public juce::Component,
+                            juce::ToggleButton::Listener,
+                            juce::ComboBox::Listener,
+                            juce::Slider::Listener,
+                            private juce::Timer,
+                            ComponentHelper {
+public:
+    DistortionComponent(DistortionParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    virtual ~DistortionComponent();
+    DistortionComponent(const DistortionComponent&) = delete;
+
+    virtual void paint(juce::Graphics& g) override;
+
+    virtual void resized() override;
+
+private:
+    virtual void buttonClicked(juce::Button* button) override;
+    virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
+    virtual void sliderValueChanged(juce::Slider* slider) override;
+    virtual void timerCallback() override;
+
+    DistortionParams& params;
+    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
+
+    HeaderComponent header;
+
+    juce::Component body;
+
+    juce::Slider amountSlider;
+
+    juce::Label amountLabel;
+};
+
+//==============================================================================
 class DelayComponent : public juce::Component,
                        juce::ToggleButton::Listener,
                        juce::ComboBox::Listener,

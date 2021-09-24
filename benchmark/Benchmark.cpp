@@ -13,13 +13,10 @@ public:
     std::array<FilterParams, NUM_FILTER> filterParams = {FilterParams(0), FilterParams(1)};
     std::array<LfoParams, NUM_LFO> lfoParams = {LfoParams(0), LfoParams(1), LfoParams(2)};
     std::array<ModEnvParams, NUM_MODENV> modEnvParams = {ModEnvParams(0), ModEnvParams(1), ModEnvParams(2)};
+    DistortionParams distortionParams{};
     DelayParams delayParams{};
-    std::array<ControlItemParams, NUM_CONTROL> controlItemParams = {ControlItemParams(0),
-                                                                    ControlItemParams(1),
-                                                                    ControlItemParams(2),
-                                                                    ControlItemParams(3),
-                                                                    ControlItemParams(4),
-                                                                    ControlItemParams(5)};
+    std::array<ControlItemParams, NUM_CONTROL> controlItemParams = {
+        ControlItemParams(0), ControlItemParams(1), ControlItemParams(2)};
 };
 
 static void doStepLoop(benchmark::State& state, Params& p) {
@@ -50,6 +47,7 @@ static void doStepLoop(benchmark::State& state, Params& p) {
                  p.filterParams,
                  p.lfoParams,
                  p.modEnvParams,
+                 p.distortionParams,
                  p.delayParams,
                  p.controlItemParams);
     voice.startNote(60, 1.0, &sound, 8192);

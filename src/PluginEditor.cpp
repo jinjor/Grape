@@ -35,6 +35,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
       modEnvComponents{ModEnvComponent(0, p.modEnvParams[0]),
                        ModEnvComponent(1, p.modEnvParams[1]),
                        ModEnvComponent(2, p.modEnvParams[2])},
+      distortionComponent{DistortionComponent(p.distortionParams, p.controlItemParams)},
       delayComponent{DelayComponent(p.delayParams, p.controlItemParams)} {
     getLookAndFeel().setColour(juce::Label::textColourId, colour::TEXT);
 
@@ -56,6 +57,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     addAndMakeVisible(modEnvComponents[0]);
     addAndMakeVisible(modEnvComponents[1]);
     addAndMakeVisible(modEnvComponents[2]);
+    addAndMakeVisible(distortionComponent);
     addAndMakeVisible(delayComponent);
     addAndMakeVisible(controlComponent);
     setSize(1024, 768);
@@ -189,6 +191,10 @@ void GrapeAudioProcessorEditor::resized() {
     }
     auto effectArea = lowerArea;
     auto effectHeight = effectArea.getHeight();
+    {
+        auto area = effectArea.removeFromTop(effectHeight / 3);
+        distortionComponent.setBounds(area.reduced(PANEL_MARGIN));
+    }
     {
         auto area = effectArea.removeFromTop(effectHeight / 3);
         delayComponent.setBounds(area.reduced(PANEL_MARGIN));
