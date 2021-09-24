@@ -148,6 +148,7 @@ public:
     std::array<FilterParams, NUM_FILTER> filterParams;
     std::array<LfoParams, NUM_LFO> lfoParams;
     std::array<ModEnvParams, NUM_MODENV> modEnvParams;
+    DistortionParams distortionParams;
     DelayParams delayParams;
     std::array<ControlItemParams, NUM_CONTROL> controlItemParams;
 

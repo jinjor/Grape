@@ -24,6 +24,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
       filterParams{FilterParams{0}, FilterParams{1}},
       lfoParams{LfoParams{0}, LfoParams{1}, LfoParams{2}},
       modEnvParams{ModEnvParams{0}, ModEnvParams{1}, ModEnvParams{2}},
+      distortionParams{},
       delayParams{},
       controlItemParams{ControlItemParams{0},
                         ControlItemParams{1},
@@ -41,6 +42,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
             filterParams,
             lfoParams,
             modEnvParams,
+            distortionParams,
             delayParams) {
     *oscParams[0].Enabled = true;
 
@@ -65,6 +67,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
     for (auto& params : modEnvParams) {
         params.addAllParameters(*this);
     }
+    distortionParams.addAllParameters(*this);
     delayParams.addAllParameters(*this);
     for (auto& params : controlItemParams) {
         params.addAllParameters(*this);
@@ -241,6 +244,7 @@ void GrapeAudioProcessor::getStateInformation(juce::MemoryBlock& destData) {
     for (auto& param : modEnvParams) {
         param.saveParameters(xml);
     }
+    distortionParams.saveParameters(xml);
     delayParams.saveParameters(xml);
     for (auto& param : controlItemParams) {
         param.saveParameters(xml);
@@ -269,6 +273,7 @@ void GrapeAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
             for (auto& param : modEnvParams) {
                 param.loadParameters(*xml);
             }
+            distortionParams.loadParameters(*xml);
             delayParams.loadParameters(*xml);
             for (auto& param : controlItemParams) {
                 param.loadParameters(*xml);

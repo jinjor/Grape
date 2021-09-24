@@ -25,6 +25,7 @@ void freezeParams(GlobalParams &globalParams,
                   std::array<FilterParams, NUM_FILTER> &filterParams,
                   std::array<LfoParams, NUM_LFO> &lfoParams,
                   std::array<ModEnvParams, NUM_MODENV> &modEnvParams,
+                  DistortionParams &distortionParams,
                   DelayParams &delayParams,
                   std::array<ControlItemParams, NUM_CONTROL> &controlItemParams) {
     globalParams.freeze();
@@ -44,6 +45,7 @@ void freezeParams(GlobalParams &globalParams,
     for (int i = 0; i < NUM_MODENV; ++i) {
         modEnvParams[i].freeze();
     }
+    distortionParams.freeze();
     delayParams.freeze();
     for (int i = 0; i < NUM_CONTROL; ++i) {
         controlItemParams[i].freeze();
@@ -228,6 +230,7 @@ public:
                      std::array<FilterParams, NUM_FILTER> &filterParams,
                      std::array<LfoParams, NUM_LFO> &lfoParams,
                      std::array<ModEnvParams, NUM_MODENV> &modEnvParams,
+                     DistortionParams &distortionParams,
                      DelayParams &delayParams)
         : currentPositionInfo(currentPositionInfo),
           monoStack(monoStack),
@@ -239,6 +242,7 @@ public:
           filterParams(filterParams),
           lfoParams(lfoParams),
           modEnvParams(modEnvParams),
+          distortionParams(distortionParams),
           delayParams(delayParams) {
         addSound(new GrapeSound());
     }
@@ -254,6 +258,7 @@ public:
                      filterParams,
                      lfoParams,
                      modEnvParams,
+                     distortionParams,
                      delayParams,
                      controlItemParams);
         juce::Synthesiser::renderNextBlock(outputAudio, inputMidi, startSample, numSamples);
@@ -345,8 +350,8 @@ public:
         auto *leftOut = buffer.getWritePointer(0, startSample);
         auto *rightOut = buffer.getWritePointer(1, startSample);
 
-        auto distortionEnabled = false;  // TODO
-        auto distortionAmount = 0.8;
+        auto distortionEnabled = distortionParams.enabled;
+        auto distortionAmount = distortionParams.amount;
 
         auto delayEnabled = delayParams.enabled;
         auto expression = globalParams.expression;
@@ -523,6 +528,7 @@ private:
     std::array<FilterParams, NUM_FILTER> &filterParams;
     std::array<LfoParams, NUM_LFO> &lfoParams;
     std::array<ModEnvParams, NUM_LFO> &modEnvParams;
+    DistortionParams &distortionParams;
     DelayParams &delayParams;
 
     StereoDelay stereoDelay;
