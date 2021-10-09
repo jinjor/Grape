@@ -363,8 +363,22 @@ public:
 
             // Distortion
             if (distortionEnabled) {
-                sample[0] = waveShaper.getDist1Value(distortionAmount, sample[0]);
-                sample[1] = waveShaper.getDist1Value(distortionAmount, sample[1]);
+                for (auto i = 0; i < 2; i++) {
+                    auto &s = sample[i];
+
+                    // s = waveShaper.getDist1Value(distortionAmount, s);
+
+                    // if (s > 1.0) {
+                    //     s = 1.0 - (s - 1.0) * distortionAmount;
+                    // } else if (s < -1.0) {
+                    //     s = -1.0 + (-1.0 - s) * distortionAmount;
+                    // }
+
+                    // auto a = distortionAmount * 10;
+                    auto a = std::pow(4, distortionAmount);
+                    s = std::tanh(a * s) / std::tanh(a);
+                    // s = std::tanh(a * s);
+                }
             }
 
             // Delay
