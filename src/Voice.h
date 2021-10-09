@@ -362,10 +362,10 @@ public:
             double sample[2]{leftIn[i] * expression, rightIn[i] * expression};
 
             // Distortion
-            // if (distortionEnabled) {
-            //     sample[0] = waveShaper.getDist1Value(distortionAmount, sample[0]);
-            //     sample[1] = waveShaper.getDist1Value(distortionAmount, sample[1]);
-            // }
+            if (distortionEnabled) {
+                sample[0] = waveShaper.getDist1Value(distortionAmount, sample[0]);
+                sample[1] = waveShaper.getDist1Value(distortionAmount, sample[1]);
+            }
 
             // Delay
             if (delayEnabled) {
