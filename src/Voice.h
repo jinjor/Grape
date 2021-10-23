@@ -144,6 +144,7 @@ private:
 //==============================================================================
 struct Modifiers {
     double normalizedAngleShift[NUM_OSC]{0.0, 0.0, 0.0};
+    double slaveOscRatio[NUM_OSC]{1.0, 1.0, 1.0};
     double octShift[NUM_OSC]{0.0, 0.0, 0.0};
     double edgeRatio[NUM_OSC]{1.0, 1.0, 1.0};
     double panMod[NUM_OSC]{0.0, 0.0, 0.0};

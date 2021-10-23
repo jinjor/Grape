@@ -238,6 +238,17 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
                         }
                         break;
                     }
+                    case LFO_TARGET_OSC_PARAM::OscSync: {
+                        auto v = std::pow(2.0, modifiers.lfoOctShift[i]) * params.fastFreq;
+                        if (targetIndex == NUM_OSC) {
+                            for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
+                                modifiers.slaveOscRatio[oscIndex] *= v;
+                            }
+                        } else {
+                            modifiers.slaveOscRatio[targetIndex] *= v;
+                        }
+                        break;
+                    }
                     case LFO_TARGET_OSC_PARAM::Pan: {
                         jassertfalse;
                         break;
@@ -282,8 +293,15 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         jassert(pan <= 1);
 
         double o[2]{0, 0};
-        oscs[oscIndex].step(
-            p.unison, pan, detune, spread, freq, 1.0, modifiers.normalizedAngleShift[oscIndex], edge, o);
+        oscs[oscIndex].step(p.unison,
+                            pan,
+                            detune,
+                            spread,
+                            freq,
+                            modifiers.slaveOscRatio[oscIndex],
+                            modifiers.normalizedAngleShift[oscIndex],
+                            edge,
+                            o);
         auto oscGain = adsr[envelopeIndex].getValue() * modifiers.gain[oscIndex] * p.gain;
         o[0] *= oscGain;
         o[1] *= oscGain;
@@ -411,7 +429,8 @@ void GrapeVoice::updateModifiersByLfo(Modifiers &modifiers) {
                         break;
                     }
                     case LFO_TARGET_OSC_PARAM::FM:
-                    case LFO_TARGET_OSC_PARAM::AM: {
+                    case LFO_TARGET_OSC_PARAM::AM:
+                    case LFO_TARGET_OSC_PARAM::OscSync: {
                         jassertfalse;
                         break;
                     }

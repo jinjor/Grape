@@ -29,8 +29,9 @@ const juce::StringArray LFO_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter
 const juce::StringArray LFO_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3", "All");
 const juce::StringArray LFO_TARGET_FILTER_NAMES = juce::StringArray("1", "2", "All");
 
-enum class LFO_TARGET_OSC_PARAM { Vibrato, Tremolo, Edge, FM, AM, Pan };
-const juce::StringArray LFO_TARGET_OSC_PARAM_NAMES = juce::StringArray("Vibrato", "Tremolo", "Edge", "FM", "AM", "Pan");
+enum class LFO_TARGET_OSC_PARAM { Vibrato, Tremolo, Edge, FM, AM, OscSync, Pan };
+const juce::StringArray LFO_TARGET_OSC_PARAM_NAMES =
+    juce::StringArray("Vibrato", "Tremolo", "Edge", "FM", "AM", "OscSync", "Pan");
 
 enum class LFO_TARGET_FILTER_PARAM { Freq, Q };
 const juce::StringArray LFO_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
@@ -418,6 +419,7 @@ public:
             switch (getTargetOscParam()) {
                 case LFO_TARGET_OSC_PARAM::FM:
                 case LFO_TARGET_OSC_PARAM::AM:
+                case LFO_TARGET_OSC_PARAM::OscSync:
                     return true;
                 default:
                     return false;
@@ -425,7 +427,6 @@ public:
         }
         return false;
     }
-
     void setFastFreqFromControl(double normalizedValue) {
         *FastFreq = FastFreq->range.convertFrom0to1(normalizedValue);
     }
