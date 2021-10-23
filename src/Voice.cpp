@@ -204,7 +204,7 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         auto shiftedNoteNumber = target == NUM_OSC ? midiNoteNumber : shiftedNoteNumbers[target];
         shiftedNoteNumber += modifiers.lfoOctShift[i];
         double freq = getMidiNoteInHertzDouble(shiftedNoteNumber) * params.fastFreq;
-        double lfoValue = lfos[i].step(freq, 0.0, 0.0);
+        double lfoValue = lfos[i].step(freq, 1.0, 0.0, 0.0);
         auto lfoAmount = params.amount * modifiers.lfoAmountGain[i];
         switch (params.targetType) {
             case LFO_TARGET_TYPE::OSC: {
@@ -282,7 +282,8 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         jassert(pan <= 1);
 
         double o[2]{0, 0};
-        oscs[oscIndex].step(p.unison, pan, detune, spread, freq, modifiers.normalizedAngleShift[oscIndex], edge, o);
+        oscs[oscIndex].step(
+            p.unison, pan, detune, spread, freq, 1.0, modifiers.normalizedAngleShift[oscIndex], edge, o);
         auto oscGain = adsr[envelopeIndex].getValue() * modifiers.gain[oscIndex] * p.gain;
         o[0] *= oscGain;
         o[1] *= oscGain;
@@ -369,7 +370,7 @@ void GrapeVoice::updateModifiersByLfo(Modifiers &modifiers) {
         if (modifiers.lfoOctShift[i] != 0.0) {
             freq *= std::pow(2.0, modifiers.lfoOctShift[i]);
         }
-        double lfoValue = lfos[i].step(freq, 0.0, 0.0);
+        double lfoValue = lfos[i].step(freq, 1.0, 0.0, 0.0);
         auto lfoAmount = params.amount * modifiers.lfoAmountGain[i];
         switch (params.targetType) {
             case LFO_TARGET_TYPE::OSC: {

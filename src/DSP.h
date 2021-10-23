@@ -591,7 +591,7 @@ public:
     void setWaveform(WAVEFORM waveform) { this->waveform = waveform; }
     void setSampleRate(double sampleRate) { reciprocal_sampleRate = 1.0 / sampleRate; }
     void setNormalizedAngle(double normalizedAngle) { currentNormalizedAngle = normalizedAngle; }
-    double step(double freq, double normalizedAngleShift, double edge) {
+    double step(double freq, double slaveOscFreqRatio, double normalizedAngleShift, double edge) {
         if (reciprocal_sampleRate <= 0.0) {
             return 0.0;
         }
@@ -601,7 +601,7 @@ public:
             currentNormalizedAngle -= 1.0;
             currentRandomValue = 0.0;
         }
-        auto normalizedAngle = currentNormalizedAngle + normalizedAngleShift;
+        auto normalizedAngle = currentNormalizedAngle * slaveOscFreqRatio + normalizedAngleShift;
         switch (waveform) {
             case WAVEFORM::Sine:
                 //                return std::sin(angle);
@@ -686,17 +686,19 @@ public:
               double detune,
               double spread,
               double freq,
+              double slaveOscRatio,
               double normalizedAngleShift,
               double edge,
               double *outout) {
         if (numOsc == 1) {
-            outout[0] = outout[1] = oscs[0].step(freq, normalizedAngleShift, edge) * GAIN_AT_CENTER;
+            outout[0] = outout[1] = oscs[0].step(freq, slaveOscRatio, normalizedAngleShift, edge) * GAIN_AT_CENTER;
         } else {
             setUnison(numOsc, pan, detune, spread);
             outout[0] = 0;
             outout[1] = 0;
             for (int i = 0; i < currentNumOsc; ++i) {
-                auto value = oscs[i].step(freq * detunes[i], normalizedAngleShifts[i] + normalizedAngleShift, edge);
+                auto value = oscs[i].step(
+                    freq * detunes[i], slaveOscRatio, normalizedAngleShifts[i] + normalizedAngleShift, edge);
                 outout[0] += value * pans[i][0];
                 outout[1] += value * pans[i][1];
             }
