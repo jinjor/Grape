@@ -670,12 +670,12 @@ public:
 
 private:
     Wavetable wavetable;
-    bool useWavetable;
     double currentNormalizedAngle = 0.0;
     double currentRandomValue = 0.0;
     double pink[7]{};
     juce::Random whiteNoise;
     WAVEFORM waveform = WAVEFORM::Sine;
+    bool useWavetable = true;
     double reciprocal_sampleRate = -1;
 };
 
@@ -689,9 +689,9 @@ public:
     MultiOsc() {}
     ~MultiOsc() { DBG("MultiOsc's destructor called."); }
     MultiOsc(const MultiOsc &) = delete;
-    void setWaveform(WAVEFORM waveform) {
+    void setWaveform(WAVEFORM waveform, bool useWavetable) {
         for (int i = 0; i < MAX_NUM_OSC; ++i) {
-            oscs[i].setWaveform(waveform, true);
+            oscs[i].setWaveform(waveform, useWavetable);
         }
     }
     void setSampleRate(double sampleRate) {

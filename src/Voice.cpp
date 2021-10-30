@@ -139,7 +139,7 @@ void GrapeVoice::renderNextBlock(juce::AudioBuffer<float> &outputBuffer, int sta
 void GrapeVoice::applyParamsBeforeLoop(double sampleRate) {
     for (int i = 0; i < NUM_OSC; ++i) {
         oscs[i].setSampleRate(sampleRate);
-        oscs[i].setWaveform(oscParams[i].waveform);
+        oscs[i].setWaveform(oscParams[i].waveform, true);
     }
     for (int i = 0; i < NUM_ENVELOPE; ++i) {
         auto &params = envelopeParams[i];
