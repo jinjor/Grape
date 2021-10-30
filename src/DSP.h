@@ -588,7 +588,10 @@ public:
     Osc() {}
     ~Osc() { DBG("Osc's destructor called."); }
     Osc(const Osc &) = delete;
-    void setWaveform(WAVEFORM waveform) { this->waveform = waveform; }
+    void setWaveform(WAVEFORM waveform, bool useWavetable) {
+        this->waveform = waveform;
+        this->useWavetable = useWavetable;
+    }
     void setSampleRate(double sampleRate) { reciprocal_sampleRate = 1.0 / sampleRate; }
     void setNormalizedAngle(double normalizedAngle) { currentNormalizedAngle = normalizedAngle; }
     double step(double freq, double normalizedAngleShift, double edge) {
@@ -607,19 +610,33 @@ public:
                 //                return std::sin(angle);
                 return wavetable.getSineValue(normalizedAngle);
             case WAVEFORM::Triangle:
-                //                return angle >= PI ?
-                //                    angle / TWO_PI * 4.0 - 1.0 :
-                //                    angle / TWO_PI - 4.0 + 3.0;
-                return wavetable.getSlopedVariableTriangleValue(freq, normalizedAngle, edge);
+                if (useWavetable) {
+                    return wavetable.getSlopedVariableTriangleValue(freq, normalizedAngle, edge);
+                } else {
+                    normalizedAngle = std::fmod(normalizedAngle, 1.0);
+                    return normalizedAngle >= 0.5 ? normalizedAngle * 4.0 - 1.0 : normalizedAngle - 4.0 + 3.0;
+                }
             case WAVEFORM::SawUp:
-                //                return angle / TWO_PI * 2.0 - 1.0;
-                return wavetable.getSawUpValue(freq, normalizedAngle);
+                if (useWavetable) {
+                    return wavetable.getSawUpValue(freq, normalizedAngle);
+                } else {
+                    normalizedAngle = std::fmod(normalizedAngle, 1.0);
+                    return normalizedAngle * 2.0 - 1.0;
+                }
             case WAVEFORM::SawDown:
-                //                return angle / TWO_PI * -2.0 + 1.0;
-                return wavetable.getSawDownValue(freq, normalizedAngle);
+                if (useWavetable) {
+                    return wavetable.getSawDownValue(freq, normalizedAngle);
+                } else {
+                    normalizedAngle = std::fmod(normalizedAngle, 1.0);
+                    return normalizedAngle * -2.0 + 1.0;
+                }
             case WAVEFORM::Square:
-                //                return angle < PI ? 1.0 : -1.0;
-                return wavetable.getPulseValue(freq, normalizedAngle, edge);
+                if (useWavetable) {
+                    return wavetable.getPulseValue(freq, normalizedAngle, edge);
+                } else {
+                    normalizedAngle = std::fmod(normalizedAngle, 1.0);
+                    return normalizedAngle < 0.5 ? 1.0 : -1.0;
+                }
             case WAVEFORM::Random:
                 if (currentRandomValue == 0.0) {
                     currentRandomValue = whiteNoise.nextDouble() * 2.0 - 1.0;
@@ -653,6 +670,7 @@ public:
 
 private:
     Wavetable wavetable;
+    bool useWavetable;
     double currentNormalizedAngle = 0.0;
     double currentRandomValue = 0.0;
     double pink[7]{};
@@ -673,7 +691,7 @@ public:
     MultiOsc(const MultiOsc &) = delete;
     void setWaveform(WAVEFORM waveform) {
         for (int i = 0; i < MAX_NUM_OSC; ++i) {
-            oscs[i].setWaveform(waveform);
+            oscs[i].setWaveform(waveform, true);
         }
     }
     void setSampleRate(double sampleRate) {
