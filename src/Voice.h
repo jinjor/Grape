@@ -2,16 +2,11 @@
 
 #include <JuceHeader.h>
 
+#include "Constants.h"
 #include "DSP.h"
 #include "Params.h"
 
 namespace {
-const int NUM_OSC = 3;
-const int NUM_ENVELOPE = 2;
-const int NUM_FILTER = 2;
-const int NUM_LFO = 3;
-const int NUM_MODENV = 3;
-const int NUM_CONTROL = 6;
 const double A = 1.0 / 12.0;
 const double X = std::pow(2.0, 1.0 / 12.0);
 const double Y = 440.0 / std::pow(X, 69);

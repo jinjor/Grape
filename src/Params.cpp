@@ -505,3 +505,81 @@ void ControlItemParams::loadParameters(juce::XmlElement& xml) {
     *TargetLfoParam = xml.getIntAttribute(TargetLfoParam->paramID, 0);
     *TargetMiscParam = xml.getIntAttribute(TargetMiscParam->paramID, 0);
 }
+
+//==============================================================================
+MainParams::MainParams()
+    : oscParams{OscParams{0}, OscParams{1}, OscParams{2}},
+      envelopeParams{EnvelopeParams{0}, EnvelopeParams{1}},
+      filterParams{FilterParams{0}, FilterParams{1}},
+      lfoParams{LfoParams{0}, LfoParams{1}, LfoParams{2}},
+      modEnvParams{ModEnvParams{0}, ModEnvParams{1}, ModEnvParams{2}},
+      delayParams{},
+      controlItemParams{ControlItemParams{0},
+                        ControlItemParams{1},
+                        ControlItemParams{2},
+                        ControlItemParams{3},
+                        ControlItemParams{4},
+                        ControlItemParams{5}} {}
+void MainParams::addAllParameters(juce::AudioProcessor& processor) {
+    for (auto& params : envelopeParams) {
+        params.addAllParameters(processor);
+    }
+    for (auto& params : oscParams) {
+        params.addAllParameters(processor);
+    }
+    for (auto& params : filterParams) {
+        params.addAllParameters(processor);
+    }
+    for (auto& params : lfoParams) {
+        params.addAllParameters(processor);
+    }
+    for (auto& params : modEnvParams) {
+        params.addAllParameters(processor);
+    }
+    delayParams.addAllParameters(processor);
+    for (auto& params : controlItemParams) {
+        params.addAllParameters(processor);
+    }
+}
+void MainParams::saveParameters(juce::XmlElement& xml) {
+    for (auto& param : envelopeParams) {
+        param.saveParameters(xml);
+    }
+    for (auto& param : oscParams) {
+        param.saveParameters(xml);
+    }
+    for (auto& param : filterParams) {
+        param.saveParameters(xml);
+    }
+    for (auto& param : lfoParams) {
+        param.saveParameters(xml);
+    }
+    for (auto& param : modEnvParams) {
+        param.saveParameters(xml);
+    }
+    delayParams.saveParameters(xml);
+    for (auto& param : controlItemParams) {
+        param.saveParameters(xml);
+    }
+}
+void MainParams::loadParameters(juce::XmlElement& xml) {
+    for (auto& param : envelopeParams) {
+        param.loadParameters(xml);
+    }
+    for (auto& param : oscParams) {
+        param.loadParameters(xml);
+    }
+    for (auto& param : filterParams) {
+        param.loadParameters(xml);
+    }
+    for (auto& param : lfoParams) {
+        param.loadParameters(xml);
+    }
+    for (auto& param : modEnvParams) {
+        param.loadParameters(xml);
+    }
+    delayParams.loadParameters(xml);
+    for (auto& param : controlItemParams) {
+        param.loadParameters(xml);
+    }
+}
