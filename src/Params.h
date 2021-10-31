@@ -4,7 +4,7 @@
 
 namespace {
 
-enum class VOICE_MODE { Mono, Poly };
+enum class VOICE_MODE { Mono, Poly, Drum };
 const juce::StringArray VOICE_MODE_NAMES = juce::StringArray("Mono", "Poly");
 
 enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Random, Pink, White };
