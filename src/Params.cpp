@@ -54,21 +54,25 @@ VoiceParams::VoiceParams() {
                                                    0.02f);
     PitchBendRange =
         new juce::AudioParameterInt(idPrefix + "PITCH_BEND_RANGE", namePrefix + "Pitch-Bend Range", 1, 12, 2);
+    TargetNote = new juce::AudioParameterInt(idPrefix + "TARGET_NOTE", namePrefix + "Target Note", -1, 127, -1);
 }
 void VoiceParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Mode);
     processor.addParameter(PortamentoTime);
     processor.addParameter(PitchBendRange);
+    processor.addParameter(TargetNote);
 }
 void VoiceParams::saveParameters(juce::XmlElement& xml) {
     xml.setAttribute(Mode->paramID, Mode->getIndex());
     xml.setAttribute(PortamentoTime->paramID, PortamentoTime->get());
     xml.setAttribute(PitchBendRange->paramID, PitchBendRange->get());
+    xml.setAttribute(TargetNote->paramID, TargetNote->get());
 }
 void VoiceParams::loadParameters(juce::XmlElement& xml) {
     *Mode = xml.getIntAttribute(Mode->paramID, 0);
     *PortamentoTime = xml.getDoubleAttribute(PortamentoTime->paramID, 0.001);
     *PitchBendRange = xml.getIntAttribute(PitchBendRange->paramID, 2);
+    *TargetNote = xml.getIntAttribute(TargetNote->paramID, -1);
 }
 
 //==============================================================================

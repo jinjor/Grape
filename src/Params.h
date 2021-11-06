@@ -20,6 +20,7 @@ public:
     juce::AudioParameterChoice* Mode;
     juce::AudioParameterFloat* PortamentoTime;
     juce::AudioParameterInt* PitchBendRange;
+    juce::AudioParameterInt* TargetNote;
 
     VoiceParams();
     VoiceParams(const VoiceParams&) = delete;
@@ -39,11 +40,13 @@ public:
     bool isDrumModeFreezed;
     float portamentoTime;
     int pitchBendRange;
+    int targetNote;
     void freeze() {
         isMonoModeFreezed = isMonoMode();
         isDrumModeFreezed = isDrumMode();
         portamentoTime = PortamentoTime->get();
         pitchBendRange = PitchBendRange->get();
+        targetNote = TargetNote->get();
     }
 
 private:
