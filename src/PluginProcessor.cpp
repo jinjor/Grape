@@ -19,12 +19,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
       ,
       globalParams{},
       voiceParams{},
-      oscParams{OscParams{0}, OscParams{1}, OscParams{2}},
-      envelopeParams{EnvelopeParams{0}, EnvelopeParams{1}},
-      filterParams{FilterParams{0}, FilterParams{1}},
-      lfoParams{LfoParams{0}, LfoParams{1}, LfoParams{2}},
-      modEnvParams{ModEnvParams{0}, ModEnvParams{1}, ModEnvParams{2}},
-      delayParams{},
+      mainParams{},
       controlItemParams{ControlItemParams{0},
                         ControlItemParams{1},
                         ControlItemParams{2},
@@ -36,13 +31,13 @@ GrapeAudioProcessor::GrapeAudioProcessor()
             controlItemParams,
             globalParams,
             voiceParams,
-            oscParams,
-            envelopeParams,
-            filterParams,
-            lfoParams,
-            modEnvParams,
-            delayParams) {
-    *oscParams[0].Enabled = true;
+            mainParams.oscParams,
+            mainParams.envelopeParams,
+            mainParams.filterParams,
+            mainParams.lfoParams,
+            mainParams.modEnvParams,
+            mainParams.delayParams) {
+    *mainParams.oscParams[0].Enabled = true;
 
     *controlItemParams[0].Number = CONTROL_NUMBER_NAMES.indexOf("1: Modulation");
     *controlItemParams[0].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("LFO");
@@ -50,22 +45,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 
     globalParams.addAllParameters(*this);
     voiceParams.addAllParameters(*this);
-    for (auto& params : envelopeParams) {
-        params.addAllParameters(*this);
-    }
-    for (auto& params : oscParams) {
-        params.addAllParameters(*this);
-    }
-    for (auto& params : filterParams) {
-        params.addAllParameters(*this);
-    }
-    for (auto& params : lfoParams) {
-        params.addAllParameters(*this);
-    }
-    for (auto& params : modEnvParams) {
-        params.addAllParameters(*this);
-    }
-    delayParams.addAllParameters(*this);
+    mainParams.addAllParameters(*this);
     for (auto& params : controlItemParams) {
         params.addAllParameters(*this);
     }
@@ -168,22 +148,22 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
         synth.addVoice(new GrapeVoice(&currentPositionInfo,
                                       globalParams,
                                       voiceParams,
-                                      oscParams,
-                                      envelopeParams,
-                                      filterParams,
-                                      lfoParams,
-                                      modEnvParams));
+                                      mainParams.oscParams,
+                                      mainParams.envelopeParams,
+                                      mainParams.filterParams,
+                                      mainParams.lfoParams,
+                                      mainParams.modEnvParams));
     } else if (voiceMode == VOICE_MODE::Poly && synth.getNumVoices() != numVoices) {
         synth.clearVoices();
         for (auto i = 0; i < numVoices; ++i) {
             synth.addVoice(new GrapeVoice(&currentPositionInfo,
                                           globalParams,
                                           voiceParams,
-                                          oscParams,
-                                          envelopeParams,
-                                          filterParams,
-                                          lfoParams,
-                                          modEnvParams));
+                                          mainParams.oscParams,
+                                          mainParams.envelopeParams,
+                                          mainParams.filterParams,
+                                          mainParams.lfoParams,
+                                          mainParams.modEnvParams));
         }
     }
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
@@ -226,22 +206,7 @@ void GrapeAudioProcessor::getStateInformation(juce::MemoryBlock& destData) {
 
     globalParams.saveParameters(xml);
     voiceParams.saveParameters(xml);
-    for (auto& param : envelopeParams) {
-        param.saveParameters(xml);
-    }
-    for (auto& param : oscParams) {
-        param.saveParameters(xml);
-    }
-    for (auto& param : filterParams) {
-        param.saveParameters(xml);
-    }
-    for (auto& param : lfoParams) {
-        param.saveParameters(xml);
-    }
-    for (auto& param : modEnvParams) {
-        param.saveParameters(xml);
-    }
-    delayParams.saveParameters(xml);
+    mainParams.saveParameters(xml);
     for (auto& param : controlItemParams) {
         param.saveParameters(xml);
     }
@@ -254,22 +219,7 @@ void GrapeAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
         if (xml->hasTagName("GrapeInstrument")) {
             globalParams.loadParameters(*xml);
             voiceParams.loadParameters(*xml);
-            for (auto& param : envelopeParams) {
-                param.loadParameters(*xml);
-            }
-            for (auto& param : oscParams) {
-                param.loadParameters(*xml);
-            }
-            for (auto& param : filterParams) {
-                param.loadParameters(*xml);
-            }
-            for (auto& param : lfoParams) {
-                param.loadParameters(*xml);
-            }
-            for (auto& param : modEnvParams) {
-                param.loadParameters(*xml);
-            }
-            delayParams.loadParameters(*xml);
+            mainParams.loadParameters(*xml);
             for (auto& param : controlItemParams) {
                 param.loadParameters(*xml);
             }
