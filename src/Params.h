@@ -5,7 +5,6 @@
 #include "Constants.h"
 #include "DSP.h"
 
-
 //==============================================================================
 class SynthParametersBase {
 public:
@@ -547,5 +546,4 @@ private:
     std::array<LfoParams, NUM_LFO> lfoParams;
     std::array<ModEnvParams, NUM_MODENV> modEnvParams;
     DelayParams delayParams;
-    std::array<ControlItemParams, NUM_CONTROL> controlItemParams;
 };

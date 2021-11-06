@@ -513,13 +513,7 @@ MainParams::MainParams()
       filterParams{FilterParams{0}, FilterParams{1}},
       lfoParams{LfoParams{0}, LfoParams{1}, LfoParams{2}},
       modEnvParams{ModEnvParams{0}, ModEnvParams{1}, ModEnvParams{2}},
-      delayParams{},
-      controlItemParams{ControlItemParams{0},
-                        ControlItemParams{1},
-                        ControlItemParams{2},
-                        ControlItemParams{3},
-                        ControlItemParams{4},
-                        ControlItemParams{5}} {}
+      delayParams{} {}
 void MainParams::addAllParameters(juce::AudioProcessor& processor) {
     for (auto& params : envelopeParams) {
         params.addAllParameters(processor);
@@ -537,9 +531,6 @@ void MainParams::addAllParameters(juce::AudioProcessor& processor) {
         params.addAllParameters(processor);
     }
     delayParams.addAllParameters(processor);
-    for (auto& params : controlItemParams) {
-        params.addAllParameters(processor);
-    }
 }
 void MainParams::saveParameters(juce::XmlElement& xml) {
     for (auto& param : envelopeParams) {
@@ -558,9 +549,6 @@ void MainParams::saveParameters(juce::XmlElement& xml) {
         param.saveParameters(xml);
     }
     delayParams.saveParameters(xml);
-    for (auto& param : controlItemParams) {
-        param.saveParameters(xml);
-    }
 }
 void MainParams::loadParameters(juce::XmlElement& xml) {
     for (auto& param : envelopeParams) {
@@ -579,7 +567,4 @@ void MainParams::loadParameters(juce::XmlElement& xml) {
         param.loadParameters(xml);
     }
     delayParams.loadParameters(xml);
-    for (auto& param : controlItemParams) {
-        param.loadParameters(xml);
-    }
 }
