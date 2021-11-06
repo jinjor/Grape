@@ -539,11 +539,12 @@ public:
     MainParams();
     MainParams(const MainParams&) = delete;
 
-private:
     std::array<OscParams, NUM_OSC> oscParams;
     std::array<EnvelopeParams, NUM_ENVELOPE> envelopeParams;
     std::array<FilterParams, NUM_FILTER> filterParams;
     std::array<LfoParams, NUM_LFO> lfoParams;
     std::array<ModEnvParams, NUM_MODENV> modEnvParams;
     DelayParams delayParams;
+
+private:
 };
