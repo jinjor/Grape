@@ -26,17 +26,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
                         ControlItemParams{3},
                         ControlItemParams{4},
                         ControlItemParams{5}},
-      synth(&currentPositionInfo,
-            &monoStack,
-            controlItemParams,
-            globalParams,
-            voiceParams,
-            mainParams.oscParams,
-            mainParams.envelopeParams,
-            mainParams.filterParams,
-            mainParams.lfoParams,
-            mainParams.modEnvParams,
-            mainParams.delayParams) {
+      synth(&currentPositionInfo, &monoStack, controlItemParams, globalParams, voiceParams, mainParams) {
     *mainParams.oscParams[0].Enabled = true;
 
     *controlItemParams[0].Number = CONTROL_NUMBER_NAMES.indexOf("1: Modulation");
@@ -145,25 +135,11 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     if (voiceMode == VOICE_MODE::Mono && synth.getNumVoices() != 1) {
         //        this->monoStack.reset();
         synth.clearVoices();
-        synth.addVoice(new GrapeVoice(&currentPositionInfo,
-                                      globalParams,
-                                      voiceParams,
-                                      mainParams.oscParams,
-                                      mainParams.envelopeParams,
-                                      mainParams.filterParams,
-                                      mainParams.lfoParams,
-                                      mainParams.modEnvParams));
+        synth.addVoice(new GrapeVoice(&currentPositionInfo, globalParams, voiceParams, mainParams));
     } else if (voiceMode == VOICE_MODE::Poly && synth.getNumVoices() != numVoices) {
         synth.clearVoices();
         for (auto i = 0; i < numVoices; ++i) {
-            synth.addVoice(new GrapeVoice(&currentPositionInfo,
-                                          globalParams,
-                                          voiceParams,
-                                          mainParams.oscParams,
-                                          mainParams.envelopeParams,
-                                          mainParams.filterParams,
-                                          mainParams.lfoParams,
-                                          mainParams.modEnvParams));
+            synth.addVoice(new GrapeVoice(&currentPositionInfo, globalParams, voiceParams, mainParams));
         }
     }
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);

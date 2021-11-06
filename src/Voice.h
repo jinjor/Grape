@@ -15,31 +15,11 @@ const double CONTROL_RATE = 1.0 / CONTROL_INTERVAL;
 
 void freezeParams(GlobalParams &globalParams,
                   VoiceParams &voiceParams,
-                  std::array<OscParams, NUM_OSC> &oscParams,
-                  std::array<EnvelopeParams, NUM_ENVELOPE> &envelopeParams,
-                  std::array<FilterParams, NUM_FILTER> &filterParams,
-                  std::array<LfoParams, NUM_LFO> &lfoParams,
-                  std::array<ModEnvParams, NUM_MODENV> &modEnvParams,
-                  DelayParams &delayParams,
+                  MainParams &mainParams,
                   std::array<ControlItemParams, NUM_CONTROL> &controlItemParams) {
     globalParams.freeze();
     voiceParams.freeze();
-    for (int i = 0; i < NUM_OSC; ++i) {
-        oscParams[i].freeze();
-    }
-    for (int i = 0; i < NUM_ENVELOPE; ++i) {
-        envelopeParams[i].freeze();
-    }
-    for (int i = 0; i < NUM_FILTER; ++i) {
-        filterParams[i].freeze();
-    }
-    for (int i = 0; i < NUM_LFO; ++i) {
-        lfoParams[i].freeze();
-    }
-    for (int i = 0; i < NUM_MODENV; ++i) {
-        modEnvParams[i].freeze();
-    }
-    delayParams.freeze();
+    mainParams.freeze();
     for (int i = 0; i < NUM_CONTROL; ++i) {
         controlItemParams[i].freeze();
     }
@@ -157,11 +137,7 @@ public:
     GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo,
                GlobalParams &globalParams,
                VoiceParams &voiceParams,
-               std::array<OscParams, NUM_OSC> &oscParams,
-               std::array<EnvelopeParams, NUM_ENVELOPE> &envelopeParams,
-               std::array<FilterParams, NUM_FILTER> &filterParams,
-               std::array<LfoParams, NUM_LFO> &lfoParams,
-               std::array<ModEnvParams, NUM_MODENV> &modEnvParams);
+               MainParams &mainParams);
     ~GrapeVoice();
     bool canPlaySound(juce::SynthesiserSound *sound) override;
     void startNote(int midiNoteNumber,
@@ -182,11 +158,7 @@ private:
 
     GlobalParams &globalParams;
     VoiceParams &voiceParams;
-    std::array<OscParams, NUM_OSC> &oscParams;
-    std::array<EnvelopeParams, NUM_ENVELOPE> &envelopeParams;
-    std::array<FilterParams, NUM_FILTER> &filterParams;
-    std::array<LfoParams, NUM_LFO> &lfoParams;
-    std::array<ModEnvParams, NUM_MODENV> &modEnvParams;
+    MainParams &mainParams;
 
     MultiOsc oscs[NUM_OSC];
     Adsr adsr[NUM_ENVELOPE];
@@ -217,23 +189,13 @@ public:
                      std::array<ControlItemParams, NUM_CONTROL> &controlItemParams,
                      GlobalParams &globalParams,
                      VoiceParams &voiceParams,
-                     std::array<OscParams, NUM_OSC> &oscParams,
-                     std::array<EnvelopeParams, NUM_ENVELOPE> &envelopeParams,
-                     std::array<FilterParams, NUM_FILTER> &filterParams,
-                     std::array<LfoParams, NUM_LFO> &lfoParams,
-                     std::array<ModEnvParams, NUM_MODENV> &modEnvParams,
-                     DelayParams &delayParams)
+                     MainParams &mainParams)
         : currentPositionInfo(currentPositionInfo),
           monoStack(monoStack),
           controlItemParams(controlItemParams),
           globalParams(globalParams),
           voiceParams(voiceParams),
-          oscParams(oscParams),
-          envelopeParams(envelopeParams),
-          filterParams(filterParams),
-          lfoParams(lfoParams),
-          modEnvParams(modEnvParams),
-          delayParams(delayParams) {
+          mainParams(mainParams) {
         addSound(new GrapeSound());
     }
     ~GrapeSynthesiser() {}
@@ -241,15 +203,7 @@ public:
                                  const MidiBuffer &inputMidi,
                                  int startSample,
                                  int numSamples) {
-        freezeParams(globalParams,
-                     voiceParams,
-                     oscParams,
-                     envelopeParams,
-                     filterParams,
-                     lfoParams,
-                     modEnvParams,
-                     delayParams,
-                     controlItemParams);
+        freezeParams(globalParams, voiceParams, mainParams, controlItemParams);
         juce::Synthesiser::renderNextBlock(outputAudio, inputMidi, startSample, numSamples);
     }
     virtual void handleMidiEvent(const juce::MidiMessage &m) override {
@@ -320,6 +274,7 @@ public:
     }
     void renderVoices(juce::AudioBuffer<float> &buffer, int startSample, int numSamples) override {
         juce::Synthesiser::renderVoices(buffer, startSample, numSamples);
+        auto &delayParams = mainParams.delayParams;
 
         stereoDelay.setParams(getSampleRate(),
                               currentPositionInfo->bpm,
@@ -388,7 +343,7 @@ public:
                             auto targetParam = params.targetOscParam;
                             for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
                                 if (targetIndex == oscIndex) {
-                                    auto &params = oscParams[oscIndex];
+                                    auto &params = mainParams.oscParams[oscIndex];
                                     switch (targetParam) {
                                         case CONTROL_TARGET_OSC_PARAM::Edge: {
                                             params.setEdgeFromControl(normalizedValue);
@@ -420,7 +375,7 @@ public:
                             auto targetParam = params.targetFilterParam;
                             for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
                                 if (targetIndex == filterIndex) {
-                                    auto &params = filterParams[filterIndex];
+                                    auto &params = mainParams.filterParams[filterIndex];
                                     switch (targetParam) {
                                         case CONTROL_TARGET_FILTER_PARAM::Freq: {
                                             if (params.isFreqAbsoluteFreezed) {
@@ -447,7 +402,7 @@ public:
                             auto targetParam = params.targetLfoParam;
                             for (int lfoIndex = 0; lfoIndex < NUM_MODENV; ++lfoIndex) {
                                 if (targetIndex == lfoIndex) {
-                                    auto &params = lfoParams[lfoIndex];
+                                    auto &params = mainParams.lfoParams[lfoIndex];
                                     switch (targetParam) {
                                         case CONTROL_TARGET_LFO_PARAM::Freq: {
                                             if (params.shouldUseFastFreqFreezed) {
@@ -477,8 +432,8 @@ public:
                                     break;
                                 }
                                 case CONTROL_TARGET_MISC_PARAM::DelayMix: {
-                                    delayParams.setMixFromControl(normalizedValue);
-                                    delayParams.freeze();
+                                    mainParams.delayParams.setMixFromControl(normalizedValue);
+                                    mainParams.delayParams.freeze();
                                     break;
                                 }
                             }
@@ -503,12 +458,7 @@ private:
 
     GlobalParams &globalParams;
     VoiceParams &voiceParams;
-    std::array<OscParams, NUM_OSC> &oscParams;
-    std::array<EnvelopeParams, NUM_ENVELOPE> &envelopeParams;
-    std::array<FilterParams, NUM_FILTER> &filterParams;
-    std::array<LfoParams, NUM_LFO> &lfoParams;
-    std::array<ModEnvParams, NUM_LFO> &modEnvParams;
-    DelayParams &delayParams;
+    MainParams &mainParams;
 
     StereoDelay stereoDelay;
 };

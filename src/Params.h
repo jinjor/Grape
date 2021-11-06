@@ -551,6 +551,24 @@ public:
     std::array<LfoParams, NUM_LFO> lfoParams;
     std::array<ModEnvParams, NUM_MODENV> modEnvParams;
     DelayParams delayParams;
+    void freeze() {
+        for (int i = 0; i < NUM_OSC; ++i) {
+            oscParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_ENVELOPE; ++i) {
+            envelopeParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_FILTER; ++i) {
+            filterParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_LFO; ++i) {
+            lfoParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_MODENV; ++i) {
+            modEnvParams[i].freeze();
+        }
+        delayParams.freeze();
+    }
 
 private:
 };

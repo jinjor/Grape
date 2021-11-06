@@ -12,20 +12,12 @@ bool GrapeSound::appliesToChannel(int) { return true; }
 GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo,
                        GlobalParams &globalParams,
                        VoiceParams &voiceParams,
-                       std::array<OscParams, NUM_OSC> &oscParams,
-                       std::array<EnvelopeParams, NUM_ENVELOPE> &envelopeParams,
-                       std::array<FilterParams, NUM_FILTER> &filterParams,
-                       std::array<LfoParams, NUM_LFO> &lfoParams,
-                       std::array<ModEnvParams, NUM_MODENV> &modEnvParams)
+                       MainParams &mainParams)
     : perf(juce::PerformanceCounter("voice cycle", 100000)),
       currentPositionInfo(currentPositionInfo),
       globalParams(globalParams),
       voiceParams(voiceParams),
-      oscParams(oscParams),
-      envelopeParams(envelopeParams),
-      filterParams(filterParams),
-      lfoParams(lfoParams),
-      modEnvParams(modEnvParams),
+      mainParams(mainParams),
       oscs{MultiOsc(), MultiOsc(), MultiOsc()},
       adsr{Adsr(), Adsr()},
       filters{Filter(), Filter()},
@@ -61,7 +53,7 @@ void GrapeVoice::startNote(int midiNoteNumber,
             }
         }
         for (int i = 0; i < NUM_ENVELOPE; ++i) {
-            auto &params = envelopeParams[i];
+            auto &params = mainParams.envelopeParams[i];
             adsr[i].setParams(params.attackCurve, params.attack, 0.0, params.decay, params.sustain, params.release);
             adsr[i].doAttack(fixedSampleRate);
         }
@@ -72,7 +64,7 @@ void GrapeVoice::startNote(int midiNoteNumber,
             lfos[i].setNormalizedAngle(0.0);
         }
         for (int i = 0; i < NUM_MODENV; ++i) {
-            auto &params = modEnvParams[i];
+            auto &params = mainParams.modEnvParams[i];
             if (params.shouldUseHold()) {
                 modEnvs[i].setParams(0.5, 0.0, params.wait, params.decay, 0.0, 0.0);
             } else {
@@ -139,22 +131,22 @@ void GrapeVoice::renderNextBlock(juce::AudioBuffer<float> &outputBuffer, int sta
 void GrapeVoice::applyParamsBeforeLoop(double sampleRate) {
     for (int i = 0; i < NUM_OSC; ++i) {
         oscs[i].setSampleRate(sampleRate);
-        oscs[i].setWaveform(oscParams[i].waveform, true);
+        oscs[i].setWaveform(mainParams.oscParams[i].waveform, true);
     }
     for (int i = 0; i < NUM_ENVELOPE; ++i) {
-        auto &params = envelopeParams[i];
+        auto &params = mainParams.envelopeParams[i];
         adsr[i].setParams(params.attackCurve, params.attack, 0.0, params.decay, params.sustain, params.release);
     }
     for (int i = 0; i < NUM_FILTER; ++i) {
         filters[i].setSampleRate(sampleRate);
     }
     for (int i = 0; i < NUM_LFO; ++i) {
-        auto &params = lfoParams[i];
+        auto &params = mainParams.lfoParams[i];
         lfos[i].setSampleRate(params.shouldUseFastFreqFreezed ? sampleRate : sampleRate * CONTROL_RATE);
         lfos[i].setWaveform(params.waveform, false);
     }
     for (int i = 0; i < NUM_MODENV; ++i) {
-        auto &params = modEnvParams[i];
+        auto &params = mainParams.modEnvParams[i];
         if (params.shouldUseHold()) {
             modEnvs[i].setParams(0.5, 0.0, params.wait, params.decay, 0.0, 0.0);
         } else {
@@ -170,10 +162,10 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
 
     double shiftedNoteNumbers[NUM_OSC]{midiNoteNumber, midiNoteNumber, midiNoteNumber};
     for (int i = 0; i < NUM_OSC; ++i) {
-        if (!oscParams[i].enabled) {
+        if (!mainParams.oscParams[i].enabled) {
             continue;
         }
-        shiftedNoteNumbers[i] += oscParams[i].octave * 12 + oscParams[i].coarse;
+        shiftedNoteNumbers[i] += mainParams.oscParams[i].octave * 12 + mainParams.oscParams[i].coarse;
     }
 
     if (stepCounter == 0) {
@@ -193,7 +185,7 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
     auto modifiers = controlModifiers;  // copy;
 
     for (int i = 0; i < NUM_LFO; ++i) {
-        auto &params = lfoParams[i];
+        auto &params = mainParams.lfoParams[i];
         if (!params.enabled) {
             continue;
         }
@@ -263,7 +255,7 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
     auto panModAmp = std::min(1.0 - panBase, 1.0 + panBase);
     // ---------------- OSC with Envelope and Filter ----------------
     for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
-        auto &p = oscParams[oscIndex];
+        auto &p = mainParams.oscParams[oscIndex];
         if (!p.enabled) {
             continue;
         }
@@ -288,7 +280,7 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         o[1] *= oscGain;
 
         for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-            auto &fp = filterParams[filterIndex];
+            auto &fp = mainParams.filterParams[filterIndex];
             if (!fp.enabled) {
                 continue;
             }
@@ -318,7 +310,7 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
         out[1] += o[1];
     }
     for (int filterIndex = 0; filterIndex < NUM_FILTER; ++filterIndex) {
-        auto &fp = filterParams[filterIndex];
+        auto &fp = mainParams.filterParams[filterIndex];
         if (!fp.enabled) {
             continue;
         }
@@ -358,7 +350,7 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
 }
 void GrapeVoice::updateModifiersByLfo(Modifiers &modifiers) {
     for (int i = 0; i < NUM_LFO; ++i) {
-        auto &params = lfoParams[i];
+        auto &params = mainParams.lfoParams[i];
         if (!params.enabled) {
             continue;
         }
@@ -461,7 +453,7 @@ void GrapeVoice::updateModifiersByLfo(Modifiers &modifiers) {
 }
 void GrapeVoice::updateModifiersByModEnv(Modifiers &modifiers, double sampleRate) {
     for (int i = 0; i < NUM_MODENV; ++i) {
-        auto &params = modEnvParams[i];
+        auto &params = mainParams.modEnvParams[i];
         if (!params.enabled) {
             continue;
         }
