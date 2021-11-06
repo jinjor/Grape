@@ -33,12 +33,15 @@ public:
     }
 
     bool isMonoMode() { return getMode() == VOICE_MODE::Mono; }
+    bool isDrumMode() { return getMode() == VOICE_MODE::Drum; }
 
     bool isMonoModeFreezed;
+    bool isDrumModeFreezed;
     float portamentoTime;
     int pitchBendRange;
     void freeze() {
         isMonoModeFreezed = isMonoMode();
+        isDrumModeFreezed = isDrumMode();
         portamentoTime = PortamentoTime->get();
         pitchBendRange = PitchBendRange->get();
     }
