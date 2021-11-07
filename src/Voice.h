@@ -137,7 +137,7 @@ public:
     GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo,
                GlobalParams &globalParams,
                VoiceParams &voiceParams,
-               MainParams &mainParams);
+               std::vector<MainParams> &mainParamList);
     ~GrapeVoice();
     bool canPlaySound(juce::SynthesiserSound *sound) override;
     void startNote(int midiNoteNumber,
@@ -158,7 +158,7 @@ private:
 
     GlobalParams &globalParams;
     VoiceParams &voiceParams;
-    MainParams &mainParams;
+    std::vector<MainParams> &mainParamList;
 
     MultiOsc oscs[NUM_OSC];
     Adsr adsr[NUM_ENVELOPE];
@@ -189,13 +189,13 @@ public:
                      std::array<ControlItemParams, NUM_CONTROL> &controlItemParams,
                      GlobalParams &globalParams,
                      VoiceParams &voiceParams,
-                     MainParams &mainParams)
+                     std::vector<MainParams> &mainParamList)
         : currentPositionInfo(currentPositionInfo),
           monoStack(monoStack),
           controlItemParams(controlItemParams),
           globalParams(globalParams),
           voiceParams(voiceParams),
-          mainParams(mainParams) {
+          mainParamList(mainParamList) {
         addSound(new GrapeSound());
     }
     ~GrapeSynthesiser() {}
@@ -203,6 +203,7 @@ public:
                                  const MidiBuffer &inputMidi,
                                  int startSample,
                                  int numSamples) {
+        auto &mainParams = mainParamList[128];
         freezeParams(globalParams, voiceParams, mainParams, controlItemParams);
         juce::Synthesiser::renderNextBlock(outputAudio, inputMidi, startSample, numSamples);
     }
@@ -274,6 +275,7 @@ public:
     }
     void renderVoices(juce::AudioBuffer<float> &buffer, int startSample, int numSamples) override {
         juce::Synthesiser::renderVoices(buffer, startSample, numSamples);
+        auto &mainParams = mainParamList[128];
         auto &delayParams = mainParams.delayParams;
 
         stereoDelay.setParams(getSampleRate(),
@@ -315,6 +317,7 @@ public:
     }
     void controllerMoved(int number, int value) {
         auto normalizedValue = value / 127.0;
+        auto &mainParams = mainParamList[128];
 
         // predefined
         switch (number) {
@@ -458,7 +461,7 @@ private:
 
     GlobalParams &globalParams;
     VoiceParams &voiceParams;
-    MainParams &mainParams;
+    std::vector<MainParams> &mainParamList;
 
     StereoDelay stereoDelay;
 };

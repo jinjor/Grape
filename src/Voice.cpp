@@ -12,12 +12,12 @@ bool GrapeSound::appliesToChannel(int) { return true; }
 GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo,
                        GlobalParams &globalParams,
                        VoiceParams &voiceParams,
-                       MainParams &mainParams)
+                       std::vector<MainParams> &mainParamList)
     : perf(juce::PerformanceCounter("voice cycle", 100000)),
       currentPositionInfo(currentPositionInfo),
       globalParams(globalParams),
       voiceParams(voiceParams),
-      mainParams(mainParams),
+      mainParamList(mainParamList),
       oscs{MultiOsc(), MultiOsc(), MultiOsc()},
       adsr{Adsr(), Adsr()},
       filters{Filter(), Filter()},
@@ -37,6 +37,7 @@ void GrapeVoice::startNote(int midiNoteNumber,
     DBG("startNote() midiNoteNumber:" << midiNoteNumber);
     if (GrapeSound *playingSound = dynamic_cast<GrapeSound *>(sound)) {
         auto sampleRate = getSampleRate();
+        auto &mainParams = mainParamList[128];
         smoothNote.init(midiNoteNumber);
         if (stolen) {
             smoothVelocity.exponentialInfinite(0.01, velocity, sampleRate);
@@ -129,6 +130,7 @@ void GrapeVoice::renderNextBlock(juce::AudioBuffer<float> &outputBuffer, int sta
     }
 }
 void GrapeVoice::applyParamsBeforeLoop(double sampleRate) {
+    auto &mainParams = mainParamList[128];
     for (int i = 0; i < NUM_OSC; ++i) {
         oscs[i].setSampleRate(sampleRate);
         oscs[i].setWaveform(mainParams.oscParams[i].waveform, true);
@@ -155,6 +157,7 @@ void GrapeVoice::applyParamsBeforeLoop(double sampleRate) {
     }
 }
 bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
+    auto &mainParams = mainParamList[128];
     smoothNote.step();
     smoothVelocity.step();
 
@@ -349,6 +352,7 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
     // }
 }
 void GrapeVoice::updateModifiersByLfo(Modifiers &modifiers) {
+    auto &mainParams = mainParamList[128];
     for (int i = 0; i < NUM_LFO; ++i) {
         auto &params = mainParams.lfoParams[i];
         if (!params.enabled) {
@@ -452,6 +456,7 @@ void GrapeVoice::updateModifiersByLfo(Modifiers &modifiers) {
     }
 }
 void GrapeVoice::updateModifiersByModEnv(Modifiers &modifiers, double sampleRate) {
+    auto &mainParams = mainParamList[128];
     for (int i = 0; i < NUM_MODENV; ++i) {
         auto &params = mainParams.modEnvParams[i];
         if (!params.enabled) {

@@ -19,15 +19,19 @@ GrapeAudioProcessor::GrapeAudioProcessor()
       ,
       globalParams{},
       voiceParams{},
-      mainParams{},
       controlItemParams{ControlItemParams{0},
                         ControlItemParams{1},
                         ControlItemParams{2},
                         ControlItemParams{3},
                         ControlItemParams{4},
                         ControlItemParams{5}},
-      synth(&currentPositionInfo, &monoStack, controlItemParams, globalParams, voiceParams, mainParams) {
-    *mainParams.oscParams[0].Enabled = true;
+      synth(&currentPositionInfo, &monoStack, controlItemParams, globalParams, voiceParams, mainParamList) {
+    for (int i = 0; i < 129; i++) {
+        jassert(mainParamList.size() == i);
+        mainParamList.push_back(MainParams{i});
+    }
+
+    *mainParamList[128].oscParams[0].Enabled = true;
 
     *controlItemParams[0].Number = CONTROL_NUMBER_NAMES.indexOf("1: Modulation");
     *controlItemParams[0].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("LFO");
@@ -35,7 +39,9 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 
     globalParams.addAllParameters(*this);
     voiceParams.addAllParameters(*this);
-    mainParams.addAllParameters(*this);
+    for (int i = 0; i < 129; i++) {
+        mainParamList[i].addAllParameters(*this);
+    }
     for (auto& params : controlItemParams) {
         params.addAllParameters(*this);
     }
@@ -130,16 +136,17 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     if (auto* playHead = getPlayHead()) {
         playHead->getCurrentPosition(currentPositionInfo);
     }
+    auto& mainParams = mainParamList[128];
     auto voiceMode = static_cast<VOICE_MODE>(voiceParams.Mode->getIndex());
     int numVoices = 64;
     if (voiceMode == VOICE_MODE::Mono && synth.getNumVoices() != 1) {
         //        this->monoStack.reset();
         synth.clearVoices();
-        synth.addVoice(new GrapeVoice(&currentPositionInfo, globalParams, voiceParams, mainParams));
+        synth.addVoice(new GrapeVoice(&currentPositionInfo, globalParams, voiceParams, mainParamList));
     } else if (voiceMode == VOICE_MODE::Poly && synth.getNumVoices() != numVoices) {
         synth.clearVoices();
         for (auto i = 0; i < numVoices; ++i) {
-            synth.addVoice(new GrapeVoice(&currentPositionInfo, globalParams, voiceParams, mainParams));
+            synth.addVoice(new GrapeVoice(&currentPositionInfo, globalParams, voiceParams, mainParamList));
         }
     }
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
@@ -182,7 +189,17 @@ void GrapeAudioProcessor::getStateInformation(juce::MemoryBlock& destData) {
 
     globalParams.saveParameters(xml);
     voiceParams.saveParameters(xml);
-    mainParams.saveParameters(xml);
+    if (voiceParams.isDrumMode()) {
+        for (int i = 0; i < 128; i++) {
+            auto enabled = mainParamList[i].isEnabled();
+            xml.setAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), enabled);
+            if (enabled) {
+                mainParamList[i].saveParameters(xml);
+            }
+        }
+    } else {
+        mainParamList[128].saveParameters(xml);
+    }
     for (auto& param : controlItemParams) {
         param.saveParameters(xml);
     }
@@ -195,7 +212,17 @@ void GrapeAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
         if (xml->hasTagName("GrapeInstrument")) {
             globalParams.loadParameters(*xml);
             voiceParams.loadParameters(*xml);
-            mainParams.loadParameters(*xml);
+            if (voiceParams.isDrumMode()) {
+                for (int i = 0; i < 128; i++) {
+                    auto enabled =
+                        xml->getBoolAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), false);
+                    if (enabled) {
+                        mainParamList[i].loadParameters(*xml);
+                    }
+                }
+            } else {
+                mainParamList[128].loadParameters(*xml);
+            }
             for (auto& param : controlItemParams) {
                 param.loadParameters(*xml);
             }

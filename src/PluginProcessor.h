@@ -143,7 +143,7 @@ public:
 
     GlobalParams globalParams;
     VoiceParams voiceParams;
-    MainParams mainParams;
+    std::vector<MainParams> mainParamList{};
     std::array<ControlItemParams, NUM_CONTROL> controlItemParams;
 
     MonoStack monoStack;

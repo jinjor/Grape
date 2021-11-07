@@ -54,7 +54,7 @@ VoiceParams::VoiceParams() {
                                                    0.02f);
     PitchBendRange =
         new juce::AudioParameterInt(idPrefix + "PITCH_BEND_RANGE", namePrefix + "Pitch-Bend Range", 1, 12, 2);
-    TargetNote = new juce::AudioParameterInt(idPrefix + "TARGET_NOTE", namePrefix + "Target Note", -1, 127, -1);
+    TargetNote = new juce::AudioParameterInt(idPrefix + "TARGET_NOTE", namePrefix + "Target Note", 0, 128, 128);
 }
 void VoiceParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Mode);
@@ -72,13 +72,13 @@ void VoiceParams::loadParameters(juce::XmlElement& xml) {
     *Mode = xml.getIntAttribute(Mode->paramID, 0);
     *PortamentoTime = xml.getDoubleAttribute(PortamentoTime->paramID, 0.001);
     *PitchBendRange = xml.getIntAttribute(PitchBendRange->paramID, 2);
-    *TargetNote = xml.getIntAttribute(TargetNote->paramID, -1);
+    *TargetNote = xml.getIntAttribute(TargetNote->paramID, 128);
 }
 
 //==============================================================================
-OscParams::OscParams(int index) {
-    auto idPrefix = "OSC" + std::to_string(index) + "_";
-    auto namePrefix = "OSC" + std::to_string(index) + " ";
+OscParams::OscParams(std::string idPrefix, std::string namePrefix, int index) {
+    idPrefix += "OSC" + std::to_string(index) + "_";
+    namePrefix += "OSC" + std::to_string(index) + " ";
     Enabled = new juce::AudioParameterBool(idPrefix + "ENABLED", namePrefix + "Enabled", false);
     Waveform = new juce::AudioParameterChoice(
         idPrefix + "WAVEFORM", namePrefix + "Waveform", OSC_WAVEFORM_NAMES, OSC_WAVEFORM_NAMES.indexOf("Sine"));
@@ -131,9 +131,9 @@ void OscParams::loadParameters(juce::XmlElement& xml) {
 }
 
 //==============================================================================
-EnvelopeParams::EnvelopeParams(int index) {
-    auto idPrefix = "ENV" + std::to_string(index) + "_";
-    auto namePrefix = "Env" + std::to_string(index) + " ";
+EnvelopeParams::EnvelopeParams(std::string idPrefix, std::string namePrefix, int index) {
+    idPrefix += "ENV" + std::to_string(index) + "_";
+    namePrefix += "Env" + std::to_string(index) + " ";
     AttackCurve = new juce::AudioParameterFloat(idPrefix + "ATTACK_CURVE", "Attack Curve", 0.01, 0.99, 0.5f);
     Attack =
         new juce::AudioParameterFloat(idPrefix + "ATTACK", "Attack", rangeWithSkewForCentre(0.001f, 1.0f, 0.2f), 0.05f);
@@ -165,9 +165,9 @@ void EnvelopeParams::loadParameters(juce::XmlElement& xml) {
 }
 
 //==============================================================================
-FilterParams::FilterParams(int index) {
-    auto idPrefix = "FILTER" + std::to_string(index) + "_";
-    auto namePrefix = "Filter" + std::to_string(index) + " ";
+FilterParams::FilterParams(std::string idPrefix, std::string namePrefix, int index) {
+    idPrefix += "FILTER" + std::to_string(index) + "_";
+    namePrefix += "Filter" + std::to_string(index) + " ";
     Enabled = new juce::AudioParameterBool(idPrefix + "ENABLED", namePrefix + "Enabled", false);
     Target = new juce::AudioParameterChoice(
         idPrefix + "TARGET", namePrefix + "Target", FILTER_TARGET_NAMES, FILTER_TARGET_NAMES.indexOf("All"));
@@ -216,9 +216,9 @@ void FilterParams::loadParameters(juce::XmlElement& xml) {
 }
 
 //==============================================================================
-LfoParams::LfoParams(int index) {
-    auto idPrefix = "LFO" + std::to_string(index) + "_";
-    auto namePrefix = "LFO" + std::to_string(index) + " ";
+LfoParams::LfoParams(std::string idPrefix, std::string namePrefix, int index) {
+    idPrefix += "LFO" + std::to_string(index) + "_";
+    namePrefix += "LFO" + std::to_string(index) + " ";
     Enabled = new juce::AudioParameterBool(idPrefix + "ENABLED", namePrefix + "Enabled", false);
     TargetType = new juce::AudioParameterChoice(idPrefix + "TARGET_TYPE",
                                                 namePrefix + "Target Type",
@@ -282,9 +282,9 @@ void LfoParams::loadParameters(juce::XmlElement& xml) {
 }
 
 //==============================================================================
-ModEnvParams::ModEnvParams(int index) {
-    auto idPrefix = "MODENV" + std::to_string(index) + "_";
-    auto namePrefix = "ModEnv" + std::to_string(index) + " ";
+ModEnvParams::ModEnvParams(std::string idPrefix, std::string namePrefix, int index) {
+    idPrefix += "MODENV" + std::to_string(index) + "_";
+    namePrefix += "ModEnv" + std::to_string(index) + " ";
     Enabled = new juce::AudioParameterBool(idPrefix + "ENABLED", namePrefix + "Enabled", false);
     TargetType = new juce::AudioParameterChoice(idPrefix + "TARGET_TYPE",
                                                 namePrefix + "Target Type",
@@ -371,9 +371,9 @@ void ModEnvParams::loadParameters(juce::XmlElement& xml) {
 }
 
 //==============================================================================
-DelayParams::DelayParams() {
-    std::string idPrefix = "DELAY_";
-    std::string namePrefix = "Delay ";
+DelayParams::DelayParams(std::string idPrefix, std::string namePrefix) {
+    idPrefix += "DELAY_";
+    namePrefix += "Delay ";
     Enabled = new juce::AudioParameterBool(idPrefix + "ENABLED", namePrefix + "Enabled", false);
     Type = new juce::AudioParameterChoice(
         idPrefix + "TYPE", namePrefix + "Type", DELAY_TYPE_NAMES, DELAY_TYPE_NAMES.indexOf("Parallel"));
@@ -511,13 +511,22 @@ void ControlItemParams::loadParameters(juce::XmlElement& xml) {
 }
 
 //==============================================================================
-MainParams::MainParams()
-    : oscParams{OscParams{0}, OscParams{1}, OscParams{2}},
-      envelopeParams{EnvelopeParams{0}, EnvelopeParams{1}},
-      filterParams{FilterParams{0}, FilterParams{1}},
-      lfoParams{LfoParams{0}, LfoParams{1}, LfoParams{2}},
-      modEnvParams{ModEnvParams{0}, ModEnvParams{1}, ModEnvParams{2}},
-      delayParams{} {}
+
+MainParams::MainParams(int groupIndex)
+    : oscParams{OscParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
+                OscParams{idPrefix(groupIndex), namePrefix(groupIndex), 1},
+                OscParams{idPrefix(groupIndex), namePrefix(groupIndex), 2}},
+      envelopeParams{EnvelopeParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
+                     EnvelopeParams{idPrefix(groupIndex), namePrefix(groupIndex), 1}},
+      filterParams{FilterParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
+                   FilterParams{idPrefix(groupIndex), namePrefix(groupIndex), 1}},
+      lfoParams{LfoParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
+                LfoParams{idPrefix(groupIndex), namePrefix(groupIndex), 1},
+                LfoParams{idPrefix(groupIndex), namePrefix(groupIndex), 2}},
+      modEnvParams{ModEnvParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
+                   ModEnvParams{idPrefix(groupIndex), namePrefix(groupIndex), 1},
+                   ModEnvParams{idPrefix(groupIndex), namePrefix(groupIndex), 2}},
+      delayParams{idPrefix(groupIndex), namePrefix(groupIndex)} {}
 void MainParams::addAllParameters(juce::AudioProcessor& processor) {
     for (auto& params : envelopeParams) {
         params.addAllParameters(processor);

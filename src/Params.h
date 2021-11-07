@@ -103,8 +103,10 @@ public:
     juce::AudioParameterFloat* Gain;
     juce::AudioParameterChoice* Envelope;
 
-    OscParams(int index);
+    OscParams(std::string idPrefix, std::string namePrefix, int index);
     OscParams(const OscParams&) = delete;
+    OscParams(OscParams&&) noexcept = default;
+
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
@@ -170,8 +172,9 @@ public:
     juce::AudioParameterFloat* Sustain;
     juce::AudioParameterFloat* Release;
 
-    EnvelopeParams(int index);
+    EnvelopeParams(std::string idPrefix, std::string namePrefix, int index);
     EnvelopeParams(const EnvelopeParams&) = delete;
+    EnvelopeParams(EnvelopeParams&&) noexcept = default;
 
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -206,8 +209,9 @@ public:
     juce::AudioParameterFloat* Q;
     juce::AudioParameterFloat* Gain;
 
-    FilterParams(int index);
+    FilterParams(std::string idPrefix, std::string namePrefix, int index);
     FilterParams(const FilterParams&) = delete;
+    FilterParams(FilterParams&&) noexcept = default;
 
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -271,8 +275,9 @@ public:
     juce::AudioParameterFloat* FastFreq;
     juce::AudioParameterFloat* Amount;
 
-    LfoParams(int index);
+    LfoParams(std::string idPrefix, std::string namePrefix, int index);
     LfoParams(const LfoParams&) = delete;
+    LfoParams(LfoParams&&) noexcept = default;
 
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -351,8 +356,9 @@ public:
     juce::AudioParameterFloat* Attack;
     juce::AudioParameterFloat* Decay;
 
-    ModEnvParams(int index);
+    ModEnvParams(std::string idPrefix, std::string namePrefix, int index);
     ModEnvParams(const ModEnvParams&) = delete;
+    ModEnvParams(ModEnvParams&&) noexcept = default;
 
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -424,8 +430,10 @@ public:
     juce::AudioParameterFloat* HighFreq;
     juce::AudioParameterFloat* Feedback;
     juce::AudioParameterFloat* Mix;
-    DelayParams();
+    DelayParams(std::string idPrefix, std::string namePrefix);
     DelayParams(const DelayParams&) = delete;
+    DelayParams(DelayParams&&) noexcept = default;
+
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
@@ -542,8 +550,9 @@ public:
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
-    MainParams();
+    MainParams(int groupIndex);
     MainParams(const MainParams&) = delete;
+    MainParams(MainParams&&) noexcept = default;
 
     std::array<OscParams, NUM_OSC> oscParams;
     std::array<EnvelopeParams, NUM_ENVELOPE> envelopeParams;
@@ -551,6 +560,14 @@ public:
     std::array<LfoParams, NUM_LFO> lfoParams;
     std::array<ModEnvParams, NUM_MODENV> modEnvParams;
     DelayParams delayParams;
+    bool isEnabled() {
+        for (int i = 0; i < NUM_OSC; ++i) {
+            if (oscParams[i].Enabled->get()) {
+                return true;
+            }
+        }
+        return false;
+    }
     void freeze() {
         for (int i = 0; i < NUM_OSC; ++i) {
             oscParams[i].freeze();
@@ -571,4 +588,10 @@ public:
     }
 
 private:
+    static std::string idPrefix(int groupIndex) {
+        return groupIndex == 128 ? "" : "G" + std::to_string(groupIndex) + "_";
+    }
+    static std::string namePrefix(int groupIndex) {
+        return groupIndex == 128 ? "" : "G" + std::to_string(groupIndex) + " ";
+    }
 };
