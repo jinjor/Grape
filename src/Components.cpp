@@ -239,9 +239,13 @@ void MasterComponent::timerCallback() {
 }
 
 //==============================================================================
-OscComponent::OscComponent(int index, OscParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+OscComponent::OscComponent(int index,
+                           VoiceParams& voiceParams,
+                           std::vector<MainParams>& mainParamList,
+                           std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
     : index(index),
-      params(params),
+      voiceParams(voiceParams),
+      mainParamList(mainParamList),
       controlItemParams(controlItemParams),
       header("OSC " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       envelopeSelector("Envelope"),
@@ -263,6 +267,8 @@ OscComponent::OscComponent(int index, OscParams& params, std::array<ControlItemP
     header.enabledButton.addListener(this);
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
+
+    auto& params = getSelectedOscParams();
 
     initChoice(envelopeSelector, params.Envelope, this, body);
     initChoice(waveformSelector, params.Waveform, this, body);
@@ -316,11 +322,13 @@ void OscComponent::resized() {
     consumeLabeledKnob(lowerArea, spreadLabel, spreadSlider);
 }
 void OscComponent::buttonClicked(juce::Button* button) {
+    auto& params = getSelectedOscParams();
     if (button == &header.enabledButton) {
         *params.Enabled = header.enabledButton.getToggleState();
     }
 }
 void OscComponent::comboBoxChanged(juce::ComboBox* comboBox) {
+    auto& params = getSelectedOscParams();
     if (comboBox == &envelopeSelector) {
         *params.Envelope = envelopeSelector.getSelectedItemIndex();
     } else if (comboBox == &waveformSelector) {
@@ -328,6 +336,7 @@ void OscComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     }
 }
 void OscComponent::sliderValueChanged(juce::Slider* slider) {
+    auto& params = getSelectedOscParams();
     if (slider == &edgeSlider) {
         *params.Edge = edgeSlider.getValue();
     } else if (slider == &octaveSlider) {
@@ -345,6 +354,8 @@ void OscComponent::sliderValueChanged(juce::Slider* slider) {
     }
 }
 void OscComponent::timerCallback() {
+    auto& params = getSelectedOscParams();
+
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     body.setEnabled(params.Enabled->get());
     envelopeSelector.setSelectedItemIndex(params.Envelope->getIndex(), juce::dontSendNotification);
@@ -387,9 +398,10 @@ void OscComponent::timerCallback() {
 }
 
 //==============================================================================
-EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams& params)
+EnvelopeComponent::EnvelopeComponent(int index, VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
     : index(index),
-      params(params),
+      voiceParams(voiceParams),
+      mainParamList(mainParamList),
       header("ENV " + std::to_string(index + 1), HEADER_CHECK::Hidden),
       attackCurveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                         juce::Slider::TextEntryBoxPosition::NoTextBox),
@@ -403,6 +415,8 @@ EnvelopeComponent::EnvelopeComponent(int index, EnvelopeParams& params)
                     juce::Slider::TextEntryBoxPosition::NoTextBox) {
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
+
+    auto& params = getSelectedEnvelopeParams();
 
     initLinear(attackCurveSlider, params.AttackCurve, 0.01, this, *this);
     initSkewFromMid(attackSlider, params.Attack, 0.001, " sec", nullptr, this, *this);
@@ -434,6 +448,7 @@ void EnvelopeComponent::resized() {
     consumeLabeledKnob(bounds, releaseLabel, releaseSlider);
 }
 void EnvelopeComponent::sliderValueChanged(juce::Slider* slider) {
+    auto& params = getSelectedEnvelopeParams();
     if (slider == &attackCurveSlider) {
         *params.AttackCurve = (float)attackCurveSlider.getValue();
     } else if (slider == &attackSlider) {
@@ -447,6 +462,7 @@ void EnvelopeComponent::sliderValueChanged(juce::Slider* slider) {
     }
 }
 void EnvelopeComponent::timerCallback() {
+    auto& params = getSelectedEnvelopeParams();
     attackCurveSlider.setValue(params.AttackCurve->get(), juce::dontSendNotification);
     attackSlider.setValue(params.Attack->get(), juce::dontSendNotification);
     decaySlider.setValue(params.Decay->get(), juce::dontSendNotification);
@@ -456,10 +472,12 @@ void EnvelopeComponent::timerCallback() {
 
 //==============================================================================
 FilterComponent::FilterComponent(int index,
-                                 FilterParams& params,
+                                 VoiceParams& voiceParams,
+                                 std::vector<MainParams>& mainParamList,
                                  std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
     : index(index),
-      params(params),
+      voiceParams(voiceParams),
+      mainParamList(mainParamList),
       controlItemParams(controlItemParams),
       header("FILTER " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       targetSelector("Target"),
@@ -471,6 +489,7 @@ FilterComponent::FilterComponent(int index,
       qSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox),
       gainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                  juce::Slider::TextEntryBoxPosition::NoTextBox) {
+    auto& params = getSelectedFilterParams();
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
@@ -524,11 +543,13 @@ void FilterComponent::resized() {
     consumeLabeledKnob(lowerArea, gainLabel, gainSlider);
 }
 void FilterComponent::buttonClicked(juce::Button* button) {
+    auto& params = getSelectedFilterParams();
     if (button == &header.enabledButton) {
         *params.Enabled = header.enabledButton.getToggleState();
     }
 }
 void FilterComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
+    auto& params = getSelectedFilterParams();
     if (comboBoxThatHasChanged == &targetSelector) {
         *params.Target = targetSelector.getSelectedItemIndex();
     } else if (comboBoxThatHasChanged == &typeSelector) {
@@ -538,6 +559,7 @@ void FilterComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
     }
 }
 void FilterComponent::sliderValueChanged(juce::Slider* slider) {
+    auto& params = getSelectedFilterParams();
     if (slider == &hzSlider) {
         *params.Hz = (float)hzSlider.getValue();
     } else if (slider == &semitoneSlider) {
@@ -549,6 +571,7 @@ void FilterComponent::sliderValueChanged(juce::Slider* slider) {
     }
 }
 void FilterComponent::timerCallback() {
+    auto& params = getSelectedFilterParams();
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     body.setEnabled(params.Enabled->get());
 
@@ -580,9 +603,13 @@ void FilterComponent::timerCallback() {
 }
 
 //==============================================================================
-LfoComponent::LfoComponent(int index, LfoParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+LfoComponent::LfoComponent(int index,
+                           VoiceParams& voiceParams,
+                           std::vector<MainParams>& mainParamList,
+                           std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
     : index(index),
-      params(params),
+      voiceParams(voiceParams),
+      mainParamList(mainParamList),
       controlItemParams(controlItemParams),
       header("LFO " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       targetTypeSelector("TargetType"),
@@ -597,6 +624,7 @@ LfoComponent::LfoComponent(int index, LfoParams& params, std::array<ControlItemP
                      juce::Slider::TextEntryBoxPosition::NoTextBox),
       amountSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox) {
+    auto& params = getSelectedLfoParams();
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
@@ -655,11 +683,13 @@ void LfoComponent::resized() {
     consumeLabeledKnob(lowerArea, amountLabel, amountSlider);
 }
 void LfoComponent::buttonClicked(juce::Button* button) {
+    auto& params = getSelectedLfoParams();
     if (button == &header.enabledButton) {
         *params.Enabled = header.enabledButton.getToggleState();
     }
 }
 void LfoComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
+    auto& params = getSelectedLfoParams();
     if (comboBoxThatHasChanged == &targetTypeSelector) {
         *params.TargetType = targetTypeSelector.getSelectedItemIndex();
     } else if (comboBoxThatHasChanged == &targetOscSelector) {
@@ -676,6 +706,7 @@ void LfoComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
     resized();  // re-render
 }
 void LfoComponent::sliderValueChanged(juce::Slider* slider) {
+    auto& params = getSelectedLfoParams();
     if (slider == &slowFreqSlider) {
         *params.SlowFreq = (float)slowFreqSlider.getValue();
     } else if (slider == &fastFreqSlider) {
@@ -685,6 +716,7 @@ void LfoComponent::sliderValueChanged(juce::Slider* slider) {
     }
 }
 void LfoComponent::timerCallback() {
+    auto& params = getSelectedLfoParams();
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     body.setEnabled(params.Enabled->get());
 
@@ -723,9 +755,10 @@ void LfoComponent::timerCallback() {
 }
 
 //==============================================================================
-ModEnvComponent::ModEnvComponent(int index, ModEnvParams& params)
+ModEnvComponent::ModEnvComponent(int index, VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
     : index(index),
-      params(params),
+      voiceParams(voiceParams),
+      mainParamList(mainParamList),
       header("MOD ENV " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       targetTypeSelector("TargetType"),
       targetOscSelector("TargetOsc"),
@@ -740,6 +773,7 @@ ModEnvComponent::ModEnvComponent(int index, ModEnvParams& params)
                    juce::Slider::TextEntryBoxPosition::NoTextBox),
       decaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                   juce::Slider::TextEntryBoxPosition::NoTextBox) {
+    auto& params = getSelectedModEnvParams();
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
@@ -813,11 +847,13 @@ void ModEnvComponent::resized() {
     consumeLabeledKnob(lowerArea, decayLabel, decaySlider);
 }
 void ModEnvComponent::buttonClicked(juce::Button* button) {
+    auto& params = getSelectedModEnvParams();
     if (button == &header.enabledButton) {
         *params.Enabled = header.enabledButton.getToggleState();
     }
 }
 void ModEnvComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
+    auto& params = getSelectedModEnvParams();
     if (comboBoxThatHasChanged == &targetTypeSelector) {
         *params.TargetType = targetTypeSelector.getSelectedItemIndex();
     } else if (comboBoxThatHasChanged == &targetOscSelector) {
@@ -838,6 +874,7 @@ void ModEnvComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
     resized();  // re-render
 }
 void ModEnvComponent::sliderValueChanged(juce::Slider* slider) {
+    auto& params = getSelectedModEnvParams();
     if (slider == &peakFreqSlider) {
         *params.PeakFreq = (float)peakFreqSlider.getValue();
     } else if (slider == &waitSlider) {
@@ -849,6 +886,7 @@ void ModEnvComponent::sliderValueChanged(juce::Slider* slider) {
     }
 }
 void ModEnvComponent::timerCallback() {
+    auto& params = getSelectedModEnvParams();
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     body.setEnabled(params.Enabled->get());
 
@@ -887,8 +925,11 @@ void ModEnvComponent::timerCallback() {
 }
 
 //==============================================================================
-DelayComponent::DelayComponent(DelayParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
-    : params(params),
+DelayComponent::DelayComponent(VoiceParams& voiceParams,
+                               std::vector<MainParams>& mainParamList,
+                               std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+    : voiceParams(voiceParams),
+      mainParamList(mainParamList),
       controlItemParams(controlItemParams),
       header("DELAY", HEADER_CHECK::Enabled),
       typeSelector("Type"),
@@ -908,6 +949,7 @@ DelayComponent::DelayComponent(DelayParams& params, std::array<ControlItemParams
                      juce::Slider::TextEntryBoxPosition::NoTextBox),
       mixSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                 juce::Slider::TextEntryBoxPosition::NoTextBox) {
+    auto& params = getSelectedDelayParams();
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     header.enabledButton.addListener(this);
@@ -963,11 +1005,13 @@ void DelayComponent::resized() {
     consumeLabeledKnob(lowerArea, mixLabel, mixSlider);
 }
 void DelayComponent::buttonClicked(juce::Button* button) {
+    auto& params = getSelectedDelayParams();
     if (button == &header.enabledButton) {
         *params.Enabled = header.enabledButton.getToggleState();
     }
 }
 void DelayComponent::comboBoxChanged(juce::ComboBox* comboBox) {
+    auto& params = getSelectedDelayParams();
     if (comboBox == &typeSelector) {
         *params.Type = typeSelector.getSelectedItemIndex();
     } else if (comboBox == &syncSelector) {
@@ -975,6 +1019,7 @@ void DelayComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     }
 }
 void DelayComponent::sliderValueChanged(juce::Slider* slider) {
+    auto& params = getSelectedDelayParams();
     if (slider == &timeLSlider) {
         *params.TimeL = (float)timeLSlider.getValue();
     } else if (slider == &timeRSlider) {
@@ -994,6 +1039,7 @@ void DelayComponent::sliderValueChanged(juce::Slider* slider) {
     }
 }
 void DelayComponent::timerCallback() {
+    auto& params = getSelectedDelayParams();
     header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
     body.setEnabled(params.Enabled->get());
 
@@ -1238,17 +1284,13 @@ void AnalyserToggle::toggleItemSelected(AnalyserToggleItem* toggleItem) {
 AnalyserWindow::AnalyserWindow(ANALYSER_MODE* analyserMode,
                                LatestDataProvider* latestDataProvider,
                                MonoStack* monoStack,
-                               std::array<EnvelopeParams, NUM_ENVELOPE>& envelopeParams,
-                               std::array<OscParams, NUM_OSC>& oscParams,
-                               std::array<FilterParams, NUM_FILTER>& filterParams,
-                               std::array<ModEnvParams, NUM_MODENV>& modEnvParams)
+                               VoiceParams& voiceParams,
+                               std::vector<MainParams>& mainParamList)
     : analyserMode(analyserMode),
       latestDataProvider(latestDataProvider),
       monoStack(monoStack),
-      envelopeParams(envelopeParams),
-      oscParams(oscParams),
-      filterParams(filterParams),
-      modEnvParams(modEnvParams),
+      voiceParams(voiceParams),
+      mainParamList(mainParamList),
       forwardFFT(fftOrder),
       window(fftSize, juce::dsp::WindowingFunction<float>::hann),
       lastAmpEnvParams{SimpleAmpEnvParams(), SimpleAmpEnvParams()},
@@ -1286,6 +1328,10 @@ void AnalyserWindow::timerCallback() {
             break;
         }
         case ANALYSER_MODE::Envelope: {
+            auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128];
+            auto& envelopeParams = mainParams.envelopeParams;
+            auto& modEnvParams = mainParams.modEnvParams;
+
             if (lastAnalyserMode != ANALYSER_MODE::Envelope) {
                 shouldRepaint = true;
             }
@@ -1376,6 +1422,10 @@ void AnalyserWindow::timerCallback() {
             break;
         }
         case ANALYSER_MODE::Filter: {
+            auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128];
+            auto& oscParams = mainParams.oscParams;
+            auto& filterParams = mainParams.filterParams;
+
             if (lastAnalyserMode != ANALYSER_MODE::Filter) {
                 shouldRepaint = true;
             }
@@ -1534,6 +1584,9 @@ void AnalyserWindow::paint(juce::Graphics& g) {
                 break;
             }
             case ANALYSER_MODE::Envelope: {
+                auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128];
+                auto& modEnvParams = mainParams.modEnvParams;
+
                 auto spectrumWidth = displayBounds.getWidth();
                 for (int i = NUM_MODENV - 1; i >= 0; i--) {
                     if (!modEnvParams[i].Enabled->get()) {
@@ -1549,6 +1602,9 @@ void AnalyserWindow::paint(juce::Graphics& g) {
                 break;
             }
             case ANALYSER_MODE::Filter: {
+                auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128];
+                auto& filterParams = mainParams.filterParams;
+
                 for (int i = 0; i < NUM_FILTER; i++) {
                     if (!filterParams[i].Enabled->get()) {
                         continue;
