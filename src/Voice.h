@@ -15,10 +15,11 @@ const double CONTROL_RATE = 1.0 / CONTROL_INTERVAL;
 
 void freezeParams(GlobalParams &globalParams,
                   VoiceParams &voiceParams,
-                  MainParams &mainParams,
+                  std::vector<MainParams> &mainParamList,
                   std::array<ControlItemParams, NUM_CONTROL> &controlItemParams) {
     globalParams.freeze();
     voiceParams.freeze();
+    auto &mainParams = mainParamList[voiceParams.isDrumModeFreezed ? voiceParams.targetNote : 128];
     mainParams.freeze();
     for (int i = 0; i < NUM_CONTROL; ++i) {
         controlItemParams[i].freeze();
@@ -203,8 +204,7 @@ public:
                                  const MidiBuffer &inputMidi,
                                  int startSample,
                                  int numSamples) {
-        auto &mainParams = mainParamList[128];
-        freezeParams(globalParams, voiceParams, mainParams, controlItemParams);
+        freezeParams(globalParams, voiceParams, mainParamList, controlItemParams);
         juce::Synthesiser::renderNextBlock(outputAudio, inputMidi, startSample, numSamples);
     }
     virtual void handleMidiEvent(const juce::MidiMessage &m) override {
@@ -275,7 +275,7 @@ public:
     }
     void renderVoices(juce::AudioBuffer<float> &buffer, int startSample, int numSamples) override {
         juce::Synthesiser::renderVoices(buffer, startSample, numSamples);
-        auto &mainParams = mainParamList[128];
+        auto &mainParams = mainParamList[voiceParams.isDrumModeFreezed ? voiceParams.targetNote : 128];
         auto &delayParams = mainParams.delayParams;
 
         stereoDelay.setParams(getSampleRate(),

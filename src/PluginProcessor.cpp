@@ -136,7 +136,6 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     if (auto* playHead = getPlayHead()) {
         playHead->getCurrentPosition(currentPositionInfo);
     }
-    auto& mainParams = mainParamList[128];
     auto voiceMode = static_cast<VOICE_MODE>(voiceParams.Mode->getIndex());
     int numVoices = 64;
     if (voiceMode == VOICE_MODE::Mono && synth.getNumVoices() != 1) {
