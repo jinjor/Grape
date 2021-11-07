@@ -317,7 +317,6 @@ public:
     }
     void controllerMoved(int number, int value) {
         auto normalizedValue = value / 127.0;
-        auto &mainParams = mainParamList[128];
 
         // predefined
         switch (number) {
@@ -334,6 +333,10 @@ public:
                 globalParams.freeze();
                 break;
             default: {
+                if (voiceParams.isDrumMode()) {
+                    break;
+                }
+                auto &mainParams = mainParamList[128];
                 // custom
                 for (int i = 0; i < NUM_CONTROL; ++i) {
                     auto &params = controlItemParams[i];
