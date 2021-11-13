@@ -20,7 +20,11 @@ void freezeParams(GlobalParams &globalParams,
     globalParams.freeze();
     voiceParams.freeze();
     auto &mainParams = mainParamList[voiceParams.isDrumModeFreezed ? voiceParams.targetNote : 128];
-    mainParams.freeze();
+    for (auto &mainParams : mainParamList) {
+        if (mainParams.isEnabled()) {
+            mainParams.freeze();
+        }
+    }
     for (int i = 0; i < NUM_CONTROL; ++i) {
         controlItemParams[i].freeze();
     }
@@ -56,10 +60,13 @@ private:
 //==============================================================================
 class GrapeSound : public juce::SynthesiserSound {
 public:
-    GrapeSound();
-    ~GrapeSound();
-    bool appliesToNote(int) override;
-    bool appliesToChannel(int) override;
+    GrapeSound(std::vector<MainParams> &mainParamList) : mainParamList(mainParamList) {}
+    ~GrapeSound(){};
+    bool appliesToNote(int noteNumber) override { return mainParamList[noteNumber].isEnabled(); };
+    bool appliesToChannel(int) override { return true; };
+
+private:
+    std::vector<MainParams> &mainParamList;
 };
 
 //==============================================================================
@@ -167,6 +174,7 @@ private:
     Osc lfos[NUM_LFO];
     Adsr modEnvs[NUM_MODENV];
 
+    int noteNumberAtStart = -1;
     TransitiveValue smoothNote;
     TransitiveValue smoothVelocity;
     bool stolen = false;
@@ -197,7 +205,7 @@ public:
           globalParams(globalParams),
           voiceParams(voiceParams),
           mainParamList(mainParamList) {
-        addSound(new GrapeSound());
+        addSound(new GrapeSound(mainParamList));
     }
     ~GrapeSynthesiser() {}
     virtual void renderNextBlock(AudioBuffer<float> &outputAudio,

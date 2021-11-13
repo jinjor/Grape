@@ -264,10 +264,13 @@ private:
     juce::ComboBox modeSelector;
     juce::Slider portamentoTimeSlider;
     juce::Slider pitchBendRangeSlider;
+    juce::ComboBox targetNoteKindSelector;
+    juce::ComboBox targetNoteOctSelector;
 
     juce::Label modeLabel;
     juce::Label portamentoTimeLabel;
     juce::Label pitchBendRangeLabel;
+    juce::Label targetNoteLabel;
 };
 
 //==============================================================================
@@ -381,7 +384,7 @@ private:
     juce::Label gainLabel;
 
     OscParams& getSelectedOscParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128].oscParams[index];
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].oscParams[index];
     }
 };
 
@@ -418,7 +421,7 @@ private:
     juce::Label releaseLabel;
 
     EnvelopeParams& getSelectedEnvelopeParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128].envelopeParams[index];
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].envelopeParams[index];
     }
 };
 
@@ -472,7 +475,7 @@ private:
     juce::Label gainLabel;
 
     FilterParams& getSelectedFilterParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128].filterParams[index];
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].filterParams[index];
     }
 };
 
@@ -528,7 +531,7 @@ private:
     juce::Label amountLabel;
 
     LfoParams& getSelectedLfoParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128].lfoParams[index];
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].lfoParams[index];
     }
 };
 
@@ -585,7 +588,7 @@ private:
     juce::Label decayLabel;
 
     ModEnvParams& getSelectedModEnvParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128].modEnvParams[index];
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].modEnvParams[index];
     }
 };
 
@@ -642,7 +645,7 @@ private:
     juce::Label mixLabel;
 
     DelayParams& getSelectedDelayParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128].delayParams;
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].delayParams;
     }
 };
 

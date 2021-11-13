@@ -20,7 +20,8 @@ public:
     juce::AudioParameterChoice* Mode;
     juce::AudioParameterFloat* PortamentoTime;
     juce::AudioParameterInt* PitchBendRange;
-    juce::AudioParameterInt* TargetNote;
+    juce::AudioParameterChoice* TargetNoteKind;
+    juce::AudioParameterChoice* TargetNoteOct;
 
     VoiceParams();
     VoiceParams(const VoiceParams&) = delete;
@@ -35,6 +36,9 @@ public:
 
     bool isMonoMode() { return getMode() == VOICE_MODE::Mono; }
     bool isDrumMode() { return getMode() == VOICE_MODE::Drum; }
+    int getTargetNote() {
+        return (TARGET_NOTE_OCT_VALUES[TargetNoteOct->getIndex()] + 2) * 12 + TargetNoteKind->getIndex();
+    }
 
     bool isMonoModeFreezed;
     bool isDrumModeFreezed;
@@ -46,7 +50,7 @@ public:
         isDrumModeFreezed = isDrumMode();
         portamentoTime = PortamentoTime->get();
         pitchBendRange = PitchBendRange->get();
-        targetNote = TargetNote->get();
+        targetNote = getTargetNote();
     }
 
 private:

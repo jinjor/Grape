@@ -64,9 +64,12 @@ VoiceComponent::VoiceComponent(VoiceParams& params, std::array<ControlItemParams
     initChoice(modeSelector, params.Mode, this, *this);
     initLinear(portamentoTimeSlider, params.PortamentoTime, 0.001, " sec", nullptr, this, *this);
     initLinear(pitchBendRangeSlider, params.PitchBendRange, this, *this);
+    initChoice(targetNoteKindSelector, params.TargetNoteKind, this, *this);
+    initChoice(targetNoteOctSelector, params.TargetNoteOct, this, *this);
     initLabel(modeLabel, "Mode", *this);
     initLabel(portamentoTimeLabel, "Glide Time", *this);
     initLabel(pitchBendRangeLabel, "PB Range", *this);
+    initLabel(targetNoteLabel, "Target Note", *this);
 
     startTimerHz(30.0f);
 }
@@ -82,12 +85,22 @@ void VoiceComponent::resized() {
 
     bounds.reduce(0, 10);
     consumeLabeledComboBox(bounds, 70, modeLabel, modeSelector);
+    {
+        auto bounds2 = bounds;
+        // TODO
+        consumeLabeledComboBox(bounds2, 60, targetNoteLabel, targetNoteKindSelector);
+        consumeLabeledComboBox(bounds2, 60, targetNoteLabel, targetNoteOctSelector);
+    }
     consumeLabeledKnob(bounds, portamentoTimeLabel, portamentoTimeSlider);
     consumeLabeledKnob(bounds, pitchBendRangeLabel, pitchBendRangeSlider);
 }
 void VoiceComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     if (comboBox == &modeSelector) {
         *params.Mode = modeSelector.getSelectedItemIndex();
+    } else if (comboBox == &targetNoteKindSelector) {
+        *params.TargetNoteKind = targetNoteKindSelector.getSelectedItemIndex();
+    } else if (comboBox == &targetNoteOctSelector) {
+        *params.TargetNoteOct = targetNoteOctSelector.getSelectedItemIndex();
     }
 }
 void VoiceComponent::sliderValueChanged(juce::Slider* slider) {
@@ -104,6 +117,15 @@ void VoiceComponent::timerCallback() {
     auto isMono = params.isMonoMode();
     portamentoTimeLabel.setEnabled(isMono);
     portamentoTimeSlider.setEnabled(isMono);
+
+    auto isDrum = params.isDrumMode();
+    portamentoTimeLabel.setVisible(!isDrum);
+    portamentoTimeSlider.setVisible(!isDrum);
+    pitchBendRangeLabel.setVisible(!isDrum);
+    pitchBendRangeSlider.setVisible(!isDrum);
+    targetNoteLabel.setVisible(isDrum);
+    targetNoteKindSelector.setVisible(isDrum);
+    targetNoteOctSelector.setVisible(isDrum);
 
     portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {
@@ -1328,7 +1350,7 @@ void AnalyserWindow::timerCallback() {
             break;
         }
         case ANALYSER_MODE::Envelope: {
-            auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128];
+            auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128];
             auto& envelopeParams = mainParams.envelopeParams;
             auto& modEnvParams = mainParams.modEnvParams;
 
@@ -1422,7 +1444,7 @@ void AnalyserWindow::timerCallback() {
             break;
         }
         case ANALYSER_MODE::Filter: {
-            auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128];
+            auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128];
             auto& oscParams = mainParams.oscParams;
             auto& filterParams = mainParams.filterParams;
 
@@ -1584,7 +1606,7 @@ void AnalyserWindow::paint(juce::Graphics& g) {
                 break;
             }
             case ANALYSER_MODE::Envelope: {
-                auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128];
+                auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128];
                 auto& modEnvParams = mainParams.modEnvParams;
 
                 auto spectrumWidth = displayBounds.getWidth();
@@ -1602,7 +1624,7 @@ void AnalyserWindow::paint(juce::Graphics& g) {
                 break;
             }
             case ANALYSER_MODE::Filter: {
-                auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.TargetNote->get() : 128];
+                auto& mainParams = mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128];
                 auto& filterParams = mainParams.filterParams;
 
                 for (int i = 0; i < NUM_FILTER; i++) {

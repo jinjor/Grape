@@ -9,7 +9,11 @@ using namespace math_constants;
 namespace {
 
 enum class VOICE_MODE { Mono, Poly, Drum };
-const juce::StringArray VOICE_MODE_NAMES = juce::StringArray("Mono", "Poly");
+const juce::StringArray VOICE_MODE_NAMES = juce::StringArray("Mono", "Poly", "Drum");
+const juce::StringArray TARGET_NOTE_KINDS =
+    juce::StringArray("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B");
+const juce::StringArray TARGET_NOTE_OCT_NAMES = juce::StringArray("-1", "0", "1", "2", "3", "4", "5");
+const int TARGET_NOTE_OCT_VALUES[7] = {-1, 0, 1, 2, 3, 4, 5};
 
 enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Random, Pink, White };
 const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Square", "Pink", "White");
