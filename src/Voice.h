@@ -60,12 +60,20 @@ private:
 //==============================================================================
 class GrapeSound : public juce::SynthesiserSound {
 public:
-    GrapeSound(std::vector<MainParams> &mainParamList) : mainParamList(mainParamList) {}
+    GrapeSound(VoiceParams &voiceParams, std::vector<MainParams> &mainParamList)
+        : voiceParams(voiceParams), mainParamList(mainParamList) {}
     ~GrapeSound(){};
-    bool appliesToNote(int noteNumber) override { return mainParamList[noteNumber].isEnabled(); };
+    bool appliesToNote(int noteNumber) override {
+        if (voiceParams.isDrumMode()) {
+            return mainParamList[noteNumber].isEnabled();
+        } else {
+            return true;
+        }
+    };
     bool appliesToChannel(int) override { return true; };
 
 private:
+    VoiceParams &voiceParams;
     std::vector<MainParams> &mainParamList;
 };
 
@@ -205,7 +213,7 @@ public:
           globalParams(globalParams),
           voiceParams(voiceParams),
           mainParamList(mainParamList) {
-        addSound(new GrapeSound(mainParamList));
+        addSound(new GrapeSound(voiceParams, mainParamList));
     }
     ~GrapeSynthesiser() {}
     virtual void renderNextBlock(AudioBuffer<float> &outputAudio,
