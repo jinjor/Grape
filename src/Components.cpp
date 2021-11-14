@@ -1091,14 +1091,22 @@ void DelayComponent::timerCallback() {
 
 //==============================================================================
 DrumComponent::DrumComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
-    : voiceParams(voiceParams), mainParamList(mainParamList), header("DRUM", HEADER_CHECK::Hidden) {
+    : voiceParams(voiceParams),
+      mainParamList(mainParamList),
+      header("DRUM", HEADER_CHECK::Hidden),
+      noteToPlaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
+                       juce::Slider::TextEntryBoxPosition::NoTextBox) {
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
     auto& params = getSelectedDrumParams();
 
-    initLabel(noteToPlayLabel, "Note to Play", *this);
-    initLabel(noteToMuteLabel, "Note to Mute", *this);
+    initLinear(noteToPlaySlider, params.NoteToPlay, this, body);
+
+    initLabel(noteToPlayLabel, "Note to Play", body);
+    initLabel(noteToMuteLabel, "Note to Mute", body);
+
+    addAndMakeVisible(body);
 
     startTimerHz(30.0f);
 }
@@ -1112,7 +1120,15 @@ void DrumComponent::resized() {
     auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
     header.setBounds(headerArea);
 
+    body.setBounds(bounds);
+    bounds = body.getLocalBounds();
+    auto bodyHeight = bounds.getHeight();
+    auto upperArea = bounds.removeFromTop(bodyHeight / 2);
+    auto& lowerArea = bounds;
+
     auto& params = getSelectedDrumParams();
+
+    consumeLabeledKnob(upperArea, noteToPlayLabel, noteToPlaySlider);
 
     // TODO
 }
@@ -1121,17 +1137,18 @@ void DrumComponent::comboBoxChanged(juce::ComboBox* comboBox) {
         // TODO
     } else if (comboBox == &noteToMuteOctSelector) {
         // TODO
-    } else if (comboBox == &noteToMuteKindSelector) {
-        // TODO
-    } else if (comboBox == &noteToMuteOctSelector) {
-        // TODO
     }
 }
 void DrumComponent::sliderValueChanged(juce::Slider* slider) {
-    // TODO
+    auto& params = getSelectedDrumParams();
+    if (slider == &noteToPlaySlider) {
+        *params.NoteToPlay = noteToPlaySlider.getValue();
+    }
 }
 
 void DrumComponent::timerCallback() {
+    auto& params = getSelectedDrumParams();
+    noteToPlaySlider.setValue(params.NoteToPlay->get());
     // TODO
 }
 

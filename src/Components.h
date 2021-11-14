@@ -676,8 +676,7 @@ private:
 
     juce::Component body;
 
-    juce::ComboBox noteToPlayKindSelector;
-    juce::ComboBox noteToPlayOctSelector;
+    juce::Slider noteToPlaySlider;
     juce::ComboBox noteToMuteKindSelector;
     juce::ComboBox noteToMuteOctSelector;
 
