@@ -37,7 +37,7 @@ void GrapeVoice::startNote(int midiNoteNumber,
         jassert(mainParamList.size() == 129);
         auto &mainParams = mainParamList[voiceParams.isDrumModeFreezed ? noteNumberAtStart : 128];
         if (voiceParams.isDrumModeFreezed) {
-            // midiNoteNumber = mainParams.drumParams.noteNumber;
+            midiNoteNumber = mainParams.drumParams.noteToPlay;
         }
         smoothNote.init(midiNoteNumber);
         if (stolen) {

@@ -448,6 +448,101 @@ void DelayParams::loadParameters(juce::XmlElement& xml) {
 }
 
 //==============================================================================
+DrumParams::DrumParams(std::string idPrefix, std::string namePrefix) {
+    idPrefix += "DELAY_";
+    namePrefix += "Delay ";
+    NoteToPlay = new juce::AudioParameterInt(idPrefix + "NOTE_TO_PLAY", namePrefix + "Note to play", 0, 127, 60);
+    NoteToMute = new juce::AudioParameterInt(idPrefix + "NOTE_TO_MUTE", namePrefix + "Note to mute", -1, 127, -1);
+}
+void DrumParams::addAllParameters(juce::AudioProcessor& processor) {
+    processor.addParameter(NoteToPlay);
+    processor.addParameter(NoteToMute);
+}
+void DrumParams::saveParameters(juce::XmlElement& xml) {
+    xml.setAttribute(NoteToPlay->paramID, NoteToPlay->get());
+    xml.setAttribute(NoteToMute->paramID, NoteToMute->get());
+}
+void DrumParams::loadParameters(juce::XmlElement& xml) {
+    *NoteToPlay = xml.getIntAttribute(NoteToPlay->paramID, 60);
+    *NoteToMute = xml.getIntAttribute(NoteToMute->paramID, -1);
+}
+
+//==============================================================================
+MainParams::MainParams(int groupIndex)
+    : oscParams{OscParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
+                OscParams{idPrefix(groupIndex), namePrefix(groupIndex), 1},
+                OscParams{idPrefix(groupIndex), namePrefix(groupIndex), 2}},
+      envelopeParams{EnvelopeParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
+                     EnvelopeParams{idPrefix(groupIndex), namePrefix(groupIndex), 1}},
+      filterParams{FilterParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
+                   FilterParams{idPrefix(groupIndex), namePrefix(groupIndex), 1}},
+      lfoParams{LfoParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
+                LfoParams{idPrefix(groupIndex), namePrefix(groupIndex), 1},
+                LfoParams{idPrefix(groupIndex), namePrefix(groupIndex), 2}},
+      modEnvParams{ModEnvParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
+                   ModEnvParams{idPrefix(groupIndex), namePrefix(groupIndex), 1},
+                   ModEnvParams{idPrefix(groupIndex), namePrefix(groupIndex), 2}},
+      delayParams{idPrefix(groupIndex), namePrefix(groupIndex)},
+      drumParams{idPrefix(groupIndex), namePrefix(groupIndex)} {}
+void MainParams::addAllParameters(juce::AudioProcessor& processor) {
+    for (auto& params : envelopeParams) {
+        params.addAllParameters(processor);
+    }
+    for (auto& params : oscParams) {
+        params.addAllParameters(processor);
+    }
+    for (auto& params : filterParams) {
+        params.addAllParameters(processor);
+    }
+    for (auto& params : lfoParams) {
+        params.addAllParameters(processor);
+    }
+    for (auto& params : modEnvParams) {
+        params.addAllParameters(processor);
+    }
+    delayParams.addAllParameters(processor);
+    drumParams.addAllParameters(processor);
+}
+void MainParams::saveParameters(juce::XmlElement& xml) {
+    for (auto& param : envelopeParams) {
+        param.saveParameters(xml);
+    }
+    for (auto& param : oscParams) {
+        param.saveParameters(xml);
+    }
+    for (auto& param : filterParams) {
+        param.saveParameters(xml);
+    }
+    for (auto& param : lfoParams) {
+        param.saveParameters(xml);
+    }
+    for (auto& param : modEnvParams) {
+        param.saveParameters(xml);
+    }
+    delayParams.saveParameters(xml);
+    drumParams.saveParameters(xml);
+}
+void MainParams::loadParameters(juce::XmlElement& xml) {
+    for (auto& param : envelopeParams) {
+        param.loadParameters(xml);
+    }
+    for (auto& param : oscParams) {
+        param.loadParameters(xml);
+    }
+    for (auto& param : filterParams) {
+        param.loadParameters(xml);
+    }
+    for (auto& param : lfoParams) {
+        param.loadParameters(xml);
+    }
+    for (auto& param : modEnvParams) {
+        param.loadParameters(xml);
+    }
+    delayParams.loadParameters(xml);
+    drumParams.loadParameters(xml);
+}
+
+//==============================================================================
 ControlItemParams::ControlItemParams(int index) {
     auto idPrefix = "CONTROL" + std::to_string(index) + "_";
     auto namePrefix = "Control" + std::to_string(index) + " ";
@@ -518,76 +613,4 @@ void ControlItemParams::loadParameters(juce::XmlElement& xml) {
     *TargetFilterParam = xml.getIntAttribute(TargetFilterParam->paramID, 0);
     *TargetLfoParam = xml.getIntAttribute(TargetLfoParam->paramID, 0);
     *TargetMiscParam = xml.getIntAttribute(TargetMiscParam->paramID, 0);
-}
-
-//==============================================================================
-
-MainParams::MainParams(int groupIndex)
-    : oscParams{OscParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
-                OscParams{idPrefix(groupIndex), namePrefix(groupIndex), 1},
-                OscParams{idPrefix(groupIndex), namePrefix(groupIndex), 2}},
-      envelopeParams{EnvelopeParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
-                     EnvelopeParams{idPrefix(groupIndex), namePrefix(groupIndex), 1}},
-      filterParams{FilterParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
-                   FilterParams{idPrefix(groupIndex), namePrefix(groupIndex), 1}},
-      lfoParams{LfoParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
-                LfoParams{idPrefix(groupIndex), namePrefix(groupIndex), 1},
-                LfoParams{idPrefix(groupIndex), namePrefix(groupIndex), 2}},
-      modEnvParams{ModEnvParams{idPrefix(groupIndex), namePrefix(groupIndex), 0},
-                   ModEnvParams{idPrefix(groupIndex), namePrefix(groupIndex), 1},
-                   ModEnvParams{idPrefix(groupIndex), namePrefix(groupIndex), 2}},
-      delayParams{idPrefix(groupIndex), namePrefix(groupIndex)} {}
-void MainParams::addAllParameters(juce::AudioProcessor& processor) {
-    for (auto& params : envelopeParams) {
-        params.addAllParameters(processor);
-    }
-    for (auto& params : oscParams) {
-        params.addAllParameters(processor);
-    }
-    for (auto& params : filterParams) {
-        params.addAllParameters(processor);
-    }
-    for (auto& params : lfoParams) {
-        params.addAllParameters(processor);
-    }
-    for (auto& params : modEnvParams) {
-        params.addAllParameters(processor);
-    }
-    delayParams.addAllParameters(processor);
-}
-void MainParams::saveParameters(juce::XmlElement& xml) {
-    for (auto& param : envelopeParams) {
-        param.saveParameters(xml);
-    }
-    for (auto& param : oscParams) {
-        param.saveParameters(xml);
-    }
-    for (auto& param : filterParams) {
-        param.saveParameters(xml);
-    }
-    for (auto& param : lfoParams) {
-        param.saveParameters(xml);
-    }
-    for (auto& param : modEnvParams) {
-        param.saveParameters(xml);
-    }
-    delayParams.saveParameters(xml);
-}
-void MainParams::loadParameters(juce::XmlElement& xml) {
-    for (auto& param : envelopeParams) {
-        param.loadParameters(xml);
-    }
-    for (auto& param : oscParams) {
-        param.loadParameters(xml);
-    }
-    for (auto& param : filterParams) {
-        param.loadParameters(xml);
-    }
-    for (auto& param : lfoParams) {
-        param.loadParameters(xml);
-    }
-    for (auto& param : modEnvParams) {
-        param.loadParameters(xml);
-    }
-    delayParams.loadParameters(xml);
 }

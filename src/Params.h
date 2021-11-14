@@ -477,6 +477,83 @@ private:
 };
 
 //==============================================================================
+class DrumParams : public SynthParametersBase {
+public:
+    juce::AudioParameterInt* NoteToPlay;
+    juce::AudioParameterInt* NoteToMute;
+
+    DrumParams(std::string idPrefix, std::string namePrefix);
+    DrumParams(const DrumParams&) = delete;
+    DrumParams(DrumParams&&) noexcept = default;
+
+    virtual void addAllParameters(juce::AudioProcessor& processor) override;
+    virtual void saveParameters(juce::XmlElement& xml) override;
+    virtual void loadParameters(juce::XmlElement& xml) override;
+
+    int noteToPlay;
+    int noteToMute;
+    void freeze() {
+        noteToPlay = NoteToPlay->get();
+        noteToMute = NoteToMute->get();
+    }
+
+private:
+};
+
+class MainParams : public SynthParametersBase {
+public:
+    virtual void addAllParameters(juce::AudioProcessor& processor) override;
+    virtual void saveParameters(juce::XmlElement& xml) override;
+    virtual void loadParameters(juce::XmlElement& xml) override;
+    MainParams(int groupIndex);
+    MainParams(const MainParams&) = delete;
+    MainParams(MainParams&&) noexcept = default;
+
+    std::array<OscParams, NUM_OSC> oscParams;
+    std::array<EnvelopeParams, NUM_ENVELOPE> envelopeParams;
+    std::array<FilterParams, NUM_FILTER> filterParams;
+    std::array<LfoParams, NUM_LFO> lfoParams;
+    std::array<ModEnvParams, NUM_MODENV> modEnvParams;
+    DelayParams delayParams;
+    DrumParams drumParams;
+    bool isEnabled() {
+        for (int i = 0; i < NUM_OSC; ++i) {
+            if (oscParams[i].Enabled->get()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    void freeze() {
+        for (int i = 0; i < NUM_OSC; ++i) {
+            oscParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_ENVELOPE; ++i) {
+            envelopeParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_FILTER; ++i) {
+            filterParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_LFO; ++i) {
+            lfoParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_MODENV; ++i) {
+            modEnvParams[i].freeze();
+        }
+        delayParams.freeze();
+        drumParams.freeze();
+    }
+
+private:
+    static std::string idPrefix(int groupIndex) {
+        return groupIndex == 128 ? "" : "G" + std::to_string(groupIndex) + "_";
+    }
+    static std::string namePrefix(int groupIndex) {
+        return groupIndex == 128 ? "" : "G" + std::to_string(groupIndex) + " ";
+    }
+};
+
+//==============================================================================
 class ControlItemParams : public SynthParametersBase {
 public:
     juce::AudioParameterChoice* Number;
@@ -547,55 +624,4 @@ public:
 
 private:
     ControlItemParams(){};
-};
-
-class MainParams : public SynthParametersBase {
-public:
-    virtual void addAllParameters(juce::AudioProcessor& processor) override;
-    virtual void saveParameters(juce::XmlElement& xml) override;
-    virtual void loadParameters(juce::XmlElement& xml) override;
-    MainParams(int groupIndex);
-    MainParams(const MainParams&) = delete;
-    MainParams(MainParams&&) noexcept = default;
-
-    std::array<OscParams, NUM_OSC> oscParams;
-    std::array<EnvelopeParams, NUM_ENVELOPE> envelopeParams;
-    std::array<FilterParams, NUM_FILTER> filterParams;
-    std::array<LfoParams, NUM_LFO> lfoParams;
-    std::array<ModEnvParams, NUM_MODENV> modEnvParams;
-    DelayParams delayParams;
-    bool isEnabled() {
-        for (int i = 0; i < NUM_OSC; ++i) {
-            if (oscParams[i].Enabled->get()) {
-                return true;
-            }
-        }
-        return false;
-    }
-    void freeze() {
-        for (int i = 0; i < NUM_OSC; ++i) {
-            oscParams[i].freeze();
-        }
-        for (int i = 0; i < NUM_ENVELOPE; ++i) {
-            envelopeParams[i].freeze();
-        }
-        for (int i = 0; i < NUM_FILTER; ++i) {
-            filterParams[i].freeze();
-        }
-        for (int i = 0; i < NUM_LFO; ++i) {
-            lfoParams[i].freeze();
-        }
-        for (int i = 0; i < NUM_MODENV; ++i) {
-            modEnvParams[i].freeze();
-        }
-        delayParams.freeze();
-    }
-
-private:
-    static std::string idPrefix(int groupIndex) {
-        return groupIndex == 128 ? "" : "G" + std::to_string(groupIndex) + "_";
-    }
-    static std::string namePrefix(int groupIndex) {
-        return groupIndex == 128 ? "" : "G" + std::to_string(groupIndex) + " ";
-    }
 };
