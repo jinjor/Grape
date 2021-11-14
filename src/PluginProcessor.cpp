@@ -188,16 +188,12 @@ void GrapeAudioProcessor::getStateInformation(juce::MemoryBlock& destData) {
 
     globalParams.saveParameters(xml);
     voiceParams.saveParameters(xml);
-    if (voiceParams.isDrumMode()) {
-        for (int i = 0; i < 128; i++) {
-            auto enabled = mainParamList[i].isEnabled();
-            xml.setAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), enabled);
-            if (enabled) {
-                mainParamList[i].saveParameters(xml);
-            }
+    for (int i = 0; i < 129; i++) {
+        auto enabled = mainParamList[i].isEnabled();
+        xml.setAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), enabled);
+        if (enabled) {
+            mainParamList[i].saveParameters(xml);
         }
-    } else {
-        mainParamList[128].saveParameters(xml);
     }
     for (auto& param : controlItemParams) {
         param.saveParameters(xml);
@@ -211,16 +207,12 @@ void GrapeAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
         if (xml->hasTagName("GrapeInstrument")) {
             globalParams.loadParameters(*xml);
             voiceParams.loadParameters(*xml);
-            if (voiceParams.isDrumMode()) {
-                for (int i = 0; i < 128; i++) {
-                    auto enabled =
-                        xml->getBoolAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), false);
-                    if (enabled) {
-                        mainParamList[i].loadParameters(*xml);
-                    }
+            for (int i = 0; i < 129; i++) {
+                auto enabled =
+                    xml->getBoolAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), false);
+                if (enabled) {
+                    mainParamList[i].loadParameters(*xml);
                 }
-            } else {
-                mainParamList[128].loadParameters(*xml);
             }
             for (auto& param : controlItemParams) {
                 param.loadParameters(*xml);
