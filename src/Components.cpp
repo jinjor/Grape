@@ -116,6 +116,8 @@ void VoiceComponent::sliderValueChanged(juce::Slider* slider) {
 void VoiceComponent::timerCallback() {
     portamentoTimeSlider.setValue(params.PortamentoTime->get(), juce::dontSendNotification);
     pitchBendRangeSlider.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
+    targetNoteKindSelector.setSelectedItemIndex(params.TargetNoteKind->getIndex(), juce::dontSendNotification);
+    targetNoteOctSelector.setSelectedItemIndex(params.TargetNoteOct->getIndex(), juce::dontSendNotification);
 
     auto isMono = params.isMonoMode();
     portamentoTimeLabel.setEnabled(isMono);
@@ -1104,10 +1106,14 @@ DrumComponent::DrumComponent(VoiceParams& voiceParams, std::vector<MainParams>& 
     auto& params = getSelectedDrumParams();
 
     initLinear(noteToPlaySlider, params.NoteToPlay, this, body);
+    initChoice(noteToMuteEnabledSelector, params.NoteToMuteEnabled, this, noteToMuteSelector);
+    initChoice(noteToMuteKindSelector, params.NoteToMuteKind, this, noteToMuteSelector);
+    initChoice(noteToMuteOctSelector, params.NoteToMuteOct, this, noteToMuteSelector);
 
-    initLabel(noteToPlayLabel, "Note to Play", body);
+    initLabel(noteToPlayLabel, "Note", body);
     initLabel(noteToMuteLabel, "Note to Mute", body);
 
+    body.addAndMakeVisible(noteToMuteSelector);
     addAndMakeVisible(body);
 
     startTimerHz(30.0f);
@@ -1131,14 +1137,22 @@ void DrumComponent::resized() {
     auto& params = getSelectedDrumParams();
 
     consumeLabeledKnob(upperArea, noteToPlayLabel, noteToPlaySlider);
-
-    // TODO
+    consumeLabeledComboBox(upperArea, 180, noteToMuteLabel, noteToMuteSelector);
+    {
+        juce::Rectangle<int> selectorsArea = noteToMuteSelector.getLocalBounds();
+        noteToMuteEnabledSelector.setBounds(selectorsArea.removeFromLeft(60));
+        noteToMuteKindSelector.setBounds(selectorsArea.removeFromLeft(60));
+        noteToMuteOctSelector.setBounds(selectorsArea.removeFromLeft(60));
+    }
 }
 void DrumComponent::comboBoxChanged(juce::ComboBox* comboBox) {
-    if (comboBox == &noteToMuteKindSelector) {
-        // TODO
+    auto& params = getSelectedDrumParams();
+    if (comboBox == &noteToMuteEnabledSelector) {
+        *params.NoteToMuteEnabled = noteToMuteEnabledSelector.getSelectedItemIndex();
+    } else if (comboBox == &noteToMuteKindSelector) {
+        *params.NoteToMuteKind = noteToMuteKindSelector.getSelectedItemIndex();
     } else if (comboBox == &noteToMuteOctSelector) {
-        // TODO
+        *params.NoteToMuteOct = noteToMuteOctSelector.getSelectedItemIndex();
     }
 }
 void DrumComponent::sliderValueChanged(juce::Slider* slider) {
@@ -1150,8 +1164,14 @@ void DrumComponent::sliderValueChanged(juce::Slider* slider) {
 
 void DrumComponent::timerCallback() {
     auto& params = getSelectedDrumParams();
-    noteToPlaySlider.setValue(params.NoteToPlay->get());
-    // TODO
+    noteToPlaySlider.setValue(params.NoteToPlay->get(), juce::dontSendNotification);
+    noteToMuteEnabledSelector.setSelectedItemIndex(params.NoteToMuteEnabled->get(), juce::dontSendNotification);
+    noteToMuteKindSelector.setSelectedItemIndex(params.NoteToMuteKind->getIndex(), juce::dontSendNotification);
+    noteToMuteOctSelector.setSelectedItemIndex(params.NoteToMuteOct->getIndex(), juce::dontSendNotification);
+
+    auto muteEnabled = params.NoteToMuteEnabled->get();
+    noteToMuteKindSelector.setEnabled(muteEnabled);
+    noteToMuteOctSelector.setEnabled(muteEnabled);
 }
 
 //==============================================================================

@@ -452,19 +452,34 @@ DrumParams::DrumParams(std::string idPrefix, std::string namePrefix) {
     idPrefix += "DELAY_";
     namePrefix += "Delay ";
     NoteToPlay = new juce::AudioParameterInt(idPrefix + "NOTE_TO_PLAY", namePrefix + "Note to play", 0, 127, 60);
-    NoteToMute = new juce::AudioParameterInt(idPrefix + "NOTE_TO_MUTE", namePrefix + "Note to mute", -1, 127, -1);
+    NoteToMuteEnabled =
+        new juce::AudioParameterBool(idPrefix + "NOTE_TO_MUTE_ENABLED", namePrefix + "Note to Mute Enabled", false);
+    NoteToMuteKind = new juce::AudioParameterChoice(idPrefix + "NOTE_TO_MUTE_KIND",
+                                                    namePrefix + "Note to Mute Kind",
+                                                    TARGET_NOTE_KINDS,
+                                                    TARGET_NOTE_KINDS.indexOf("C"));
+    NoteToMuteOct = new juce::AudioParameterChoice(idPrefix + "NOTE_TO_MUTE_OCT",
+                                                   namePrefix + "Note to Mute Oct",
+                                                   TARGET_NOTE_OCT_NAMES,
+                                                   TARGET_NOTE_OCT_NAMES.indexOf("1"));
 }
 void DrumParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(NoteToPlay);
-    processor.addParameter(NoteToMute);
+    processor.addParameter(NoteToMuteEnabled);
+    processor.addParameter(NoteToMuteKind);
+    processor.addParameter(NoteToMuteOct);
 }
 void DrumParams::saveParameters(juce::XmlElement& xml) {
     xml.setAttribute(NoteToPlay->paramID, NoteToPlay->get());
-    xml.setAttribute(NoteToMute->paramID, NoteToMute->get());
+    xml.setAttribute(NoteToMuteEnabled->paramID, NoteToMuteEnabled->get());
+    xml.setAttribute(NoteToMuteKind->paramID, NoteToMuteKind->getIndex());
+    xml.setAttribute(NoteToMuteOct->paramID, NoteToMuteOct->getIndex());
 }
 void DrumParams::loadParameters(juce::XmlElement& xml) {
     *NoteToPlay = xml.getIntAttribute(NoteToPlay->paramID, 60);
-    *NoteToMute = xml.getIntAttribute(NoteToMute->paramID, -1);
+    *NoteToMuteEnabled = xml.getIntAttribute(NoteToMuteEnabled->paramID, false);
+    *NoteToMuteKind = xml.getIntAttribute(NoteToMuteKind->paramID, TARGET_NOTE_KINDS.indexOf("C"));
+    *NoteToMuteOct = xml.getIntAttribute(NoteToMuteOct->paramID, TARGET_NOTE_OCT_NAMES.indexOf("1"));
 }
 
 //==============================================================================

@@ -676,8 +676,10 @@ private:
     HeaderComponent header;
 
     juce::Component body;
+    juce::Component noteToMuteSelector;
 
     juce::Slider noteToPlaySlider;
+    juce::ComboBox noteToMuteEnabledSelector;
     juce::ComboBox noteToMuteKindSelector;
     juce::ComboBox noteToMuteOctSelector;
 

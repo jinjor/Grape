@@ -480,7 +480,9 @@ private:
 class DrumParams : public SynthParametersBase {
 public:
     juce::AudioParameterInt* NoteToPlay;
-    juce::AudioParameterInt* NoteToMute;
+    juce::AudioParameterBool* NoteToMuteEnabled;
+    juce::AudioParameterChoice* NoteToMuteKind;
+    juce::AudioParameterChoice* NoteToMuteOct;
 
     DrumParams(std::string idPrefix, std::string namePrefix);
     DrumParams(const DrumParams&) = delete;
@@ -491,10 +493,15 @@ public:
     virtual void loadParameters(juce::XmlElement& xml) override;
 
     int noteToPlay;
+    bool noteToMuteEnabled;
     int noteToMute;
+    int getNoteToMute() {
+        return (TARGET_NOTE_OCT_VALUES[NoteToMuteOct->getIndex()] + 2) * 12 + NoteToMuteKind->getIndex();
+    }
     void freeze() {
         noteToPlay = NoteToPlay->get();
-        noteToMute = NoteToMute->get();
+        noteToMuteEnabled = NoteToMuteEnabled->get();
+        noteToMute = getNoteToMute();
     }
 
 private:
