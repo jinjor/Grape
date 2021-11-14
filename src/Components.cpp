@@ -1090,6 +1090,52 @@ void DelayComponent::timerCallback() {
 }
 
 //==============================================================================
+DrumComponent::DrumComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
+    : voiceParams(voiceParams), mainParamList(mainParamList), header("DRUM", HEADER_CHECK::Hidden) {
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    addAndMakeVisible(header);
+
+    auto& params = getSelectedDrumParams();
+
+    initLabel(noteToPlayLabel, "Note to Play", *this);
+    initLabel(noteToMuteLabel, "Note to Mute", *this);
+
+    startTimerHz(30.0f);
+}
+
+DrumComponent::~DrumComponent() {}
+
+void DrumComponent::paint(juce::Graphics& g) {}
+
+void DrumComponent::resized() {
+    juce::Rectangle<int> bounds = getLocalBounds();
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+
+    auto& params = getSelectedDrumParams();
+
+    // TODO
+}
+void DrumComponent::comboBoxChanged(juce::ComboBox* comboBox) {
+    if (comboBox == &noteToMuteKindSelector) {
+        // TODO
+    } else if (comboBox == &noteToMuteOctSelector) {
+        // TODO
+    } else if (comboBox == &noteToMuteKindSelector) {
+        // TODO
+    } else if (comboBox == &noteToMuteOctSelector) {
+        // TODO
+    }
+}
+void DrumComponent::sliderValueChanged(juce::Slider* slider) {
+    // TODO
+}
+
+void DrumComponent::timerCallback() {
+    // TODO
+}
+
+//==============================================================================
 ControlItemComponent::ControlItemComponent(ControlItemParams& params)
     : params(params),
       numberSelector("Number"),

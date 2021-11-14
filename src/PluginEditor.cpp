@@ -30,7 +30,8 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
       modEnvComponents{ModEnvComponent(0, p.voiceParams, p.mainParamList),
                        ModEnvComponent(1, p.voiceParams, p.mainParamList),
                        ModEnvComponent(2, p.voiceParams, p.mainParamList)},
-      delayComponent{DelayComponent(p.voiceParams, p.mainParamList, p.controlItemParams)} {
+      delayComponent{DelayComponent(p.voiceParams, p.mainParamList, p.controlItemParams)},
+      drumComponent{DrumComponent(p.voiceParams, p.mainParamList)} {
     getLookAndFeel().setColour(juce::Label::textColourId, colour::TEXT);
 
     addAndMakeVisible(voiceComponent);
@@ -52,11 +53,13 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     addAndMakeVisible(modEnvComponents[1]);
     addAndMakeVisible(modEnvComponents[2]);
     addAndMakeVisible(delayComponent);
+    addAndMakeVisible(drumComponent);
     addAndMakeVisible(controlComponent);
     setSize(1024, 768);
 #if JUCE_DEBUG
     setResizable(true, true);  // for debug
 #endif
+    startTimerHz(30.0f);
 }
 
 GrapeAudioProcessorEditor::~GrapeAudioProcessorEditor() {}
@@ -189,7 +192,16 @@ void GrapeAudioProcessorEditor::resized() {
         delayComponent.setBounds(area.reduced(PANEL_MARGIN));
     }
     {
-        auto area = effectArea;
-        controlComponent.setBounds(area.reduced(PANEL_MARGIN));
+        auto controlArea = effectArea;
+        controlComponent.setBounds(controlArea.reduced(PANEL_MARGIN));
+
+        auto drumArea = effectArea.removeFromTop(effectHeight / 3);
+        drumComponent.setBounds(drumArea.reduced(PANEL_MARGIN));
     }
+}
+
+void GrapeAudioProcessorEditor::timerCallback() {
+    auto isDrumMode = audioProcessor.voiceParams.isDrumMode();
+    drumComponent.setVisible(isDrumMode);
+    controlComponent.setVisible(!isDrumMode);
 }

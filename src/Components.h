@@ -650,6 +650,46 @@ private:
 };
 
 //==============================================================================
+class DrumComponent : public juce::Component,
+                      juce::ComboBox::Listener,
+                      juce::Slider::Listener,
+                      private juce::Timer,
+                      ComponentHelper {
+public:
+    DrumComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList);
+    virtual ~DrumComponent();
+    DrumComponent(const DrumComponent&) = delete;
+
+    virtual void paint(juce::Graphics& g) override;
+
+    virtual void resized() override;
+
+private:
+    virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
+    virtual void sliderValueChanged(juce::Slider* slider) override;
+    virtual void timerCallback() override;
+
+    VoiceParams& voiceParams;
+    std::vector<MainParams>& mainParamList;
+
+    HeaderComponent header;
+
+    juce::Component body;
+
+    juce::ComboBox noteToPlayKindSelector;
+    juce::ComboBox noteToPlayOctSelector;
+    juce::ComboBox noteToMuteKindSelector;
+    juce::ComboBox noteToMuteOctSelector;
+
+    juce::Label noteToPlayLabel;
+    juce::Label noteToMuteLabel;
+
+    DrumParams& getSelectedDrumParams() {
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].drumParams;
+    }
+};
+
+//==============================================================================
 class AnalyserToggleItem : public juce::Component, private ComponentHelper {
 public:
     AnalyserToggleItem(std::string name);
