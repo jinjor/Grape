@@ -64,12 +64,14 @@ VoiceComponent::VoiceComponent(VoiceParams& params, std::array<ControlItemParams
     initChoice(modeSelector, params.Mode, this, *this);
     initLinear(portamentoTimeSlider, params.PortamentoTime, 0.001, " sec", nullptr, this, *this);
     initLinear(pitchBendRangeSlider, params.PitchBendRange, this, *this);
-    initChoice(targetNoteKindSelector, params.TargetNoteKind, this, *this);
-    initChoice(targetNoteOctSelector, params.TargetNoteOct, this, *this);
+    initChoice(targetNoteKindSelector, params.TargetNoteKind, this, drumTargetSelector);
+    initChoice(targetNoteOctSelector, params.TargetNoteOct, this, drumTargetSelector);
     initLabel(modeLabel, "Mode", *this);
     initLabel(portamentoTimeLabel, "Glide Time", *this);
     initLabel(pitchBendRangeLabel, "PB Range", *this);
     initLabel(targetNoteLabel, "Target Note", *this);
+
+    addAndMakeVisible(drumTargetSelector);
 
     startTimerHz(30.0f);
 }
@@ -85,11 +87,12 @@ void VoiceComponent::resized() {
 
     bounds.reduce(0, 10);
     consumeLabeledComboBox(bounds, 70, modeLabel, modeSelector);
+    auto drumBounds = bounds;
+    consumeLabeledComboBox(drumBounds, 120, targetNoteLabel, drumTargetSelector);
     {
-        auto bounds2 = bounds;
-        // TODO
-        consumeLabeledComboBox(bounds2, 60, targetNoteLabel, targetNoteKindSelector);
-        consumeLabeledComboBox(bounds2, 60, targetNoteLabel, targetNoteOctSelector);
+        juce::Rectangle<int> selectorsArea = drumTargetSelector.getLocalBounds();
+        targetNoteKindSelector.setBounds(selectorsArea.removeFromLeft(60));
+        targetNoteOctSelector.setBounds(selectorsArea.removeFromLeft(60));
     }
     consumeLabeledKnob(bounds, portamentoTimeLabel, portamentoTimeSlider);
     consumeLabeledKnob(bounds, pitchBendRangeLabel, pitchBendRangeSlider);
@@ -124,8 +127,7 @@ void VoiceComponent::timerCallback() {
     pitchBendRangeLabel.setVisible(!isDrum);
     pitchBendRangeSlider.setVisible(!isDrum);
     targetNoteLabel.setVisible(isDrum);
-    targetNoteKindSelector.setVisible(isDrum);
-    targetNoteOctSelector.setVisible(isDrum);
+    drumTargetSelector.setVisible(isDrum);
 
     portamentoTimeSlider.setLookAndFeel(&grapeLookAndFeel);
     for (auto& p : controlItemParams) {

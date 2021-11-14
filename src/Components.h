@@ -260,6 +260,7 @@ private:
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
 
     HeaderComponent header;
+    juce::Component drumTargetSelector;
 
     juce::ComboBox modeSelector;
     juce::Slider portamentoTimeSlider;
