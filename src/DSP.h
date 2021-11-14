@@ -359,6 +359,7 @@ public:
     Adsr(const Adsr &) = delete;
     double getValue() { return tvalue.value; }
     bool isActive() { return phase != ADSR_PHASE::WAIT; }
+    bool isReleasing() { return phase == ADSR_PHASE::RELEASE; }
     void setParams(double curve, double a, double h, double d, double s, double r) {
         attackCurve = curve;
         attack = a;
@@ -374,6 +375,10 @@ public:
     void doRelease(double sampleRate) {
         phase = ADSR_PHASE::RELEASE;
         tvalue.exponentialInfinite(release, ADSR_BASE, sampleRate);
+    }
+    void doRelease(double sampleRate, double duration) {
+        phase = ADSR_PHASE::RELEASE;
+        tvalue.exponentialInfinite(duration, ADSR_BASE, sampleRate);
     }
     void forceStop() {
         tvalue.init(ADSR_BASE);

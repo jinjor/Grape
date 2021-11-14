@@ -162,11 +162,13 @@ public:
                    int currentPitchWheelPosition) override;
     void stopNote(float velocity, bool allowTailOff) override;
     void glide(int midiNoteNumber, float velocity);
+    void mute(double duration);
     virtual void pitchWheelMoved(int) override{};
     virtual void controllerMoved(int, int) override{};
     void renderNextBlock(juce::AudioSampleBuffer &outputBuffer, int startSample, int numSamples) override;
     void applyParamsBeforeLoop(double sampleRate);
     bool step(double *out, double sampleRate, int numChannels);
+    int noteNumberAtStart = -1;
 
 private:
     juce::PerformanceCounter perf;
@@ -182,7 +184,6 @@ private:
     Osc lfos[NUM_LFO];
     Adsr modEnvs[NUM_MODENV];
 
-    int noteNumberAtStart = -1;
     TransitiveValue smoothNote;
     TransitiveValue smoothVelocity;
     bool stolen = false;
@@ -238,6 +239,19 @@ public:
                             if (voice->isPlayingChannel(channel) && playingNotesExist) {
                                 voice->glide(midiNoteNumber, velocity);
                                 return;
+                            }
+                        }
+                    }
+                    if (voiceParams.isDrumModeFreezed) {
+                        auto &drumParams = mainParamList[midiNoteNumber].drumParams;
+                        if (drumParams.noteToMuteEnabled) {
+                            for (auto *voice_ : voices) {
+                                if (GrapeVoice *voice = dynamic_cast<GrapeVoice *>(voice_)) {
+                                    if (voice->isPlayingChannel(channel) &&
+                                        voice->noteNumberAtStart == drumParams.noteToMute) {
+                                        voice->mute(0.001);
+                                    }
+                                }
                             }
                         }
                     }

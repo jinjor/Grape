@@ -84,6 +84,9 @@ void GrapeVoice::stopNote(float velocity, bool allowTailOff) {
             auto sampleRate = getSampleRate();
             auto fixedSampleRate = sampleRate * CONTROL_RATE;  // for control
             for (int i = 0; i < NUM_ENVELOPE; ++i) {
+                if (adsr[i].isReleasing()) {
+                    continue;
+                }
                 adsr[i].doRelease(fixedSampleRate);
             }
         } else {
@@ -96,6 +99,14 @@ void GrapeVoice::stopNote(float velocity, bool allowTailOff) {
             }
             clearCurrentNote();
         }
+    }
+}
+void GrapeVoice::mute(double duration) {
+    DBG("mute()");
+    auto sampleRate = getSampleRate();
+    auto fixedSampleRate = sampleRate * CONTROL_RATE;  // for control
+    for (int i = 0; i < NUM_ENVELOPE; ++i) {
+        adsr[i].doRelease(fixedSampleRate, duration);
     }
 }
 void GrapeVoice::glide(int midiNoteNumber, float velocity) {
