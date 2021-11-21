@@ -14,12 +14,8 @@ public:
     GlobalParams globalParams{};
     VoiceParams voiceParams{};
     std::vector<MainParams> mainParamList;
-    std::array<ControlItemParams, NUM_CONTROL> controlItemParams = {ControlItemParams(0),
-                                                                    ControlItemParams(1),
-                                                                    ControlItemParams(2),
-                                                                    ControlItemParams(3),
-                                                                    ControlItemParams(4),
-                                                                    ControlItemParams(5)};
+    std::array<ControlItemParams, NUM_CONTROL> controlItemParams = {
+        ControlItemParams(0), ControlItemParams(1), ControlItemParams(2)};
 };
 
 static void doStepLoop(benchmark::State& state, Params& p) {

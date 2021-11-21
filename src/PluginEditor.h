@@ -25,13 +25,14 @@ private:
     AnalyserToggle analyserToggle;
     AnalyserWindow analyserWindow;
     StatusComponent statusComponent;
-    MasterComponent masterComponent;
+    UtilComponent utilComponent;
     OscComponent oscComponents[NUM_OSC];
     EnvelopeComponent envelopeComponents[NUM_ENVELOPE];
     FilterComponent filterComponents[NUM_FILTER];
     LfoComponent lfoComponents[NUM_LFO];
     ModEnvComponent modEnvComponents[NUM_MODENV];
     DelayComponent delayComponent;
+    MasterComponent masterComponent;
     DrumComponent drumComponent;
 
     virtual void timerCallback() override;

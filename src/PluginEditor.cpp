@@ -16,7 +16,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
       analyserToggle(&analyserMode),
       analyserWindow(&analyserMode, &p.latestDataProvider, &p.monoStack, p.voiceParams, p.mainParamList),
       statusComponent(&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider),
-      masterComponent(p.globalParams),
+      utilComponent(),
       oscComponents{OscComponent(0, p.voiceParams, p.mainParamList, p.controlItemParams),
                     OscComponent(1, p.voiceParams, p.mainParamList, p.controlItemParams),
                     OscComponent(2, p.voiceParams, p.mainParamList, p.controlItemParams)},
@@ -31,6 +31,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
                        ModEnvComponent(1, p.voiceParams, p.mainParamList),
                        ModEnvComponent(2, p.voiceParams, p.mainParamList)},
       delayComponent{DelayComponent(p.voiceParams, p.mainParamList, p.controlItemParams)},
+      masterComponent(p.globalParams),
       drumComponent{DrumComponent(p.voiceParams, p.mainParamList)} {
     getLookAndFeel().setColour(juce::Label::textColourId, colour::TEXT);
 
@@ -38,7 +39,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     addAndMakeVisible(analyserToggle);
     addAndMakeVisible(analyserWindow);
     addAndMakeVisible(statusComponent);
-    addAndMakeVisible(masterComponent);
+    addAndMakeVisible(utilComponent);
     addAndMakeVisible(oscComponents[0]);
     addAndMakeVisible(oscComponents[1]);
     addAndMakeVisible(oscComponents[2]);
@@ -53,6 +54,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     addAndMakeVisible(modEnvComponents[1]);
     addAndMakeVisible(modEnvComponents[2]);
     addAndMakeVisible(delayComponent);
+    addAndMakeVisible(masterComponent);
     addAndMakeVisible(drumComponent);
     addAndMakeVisible(controlComponent);
     setSize(1024, 768);
@@ -118,7 +120,7 @@ void GrapeAudioProcessorEditor::resized() {
         }
         {
             auto area = upperRightArea;
-            masterComponent.setBounds(area.reduced(PANEL_MARGIN));
+            utilComponent.setBounds(area.reduced(PANEL_MARGIN));
         }
     }
 
@@ -192,10 +194,14 @@ void GrapeAudioProcessorEditor::resized() {
         delayComponent.setBounds(area.reduced(PANEL_MARGIN));
     }
     {
+        auto area = effectArea.removeFromTop(effectHeight * 2 / 9);
+        masterComponent.setBounds(area.reduced(PANEL_MARGIN));
+    }
+    {
         auto controlArea = effectArea;
         controlComponent.setBounds(controlArea.reduced(PANEL_MARGIN));
 
-        auto drumArea = effectArea.removeFromTop(effectHeight / 3);
+        auto drumArea = effectArea.removeFromTop(effectHeight * 2 / 9);
         drumComponent.setBounds(drumArea.reduced(PANEL_MARGIN));
     }
 }

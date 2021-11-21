@@ -163,6 +163,47 @@ void VoiceComponent::timerCallback() {
 }
 
 //==============================================================================
+UtilComponent::UtilComponent()
+    : header("UTILITY", HEADER_CHECK::Hidden), copyToClipboardButton(), pasteFromClipboardButton() {
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    addAndMakeVisible(header);
+
+    copyToClipboardButton.setLookAndFeel(&grapeLookAndFeel);
+    copyToClipboardButton.setButtonText("Copy");
+    copyToClipboardButton.addListener(this);
+    this->addAndMakeVisible(copyToClipboardButton);
+
+    pasteFromClipboardButton.setLookAndFeel(&grapeLookAndFeel);
+    pasteFromClipboardButton.setButtonText("Paste");
+    pasteFromClipboardButton.addListener(this);
+    this->addAndMakeVisible(pasteFromClipboardButton);
+
+    initLabel(copyToClipboardLabel, "Copy", *this);
+    initLabel(pasteFromClipboardLabel, "Paste", *this);
+}
+
+UtilComponent::~UtilComponent() {}
+
+void UtilComponent::paint(juce::Graphics& g) {}
+
+void UtilComponent::resized() {
+    juce::Rectangle<int> bounds = getLocalBounds();
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+
+    bounds.reduce(0, 10);
+    consumeLabeledComboBox(bounds, 60, copyToClipboardLabel, copyToClipboardButton);
+    consumeLabeledComboBox(bounds, 60, pasteFromClipboardLabel, pasteFromClipboardButton);
+}
+void UtilComponent::buttonClicked(juce::Button* button) {
+    if (button == &copyToClipboardButton) {
+        // TODO
+    } else if (button == &pasteFromClipboardButton) {
+        // TODO
+    }
+}
+
+//==============================================================================
 StatusComponent::StatusComponent(int* polyphony,
                                  TimeConsumptionState* timeConsumptionState,
                                  LatestDataProvider* latestDataProvider)
@@ -271,7 +312,8 @@ void MasterComponent::resized() {
     auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
     header.setBounds(headerArea);
 
-    bounds.reduce(0, 10);
+    bounds = bounds.removeFromTop(bounds.getHeight() * 3 / 4);
+
     consumeLabeledKnob(bounds, panLabel, panSlider);
     consumeLabeledKnob(bounds, volumeLabel, volumeSlider);
 }
@@ -1154,7 +1196,8 @@ void DrumComponent::resized() {
     body.setBounds(bounds);
     bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
-    auto upperArea = bounds.removeFromTop(bodyHeight / 2);
+    // auto upperArea = bounds.removeFromTop(bodyHeight / 2);
+    auto upperArea = bounds.removeFromTop(bodyHeight * 3 / 4);
     auto& lowerArea = bounds;
 
     auto& params = getSelectedDrumParams();
@@ -1304,12 +1347,8 @@ void ControlItemComponent::timerCallback() {
 //==============================================================================
 ControlComponent::ControlComponent(std::array<ControlItemParams, NUM_CONTROL>& params)
     : header("CONTROLS", HEADER_CHECK::Hidden),
-      controlItemComponents{ControlItemComponent(params[0]),
-                            ControlItemComponent(params[1]),
-                            ControlItemComponent(params[2]),
-                            ControlItemComponent(params[3]),
-                            ControlItemComponent(params[4]),
-                            ControlItemComponent(params[5])} {
+      controlItemComponents{
+          ControlItemComponent(params[0]), ControlItemComponent(params[1]), ControlItemComponent(params[2])} {
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
@@ -1335,7 +1374,7 @@ void ControlComponent::resized() {
     numberLabel.setBounds(labelArea.removeFromLeft(width / 5));
     targetLabel.setBounds(labelArea);
 
-    auto itemHeight = bounds.getHeight() / NUM_CONTROL;
+    auto itemHeight = (bounds.getHeight() * 0.8) / NUM_CONTROL;
     for (int i = 0; i < NUM_CONTROL; i++) {
         controlItemComponents[i].setBounds(bounds.removeFromTop(itemHeight));
     }

@@ -278,6 +278,29 @@ private:
 };
 
 //==============================================================================
+class UtilComponent : public juce::Component, juce::Button::Listener, private ComponentHelper {
+public:
+    UtilComponent();
+    virtual ~UtilComponent();
+    UtilComponent(const UtilComponent&) = delete;
+
+    virtual void paint(juce::Graphics& g) override;
+
+    virtual void resized() override;
+
+private:
+    virtual void buttonClicked(juce::Button* button) override;
+
+    HeaderComponent header;
+
+    juce::TextButton copyToClipboardButton;
+    juce::TextButton pasteFromClipboardButton;
+
+    juce::Label copyToClipboardLabel;
+    juce::Label pasteFromClipboardLabel;
+};
+
+//==============================================================================
 class StatusComponent : public juce::Component, private juce::Timer, ComponentHelper {
 public:
     StatusComponent(int* polyphony, TimeConsumptionState* timeConsumptionState, LatestDataProvider* latestDataProvider);

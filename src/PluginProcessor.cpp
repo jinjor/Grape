@@ -19,12 +19,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
       ,
       globalParams{},
       voiceParams{},
-      controlItemParams{ControlItemParams{0},
-                        ControlItemParams{1},
-                        ControlItemParams{2},
-                        ControlItemParams{3},
-                        ControlItemParams{4},
-                        ControlItemParams{5}},
+      controlItemParams{ControlItemParams{0}, ControlItemParams{1}, ControlItemParams{2}},
       synth(&currentPositionInfo, &monoStack, controlItemParams, globalParams, voiceParams, mainParamList) {
     for (int i = 0; i < 129; i++) {
         jassert(mainParamList.size() == i);

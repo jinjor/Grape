@@ -35,11 +35,11 @@ void GlobalParams::saveParameters(juce::XmlElement& xml) {
     // xml.setAttribute(MidiVolume->paramID, (double)MidiVolume->get());
 }
 void GlobalParams::loadParameters(juce::XmlElement& xml) {
-    *Pitch = (float)xml.getDoubleAttribute(Pitch->paramID, 0);
+    // *Pitch = (float)xml.getDoubleAttribute(Pitch->paramID, 0);
     *Pan = (float)xml.getDoubleAttribute(Pan->paramID, 0);
-    *Expression = (float)xml.getDoubleAttribute(Expression->paramID, 1.0);
+    // *Expression = (float)xml.getDoubleAttribute(Expression->paramID, 1.0);
     *MasterVolume = (float)xml.getDoubleAttribute(MasterVolume->paramID, 1.0);
-    *MidiVolume = (float)xml.getDoubleAttribute(MidiVolume->paramID, 1.0);
+    // *MidiVolume = (float)xml.getDoubleAttribute(MidiVolume->paramID, 1.0);
 }
 
 //==============================================================================
