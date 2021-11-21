@@ -49,8 +49,11 @@ void HeaderComponent::resized() {
 }
 
 //==============================================================================
-VoiceComponent::VoiceComponent(VoiceParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+VoiceComponent::VoiceComponent(VoiceParams& params,
+                               std::vector<MainParams>& mainParamList,
+                               std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
     : params(params),
+      mainParamList(mainParamList),
       controlItemParams(controlItemParams),
       header("VOICE", HEADER_CHECK::Hidden),
       modeSelector("Mode"),
@@ -118,6 +121,26 @@ void VoiceComponent::timerCallback() {
     pitchBendRangeSlider.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
     targetNoteKindSelector.setSelectedItemIndex(params.TargetNoteKind->getIndex(), juce::dontSendNotification);
     targetNoteOctSelector.setSelectedItemIndex(params.TargetNoteOct->getIndex(), juce::dontSendNotification);
+
+    for (auto octIndex = 0; octIndex < 7; octIndex++) {
+        auto oct = TARGET_NOTE_OCT_VALUES[octIndex];
+        auto cNote = (oct + 2) * 12;
+        auto isOctSelected = TARGET_NOTE_OCT_VALUES[params.TargetNoteOct->getIndex()] == oct;
+        auto isAnyNoteInOctEnabled = false;
+        for (auto kindIndex = 0; kindIndex < 12; kindIndex++) {
+            auto note = cNote + kindIndex;
+            auto isNoteEnabled = mainParamList[note].isEnabled();
+            isAnyNoteInOctEnabled |= isNoteEnabled;
+            if (isOctSelected) {
+                auto kindName = TARGET_NOTE_KINDS[kindIndex];
+                kindName = (isNoteEnabled ? "*" : " ") + kindName;
+                targetNoteKindSelector.changeItemText(kindIndex + 1, kindName);
+            }
+        }
+        auto octName = juce::String(oct);
+        octName = (isAnyNoteInOctEnabled ? "*" : " ") + octName;
+        targetNoteOctSelector.changeItemText(octIndex + 1, octName);
+    }
 
     auto isMono = params.isMonoMode();
     portamentoTimeLabel.setEnabled(isMono);

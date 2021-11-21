@@ -244,7 +244,9 @@ class VoiceComponent : public juce::Component,
                        private juce::Timer,
                        ComponentHelper {
 public:
-    VoiceComponent(VoiceParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    VoiceComponent(VoiceParams& params,
+                   std::vector<MainParams>& mainParamList,
+                   std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~VoiceComponent();
     VoiceComponent(const VoiceComponent&) = delete;
 
@@ -257,6 +259,7 @@ private:
     virtual void timerCallback() override;
 
     VoiceParams& params;
+    std::vector<MainParams>& mainParamList;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
 
     HeaderComponent header;

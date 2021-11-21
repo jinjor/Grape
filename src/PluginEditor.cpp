@@ -12,7 +12,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     : AudioProcessorEditor(&p),
       audioProcessor(p),
       controlComponent{ControlComponent(p.controlItemParams)},
-      voiceComponent(p.voiceParams, p.controlItemParams),
+      voiceComponent(p.voiceParams, p.mainParamList, p.controlItemParams),
       analyserToggle(&analyserMode),
       analyserWindow(&analyserMode, &p.latestDataProvider, &p.monoStack, p.voiceParams, p.mainParamList),
       statusComponent(&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider),
