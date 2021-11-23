@@ -63,13 +63,7 @@ public:
     GrapeSound(VoiceParams &voiceParams, std::vector<MainParams> &mainParamList)
         : voiceParams(voiceParams), mainParamList(mainParamList) {}
     ~GrapeSound(){};
-    bool appliesToNote(int noteNumber) override {
-        if (voiceParams.isDrumMode()) {
-            return mainParamList[noteNumber].isEnabled();
-        } else {
-            return true;
-        }
-    };
+    bool appliesToNote(int noteNumber) override { return true; };
     bool appliesToChannel(int) override { return true; };
 
 private:
@@ -168,6 +162,7 @@ public:
     void renderNextBlock(juce::AudioSampleBuffer &outputBuffer, int startSample, int numSamples) override;
     void applyParamsBeforeLoop(double sampleRate);
     bool step(double *out, double sampleRate, int numChannels);
+    bool isDrumAtStart = false;
     int noteNumberAtStart = -1;
 
 private:
