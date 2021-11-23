@@ -4,11 +4,13 @@
 
 //==============================================================================
 GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo,
+                       std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers,
                        GlobalParams &globalParams,
                        VoiceParams &voiceParams,
                        std::vector<MainParams> &mainParamList)
     : perf(juce::PerformanceCounter("voice cycle", 100000)),
       currentPositionInfo(currentPositionInfo),
+      buffers(buffers),
       globalParams(globalParams),
       voiceParams(voiceParams),
       mainParamList(mainParamList),
@@ -122,6 +124,8 @@ void GrapeVoice::glide(int midiNoteNumber, float velocity) {
 }
 void GrapeVoice::renderNextBlock(juce::AudioBuffer<float> &outputBuffer, int startSample, int numSamples) {
     if (GrapeSound *playingSound = dynamic_cast<GrapeSound *>(getCurrentlyPlayingSound().get())) {
+        // DBG("startSample: " + std::to_string(startSample));
+        // DBG("numSamples: " + std::to_string(numSamples));
         if (getCurrentlyPlayingNote() == 0) {
             return;
         }
@@ -145,12 +149,13 @@ void GrapeVoice::renderNextBlock(juce::AudioBuffer<float> &outputBuffer, int sta
 
         int numChannels = outputBuffer.getNumChannels();
         jassert(numChannels <= 2);
-
+        jassert(noteNumberAtStart >= 0);
+        auto &buffer = buffers[isDrumAtStart ? noteNumberAtStart : 128];
         while (--numSamples >= 0) {
             double out[2]{0, 0};
             auto active = step(out, sampleRate, numChannels);
             for (auto ch = 0; ch < numChannels; ++ch) {
-                outputBuffer.addSample(ch, startSample, out[ch]);
+                buffer->addSample(ch, startSample, out[ch]);
             }
             ++startSample;
             if (!active) {

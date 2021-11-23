@@ -22,7 +22,11 @@ static void doStepLoop(benchmark::State& state, Params& p) {
     juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo{};
     juce::AudioBuffer<float> buf{};
 
-    GrapeVoice voice{&currentPositionInfo, p.globalParams, p.voiceParams, p.mainParamList};
+    std::vector<std::unique_ptr<juce::AudioBuffer<float>>> buffers{};
+    for (int i = 0; i < 129; i++) {
+        buffers.push_back(std::make_unique<juce::AudioBuffer<float>>(2, 0));
+    }
+    GrapeVoice voice{&currentPositionInfo, buffers, p.globalParams, p.voiceParams, p.mainParamList};
     auto numChannels = 2;
     auto sampleRate = 48000;
     double out[2]{0, 0};

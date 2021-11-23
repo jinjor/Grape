@@ -20,12 +20,14 @@ GrapeAudioProcessor::GrapeAudioProcessor()
       globalParams{},
       voiceParams{},
       controlItemParams{ControlItemParams{0}, ControlItemParams{1}, ControlItemParams{2}},
-      synth(&currentPositionInfo, &monoStack, controlItemParams, globalParams, voiceParams, mainParamList) {
+      synth(&currentPositionInfo, &monoStack, buffers, controlItemParams, globalParams, voiceParams, mainParamList) {
     for (int i = 0; i < 129; i++) {
         jassert(mainParamList.size() == i);
         mainParamList.push_back(MainParams{i});
     }
-
+    for (auto i = 0; i < 129; i++) {
+        buffers.push_back(std::make_unique<juce::AudioBuffer<float>>(2, 0));
+    }
     *mainParamList[128].oscParams[0].Enabled = true;
 
     *controlItemParams[0].Number = CONTROL_NUMBER_NAMES.indexOf("1: Modulation");
@@ -136,11 +138,11 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     if (voiceMode == VOICE_MODE::Mono && synth.getNumVoices() != 1) {
         //        this->monoStack.reset();
         synth.clearVoices();
-        synth.addVoice(new GrapeVoice(&currentPositionInfo, globalParams, voiceParams, mainParamList));
+        synth.addVoice(new GrapeVoice(&currentPositionInfo, buffers, globalParams, voiceParams, mainParamList));
     } else if (voiceMode == VOICE_MODE::Poly && synth.getNumVoices() != numVoices) {
         synth.clearVoices();
         for (auto i = 0; i < numVoices; ++i) {
-            synth.addVoice(new GrapeVoice(&currentPositionInfo, globalParams, voiceParams, mainParamList));
+            synth.addVoice(new GrapeVoice(&currentPositionInfo, buffers, globalParams, voiceParams, mainParamList));
         }
     }
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);

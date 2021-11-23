@@ -145,6 +145,7 @@ struct Modifiers {
 class GrapeVoice : public juce::SynthesiserVoice {
 public:
     GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo,
+               std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers,
                GlobalParams &globalParams,
                VoiceParams &voiceParams,
                std::vector<MainParams> &mainParamList);
@@ -172,6 +173,7 @@ private:
     GlobalParams &globalParams;
     VoiceParams &voiceParams;
     std::vector<MainParams> &mainParamList;
+    std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers;
 
     MultiOsc oscs[NUM_OSC];
     Adsr adsr[NUM_ENVELOPE];
@@ -199,17 +201,22 @@ class GrapeSynthesiser : public juce::Synthesiser {
 public:
     GrapeSynthesiser(juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo,
                      MonoStack *monoStack,
+                     std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers,
                      std::array<ControlItemParams, NUM_CONTROL> &controlItemParams,
                      GlobalParams &globalParams,
                      VoiceParams &voiceParams,
                      std::vector<MainParams> &mainParamList)
         : currentPositionInfo(currentPositionInfo),
           monoStack(monoStack),
+          buffers(buffers),
           controlItemParams(controlItemParams),
           globalParams(globalParams),
           voiceParams(voiceParams),
           mainParamList(mainParamList) {
         addSound(new GrapeSound(voiceParams, mainParamList));
+        for (auto i = 0; i < 129; i++) {
+            stereoDelays.push_back(std::unique_ptr<StereoDelay>(nullptr));
+        }
     }
     ~GrapeSynthesiser() {}
     virtual void renderNextBlock(AudioBuffer<float> &outputAudio,
@@ -217,6 +224,14 @@ public:
                                  int startSample,
                                  int numSamples) {
         freezeParams(globalParams, voiceParams, mainParamList, controlItemParams);
+        for (auto i = 0; i < 129; i++) {
+            if (mainParamList[i].isEnabled()) {
+                buffers[i]->setSize(2, startSample + numSamples, false, false, true);
+                buffers[i]->clear();
+            } else {
+                buffers[i]->setSize(2, 0);
+            }
+        }
         juce::Synthesiser::renderNextBlock(outputAudio, inputMidi, startSample, numSamples);
     }
     virtual void handleMidiEvent(const juce::MidiMessage &m) override {
@@ -298,46 +313,57 @@ public:
             pitchWheelMoved(wheelValue);
         }
     }
-    void renderVoices(juce::AudioBuffer<float> &buffer, int startSample, int numSamples) override {
-        juce::Synthesiser::renderVoices(buffer, startSample, numSamples);
-        auto &mainParams = mainParamList[voiceParams.isDrumModeFreezed ? voiceParams.targetNote : 128];
-        auto &delayParams = mainParams.delayParams;
+    void renderVoices(juce::AudioBuffer<float> &_buffer, int startSample, int numSamples) override {
+        juce::Synthesiser::renderVoices(_buffer, startSample, numSamples);
 
-        stereoDelay.setParams(getSampleRate(),
-                              currentPositionInfo->bpm,
-                              delayParams.type,
-                              delayParams.sync,
-                              delayParams.timeL,
-                              delayParams.timeR,
-                              delayParams.timeSyncL,
-                              delayParams.timeSyncR,
-                              delayParams.lowFreq,
-                              delayParams.highFreq,
-                              delayParams.feedback,
-                              delayParams.mix);
-
-        auto *leftIn = buffer.getReadPointer(0, startSample);
-        auto *rightIn = buffer.getReadPointer(1, startSample);
-        auto *leftOut = buffer.getWritePointer(0, startSample);
-        auto *rightOut = buffer.getWritePointer(1, startSample);
-
-        auto delayEnabled = delayParams.enabled;
-        auto expression = globalParams.expression;
-        auto masterVolume = globalParams.masterVolume * globalParams.midiVolume;
-        for (int i = 0; i < numSamples; ++i) {
-            double sample[2]{leftIn[i] * expression, rightIn[i] * expression};
-
-            // Delay
-            if (delayEnabled) {
-                stereoDelay.step(sample);
+        for (auto n = 0; n < 129; n++) {
+            if (!mainParamList[n].isEnabled()) {
+                continue;
             }
+            auto &buffer = buffers[n];
+            auto &mainParams = mainParamList[n];
+            auto &delayParams = mainParams.delayParams;
+            auto &stereoDelay = stereoDelays[n];
+            if (delayParams.enabled) {
+                if (!stereoDelay) {
+                    stereoDelay.reset(new StereoDelay());
+                }
+                stereoDelay->setParams(getSampleRate(),
+                                       currentPositionInfo->bpm,
+                                       delayParams.type,
+                                       delayParams.sync,
+                                       delayParams.timeL,
+                                       delayParams.timeR,
+                                       delayParams.timeSyncL,
+                                       delayParams.timeSyncR,
+                                       delayParams.lowFreq,
+                                       delayParams.highFreq,
+                                       delayParams.feedback,
+                                       delayParams.mix);
+            } else {
+                stereoDelay.reset();
+            }
+            auto *leftIn = buffer->getReadPointer(0, startSample);
+            auto *rightIn = buffer->getReadPointer(1, startSample);
 
-            // Master Volume
-            sample[0] *= masterVolume;
-            sample[1] *= masterVolume;
+            auto delayEnabled = delayParams.enabled;
+            auto expression = globalParams.expression;
+            auto masterVolume = globalParams.masterVolume * globalParams.midiVolume;
+            for (int i = 0; i < numSamples; ++i) {
+                double sample[2]{leftIn[i] * expression, rightIn[i] * expression};
 
-            leftOut[i] = sample[0];
-            rightOut[i] = sample[1];
+                // Delay
+                if (delayEnabled) {
+                    stereoDelay->step(sample);
+                }
+
+                // Master Volume
+                sample[0] *= masterVolume;
+                sample[1] *= masterVolume;
+
+                _buffer.addSample(0, startSample + i, sample[0]);
+                _buffer.addSample(1, startSample + i, sample[1]);
+            }
         }
     }
     void controllerMoved(int number, int value) {
@@ -485,11 +511,12 @@ private:
     juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo;
 
     MonoStack *monoStack;
+    std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers;
     std::array<ControlItemParams, NUM_CONTROL> &controlItemParams;
 
     GlobalParams &globalParams;
     VoiceParams &voiceParams;
     std::vector<MainParams> &mainParamList;
 
-    StereoDelay stereoDelay;
+    std::vector<std::unique_ptr<StereoDelay>> stereoDelays{};
 };

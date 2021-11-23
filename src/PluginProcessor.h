@@ -146,6 +146,7 @@ public:
     std::vector<MainParams> mainParamList{};
     std::array<ControlItemParams, NUM_CONTROL> controlItemParams;
 
+    std::vector<std::unique_ptr<juce::AudioBuffer<float>>> buffers{};
     MonoStack monoStack;
     GrapeSynthesiser synth;
 
