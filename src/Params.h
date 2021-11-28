@@ -60,11 +60,9 @@ private:
 class GlobalParams : public SynthParametersBase {
 public:
     //    TODO: portamento time?, pitch bend range?, velocity sense
-
     juce::AudioParameterFloat* Pitch;
     juce::AudioParameterFloat* Pan;
     juce::AudioParameterFloat* Expression;
-    juce::AudioParameterFloat* MasterVolume;
     juce::AudioParameterFloat* MidiVolume;
 
     GlobalParams();
@@ -80,14 +78,38 @@ public:
     float pitch;
     float pan;
     float expression;
-    float masterVolume;
     float midiVolume;
     void freeze() {
         pitch = Pitch->get();
         pan = Pan->get();
         expression = Expression->get();
-        masterVolume = MasterVolume->get();
         midiVolume = MidiVolume->get();
+    }
+
+private:
+};
+
+//==============================================================================
+class MasterParams : public SynthParametersBase {
+public:
+    //    TODO: portamento time?, pitch bend range?, velocity sense
+
+    juce::AudioParameterFloat* Pan;
+    juce::AudioParameterFloat* MasterVolume;
+
+    MasterParams(std::string idPrefix, std::string namePrefix);
+    MasterParams(const MasterParams&) = delete;
+    MasterParams(MasterParams&&) noexcept = default;
+
+    virtual void addAllParameters(juce::AudioProcessor& processor) override;
+    virtual void saveParameters(juce::XmlElement& xml) override;
+    virtual void loadParameters(juce::XmlElement& xml) override;
+
+    float pan;
+    float masterVolume;
+    void freeze() {
+        pan = Pan->get();
+        masterVolume = MasterVolume->get();
     }
 
 private:
@@ -523,6 +545,7 @@ public:
     std::array<ModEnvParams, NUM_MODENV> modEnvParams;
     DelayParams delayParams;
     DrumParams drumParams;
+    MasterParams masterParams;
     bool isEnabled() {
         for (int i = 0; i < NUM_OSC; ++i) {
             if (oscParams[i].Enabled->get()) {
@@ -549,6 +572,7 @@ public:
         }
         delayParams.freeze();
         drumParams.freeze();
+        masterParams.freeze();
     }
 
 private:

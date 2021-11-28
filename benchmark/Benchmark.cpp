@@ -23,6 +23,7 @@ static void doStepLoop(benchmark::State& state, Params& p) {
     juce::AudioBuffer<float> buf{};
 
     std::vector<std::unique_ptr<juce::AudioBuffer<float>>> buffers{};
+    buffers.reserve(129);
     for (int i = 0; i < 129; i++) {
         buffers.push_back(std::make_unique<juce::AudioBuffer<float>>(2, 0));
     }

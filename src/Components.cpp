@@ -286,8 +286,9 @@ void StatusComponent::timerCallback() {
 }
 
 //==============================================================================
-MasterComponent::MasterComponent(GlobalParams& params)
-    : params(params),
+MasterComponent::MasterComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
+    : voiceParams(voiceParams),
+      mainParamList(mainParamList),
       header("MASTER", HEADER_CHECK::Hidden),
       panSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox),
       volumeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -295,6 +296,7 @@ MasterComponent::MasterComponent(GlobalParams& params)
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
+    auto& params = getSelectedOscParams();
     initLinear(panSlider, params.Pan, 0.01, this, *this);
     initLinear(volumeSlider, params.MasterVolume, 0.01, this, *this);
     initLabel(panLabel, "Pan", *this);
@@ -318,6 +320,7 @@ void MasterComponent::resized() {
     consumeLabeledKnob(bounds, volumeLabel, volumeSlider);
 }
 void MasterComponent::sliderValueChanged(juce::Slider* slider) {
+    auto& params = getSelectedOscParams();
     if (slider == &panSlider) {
         *params.Pan = (float)panSlider.getValue();
     } else if (slider == &volumeSlider) {
@@ -325,6 +328,7 @@ void MasterComponent::sliderValueChanged(juce::Slider* slider) {
     }
 }
 void MasterComponent::timerCallback() {
+    auto& params = getSelectedOscParams();
     panSlider.setValue(params.Pan->get(), juce::dontSendNotification);
     volumeSlider.setValue(params.MasterVolume->get(), juce::dontSendNotification);
 }

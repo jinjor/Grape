@@ -21,10 +21,12 @@ GrapeAudioProcessor::GrapeAudioProcessor()
       voiceParams{},
       controlItemParams{ControlItemParams{0}, ControlItemParams{1}, ControlItemParams{2}},
       synth(&currentPositionInfo, &monoStack, buffers, controlItemParams, globalParams, voiceParams, mainParamList) {
+
+    mainParamList.reserve(129);
     for (int i = 0; i < 129; i++) {
-        jassert(mainParamList.size() == i);
         mainParamList.push_back(MainParams{i});
     }
+    buffers.reserve(129);
     for (auto i = 0; i < 129; i++) {
         buffers.push_back(std::make_unique<juce::AudioBuffer<float>>(2, 0));
     }

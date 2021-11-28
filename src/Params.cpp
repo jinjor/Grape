@@ -16,30 +16,35 @@ GlobalParams::GlobalParams() {
     Pitch = new juce::AudioParameterFloat(idPrefix + "PITCH", namePrefix + "Pitch", -1.0f, 1.0f, 0.0f);
     Pan = new juce::AudioParameterFloat(idPrefix + "PAN", namePrefix + "Pan", -1.0f, 1.0f, 0.0f);
     Expression = new juce::AudioParameterFloat(idPrefix + "EXPRESSION", namePrefix + "Expression", 0.0f, 1.0f, 1.0f);
-    MasterVolume =
-        new juce::AudioParameterFloat(idPrefix + "MASTER_VOLUME", namePrefix + "Master Volume", 0.0f, 1.0f, 1.0f);
     MidiVolume = new juce::AudioParameterFloat(idPrefix + "MIDI_VOLUME", namePrefix + "Midi Volume", 0.0f, 1.0f, 1.0f);
 }
 void GlobalParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Pitch);
     processor.addParameter(Pan);
     processor.addParameter(Expression);
-    processor.addParameter(MasterVolume);
     processor.addParameter(MidiVolume);
 }
-void GlobalParams::saveParameters(juce::XmlElement& xml) {
-    // xml.setAttribute(Pitch->paramID, (double)Pitch->get());
-    xml.setAttribute(Pan->paramID, (double)Pan->get());
-    // xml.setAttribute(Expression->paramID, (double)Expression->get());
-    xml.setAttribute(MasterVolume->paramID, (double)MasterVolume->get());
-    // xml.setAttribute(MidiVolume->paramID, (double)MidiVolume->get());
+void GlobalParams::saveParameters(juce::XmlElement& xml) {}
+void GlobalParams::loadParameters(juce::XmlElement& xml) {}
+
+//==============================================================================
+MasterParams::MasterParams(std::string idPrefix, std::string namePrefix) {
+    idPrefix += "MASTER_";
+    namePrefix += "Master ";
+    Pan = new juce::AudioParameterFloat(idPrefix + "PAN", namePrefix + "Pan", -1.0f, 1.0f, 0.0f);
+    MasterVolume = new juce::AudioParameterFloat(idPrefix + "VOLUME", namePrefix + "Volume", 0.0f, 1.0f, 1.0f);
 }
-void GlobalParams::loadParameters(juce::XmlElement& xml) {
-    // *Pitch = (float)xml.getDoubleAttribute(Pitch->paramID, 0);
+void MasterParams::addAllParameters(juce::AudioProcessor& processor) {
+    processor.addParameter(Pan);
+    processor.addParameter(MasterVolume);
+}
+void MasterParams::saveParameters(juce::XmlElement& xml) {
+    xml.setAttribute(Pan->paramID, (double)Pan->get());
+    xml.setAttribute(MasterVolume->paramID, (double)MasterVolume->get());
+}
+void MasterParams::loadParameters(juce::XmlElement& xml) {
     *Pan = (float)xml.getDoubleAttribute(Pan->paramID, 0);
-    // *Expression = (float)xml.getDoubleAttribute(Expression->paramID, 1.0);
     *MasterVolume = (float)xml.getDoubleAttribute(MasterVolume->paramID, 1.0);
-    // *MidiVolume = (float)xml.getDoubleAttribute(MidiVolume->paramID, 1.0);
 }
 
 //==============================================================================
@@ -498,7 +503,8 @@ MainParams::MainParams(int groupIndex)
                    ModEnvParams{idPrefix(groupIndex), namePrefix(groupIndex), 1},
                    ModEnvParams{idPrefix(groupIndex), namePrefix(groupIndex), 2}},
       delayParams{idPrefix(groupIndex), namePrefix(groupIndex)},
-      drumParams{idPrefix(groupIndex), namePrefix(groupIndex)} {}
+      drumParams{idPrefix(groupIndex), namePrefix(groupIndex)},
+      masterParams{idPrefix(groupIndex), namePrefix(groupIndex)} {}
 void MainParams::addAllParameters(juce::AudioProcessor& processor) {
     for (auto& params : envelopeParams) {
         params.addAllParameters(processor);
@@ -517,6 +523,7 @@ void MainParams::addAllParameters(juce::AudioProcessor& processor) {
     }
     delayParams.addAllParameters(processor);
     drumParams.addAllParameters(processor);
+    masterParams.addAllParameters(processor);
 }
 void MainParams::saveParameters(juce::XmlElement& xml) {
     for (auto& param : envelopeParams) {
@@ -536,6 +543,7 @@ void MainParams::saveParameters(juce::XmlElement& xml) {
     }
     delayParams.saveParameters(xml);
     drumParams.saveParameters(xml);
+    masterParams.saveParameters(xml);
 }
 void MainParams::loadParameters(juce::XmlElement& xml) {
     for (auto& param : envelopeParams) {
@@ -555,6 +563,7 @@ void MainParams::loadParameters(juce::XmlElement& xml) {
     }
     delayParams.loadParameters(xml);
     drumParams.loadParameters(xml);
+    masterParams.loadParameters(xml);
 }
 
 //==============================================================================

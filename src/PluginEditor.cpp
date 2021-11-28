@@ -31,7 +31,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
                        ModEnvComponent(1, p.voiceParams, p.mainParamList),
                        ModEnvComponent(2, p.voiceParams, p.mainParamList)},
       delayComponent{DelayComponent(p.voiceParams, p.mainParamList, p.controlItemParams)},
-      masterComponent(p.globalParams),
+      masterComponent{MasterComponent(p.voiceParams, p.mainParamList)},
       drumComponent{DrumComponent(p.voiceParams, p.mainParamList)} {
     getLookAndFeel().setColour(juce::Label::textColourId, colour::TEXT);
 

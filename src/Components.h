@@ -334,7 +334,7 @@ private:
 //==============================================================================
 class MasterComponent : public juce::Component, juce::Slider::Listener, private juce::Timer, ComponentHelper {
 public:
-    MasterComponent(GlobalParams& params);
+    MasterComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList);
     virtual ~MasterComponent();
     MasterComponent(const MasterComponent&) = delete;
 
@@ -346,7 +346,8 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
 
-    GlobalParams& params;
+    VoiceParams& voiceParams;
+    std::vector<MainParams>& mainParamList;
 
     HeaderComponent header;
 
@@ -355,6 +356,10 @@ private:
 
     juce::Label panLabel;
     juce::Label volumeLabel;
+
+    MasterParams& getSelectedOscParams() {
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].masterParams;
+    }
 };
 
 //==============================================================================

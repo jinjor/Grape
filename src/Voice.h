@@ -348,7 +348,7 @@ public:
 
             auto delayEnabled = delayParams.enabled;
             auto expression = globalParams.expression;
-            auto masterVolume = globalParams.masterVolume * globalParams.midiVolume;
+            auto masterVolume = mainParams.masterParams.masterVolume * globalParams.midiVolume;
             for (int i = 0; i < numSamples; ++i) {
                 double sample[2]{leftIn[i] * expression, rightIn[i] * expression};
 
