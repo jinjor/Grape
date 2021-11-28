@@ -199,10 +199,9 @@ void GrapeAudioProcessor::getStateInformation(juce::MemoryBlock& destData) {
     }
     copyXmlToBinary(xml, destData);
 }
-
 void GrapeAudioProcessor::setStateInformation(const void* data, int sizeInBytes) {
     std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
-    if (xml.get() != nullptr) {
+    if (xml) {
         if (xml->hasTagName("GrapeInstrument")) {
             globalParams.loadParameters(*xml);
             voiceParams.loadParameters(*xml);
@@ -223,3 +222,24 @@ void GrapeAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new GrapeAudioProcessor(); }
+
+//==============================================================================
+void GrapeAudioProcessor::copyToClipboard() {
+    // TODO: ValueTree でもできるらしいので調べる
+    juce::XmlElement xml("GrapeInstrumentClipboard");
+
+    // TODO: portamento, pitchbend range
+    auto index = voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128;
+    // TODO
+    juce::SystemClipboard::copyTextToClipboard(xml.toString());
+}
+void GrapeAudioProcessor::pasteFromClipboard() {
+    auto text = juce::SystemClipboard::getTextFromClipboard();
+    std::cout << text << std::endl;
+    auto xml = juce::parseXML(text);
+    if (xml) {
+        if (xml->hasTagName("GrapeInstrumentClipboard")) {
+            // TODO
+        }
+    }
+}

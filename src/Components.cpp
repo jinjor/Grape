@@ -163,8 +163,11 @@ void VoiceComponent::timerCallback() {
 }
 
 //==============================================================================
-UtilComponent::UtilComponent()
-    : header("UTILITY", HEADER_CHECK::Hidden), copyToClipboardButton(), pasteFromClipboardButton() {
+UtilComponent::UtilComponent(GrapeAudioProcessor& processor)
+    : processor(processor),
+      header("UTILITY", HEADER_CHECK::Hidden),
+      copyToClipboardButton(),
+      pasteFromClipboardButton() {
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
@@ -197,9 +200,9 @@ void UtilComponent::resized() {
 }
 void UtilComponent::buttonClicked(juce::Button* button) {
     if (button == &copyToClipboardButton) {
-        // TODO
+        processor.copyToClipboard();
     } else if (button == &pasteFromClipboardButton) {
-        // TODO
+        processor.pasteFromClipboard();
     }
 }
 

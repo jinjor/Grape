@@ -16,7 +16,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
       analyserToggle(&analyserMode),
       analyserWindow(&analyserMode, &p.latestDataProvider, &p.monoStack, p.voiceParams, p.mainParamList),
       statusComponent(&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider),
-      utilComponent(),
+      utilComponent(p),
       oscComponents{OscComponent(0, p.voiceParams, p.mainParamList, p.controlItemParams),
                     OscComponent(1, p.voiceParams, p.mainParamList, p.controlItemParams),
                     OscComponent(2, p.voiceParams, p.mainParamList, p.controlItemParams)},

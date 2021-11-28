@@ -280,7 +280,7 @@ private:
 //==============================================================================
 class UtilComponent : public juce::Component, juce::Button::Listener, private ComponentHelper {
 public:
-    UtilComponent();
+    UtilComponent(GrapeAudioProcessor& processor);
     virtual ~UtilComponent();
     UtilComponent(const UtilComponent&) = delete;
 
@@ -289,6 +289,8 @@ public:
     virtual void resized() override;
 
 private:
+    GrapeAudioProcessor& processor;
+
     virtual void buttonClicked(juce::Button* button) override;
 
     HeaderComponent header;

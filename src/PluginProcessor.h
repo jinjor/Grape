@@ -134,6 +134,10 @@ public:
     void setStateInformation(const void *data, int sizeInBytes) override;
 
     //==============================================================================
+    void copyToClipboard();
+    void pasteFromClipboard();
+
+    //==============================================================================
     int currentProgram = 0;
     juce::MidiKeyboardState keyboardState;
     LatestDataProvider latestDataProvider;
