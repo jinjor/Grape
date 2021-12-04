@@ -224,13 +224,35 @@ void GrapeAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new GrapeAudioProcessor(); }
 
 //==============================================================================
+void replaceAttributeNames(juce::XmlElement& xml, juce::StringRef before, juce::StringRef after) {
+    auto newAttrs = std::map<juce::String, juce::String>{};
+    for (auto i = 0; i < xml.getNumAttributes(); i++) {
+        auto attrName = xml.getAttributeName(i);
+        attrName = attrName.replace(before, after);
+        newAttrs[attrName] = xml.getAttributeValue(i);
+    }
+    xml.removeAllAttributes();
+    for (auto const& [attrName, value] : newAttrs) {
+        xml.setAttribute(attrName, value);
+    }
+}
+
 void GrapeAudioProcessor::copyToClipboard() {
     // TODO: ValueTree でもできるらしいので調べる
     juce::XmlElement xml("GrapeInstrumentClipboard");
 
     // TODO: portamento, pitchbend range
     auto index = voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128;
-    // TODO
+    xml.setAttribute("DRUM_MODE", voiceParams.isDrumMode());
+    mainParamList[index].saveParameters(xml);
+    if (!voiceParams.isDrumMode()) {
+        for (auto& param : controlItemParams) {
+            param.saveParameters(xml);
+        }
+    }
+
+    replaceAttributeNames(xml, "G" + std::to_string(index) + "_", "GROUP_");
+
     juce::SystemClipboard::copyTextToClipboard(xml.toString());
 }
 void GrapeAudioProcessor::pasteFromClipboard() {
@@ -239,7 +261,17 @@ void GrapeAudioProcessor::pasteFromClipboard() {
     auto xml = juce::parseXML(text);
     if (xml) {
         if (xml->hasTagName("GrapeInstrumentClipboard")) {
-            // TODO
+            auto index = voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128;
+
+            replaceAttributeNames(*xml, "GROUP_", "G" + std::to_string(index) + "_");
+
+            auto wasDrumMode = xml->getBoolAttribute("DRUM_MODE", false);
+            mainParamList[index].loadParameters(*xml);
+            if (!wasDrumMode && !voiceParams.isDrumMode()) {
+                for (auto& param : controlItemParams) {
+                    param.loadParameters(*xml);
+                }
+            }
         }
     }
 }
