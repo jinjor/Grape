@@ -174,11 +174,13 @@ UtilComponent::UtilComponent(GrapeAudioProcessor& processor)
     copyToClipboardButton.setLookAndFeel(&grapeLookAndFeel);
     copyToClipboardButton.setButtonText("Copy");
     copyToClipboardButton.addListener(this);
+    copyToClipboardButton.setLookAndFeel(&grapeLookAndFeel);
     this->addAndMakeVisible(copyToClipboardButton);
 
     pasteFromClipboardButton.setLookAndFeel(&grapeLookAndFeel);
     pasteFromClipboardButton.setButtonText("Paste");
     pasteFromClipboardButton.addListener(this);
+    pasteFromClipboardButton.setLookAndFeel(&grapeLookAndFeel);
     this->addAndMakeVisible(pasteFromClipboardButton);
 
     initLabel(copyToClipboardLabel, "Copy", *this);

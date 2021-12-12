@@ -12,6 +12,8 @@ GrapeLookAndFeel::GrapeLookAndFeel(bool controlled) : controlled(controlled) {
     setColour(juce::PopupMenu::highlightedBackgroundColourId, colour::SELECT.withBrightness(0.4));
     setColour(juce::BubbleComponent::outlineColourId, colour::BORDER);
     setColour(juce::BubbleComponent::backgroundColourId, colour::PIT);
+    setColour(juce::TextButton::textColourOnId, colour::TEXT);
+    setColour(juce::TextButton::textColourOffId, colour::TEXT);  // ?
 }
 GrapeLookAndFeel::~GrapeLookAndFeel() {}
 void GrapeLookAndFeel::drawTickBox(juce::Graphics& g,
@@ -247,4 +249,63 @@ juce::Path GrapeLookAndFeel::getTickShape(float height) {
     path.addEllipse(x, y, w, h);
 
     return path;
+}
+void GrapeLookAndFeel::drawButtonBackground(Graphics& g,
+                                            Button& button,
+                                            const Colour& backgroundColour,
+                                            bool shouldDrawButtonAsHighlighted,
+                                            bool shouldDrawButtonAsDown) {
+    {
+        auto bounds = button.getLocalBounds();
+        auto width = bounds.getWidth();
+        auto height = bounds.getHeight();
+        juce::Rectangle<float> boxBounds(0, 0, width, height);
+        auto reduced = boxBounds.reduced(BORDER_WIDTH / 2);
+        auto outlineColour = button.findColour(juce::ComboBox::outlineColourId);
+        {
+            juce::Path p;
+            auto bottom = reduced.getBottom() - 0.5;
+            p.addLineSegment(juce::Line<float>(reduced.getX() - 0.5, bottom, reduced.getRight() + 0.5, bottom), 0);
+            g.setColour(colour::UNDERLINE.withAlpha(button.isEnabled() ? 1.0f : 0.3f));
+            g.strokePath(p, juce::PathStrokeType(1));
+        }
+    }
+    // auto cornerSize = 6.0f;
+    // auto bounds = button.getLocalBounds().toFloat().reduced(0.5f, 0.5f);
+    // auto baseColour = backgroundColour.withMultipliedSaturation(button.hasKeyboardFocus(true) ? 1.3f : 0.9f)
+    //                       .withMultipliedAlpha(button.isEnabled() ? 1.0f : 0.5f);
+
+    // if (shouldDrawButtonAsDown || shouldDrawButtonAsHighlighted)
+    //     baseColour = baseColour.contrasting(shouldDrawButtonAsDown ? 0.2f : 0.05f);
+
+    // g.setColour(baseColour);
+
+    // auto flatOnLeft = button.isConnectedOnLeft();
+    // auto flatOnRight = button.isConnectedOnRight();
+    // auto flatOnTop = button.isConnectedOnTop();
+    // auto flatOnBottom = button.isConnectedOnBottom();
+
+    // if (flatOnLeft || flatOnRight || flatOnTop || flatOnBottom) {
+    //     Path path;
+    //     path.addRoundedRectangle(bounds.getX(),
+    //                              bounds.getY(),
+    //                              bounds.getWidth(),
+    //                              bounds.getHeight(),
+    //                              cornerSize,
+    //                              cornerSize,
+    //                              !(flatOnLeft || flatOnTop),
+    //                              !(flatOnRight || flatOnTop),
+    //                              !(flatOnLeft || flatOnBottom),
+    //                              !(flatOnRight || flatOnBottom));
+
+    //     g.fillPath(path);
+
+    //     g.setColour(button.findColour(ComboBox::outlineColourId));
+    //     g.strokePath(path, PathStrokeType(1.0f));
+    // } else {
+    //     g.fillRoundedRectangle(bounds, cornerSize);
+
+    //     g.setColour(button.findColour(ComboBox::outlineColourId));
+    //     g.drawRoundedRectangle(bounds, cornerSize, 1.0f);
+    // }
 }
