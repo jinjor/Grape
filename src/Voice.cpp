@@ -292,7 +292,13 @@ bool GrapeVoice::step(double *out, double sampleRate, int numChannels) {
     }
 
     bool active = false;
-    auto panBase = mainParams.masterParams.pan;  // TODO: consider global?
+    auto panBase = mainParams.masterParams.pan;
+    if (globalParams.pan >= 0) {
+        panBase = (1 - panBase) * globalParams.pan + panBase;
+    } else {
+        panBase = (1 + panBase) * globalParams.pan + panBase;
+    }
+
     auto panModAmp = std::min(1.0 - panBase, 1.0 + panBase);
     // ---------------- OSC with Envelope and Filter ----------------
     for (int oscIndex = 0; oscIndex < NUM_OSC; ++oscIndex) {
