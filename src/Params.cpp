@@ -17,6 +17,7 @@ GlobalParams::GlobalParams() {
     Pan = new juce::AudioParameterFloat(idPrefix + "PAN", namePrefix + "Pan", -1.0f, 1.0f, 0.0f);
     Expression = new juce::AudioParameterFloat(idPrefix + "EXPRESSION", namePrefix + "Expression", 0.0f, 1.0f, 1.0f);
     MidiVolume = new juce::AudioParameterFloat(idPrefix + "MIDI_VOLUME", namePrefix + "Midi Volume", 0.0f, 1.0f, 1.0f);
+    freeze();
 }
 void GlobalParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Pitch);
@@ -33,6 +34,7 @@ MasterParams::MasterParams(std::string idPrefix, std::string namePrefix) {
     namePrefix += "Master ";
     Pan = new juce::AudioParameterFloat(idPrefix + "PAN", namePrefix + "Pan", -1.0f, 1.0f, 0.0f);
     MasterVolume = new juce::AudioParameterFloat(idPrefix + "VOLUME", namePrefix + "Volume", 0.0f, 1.0f, 1.0f);
+    freeze();
 }
 void MasterParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Pan);
@@ -67,6 +69,7 @@ VoiceParams::VoiceParams() {
                                                    namePrefix + "Target Note Oct",
                                                    TARGET_NOTE_OCT_NAMES,
                                                    TARGET_NOTE_OCT_NAMES.indexOf("1"));
+    freeze();
 }
 void VoiceParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Mode);
@@ -107,6 +110,7 @@ OscParams::OscParams(std::string idPrefix, std::string namePrefix, int index) {
         idPrefix + "GAIN", namePrefix + "Gain", rangeWithSkewForCentre(0.0f, 4.0f, 1.0f), 1.0f);
     Envelope = new juce::AudioParameterChoice(
         idPrefix + "ENVELOPE", namePrefix + "Envelope", OSC_ENV_NAMES, OSC_ENV_NAMES.indexOf("1"));
+    freeze();
 }
 void OscParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Enabled);
@@ -156,6 +160,7 @@ EnvelopeParams::EnvelopeParams(std::string idPrefix, std::string namePrefix, int
     Sustain = new juce::AudioParameterFloat(idPrefix + "SUSTAIN", "Sustain", 0.0f, 1.0f, 0.7f);
     Release =
         new juce::AudioParameterFloat(idPrefix + "RELEASE", "Release", rangeWithSkewForCentre(0.01f, 1.0f, 0.4f), 0.1f);
+    freeze();
 }
 void EnvelopeParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(AttackCurve);
@@ -198,6 +203,7 @@ FilterParams::FilterParams(std::string idPrefix, std::string namePrefix, int ind
     Q = new juce::AudioParameterFloat(
         idPrefix + "Q", namePrefix + "Q", rangeWithSkewForCentre(0.01f, 100.0f, 1.0f), 1.0f);
     Gain = new juce::AudioParameterFloat(idPrefix + "GAIN", namePrefix + "Gain", -20.0f, 20.0f, 0.0f);
+    freeze();
 }
 void FilterParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Enabled);
@@ -260,6 +266,7 @@ LfoParams::LfoParams(std::string idPrefix, std::string namePrefix, int index) {
     FastFreq = new juce::AudioParameterFloat(
         idPrefix + "FAST_FREQ", namePrefix + "Fast Freq", rangeWithSkewForCentre(0.01f, 100.0f, 1.0f), 1.0f);
     Amount = new juce::AudioParameterFloat(idPrefix + "AMOUNT", namePrefix + "Amount", 0.0f, 1.0f, 0.2f);
+    freeze();
 }
 void LfoParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Enabled);
@@ -338,6 +345,7 @@ ModEnvParams::ModEnvParams(std::string idPrefix, std::string namePrefix, int ind
         idPrefix + "ATTACK", namePrefix + "Attack", rangeWithSkewForCentre(0.0f, 1.0f, 0.2f), 0.0f);
     Decay = new juce::AudioParameterFloat(
         idPrefix + "DECAY", namePrefix + "Decay", rangeWithSkewForCentre(0.0f, 1.0f, 0.4f), 0.2f);
+    freeze();
 }
 void ModEnvParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Enabled);
@@ -411,6 +419,7 @@ DelayParams::DelayParams(std::string idPrefix, std::string namePrefix) {
         idPrefix + "HIGH_FREQ", namePrefix + "HighFreq", rangeWithSkewForCentre(10.0f, 20000.0f, 2000.0f), 20000.0f);
     Feedback = new juce::AudioParameterFloat(idPrefix + "FEEDBACK", namePrefix + "Feedback", 0.0f, 1.0f, 0.3f);
     Mix = new juce::AudioParameterFloat(idPrefix + "MIX", namePrefix + "Mix", 0.0f, 1.0f, 0.3f);
+    freeze();
 }
 void DelayParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Enabled);
@@ -467,6 +476,7 @@ DrumParams::DrumParams(std::string idPrefix, std::string namePrefix) {
                                                    namePrefix + "Note to Mute Oct",
                                                    TARGET_NOTE_OCT_NAMES,
                                                    TARGET_NOTE_OCT_NAMES.indexOf("1"));
+    freeze();
 }
 void DrumParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(NoteToPlay);
@@ -604,6 +614,7 @@ ControlItemParams::ControlItemParams(int index) {
                                                      namePrefix + "TargetMiscParam",
                                                      CONTROL_TARGET_MISC_PARAM_NAMES,
                                                      CONTROL_TARGET_MISC_PARAM_NAMES.indexOf("Master Volume"));
+    freeze();
 }
 void ControlItemParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(Number);
