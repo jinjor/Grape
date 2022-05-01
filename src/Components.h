@@ -244,7 +244,9 @@ class VoiceComponent : public juce::Component,
                        private juce::Timer,
                        ComponentHelper {
 public:
-    VoiceComponent(VoiceParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    VoiceComponent(VoiceParams& params,
+                   std::vector<MainParams>& mainParamList,
+                   std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~VoiceComponent();
     VoiceComponent(const VoiceComponent&) = delete;
 
@@ -257,17 +259,47 @@ private:
     virtual void timerCallback() override;
 
     VoiceParams& params;
+    std::vector<MainParams>& mainParamList;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
 
     HeaderComponent header;
+    juce::Component drumTargetSelector;
 
     juce::ComboBox modeSelector;
     juce::Slider portamentoTimeSlider;
     juce::Slider pitchBendRangeSlider;
+    juce::ComboBox targetNoteKindSelector;
+    juce::ComboBox targetNoteOctSelector;
 
     juce::Label modeLabel;
     juce::Label portamentoTimeLabel;
     juce::Label pitchBendRangeLabel;
+    juce::Label targetNoteLabel;
+};
+
+//==============================================================================
+class UtilComponent : public juce::Component, juce::Button::Listener, private ComponentHelper {
+public:
+    UtilComponent(GrapeAudioProcessor& processor);
+    virtual ~UtilComponent();
+    UtilComponent(const UtilComponent&) = delete;
+
+    virtual void paint(juce::Graphics& g) override;
+
+    virtual void resized() override;
+
+private:
+    GrapeAudioProcessor& processor;
+
+    virtual void buttonClicked(juce::Button* button) override;
+
+    HeaderComponent header;
+
+    juce::TextButton copyToClipboardButton;
+    juce::TextButton pasteFromClipboardButton;
+
+    juce::Label copyToClipboardLabel;
+    juce::Label pasteFromClipboardLabel;
 };
 
 //==============================================================================
@@ -304,7 +336,7 @@ private:
 //==============================================================================
 class MasterComponent : public juce::Component, juce::Slider::Listener, private juce::Timer, ComponentHelper {
 public:
-    MasterComponent(GlobalParams& params);
+    MasterComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList);
     virtual ~MasterComponent();
     MasterComponent(const MasterComponent&) = delete;
 
@@ -316,7 +348,8 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
 
-    GlobalParams& params;
+    VoiceParams& voiceParams;
+    std::vector<MainParams>& mainParamList;
 
     HeaderComponent header;
 
@@ -325,6 +358,10 @@ private:
 
     juce::Label panLabel;
     juce::Label volumeLabel;
+
+    MasterParams& getSelectedOscParams() {
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].masterParams;
+    }
 };
 
 //==============================================================================
@@ -335,7 +372,10 @@ class OscComponent : public juce::Component,
                      private juce::Timer,
                      ComponentHelper {
 public:
-    OscComponent(int index, OscParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    OscComponent(int index,
+                 VoiceParams& voiceParams,
+                 std::vector<MainParams>& mainParamList,
+                 std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~OscComponent();
     OscComponent(const OscComponent&) = delete;
 
@@ -350,7 +390,8 @@ private:
     virtual void timerCallback() override;
     int index;
 
-    OscParams& params;
+    VoiceParams& voiceParams;
+    std::vector<MainParams>& mainParamList;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
 
     HeaderComponent header;
@@ -375,12 +416,16 @@ private:
     juce::Label detuneLabel;
     juce::Label spreadLabel;
     juce::Label gainLabel;
+
+    OscParams& getSelectedOscParams() {
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].oscParams[index];
+    }
 };
 
 //==============================================================================
 class EnvelopeComponent : public juce::Component, juce::Slider::Listener, private juce::Timer, ComponentHelper {
 public:
-    EnvelopeComponent(int index, EnvelopeParams& params);
+    EnvelopeComponent(int index, VoiceParams& voiceParams, std::vector<MainParams>& mainParamList);
     virtual ~EnvelopeComponent();
     EnvelopeComponent(const EnvelopeComponent&) = delete;
 
@@ -392,7 +437,8 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     int index;
-    EnvelopeParams& params;
+    VoiceParams& voiceParams;
+    std::vector<MainParams>& mainParamList;
 
     HeaderComponent header;
 
@@ -407,6 +453,10 @@ private:
     juce::Label decayLabel;
     juce::Label sustainLabel;
     juce::Label releaseLabel;
+
+    EnvelopeParams& getSelectedEnvelopeParams() {
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].envelopeParams[index];
+    }
 };
 
 //==============================================================================
@@ -417,7 +467,10 @@ class FilterComponent : public juce::Component,
                         private juce::Timer,
                         ComponentHelper {
 public:
-    FilterComponent(int index, FilterParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    FilterComponent(int index,
+                    VoiceParams& voiceParams,
+                    std::vector<MainParams>& mainParamList,
+                    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~FilterComponent();
     FilterComponent(const FilterComponent&) = delete;
 
@@ -432,7 +485,8 @@ private:
     virtual void timerCallback() override;
     int index;
 
-    FilterParams& params;
+    VoiceParams& voiceParams;
+    std::vector<MainParams>& mainParamList;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
 
     HeaderComponent header;
@@ -453,6 +507,10 @@ private:
     juce::Label freqLabel;
     juce::Label qLabel;
     juce::Label gainLabel;
+
+    FilterParams& getSelectedFilterParams() {
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].filterParams[index];
+    }
 };
 
 //==============================================================================
@@ -463,7 +521,10 @@ class LfoComponent : public juce::Component,
                      private juce::Timer,
                      ComponentHelper {
 public:
-    LfoComponent(int index, LfoParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    LfoComponent(int index,
+                 VoiceParams& voiceParams,
+                 std::vector<MainParams>& mainParamList,
+                 std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~LfoComponent();
     LfoComponent(const LfoComponent&) = delete;
 
@@ -478,7 +539,8 @@ private:
     virtual void timerCallback() override;
     int index;
 
-    LfoParams& params;
+    VoiceParams& voiceParams;
+    std::vector<MainParams>& mainParamList;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
 
     HeaderComponent header;
@@ -501,6 +563,10 @@ private:
     juce::Label waveformLabel;
     juce::Label freqLabel;
     juce::Label amountLabel;
+
+    LfoParams& getSelectedLfoParams() {
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].lfoParams[index];
+    }
 };
 
 //==============================================================================
@@ -511,7 +577,7 @@ class ModEnvComponent : public juce::Component,
                         private juce::Timer,
                         ComponentHelper {
 public:
-    ModEnvComponent(int index, ModEnvParams& params);
+    ModEnvComponent(int index, VoiceParams& voiceParams, std::vector<MainParams>& mainParamList);
     virtual ~ModEnvComponent();
     ModEnvComponent(const ModEnvComponent&) = delete;
 
@@ -526,7 +592,8 @@ private:
     virtual void timerCallback() override;
     int index;
 
-    ModEnvParams& params;
+    VoiceParams& voiceParams;
+    std::vector<MainParams>& mainParamList;
 
     HeaderComponent header;
 
@@ -553,6 +620,10 @@ private:
     juce::Label waitLabel;
     juce::Label attackLabel;
     juce::Label decayLabel;
+
+    ModEnvParams& getSelectedModEnvParams() {
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].modEnvParams[index];
+    }
 };
 
 //==============================================================================
@@ -563,7 +634,9 @@ class DelayComponent : public juce::Component,
                        private juce::Timer,
                        ComponentHelper {
 public:
-    DelayComponent(DelayParams& params, std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    DelayComponent(VoiceParams& voiceParams,
+                   std::vector<MainParams>& mainParamList,
+                   std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
     virtual ~DelayComponent();
     DelayComponent(const DelayComponent&) = delete;
 
@@ -577,7 +650,8 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
 
-    DelayParams& params;
+    VoiceParams& voiceParams;
+    std::vector<MainParams>& mainParamList;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
 
     HeaderComponent header;
@@ -603,6 +677,51 @@ private:
     juce::Label highFreqLabel;
     juce::Label feedbackLabel;
     juce::Label mixLabel;
+
+    DelayParams& getSelectedDelayParams() {
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].delayParams;
+    }
+};
+
+//==============================================================================
+class DrumComponent : public juce::Component,
+                      juce::ComboBox::Listener,
+                      juce::Slider::Listener,
+                      private juce::Timer,
+                      ComponentHelper {
+public:
+    DrumComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList);
+    virtual ~DrumComponent();
+    DrumComponent(const DrumComponent&) = delete;
+
+    virtual void paint(juce::Graphics& g) override;
+
+    virtual void resized() override;
+
+private:
+    virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
+    virtual void sliderValueChanged(juce::Slider* slider) override;
+    virtual void timerCallback() override;
+
+    VoiceParams& voiceParams;
+    std::vector<MainParams>& mainParamList;
+
+    HeaderComponent header;
+
+    juce::Component body;
+    juce::Component noteToMuteSelector;
+
+    juce::Slider noteToPlaySlider;
+    juce::ComboBox noteToMuteEnabledSelector;
+    juce::ComboBox noteToMuteKindSelector;
+    juce::ComboBox noteToMuteOctSelector;
+
+    juce::Label noteToPlayLabel;
+    juce::Label noteToMuteLabel;
+
+    DrumParams& getSelectedDrumParams() {
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].drumParams;
+    }
 };
 
 //==============================================================================
@@ -662,10 +781,8 @@ public:
     AnalyserWindow(ANALYSER_MODE* analyserMode,
                    LatestDataProvider* latestDataProvider,
                    MonoStack* monoStack,
-                   std::array<EnvelopeParams, NUM_ENVELOPE>& envelopeParams,
-                   std::array<OscParams, NUM_OSC>& oscParams,
-                   std::array<FilterParams, NUM_FILTER>& filterParams,
-                   std::array<ModEnvParams, NUM_MODENV>& modEnvParams);
+                   VoiceParams& voiceParams,
+                   std::vector<MainParams>& mainParamList);
     virtual ~AnalyserWindow();
     AnalyserWindow(const AnalyserWindow&) = delete;
 
@@ -677,10 +794,8 @@ private:
     ANALYSER_MODE* analyserMode;
     LatestDataProvider* latestDataProvider;
     MonoStack* monoStack;
-    std::array<EnvelopeParams, NUM_ENVELOPE>& envelopeParams;
-    std::array<OscParams, NUM_OSC>& oscParams;
-    std::array<FilterParams, NUM_FILTER>& filterParams;
-    std::array<ModEnvParams, NUM_MODENV>& modEnvParams;
+    VoiceParams& voiceParams;
+    std::vector<MainParams>& mainParamList;
     ANALYSER_MODE lastAnalyserMode = ANALYSER_MODE::Spectrum;
 
     // FFT

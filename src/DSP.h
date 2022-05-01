@@ -3,9 +3,151 @@
 #include <JuceHeader.h>
 
 #include "MathConstants.h"
-#include "Params.h"  // TODO: 依存が逆
 
 using namespace math_constants;
+
+namespace {
+
+enum class VOICE_MODE { Mono, Poly, Drum };
+const juce::StringArray VOICE_MODE_NAMES = juce::StringArray("Mono", "Poly", "Drum");
+const juce::StringArray TARGET_NOTE_KINDS =
+    juce::StringArray("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B");
+const juce::StringArray TARGET_NOTE_OCT_NAMES = juce::StringArray("-1", "0", "1", "2", "3", "4", "5");
+const int TARGET_NOTE_OCT_VALUES[7] = {-1, 0, 1, 2, 3, 4, 5};
+
+enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Random, Pink, White };
+const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Square", "Pink", "White");
+const WAVEFORM OSC_WAVEFORM_VALUES[6] = {
+    WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Pink, WAVEFORM::White};
+
+const juce::StringArray OSC_ENV_NAMES = juce::StringArray("1", "2");
+
+const juce::StringArray FILTER_TARGET_NAMES = juce::StringArray("1", "2", "3", "All");
+
+enum class FILTER_TYPE { Lowpass, Highpass, Bandpass1, Bandpass2, Notch, Peaking, LowShelf, HighShelf };
+const juce::StringArray FILTER_TYPE_NAMES =
+    juce::StringArray("Lowpass", "Highpass", "Bandpass1", "Bandpass2", "Notch", "Peaking", "LowShelf", "HighShelf");
+
+enum class FILTER_FREQ_TYPE { Absolute, Relative };
+const juce::StringArray FILTER_FREQ_TYPE_NAMES = juce::StringArray("Abs", "Rel");
+
+enum class LFO_TARGET_TYPE { OSC, Filter };
+const juce::StringArray LFO_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter");
+
+const juce::StringArray LFO_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3", "All");
+const juce::StringArray LFO_TARGET_FILTER_NAMES = juce::StringArray("1", "2", "All");
+
+enum class LFO_TARGET_OSC_PARAM { Vibrato, Tremolo, Edge, FM, AM, Pan };
+const juce::StringArray LFO_TARGET_OSC_PARAM_NAMES = juce::StringArray("Vibrato", "Tremolo", "Edge", "FM", "AM", "Pan");
+
+enum class LFO_TARGET_FILTER_PARAM { Freq, Q };
+const juce::StringArray LFO_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
+
+const juce::StringArray LFO_WAVEFORM_NAMES =
+    juce::StringArray("Sine", "Triangle", "Saw-Up", "Saw-Down", "Square", "Random");
+const WAVEFORM LFO_WAVEFORM_VALUES[7] = {
+    WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Random};
+
+enum class MODENV_TARGET_TYPE { OSC, Filter, LFO };
+const juce::StringArray MODENV_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO");
+
+const juce::StringArray MODENV_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3", "All");
+const juce::StringArray MODENV_TARGET_FILTER_NAMES = juce::StringArray("1", "2", "All");
+const juce::StringArray MODENV_TARGET_LFO_NAMES = juce::StringArray("1", "2", "3", "All");
+
+enum class MODENV_TARGET_OSC_PARAM { Freq, Edge, Detune, Spread };
+const juce::StringArray MODENV_TARGET_OSC_PARAM_NAMES = juce::StringArray("Freq", "Edge", "Detune", "Spread");
+
+enum class MODENV_TARGET_FILTER_PARAM { Freq, Q };
+const juce::StringArray MODENV_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
+
+enum class MODENV_TARGET_LFO_PARAM { Freq, Amount };
+const juce::StringArray MODENV_TARGET_LFO_PARAM_NAMES = juce::StringArray("Freq", "Amount");
+
+enum class MODENV_FADE { In, Out };
+const juce::StringArray MODENV_FADE_NAMES = juce::StringArray("In", "Out");
+
+enum class DELAY_TYPE { Parallel, PingPong };
+const juce::StringArray DELAY_TYPE_NAMES = juce::StringArray("Parallel", "Ping-Pong");
+
+const juce::StringArray DELAY_TIME_SYNC_NAMES = juce::StringArray("1/1",
+                                                                  "1/2",
+                                                                  "1/4",
+                                                                  "1/8",
+                                                                  "1/16",
+                                                                  "1/32",
+                                                                  "1/1 T",
+                                                                  "1/2 T",
+                                                                  "1/4 T",
+                                                                  "1/8 T",
+                                                                  "1/16 T",
+                                                                  "1/32 T",
+                                                                  "1/1 D",
+                                                                  "1/2 D",
+                                                                  "1/4 D",
+                                                                  "1/8 D",
+                                                                  "1/16 D",
+                                                                  "1/32 D");
+const double DELAY_TIME_SYNC_VALUES[18] = {1.0,
+                                           0.5,
+                                           0.25,
+                                           0.125,
+                                           0.0625,
+                                           0.03125,
+                                           1.0 * 2 / 3,
+                                           0.5 * 2 / 3,
+                                           0.25 * 2 / 3,
+                                           0.125 * 2 / 3,
+                                           0.0625 * 2 / 3,
+                                           0.03125 * 2 / 3,
+                                           1.0 * 3 / 2,
+                                           0.5 * 3 / 2,
+                                           0.25 * 3 / 2,
+                                           0.125 * 3 / 2,
+                                           0.0625 * 3 / 2,
+                                           0.03125 * 3 / 2};
+
+const juce::StringArray CONTROL_NUMBER_NAMES = juce::StringArray("None",
+                                                                 "1: Modulation",
+                                                                 "2: Breath",
+                                                                 "4: Foot",
+                                                                 "5: Portamento Time",
+                                                                 "71: Resonance",
+                                                                 "74: Brightness",
+                                                                 "75: Sound Control",
+                                                                 "76: Sound Control",
+                                                                 "77: Sound Control",
+                                                                 "78: Sound Control",
+                                                                 "79: Sound Control",
+                                                                 "91: Reverb",
+                                                                 "92: Tremolo",
+                                                                 "93: Chorus",
+                                                                 "94: Detune",
+                                                                 "95: Phaser");
+const int CONTROL_NUMBER_VALUES[17]{-1, 1, 2, 4, 5, 71, 74, 75, 76, 77, 78, 79, 91, 92, 93, 94, 95};
+
+enum class CONTROL_TARGET_TYPE { OSC, Filter, LFO, Master };
+const juce::StringArray CONTROL_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO", "Misc");
+
+const juce::StringArray CONTROL_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3");
+const juce::StringArray CONTROL_TARGET_FILTER_NAMES = juce::StringArray("1", "2");
+const juce::StringArray CONTROL_TARGET_LFO_NAMES = juce::StringArray("1", "2", "3");
+const juce::StringArray CONTROL_TARGET_MODENV_NAMES = juce::StringArray("1", "2", "3");
+
+enum class CONTROL_TARGET_OSC_PARAM { Edge, Detune, Spread, /*Pan,*/ Gain };
+const juce::StringArray CONTROL_TARGET_OSC_PARAM_NAMES =
+    juce::StringArray("Edge", "Detune", "Spread", /*"Pan",*/ "Gain");
+
+enum class CONTROL_TARGET_FILTER_PARAM { Freq, Q };
+const juce::StringArray CONTROL_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
+
+enum class CONTROL_TARGET_LFO_PARAM { Freq, Amount };
+const juce::StringArray CONTROL_TARGET_LFO_PARAM_NAMES = juce::StringArray("Freq", "Amount");
+
+enum class CONTROL_TARGET_MISC_PARAM { PortamentoTime, DelayMix };
+const juce::StringArray CONTROL_TARGET_MISC_PARAM_NAMES = juce::StringArray("Portamento Time", "Delay Mix");
+
+}  // namespace
 
 //==============================================================================
 class Wavetable {
@@ -217,6 +359,7 @@ public:
     Adsr(const Adsr &) = delete;
     double getValue() { return tvalue.value; }
     bool isActive() { return phase != ADSR_PHASE::WAIT; }
+    bool isReleasing() { return phase == ADSR_PHASE::RELEASE; }
     void setParams(double curve, double a, double h, double d, double s, double r) {
         attackCurve = curve;
         attack = a;
@@ -232,6 +375,10 @@ public:
     void doRelease(double sampleRate) {
         phase = ADSR_PHASE::RELEASE;
         tvalue.exponentialInfinite(release, ADSR_BASE, sampleRate);
+    }
+    void doRelease(double sampleRate, double duration) {
+        phase = ADSR_PHASE::RELEASE;
+        tvalue.exponentialInfinite(duration, ADSR_BASE, sampleRate);
     }
     void forceStop() {
         tvalue.init(ADSR_BASE);

@@ -19,30 +19,18 @@ GrapeAudioProcessor::GrapeAudioProcessor()
       ,
       globalParams{},
       voiceParams{},
-      oscParams{OscParams{0}, OscParams{1}, OscParams{2}},
-      envelopeParams{EnvelopeParams{0}, EnvelopeParams{1}},
-      filterParams{FilterParams{0}, FilterParams{1}},
-      lfoParams{LfoParams{0}, LfoParams{1}, LfoParams{2}},
-      modEnvParams{ModEnvParams{0}, ModEnvParams{1}, ModEnvParams{2}},
-      delayParams{},
-      controlItemParams{ControlItemParams{0},
-                        ControlItemParams{1},
-                        ControlItemParams{2},
-                        ControlItemParams{3},
-                        ControlItemParams{4},
-                        ControlItemParams{5}},
-      synth(&currentPositionInfo,
-            &monoStack,
-            controlItemParams,
-            globalParams,
-            voiceParams,
-            oscParams,
-            envelopeParams,
-            filterParams,
-            lfoParams,
-            modEnvParams,
-            delayParams) {
-    *oscParams[0].Enabled = true;
+      controlItemParams{ControlItemParams{0}, ControlItemParams{1}, ControlItemParams{2}},
+      synth(&currentPositionInfo, &monoStack, buffers, controlItemParams, globalParams, voiceParams, mainParamList) {
+
+    mainParamList.reserve(129);
+    for (int i = 0; i < 129; i++) {
+        mainParamList.push_back(MainParams{i});
+    }
+    buffers.reserve(129);
+    for (auto i = 0; i < 129; i++) {
+        buffers.push_back(std::make_unique<juce::AudioBuffer<float>>(2, 0));
+    }
+    *mainParamList[128].oscParams[0].Enabled = true;
 
     *controlItemParams[0].Number = CONTROL_NUMBER_NAMES.indexOf("1: Modulation");
     *controlItemParams[0].TargetType = CONTROL_TARGET_TYPE_NAMES.indexOf("LFO");
@@ -50,22 +38,9 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 
     globalParams.addAllParameters(*this);
     voiceParams.addAllParameters(*this);
-    for (auto& params : envelopeParams) {
-        params.addAllParameters(*this);
+    for (int i = 0; i < 129; i++) {
+        mainParamList[i].addAllParameters(*this);
     }
-    for (auto& params : oscParams) {
-        params.addAllParameters(*this);
-    }
-    for (auto& params : filterParams) {
-        params.addAllParameters(*this);
-    }
-    for (auto& params : lfoParams) {
-        params.addAllParameters(*this);
-    }
-    for (auto& params : modEnvParams) {
-        params.addAllParameters(*this);
-    }
-    delayParams.addAllParameters(*this);
     for (auto& params : controlItemParams) {
         params.addAllParameters(*this);
     }
@@ -165,25 +140,11 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     if (voiceMode == VOICE_MODE::Mono && synth.getNumVoices() != 1) {
         //        this->monoStack.reset();
         synth.clearVoices();
-        synth.addVoice(new GrapeVoice(&currentPositionInfo,
-                                      globalParams,
-                                      voiceParams,
-                                      oscParams,
-                                      envelopeParams,
-                                      filterParams,
-                                      lfoParams,
-                                      modEnvParams));
+        synth.addVoice(new GrapeVoice(&currentPositionInfo, buffers, globalParams, voiceParams, mainParamList));
     } else if (voiceMode == VOICE_MODE::Poly && synth.getNumVoices() != numVoices) {
         synth.clearVoices();
         for (auto i = 0; i < numVoices; ++i) {
-            synth.addVoice(new GrapeVoice(&currentPositionInfo,
-                                          globalParams,
-                                          voiceParams,
-                                          oscParams,
-                                          envelopeParams,
-                                          filterParams,
-                                          lfoParams,
-                                          modEnvParams));
+            synth.addVoice(new GrapeVoice(&currentPositionInfo, buffers, globalParams, voiceParams, mainParamList));
         }
     }
     keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
@@ -226,50 +187,31 @@ void GrapeAudioProcessor::getStateInformation(juce::MemoryBlock& destData) {
 
     globalParams.saveParameters(xml);
     voiceParams.saveParameters(xml);
-    for (auto& param : envelopeParams) {
-        param.saveParameters(xml);
+    for (int i = 0; i < 129; i++) {
+        auto enabled = mainParamList[i].isEnabled();
+        xml.setAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), enabled);
+        if (enabled) {
+            mainParamList[i].saveParameters(xml);
+        }
     }
-    for (auto& param : oscParams) {
-        param.saveParameters(xml);
-    }
-    for (auto& param : filterParams) {
-        param.saveParameters(xml);
-    }
-    for (auto& param : lfoParams) {
-        param.saveParameters(xml);
-    }
-    for (auto& param : modEnvParams) {
-        param.saveParameters(xml);
-    }
-    delayParams.saveParameters(xml);
     for (auto& param : controlItemParams) {
         param.saveParameters(xml);
     }
     copyXmlToBinary(xml, destData);
 }
-
 void GrapeAudioProcessor::setStateInformation(const void* data, int sizeInBytes) {
     std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
-    if (xml.get() != nullptr) {
+    if (xml) {
         if (xml->hasTagName("GrapeInstrument")) {
             globalParams.loadParameters(*xml);
             voiceParams.loadParameters(*xml);
-            for (auto& param : envelopeParams) {
-                param.loadParameters(*xml);
+            for (int i = 0; i < 129; i++) {
+                auto enabled =
+                    xml->getBoolAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), false);
+                if (enabled) {
+                    mainParamList[i].loadParameters(*xml);
+                }
             }
-            for (auto& param : oscParams) {
-                param.loadParameters(*xml);
-            }
-            for (auto& param : filterParams) {
-                param.loadParameters(*xml);
-            }
-            for (auto& param : lfoParams) {
-                param.loadParameters(*xml);
-            }
-            for (auto& param : modEnvParams) {
-                param.loadParameters(*xml);
-            }
-            delayParams.loadParameters(*xml);
             for (auto& param : controlItemParams) {
                 param.loadParameters(*xml);
             }
@@ -280,3 +222,56 @@ void GrapeAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new GrapeAudioProcessor(); }
+
+//==============================================================================
+void replaceAttributeNames(juce::XmlElement& xml, juce::StringRef before, juce::StringRef after) {
+    auto newAttrs = std::map<juce::String, juce::String>{};
+    for (auto i = 0; i < xml.getNumAttributes(); i++) {
+        auto attrName = xml.getAttributeName(i);
+        attrName = attrName.replace(before, after);
+        newAttrs[attrName] = xml.getAttributeValue(i);
+    }
+    xml.removeAllAttributes();
+    for (auto const& [attrName, value] : newAttrs) {
+        xml.setAttribute(attrName, value);
+    }
+}
+
+void GrapeAudioProcessor::copyToClipboard() {
+    // TODO: ValueTree でもできるらしいので調べる
+    juce::XmlElement xml("GrapeInstrumentClipboard");
+
+    // TODO: portamento, pitchbend range
+    auto index = voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128;
+    xml.setAttribute("DRUM_MODE", voiceParams.isDrumMode());
+    mainParamList[index].saveParameters(xml);
+    if (!voiceParams.isDrumMode()) {
+        for (auto& param : controlItemParams) {
+            param.saveParameters(xml);
+        }
+    }
+
+    replaceAttributeNames(xml, "G" + std::to_string(index) + "_", "GROUP_");
+
+    juce::SystemClipboard::copyTextToClipboard(xml.toString());
+}
+void GrapeAudioProcessor::pasteFromClipboard() {
+    auto text = juce::SystemClipboard::getTextFromClipboard();
+    std::cout << text << std::endl;
+    auto xml = juce::parseXML(text);
+    if (xml) {
+        if (xml->hasTagName("GrapeInstrumentClipboard")) {
+            auto index = voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128;
+
+            replaceAttributeNames(*xml, "GROUP_", "G" + std::to_string(index) + "_");
+
+            auto wasDrumMode = xml->getBoolAttribute("DRUM_MODE", false);
+            mainParamList[index].loadParameters(*xml);
+            if (!wasDrumMode && !voiceParams.isDrumMode()) {
+                for (auto& param : controlItemParams) {
+                    param.loadParameters(*xml);
+                }
+            }
+        }
+    }
+}

@@ -134,6 +134,10 @@ public:
     void setStateInformation(const void *data, int sizeInBytes) override;
 
     //==============================================================================
+    void copyToClipboard();
+    void pasteFromClipboard();
+
+    //==============================================================================
     int currentProgram = 0;
     juce::MidiKeyboardState keyboardState;
     LatestDataProvider latestDataProvider;
@@ -143,14 +147,10 @@ public:
 
     GlobalParams globalParams;
     VoiceParams voiceParams;
-    std::array<OscParams, NUM_OSC> oscParams;
-    std::array<EnvelopeParams, NUM_ENVELOPE> envelopeParams;
-    std::array<FilterParams, NUM_FILTER> filterParams;
-    std::array<LfoParams, NUM_LFO> lfoParams;
-    std::array<ModEnvParams, NUM_MODENV> modEnvParams;
-    DelayParams delayParams;
+    std::vector<MainParams> mainParamList{};
     std::array<ControlItemParams, NUM_CONTROL> controlItemParams;
 
+    std::vector<std::unique_ptr<juce::AudioBuffer<float>>> buffers{};
     MonoStack monoStack;
     GrapeSynthesiser synth;
 

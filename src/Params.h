@@ -2,144 +2,9 @@
 
 #include <JuceHeader.h>
 
-namespace {
+#include "Constants.h"
+#include "DSP.h"
 
-enum class VOICE_MODE { Mono, Poly };
-const juce::StringArray VOICE_MODE_NAMES = juce::StringArray("Mono", "Poly");
-
-enum class WAVEFORM { Sine, Triangle, SawUp, SawDown, Square, Random, Pink, White };
-const juce::StringArray OSC_WAVEFORM_NAMES = juce::StringArray("Sine", "Triangle", "Saw", "Square", "Pink", "White");
-const WAVEFORM OSC_WAVEFORM_VALUES[6] = {
-    WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Pink, WAVEFORM::White};
-
-const juce::StringArray OSC_ENV_NAMES = juce::StringArray("1", "2");
-
-const juce::StringArray FILTER_TARGET_NAMES = juce::StringArray("1", "2", "3", "All");
-
-enum class FILTER_TYPE { Lowpass, Highpass, Bandpass1, Bandpass2, Notch, Peaking, LowShelf, HighShelf };
-const juce::StringArray FILTER_TYPE_NAMES =
-    juce::StringArray("Lowpass", "Highpass", "Bandpass1", "Bandpass2", "Notch", "Peaking", "LowShelf", "HighShelf");
-
-enum class FILTER_FREQ_TYPE { Absolute, Relative };
-const juce::StringArray FILTER_FREQ_TYPE_NAMES = juce::StringArray("Abs", "Rel");
-
-enum class LFO_TARGET_TYPE { OSC, Filter };
-const juce::StringArray LFO_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter");
-
-const juce::StringArray LFO_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3", "All");
-const juce::StringArray LFO_TARGET_FILTER_NAMES = juce::StringArray("1", "2", "All");
-
-enum class LFO_TARGET_OSC_PARAM { Vibrato, Tremolo, Edge, FM, AM, Pan };
-const juce::StringArray LFO_TARGET_OSC_PARAM_NAMES = juce::StringArray("Vibrato", "Tremolo", "Edge", "FM", "AM", "Pan");
-
-enum class LFO_TARGET_FILTER_PARAM { Freq, Q };
-const juce::StringArray LFO_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
-
-const juce::StringArray LFO_WAVEFORM_NAMES =
-    juce::StringArray("Sine", "Triangle", "Saw-Up", "Saw-Down", "Square", "Random");
-const WAVEFORM LFO_WAVEFORM_VALUES[7] = {
-    WAVEFORM::Sine, WAVEFORM::Triangle, WAVEFORM::SawUp, WAVEFORM::SawDown, WAVEFORM::Square, WAVEFORM::Random};
-
-enum class MODENV_TARGET_TYPE { OSC, Filter, LFO };
-const juce::StringArray MODENV_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO");
-
-const juce::StringArray MODENV_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3", "All");
-const juce::StringArray MODENV_TARGET_FILTER_NAMES = juce::StringArray("1", "2", "All");
-const juce::StringArray MODENV_TARGET_LFO_NAMES = juce::StringArray("1", "2", "3", "All");
-
-enum class MODENV_TARGET_OSC_PARAM { Freq, Edge, Detune, Spread };
-const juce::StringArray MODENV_TARGET_OSC_PARAM_NAMES = juce::StringArray("Freq", "Edge", "Detune", "Spread");
-
-enum class MODENV_TARGET_FILTER_PARAM { Freq, Q };
-const juce::StringArray MODENV_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
-
-enum class MODENV_TARGET_LFO_PARAM { Freq, Amount };
-const juce::StringArray MODENV_TARGET_LFO_PARAM_NAMES = juce::StringArray("Freq", "Amount");
-
-enum class MODENV_FADE { In, Out };
-const juce::StringArray MODENV_FADE_NAMES = juce::StringArray("In", "Out");
-
-enum class DELAY_TYPE { Parallel, PingPong };
-const juce::StringArray DELAY_TYPE_NAMES = juce::StringArray("Parallel", "Ping-Pong");
-
-const juce::StringArray DELAY_TIME_SYNC_NAMES = juce::StringArray("1/1",
-                                                                  "1/2",
-                                                                  "1/4",
-                                                                  "1/8",
-                                                                  "1/16",
-                                                                  "1/32",
-                                                                  "1/1 T",
-                                                                  "1/2 T",
-                                                                  "1/4 T",
-                                                                  "1/8 T",
-                                                                  "1/16 T",
-                                                                  "1/32 T",
-                                                                  "1/1 D",
-                                                                  "1/2 D",
-                                                                  "1/4 D",
-                                                                  "1/8 D",
-                                                                  "1/16 D",
-                                                                  "1/32 D");
-const double DELAY_TIME_SYNC_VALUES[18] = {1.0,
-                                           0.5,
-                                           0.25,
-                                           0.125,
-                                           0.0625,
-                                           0.03125,
-                                           1.0 * 2 / 3,
-                                           0.5 * 2 / 3,
-                                           0.25 * 2 / 3,
-                                           0.125 * 2 / 3,
-                                           0.0625 * 2 / 3,
-                                           0.03125 * 2 / 3,
-                                           1.0 * 3 / 2,
-                                           0.5 * 3 / 2,
-                                           0.25 * 3 / 2,
-                                           0.125 * 3 / 2,
-                                           0.0625 * 3 / 2,
-                                           0.03125 * 3 / 2};
-
-const juce::StringArray CONTROL_NUMBER_NAMES = juce::StringArray("None",
-                                                                 "1: Modulation",
-                                                                 "2: Breath",
-                                                                 "4: Foot",
-                                                                 "5: Portamento Time",
-                                                                 "71: Resonance",
-                                                                 "74: Brightness",
-                                                                 "75: Sound Control",
-                                                                 "76: Sound Control",
-                                                                 "77: Sound Control",
-                                                                 "78: Sound Control",
-                                                                 "79: Sound Control",
-                                                                 "91: Reverb",
-                                                                 "92: Tremolo",
-                                                                 "93: Chorus",
-                                                                 "94: Detune",
-                                                                 "95: Phaser");
-const int CONTROL_NUMBER_VALUES[17]{-1, 1, 2, 4, 5, 71, 74, 75, 76, 77, 78, 79, 91, 92, 93, 94, 95};
-
-enum class CONTROL_TARGET_TYPE { OSC, Filter, LFO, Master };
-const juce::StringArray CONTROL_TARGET_TYPE_NAMES = juce::StringArray("OSC", "Filter", "LFO", "Misc");
-
-const juce::StringArray CONTROL_TARGET_OSC_NAMES = juce::StringArray("1", "2", "3");
-const juce::StringArray CONTROL_TARGET_FILTER_NAMES = juce::StringArray("1", "2");
-const juce::StringArray CONTROL_TARGET_LFO_NAMES = juce::StringArray("1", "2", "3");
-const juce::StringArray CONTROL_TARGET_MODENV_NAMES = juce::StringArray("1", "2", "3");
-
-enum class CONTROL_TARGET_OSC_PARAM { Edge, Detune, Spread, /*Pan,*/ Gain };
-const juce::StringArray CONTROL_TARGET_OSC_PARAM_NAMES =
-    juce::StringArray("Edge", "Detune", "Spread", /*"Pan",*/ "Gain");
-
-enum class CONTROL_TARGET_FILTER_PARAM { Freq, Q };
-const juce::StringArray CONTROL_TARGET_FILTER_PARAM_NAMES = juce::StringArray("Freq", "Q");
-
-enum class CONTROL_TARGET_LFO_PARAM { Freq, Amount };
-const juce::StringArray CONTROL_TARGET_LFO_PARAM_NAMES = juce::StringArray("Freq", "Amount");
-
-enum class CONTROL_TARGET_MISC_PARAM { PortamentoTime, DelayMix };
-const juce::StringArray CONTROL_TARGET_MISC_PARAM_NAMES = juce::StringArray("Portamento Time", "Delay Mix");
-
-}  // namespace
 //==============================================================================
 class SynthParametersBase {
 public:
@@ -150,14 +15,54 @@ public:
 };
 
 //==============================================================================
+class VoiceParams : public SynthParametersBase {
+public:
+    juce::AudioParameterChoice* Mode;
+    juce::AudioParameterFloat* PortamentoTime;
+    juce::AudioParameterInt* PitchBendRange;
+    juce::AudioParameterChoice* TargetNoteKind;
+    juce::AudioParameterChoice* TargetNoteOct;
+
+    VoiceParams();
+    VoiceParams(const VoiceParams&) = delete;
+    virtual void addAllParameters(juce::AudioProcessor& processor) override;
+    virtual void saveParameters(juce::XmlElement& xml) override;
+    virtual void loadParameters(juce::XmlElement& xml) override;
+
+    VOICE_MODE getMode() { return static_cast<VOICE_MODE>(Mode->getIndex()); }
+    void setPortamentoTimeFromControl(double normalizedValue) {
+        *PortamentoTime = PortamentoTime->range.convertFrom0to1(normalizedValue);
+    }
+
+    bool isMonoMode() { return getMode() == VOICE_MODE::Mono; }
+    bool isDrumMode() { return getMode() == VOICE_MODE::Drum; }
+    int getTargetNote() {
+        return (TARGET_NOTE_OCT_VALUES[TargetNoteOct->getIndex()] + 2) * 12 + TargetNoteKind->getIndex();
+    }
+
+    bool isMonoModeFreezed;
+    bool isDrumModeFreezed;
+    float portamentoTime;
+    int pitchBendRange;
+    int targetNote;
+    void freeze() {
+        isMonoModeFreezed = isMonoMode();
+        isDrumModeFreezed = isDrumMode();
+        portamentoTime = PortamentoTime->get();
+        pitchBendRange = PitchBendRange->get();
+        targetNote = getTargetNote();
+    }
+
+private:
+};
+
+//==============================================================================
 class GlobalParams : public SynthParametersBase {
 public:
     //    TODO: portamento time?, pitch bend range?, velocity sense
-
     juce::AudioParameterFloat* Pitch;
     juce::AudioParameterFloat* Pan;
     juce::AudioParameterFloat* Expression;
-    juce::AudioParameterFloat* MasterVolume;
     juce::AudioParameterFloat* MidiVolume;
 
     GlobalParams();
@@ -173,13 +78,11 @@ public:
     float pitch;
     float pan;
     float expression;
-    float masterVolume;
     float midiVolume;
     void freeze() {
         pitch = Pitch->get();
         pan = Pan->get();
         expression = Expression->get();
-        masterVolume = MasterVolume->get();
         midiVolume = MidiVolume->get();
     }
 
@@ -187,32 +90,26 @@ private:
 };
 
 //==============================================================================
-class VoiceParams : public SynthParametersBase {
+class MasterParams : public SynthParametersBase {
 public:
-    juce::AudioParameterChoice* Mode;
-    juce::AudioParameterFloat* PortamentoTime;
-    juce::AudioParameterInt* PitchBendRange;
+    //    TODO: portamento time?, pitch bend range?, velocity sense
 
-    VoiceParams();
-    VoiceParams(const VoiceParams&) = delete;
+    juce::AudioParameterFloat* Pan;
+    juce::AudioParameterFloat* MasterVolume;
+
+    MasterParams(std::string idPrefix, std::string namePrefix);
+    MasterParams(const MasterParams&) = delete;
+    MasterParams(MasterParams&&) noexcept = default;
+
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
 
-    VOICE_MODE getMode() { return static_cast<VOICE_MODE>(Mode->getIndex()); }
-    void setPortamentoTimeFromControl(double normalizedValue) {
-        *PortamentoTime = PortamentoTime->range.convertFrom0to1(normalizedValue);
-    }
-
-    bool isMonoMode() { return getMode() == VOICE_MODE::Mono; }
-
-    bool isMonoModeFreezed;
-    float portamentoTime;
-    int pitchBendRange;
+    float pan;
+    float masterVolume;
     void freeze() {
-        isMonoModeFreezed = isMonoMode();
-        portamentoTime = PortamentoTime->get();
-        pitchBendRange = PitchBendRange->get();
+        pan = Pan->get();
+        masterVolume = MasterVolume->get();
     }
 
 private:
@@ -232,8 +129,10 @@ public:
     juce::AudioParameterFloat* Gain;
     juce::AudioParameterChoice* Envelope;
 
-    OscParams(int index);
+    OscParams(std::string idPrefix, std::string namePrefix, int index);
     OscParams(const OscParams&) = delete;
+    OscParams(OscParams&&) noexcept = default;
+
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
@@ -299,8 +198,9 @@ public:
     juce::AudioParameterFloat* Sustain;
     juce::AudioParameterFloat* Release;
 
-    EnvelopeParams(int index);
+    EnvelopeParams(std::string idPrefix, std::string namePrefix, int index);
     EnvelopeParams(const EnvelopeParams&) = delete;
+    EnvelopeParams(EnvelopeParams&&) noexcept = default;
 
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -335,8 +235,9 @@ public:
     juce::AudioParameterFloat* Q;
     juce::AudioParameterFloat* Gain;
 
-    FilterParams(int index);
+    FilterParams(std::string idPrefix, std::string namePrefix, int index);
     FilterParams(const FilterParams&) = delete;
+    FilterParams(FilterParams&&) noexcept = default;
 
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -400,8 +301,9 @@ public:
     juce::AudioParameterFloat* FastFreq;
     juce::AudioParameterFloat* Amount;
 
-    LfoParams(int index);
+    LfoParams(std::string idPrefix, std::string namePrefix, int index);
     LfoParams(const LfoParams&) = delete;
+    LfoParams(LfoParams&&) noexcept = default;
 
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -480,8 +382,9 @@ public:
     juce::AudioParameterFloat* Attack;
     juce::AudioParameterFloat* Decay;
 
-    ModEnvParams(int index);
+    ModEnvParams(std::string idPrefix, std::string namePrefix, int index);
     ModEnvParams(const ModEnvParams&) = delete;
+    ModEnvParams(ModEnvParams&&) noexcept = default;
 
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
@@ -553,8 +456,10 @@ public:
     juce::AudioParameterFloat* HighFreq;
     juce::AudioParameterFloat* Feedback;
     juce::AudioParameterFloat* Mix;
-    DelayParams();
+    DelayParams(std::string idPrefix, std::string namePrefix);
     DelayParams(const DelayParams&) = delete;
+    DelayParams(DelayParams&&) noexcept = default;
+
     virtual void addAllParameters(juce::AudioProcessor& processor) override;
     virtual void saveParameters(juce::XmlElement& xml) override;
     virtual void loadParameters(juce::XmlElement& xml) override;
@@ -591,6 +496,92 @@ public:
     }
 
 private:
+};
+
+//==============================================================================
+class DrumParams : public SynthParametersBase {
+public:
+    juce::AudioParameterInt* NoteToPlay;
+    juce::AudioParameterBool* NoteToMuteEnabled;
+    juce::AudioParameterChoice* NoteToMuteKind;
+    juce::AudioParameterChoice* NoteToMuteOct;
+
+    DrumParams(std::string idPrefix, std::string namePrefix);
+    DrumParams(const DrumParams&) = delete;
+    DrumParams(DrumParams&&) noexcept = default;
+
+    virtual void addAllParameters(juce::AudioProcessor& processor) override;
+    virtual void saveParameters(juce::XmlElement& xml) override;
+    virtual void loadParameters(juce::XmlElement& xml) override;
+
+    int noteToPlay;
+    bool noteToMuteEnabled;
+    int noteToMute;
+    int getNoteToMute() {
+        return (TARGET_NOTE_OCT_VALUES[NoteToMuteOct->getIndex()] + 2) * 12 + NoteToMuteKind->getIndex();
+    }
+    void freeze() {
+        noteToPlay = NoteToPlay->get();
+        noteToMuteEnabled = NoteToMuteEnabled->get();
+        noteToMute = getNoteToMute();
+    }
+
+private:
+};
+
+class MainParams : public SynthParametersBase {
+public:
+    virtual void addAllParameters(juce::AudioProcessor& processor) override;
+    virtual void saveParameters(juce::XmlElement& xml) override;
+    virtual void loadParameters(juce::XmlElement& xml) override;
+    MainParams(int groupIndex);
+    MainParams(const MainParams&) = delete;
+    MainParams(MainParams&&) noexcept = default;
+
+    std::array<OscParams, NUM_OSC> oscParams;
+    std::array<EnvelopeParams, NUM_ENVELOPE> envelopeParams;
+    std::array<FilterParams, NUM_FILTER> filterParams;
+    std::array<LfoParams, NUM_LFO> lfoParams;
+    std::array<ModEnvParams, NUM_MODENV> modEnvParams;
+    DelayParams delayParams;
+    DrumParams drumParams;
+    MasterParams masterParams;
+    bool isEnabled() {
+        for (int i = 0; i < NUM_OSC; ++i) {
+            if (oscParams[i].Enabled->get()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    void freeze() {
+        for (int i = 0; i < NUM_OSC; ++i) {
+            oscParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_ENVELOPE; ++i) {
+            envelopeParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_FILTER; ++i) {
+            filterParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_LFO; ++i) {
+            lfoParams[i].freeze();
+        }
+        for (int i = 0; i < NUM_MODENV; ++i) {
+            modEnvParams[i].freeze();
+        }
+        delayParams.freeze();
+        drumParams.freeze();
+        masterParams.freeze();
+    }
+
+private:
+    static std::string idPrefix(int groupIndex) {
+        return groupIndex == 128 ? "" : "G" + std::to_string(groupIndex) + "_";
+    }
+    static std::string namePrefix(int groupIndex) {
+        return groupIndex == 128 ? "" : "G" + std::to_string(groupIndex) + " ";
+    }
 };
 
 //==============================================================================

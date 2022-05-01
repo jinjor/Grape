@@ -7,7 +7,7 @@
 #include "Voice.h"
 
 //==============================================================================
-class GrapeAudioProcessorEditor : public juce::AudioProcessorEditor {
+class GrapeAudioProcessorEditor : public juce::AudioProcessorEditor, private juce::Timer {
 public:
     GrapeAudioProcessorEditor(GrapeAudioProcessor &);
     ~GrapeAudioProcessorEditor() override;
@@ -25,13 +25,17 @@ private:
     AnalyserToggle analyserToggle;
     AnalyserWindow analyserWindow;
     StatusComponent statusComponent;
-    MasterComponent masterComponent;
+    UtilComponent utilComponent;
     OscComponent oscComponents[NUM_OSC];
     EnvelopeComponent envelopeComponents[NUM_ENVELOPE];
     FilterComponent filterComponents[NUM_FILTER];
     LfoComponent lfoComponents[NUM_LFO];
     ModEnvComponent modEnvComponents[NUM_MODENV];
     DelayComponent delayComponent;
+    MasterComponent masterComponent;
+    DrumComponent drumComponent;
+
+    virtual void timerCallback() override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GrapeAudioProcessorEditor)
 };

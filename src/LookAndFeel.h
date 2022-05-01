@@ -56,4 +56,9 @@ private:
                            const juce::Drawable* icon,
                            const juce::Colour* const textColourToUse) override;
     juce::Path getTickShape(float height) override;
+    void drawButtonBackground(Graphics&,
+                              Button&,
+                              const Colour& backgroundColour,
+                              bool shouldDrawButtonAsHighlighted,
+                              bool shouldDrawButtonAsDown) override;
 };
