@@ -23,7 +23,7 @@ jobs:
       - name: Build and run benchmark
         run: ./release-build.sh
       - name: Store benchmark result
-        uses: leoholz/github-action-benchmark@v1
+        uses: benchmark-action/github-action-benchmark@v1
         with:
           name: Grape Benchmark
           tool: "googlecpp"
