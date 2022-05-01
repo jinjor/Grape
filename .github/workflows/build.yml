@@ -18,6 +18,8 @@ jobs:
         with:
           path: release-build
           key: ${{ runner.os }}-release-build
+      - name: Patch JUCE's CMake
+        run: cd libs/JUCE && git apply ../../juce.patch
       - name: Build and run benchmark
         run: ./release-build.sh
       - name: Store benchmark result
