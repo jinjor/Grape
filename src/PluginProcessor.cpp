@@ -207,7 +207,7 @@ void GrapeAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
             voiceParams.loadParameters(*xml);
             for (int i = 0; i < 129; i++) {
                 auto enabled =
-                    xml->getBoolAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), false);
+                    xml->getBoolAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), i == 128);
                 if (enabled) {
                     mainParamList[i].loadParameters(*xml);
                 }
