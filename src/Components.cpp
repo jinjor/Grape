@@ -117,6 +117,7 @@ void VoiceComponent::sliderValueChanged(juce::Slider* slider) {
     }
 }
 void VoiceComponent::timerCallback() {
+    modeSelector.setSelectedItemIndex(params.Mode->getIndex(), juce::dontSendNotification);
     portamentoTimeSlider.setValue(params.PortamentoTime->get(), juce::dontSendNotification);
     pitchBendRangeSlider.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
     targetNoteKindSelector.setSelectedItemIndex(params.TargetNoteKind->getIndex(), juce::dontSendNotification);
