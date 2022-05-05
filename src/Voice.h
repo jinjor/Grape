@@ -185,8 +185,17 @@ private:
     TransitiveValue smoothVelocity;
     bool stolen = false;
     int stepCounter = 0;
+
     Modifiers controlModifiers = Modifiers{};
     SparseLog sparseLog = SparseLog(10000);
+    MainParams &getMainParams() {
+        jassert(noteNumberAtStart >= 0);
+        return mainParamList[isDrumAtStart ? noteNumberAtStart : 128];
+    }
+    std::unique_ptr<juce::AudioBuffer<float>> &getBuffer() {
+        jassert(noteNumberAtStart >= 0);
+        return buffers[isDrumAtStart ? noteNumberAtStart : 128];
+    }
     double getMidiNoteInHertzDouble(double noteNumber) {
         return 440.0 * std::pow(2.0, (noteNumber - 69) * A);
         //        return Y * std::pow(X, noteNumber);// こっちの方がパフォーマンス悪かった
