@@ -1278,29 +1278,25 @@ ControlItemComponent::~ControlItemComponent() {}
 void ControlItemComponent::paint(juce::Graphics& g) {}
 
 void ControlItemComponent::resized() {
-    juce::Rectangle<int> bounds = getLocalBounds();
-    {
-        juce::Rectangle<int> area =
-            bounds.removeFromLeft(bounds.getWidth() / 5).removeFromTop(COMBO_BOX_HEIGHT).reduced(LOCAL_MARGIN);
-        numberSelector.setBounds(area);
-    }
-    {
-        juce::Rectangle<int> area = bounds.removeFromTop(COMBO_BOX_HEIGHT).reduced(LOCAL_MARGIN);
+    juce::Rectangle<int> area = getLocalBounds();
 
-        targetTypeSelector.setBounds(area.removeFromLeft(90));
+    numberSelector.setBounds(area.removeFromLeft(area.getWidth() / 5));
 
-        targetMiscParamSelector.setBounds(area);
+    area.removeFromLeft(PARAM_MARGIN_LEFT);
 
-        auto indexArea = area.removeFromLeft(70);
-        targetOscSelector.setBounds(indexArea);
-        targetFilterSelector.setBounds(indexArea);
-        targetLfoSelector.setBounds(indexArea);
+    targetTypeSelector.setBounds(area.removeFromLeft(90));
 
-        auto paramArea = area;
-        targetOscParamSelector.setBounds(paramArea);
-        targetFilterParamSelector.setBounds(paramArea);
-        targetLfoParamSelector.setBounds(paramArea);
-    }
+    targetMiscParamSelector.setBounds(area);
+
+    auto indexArea = area.removeFromLeft(70);
+    targetOscSelector.setBounds(indexArea);
+    targetFilterSelector.setBounds(indexArea);
+    targetLfoSelector.setBounds(indexArea);
+
+    auto& paramArea = area;
+    targetOscParamSelector.setBounds(paramArea);
+    targetFilterParamSelector.setBounds(paramArea);
+    targetLfoParamSelector.setBounds(paramArea);
 }
 void ControlItemComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
     if (comboBoxThatHasChanged == &numberSelector) {
@@ -1384,9 +1380,9 @@ void ControlComponent::resized() {
     numberLabel.setBounds(labelArea.removeFromLeft(width / 5));
     targetLabel.setBounds(labelArea);
 
-    auto itemHeight = (bounds.getHeight() * 0.8) / NUM_CONTROL;
     for (int i = 0; i < NUM_CONTROL; i++) {
-        controlItemComponents[i].setBounds(bounds.removeFromTop(itemHeight));
+        bounds.removeFromTop(LABEL_MARGIN_BOTTOM);
+        controlItemComponents[i].setBounds(bounds.removeFromTop(COMBO_BOX_HEIGHT));
     }
 }
 

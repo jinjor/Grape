@@ -179,20 +179,20 @@ protected:
     }
 
     void consumeLabeledKnob(juce::Rectangle<int>& parentArea, juce::Label& label, juce::Slider& knob) {
-        parentArea.removeFromLeft(LOCAL_MARGIN);
+        parentArea.removeFromLeft(PARAM_MARGIN_LEFT);
         auto area = parentArea.removeFromLeft(SLIDER_WIDTH);
         label.setBounds(area.removeFromTop(LABEL_HEIGHT));
-        area.removeFromTop(LOCAL_MARGIN);
+        area.removeFromTop(LABEL_MARGIN_BOTTOM);
         knob.setBounds(area.removeFromTop(KNOB_HEIGHT));
     }
     void consumeLabeledKnob(juce::Rectangle<int>& parentArea,
                             juce::Label& label,
                             juce::Slider& knob1,
                             juce::Slider& knob2) {
-        parentArea.removeFromLeft(LOCAL_MARGIN);
+        parentArea.removeFromLeft(PARAM_MARGIN_LEFT);
         auto area = parentArea.removeFromLeft(SLIDER_WIDTH);
         label.setBounds(area.removeFromTop(LABEL_HEIGHT));
-        area.removeFromTop(LOCAL_MARGIN);
+        area.removeFromTop(LABEL_MARGIN_BOTTOM);
         auto knobBounds = area.removeFromTop(KNOB_HEIGHT);
         knob1.setBounds(knobBounds);
         knob2.setBounds(knobBounds);
@@ -207,15 +207,18 @@ protected:
         consumeLabeledKnob(copied, label2, knob2);
     }
     void consumeLabeledComboBox(juce::Rectangle<int>& parentArea, int width, juce::Label& label, juce::Component& box) {
+        parentArea.removeFromLeft(PARAM_MARGIN_LEFT);
         auto area = parentArea.removeFromLeft(width);
-        label.setBounds(area.removeFromTop(LABEL_HEIGHT).reduced(LOCAL_MARGIN));
-        box.setBounds(area.removeFromTop(COMBO_BOX_HEIGHT).reduced(LOCAL_MARGIN));
+        label.setBounds(area.removeFromTop(LABEL_HEIGHT));
+        area.removeFromTop(LABEL_MARGIN_BOTTOM);
+        box.setBounds(area.removeFromTop(COMBO_BOX_HEIGHT));
     }
     void consumeKeyValueText(
         juce::Rectangle<int>& parentArea, int height, int width, juce::Label& keyLabel, juce::Label& valueLabel) {
         auto area = parentArea.removeFromTop(height);
-        keyLabel.setBounds(area.removeFromLeft(width).reduced(LOCAL_MARGIN));
-        valueLabel.setBounds(area.reduced(LOCAL_MARGIN));
+        keyLabel.setBounds(area.removeFromLeft(width));
+        area.removeFromLeft(3);
+        valueLabel.setBounds(area);
     }
 };
 
