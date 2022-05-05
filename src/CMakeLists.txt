@@ -47,6 +47,7 @@ target_compile_definitions(GrapePlugin
         JUCE_VST3_CAN_REPLACE_VST2=0
         JUCE_DISPLAY_SPLASH_SCREEN=0
         JUCE_STRICT_REFCOUNTEDPOINTER=1
+        JUCE_DISABLE_CAUTIOUS_PARAMETER_ID_CHECKING=1
 )
 
 target_link_libraries(GrapePlugin

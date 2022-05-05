@@ -98,111 +98,92 @@ void GrapeAudioProcessorEditor::resized() {
     auto width = bounds.getWidth();
     auto height = bounds.getHeight();
 
-    auto upperArea = bounds.removeFromTop(height * 0.12).reduced(6, 2);
+    auto upperHeight = height * 0.12;
+    auto middleHeight = (height - upperHeight) * 2 / 5;
     {
-        auto upperLeftArea = upperArea.removeFromLeft(width * 0.36);
-        auto upperRightArea = upperArea.removeFromRight(width * 0.36);
-        {
-            auto area = upperLeftArea.removeFromLeft(width * 0.24);
-            voiceComponent.setBounds(area.reduced(PANEL_MARGIN));
-        }
-        {
-            auto area = upperLeftArea;
-            analyserToggle.setBounds(area.reduced(PANEL_MARGIN));
-        }
-        {
-            auto area = upperArea;
-            analyserWindow.setBounds(area.reduced(PANEL_MARGIN));
-        }
-        {
-            auto area = upperRightArea.removeFromLeft(width * 0.18);
-            statusComponent.setBounds(area.reduced(PANEL_MARGIN));
-        }
-        {
-            auto area = upperRightArea;
-            utilComponent.setBounds(area.reduced(PANEL_MARGIN));
-        }
-    }
+        auto upperArea = bounds.removeFromTop(upperHeight).reduced(AREA_PADDING_X, AREA_PADDING_Y);
+        auto sideWidth = width * 0.36;
+        auto centreWidth = width - sideWidth * 2;
 
-    auto middleArea = bounds.removeFromTop(bounds.getHeight() * 2 / 5).reduced(6, 2);
-    auto middleHeight = middleArea.getHeight();
-    auto lowerArea = bounds.reduced(6, 2);
+        auto voiceWidth = sideWidth * 2 / 3;
+        auto analyserToggleWidth = sideWidth * 1 / 3;
+        auto statusWidth = sideWidth * 0.5;
 
-    auto leftArea = middleArea.removeFromLeft(width * 0.35);
-    auto centreArea = middleArea.removeFromLeft(width * 0.35);
-    auto rightArea = middleArea;
+        voiceComponent.setBounds(upperArea.removeFromLeft(voiceWidth));
+        analyserToggle.setBounds(upperArea.removeFromLeft(analyserToggleWidth).reduced(3));
+        analyserWindow.setBounds(upperArea.removeFromLeft(centreWidth).reduced(3));
+        statusComponent.setBounds(upperArea.removeFromLeft(statusWidth));
+        utilComponent.setBounds(upperArea);
+    }
     {
-        auto leftUpperArea = leftArea.removeFromTop(middleHeight / 2);
-        auto upperArea = leftUpperArea.removeFromTop(leftUpperArea.getHeight() * 0.5);
-        auto lowerArea = leftUpperArea;
+        auto middleArea = bounds.removeFromTop(middleHeight).reduced(AREA_PADDING_X, AREA_PADDING_Y);
+        auto leftWidth = (width - PANEL_MARGIN_X * 2) * 0.35;
+        auto centreWidth = (width - PANEL_MARGIN_X * 2) * 0.35;
 
-        envelopeComponents[0].setBounds(upperArea.reduced(PANEL_MARGIN));
-        envelopeComponents[1].setBounds(lowerArea.reduced(PANEL_MARGIN));
+        auto middleHeight = middleArea.getHeight();
+        auto halfPanelHeight = (middleHeight - PANEL_MARGIN_Y) * 0.5;
+        auto quarterPanelHeight = (halfPanelHeight - PANEL_MARGIN_Y) * 0.5;
+        {
+            auto area = middleArea.removeFromLeft(leftWidth);
+            envelopeComponents[0].setBounds(area.removeFromTop(quarterPanelHeight));
+            area.removeFromTop(PANEL_MARGIN_Y);
+            envelopeComponents[1].setBounds(area.removeFromTop(quarterPanelHeight));
+            area.removeFromTop(PANEL_MARGIN_Y);
+            oscComponents[0].setBounds(area);
+        }
+        middleArea.removeFromLeft(PANEL_MARGIN_X);
+        {
+            auto area = middleArea.removeFromLeft(centreWidth);
+            oscComponents[1].setBounds(area.removeFromTop(halfPanelHeight));
+            area.removeFromTop(PANEL_MARGIN_Y);
+            oscComponents[2].setBounds(area);
+        }
+        middleArea.removeFromLeft(PANEL_MARGIN_X);
+        {
+            auto &area = middleArea;
+            filterComponents[0].setBounds(area.removeFromTop(halfPanelHeight));
+            area.removeFromTop(PANEL_MARGIN_Y);
+            filterComponents[1].setBounds(area);
+        }
     }
     {
-        auto area = leftArea;
-        oscComponents[0].setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        auto area = centreArea.removeFromTop(middleHeight / 2);
-        oscComponents[1].setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        auto area = centreArea;
-        oscComponents[2].setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        auto area = rightArea.removeFromTop(middleHeight / 2);
-        filterComponents[0].setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        auto area = rightArea;
-        filterComponents[1].setBounds(area.reduced(PANEL_MARGIN));
-    }
-    auto lfoArea = lowerArea.removeFromLeft(width * 0.31);
-    auto lfoHeight = lfoArea.getHeight();
-    {
-        auto area = lfoArea.removeFromTop(lfoHeight / 3);
-        lfoComponents[0].setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        auto area = lfoArea.removeFromTop(lfoHeight / 3);
-        lfoComponents[1].setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        auto area = lfoArea.removeFromTop(lfoHeight / 3);
-        lfoComponents[2].setBounds(area.reduced(PANEL_MARGIN));
-    }
-    auto modEnvArea = lowerArea.removeFromLeft(width * 0.31);
-    auto modEnvHeight = modEnvArea.getHeight();
-    {
-        auto area = modEnvArea.removeFromTop(modEnvHeight / 3);
-        modEnvComponents[0].setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        auto area = modEnvArea.removeFromTop(modEnvHeight / 3);
-        modEnvComponents[1].setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        auto area = modEnvArea.removeFromTop(modEnvHeight / 3);
-        modEnvComponents[2].setBounds(area.reduced(PANEL_MARGIN));
-    }
-    auto effectArea = lowerArea;
-    auto effectHeight = effectArea.getHeight();
-    {
-        auto area = effectArea.removeFromTop(effectHeight / 3);
-        delayComponent.setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        auto area = effectArea.removeFromTop(effectHeight * 2 / 9);
-        masterComponent.setBounds(area.reduced(PANEL_MARGIN));
-    }
-    {
-        auto controlArea = effectArea;
-        controlComponent.setBounds(controlArea.reduced(PANEL_MARGIN));
+        auto lowerArea = bounds.reduced(AREA_PADDING_X, AREA_PADDING_Y);
+        auto leftWidth = (width - PANEL_MARGIN_X * 2) * 0.31;
+        auto centreWidth = (width - PANEL_MARGIN_X * 2) * 0.31;
 
-        auto drumArea = effectArea.removeFromTop(effectHeight * 2 / 9);
-        drumComponent.setBounds(drumArea.reduced(PANEL_MARGIN));
+        auto lowerHeight = lowerArea.getHeight();
+        auto lfoPanelHeight = (lowerHeight - PANEL_MARGIN_Y * 2) / 3;
+        auto modEnvPanelHeight = (lowerHeight - PANEL_MARGIN_Y * 2) / 3;
+        auto delayPanelHeight = (lowerHeight - PANEL_MARGIN_Y * 2) / 3;
+        auto masterPanelHeight = (lowerHeight - delayPanelHeight - PANEL_MARGIN_Y) * 1 / 3;
+        auto drumPanelHeight = (lowerHeight - delayPanelHeight - PANEL_MARGIN_Y) * 1 / 3;
+        {
+            auto area = lowerArea.removeFromLeft(leftWidth);
+            lfoComponents[0].setBounds(area.removeFromTop(lfoPanelHeight));
+            area.removeFromTop(PANEL_MARGIN_Y);
+            lfoComponents[1].setBounds(area.removeFromTop(lfoPanelHeight));
+            area.removeFromTop(PANEL_MARGIN_Y);
+            lfoComponents[2].setBounds(area.removeFromTop(lfoPanelHeight));
+        }
+        lowerArea.removeFromLeft(PANEL_MARGIN_X);
+        {
+            auto area = lowerArea.removeFromLeft(leftWidth);
+            modEnvComponents[0].setBounds(area.removeFromTop(modEnvPanelHeight));
+            area.removeFromTop(PANEL_MARGIN_Y);
+            modEnvComponents[1].setBounds(area.removeFromTop(modEnvPanelHeight));
+            area.removeFromTop(PANEL_MARGIN_Y);
+            modEnvComponents[2].setBounds(area.removeFromTop(modEnvPanelHeight));
+        }
+        lowerArea.removeFromLeft(PANEL_MARGIN_X);
+        {
+            auto &area = lowerArea;
+            delayComponent.setBounds(area.removeFromTop(delayPanelHeight));
+            area.removeFromTop(PANEL_MARGIN_Y);
+            masterComponent.setBounds(area.removeFromTop(masterPanelHeight));
+            area.removeFromTop(PANEL_MARGIN_Y);
+            controlComponent.setBounds(area);
+            drumComponent.setBounds(area.removeFromTop(drumPanelHeight));
+        }
     }
 }
 

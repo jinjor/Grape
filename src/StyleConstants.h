@@ -32,9 +32,13 @@ constexpr float POINTER_RADIUS = 4.0f;
 constexpr float BORDER_WIDTH = 1.0f;
 constexpr float ARROW_ZONE_WIDTH = 12.0f;
 // layout
+constexpr float AREA_PADDING_X = 6.0f;
+constexpr float AREA_PADDING_Y = 4.0f;
+constexpr float PANEL_MARGIN_X = 5.0f;
+constexpr float PANEL_MARGIN_Y = 6.0f;
 constexpr float PANEL_NAME_HEIGHT = 26.0f;
-constexpr float PANEL_MARGIN = 5.0f;
-constexpr float LOCAL_MARGIN = 3.0f;
+constexpr float PARAM_MARGIN_LEFT = 3.0f;
+constexpr float LABEL_MARGIN_BOTTOM = 3.0f;
 constexpr float LABEL_HEIGHT = 20.0f;
 constexpr float COMBO_BOX_HEIGHT = 30.0f;
 constexpr float SLIDER_WIDTH = 60.0f;
