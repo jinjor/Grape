@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1651766514642,
+  "lastUpdate": 1651770487776,
   "repoUrl": "https://github.com/jinjor/Grape",
   "entries": {
     "Grape Benchmark": [
@@ -5088,6 +5088,156 @@ window.BENCHMARK_DATA = {
             "value": 34.38193134531865,
             "unit": "ns/iter",
             "extra": "iterations: 21566863\ncpu: 33.28805862957438 ns\nthreads: 1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jinjorweb@gmail.com",
+            "name": "Yosuke Torii",
+            "username": "jinjor"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "357b7a19af58deef2794ecbaa10cb70045a5fc51",
+          "message": "Merge pull request #26 from jinjor/refactor-2\n\nRefactor 2",
+          "timestamp": "2022-05-06T01:45:32+09:00",
+          "tree_id": "fe239c4005b51dbef439080c582bcf0e6ce8caaf",
+          "url": "https://github.com/jinjor/Grape/commit/357b7a19af58deef2794ecbaa10cb70045a5fc51"
+        },
+        "date": 1651770464272,
+        "tool": "googlecpp",
+        "benches": [
+          {
+            "name": "BM_VoiceStep_empty",
+            "value": 37.84863973480034,
+            "unit": "ns/iter",
+            "extra": "iterations: 18797952\ncpu: 37.24490838150879 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_whitenoise",
+            "value": 63.53215714498868,
+            "unit": "ns/iter",
+            "extra": "iterations: 10951874\ncpu: 63.47899911923749 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_pinknoise",
+            "value": 71.58647197403515,
+            "unit": "ns/iter",
+            "extra": "iterations: 9842796\ncpu: 71.51900740399378 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_sine",
+            "value": 70.812737218232,
+            "unit": "ns/iter",
+            "extra": "iterations: 10042177\ncpu: 70.7512922745735 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_square",
+            "value": 83.19199872417596,
+            "unit": "ns/iter",
+            "extra": "iterations: 8571708\ncpu: 83.08612472566723 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_sine_with_vibrato",
+            "value": 114.02942715902873,
+            "unit": "ns/iter",
+            "extra": "iterations: 6211235\ncpu: 113.93016042703272 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_sine_with_tremolo",
+            "value": 112.29312072609706,
+            "unit": "ns/iter",
+            "extra": "iterations: 6286710\ncpu: 112.12430667232944 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_sine_unison",
+            "value": 110.33502694956071,
+            "unit": "ns/iter",
+            "extra": "iterations: 6435539\ncpu: 110.24795281327627 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_sine_unison_with_autopan",
+            "value": 116.11189273077173,
+            "unit": "ns/iter",
+            "extra": "iterations: 6049973\ncpu: 115.99010441864776 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_multiple_sine",
+            "value": 130.31018540639406,
+            "unit": "ns/iter",
+            "extra": "iterations: 5315998\ncpu: 130.16464641258332 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_abs_filter",
+            "value": 87.58993161003214,
+            "unit": "ns/iter",
+            "extra": "iterations: 8070188\ncpu: 87.52051377241779 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_abs_filter_with_lfo_filterfreq",
+            "value": 111.8067944957873,
+            "unit": "ns/iter",
+            "extra": "iterations: 6380341\ncpu: 108.47774437134355 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_abs_lowshelf_with_lfo_filterfreq",
+            "value": 104.72345034447541,
+            "unit": "ns/iter",
+            "extra": "iterations: 6673467\ncpu: 104.63032184020666 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_abs_filter_with_lfo_filterq",
+            "value": 91.91401130289154,
+            "unit": "ns/iter",
+            "extra": "iterations: 7755717\ncpu: 91.80414911993329 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_rel_filter",
+            "value": 94.21994059345676,
+            "unit": "ns/iter",
+            "extra": "iterations: 7467862\ncpu: 94.0465959333475 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_single_rel_filter_with_vibrato",
+            "value": 95.87253504894046,
+            "unit": "ns/iter",
+            "extra": "iterations: 7415411\ncpu: 95.73993943154333 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_multiple_abs_filter",
+            "value": 104.29950922189605,
+            "unit": "ns/iter",
+            "extra": "iterations: 6665334\ncpu: 104.19057769648167 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_multiple_rel_filter",
+            "value": 121.59511073487752,
+            "unit": "ns/iter",
+            "extra": "iterations: 5789909\ncpu: 121.37651904373571 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_multiple_rel_filter_with_vibrato",
+            "value": 119.82304889513814,
+            "unit": "ns/iter",
+            "extra": "iterations: 5852402\ncpu: 119.75407704392113 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_VoiceStep_full",
+            "value": 272.8778633601272,
+            "unit": "ns/iter",
+            "extra": "iterations: 2535570\ncpu: 272.67636073939923 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_DelayStep",
+            "value": 31.282008056653297,
+            "unit": "ns/iter",
+            "extra": "iterations: 22366361\ncpu: 31.263288650308322 ns\nthreads: 1"
           }
         ]
       }
