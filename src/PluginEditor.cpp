@@ -11,28 +11,30 @@ using namespace styles;
 GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     : AudioProcessorEditor(&p),
       audioProcessor(p),
-      controlComponent{ControlComponent(p.controlItemParams)},
-      voiceComponent(p.voiceParams, p.mainParamList, p.controlItemParams),
+      controlComponent{ControlComponent(p.allParams.controlItemParams)},
+      voiceComponent(p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
       analyserToggle(&analyserMode),
-      analyserWindow(&analyserMode, &p.latestDataProvider, &p.monoStack, p.voiceParams, p.mainParamList),
+      analyserWindow(
+          &analyserMode, &p.latestDataProvider, &p.monoStack, p.allParams.voiceParams, p.allParams.mainParamList),
       statusComponent(&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider),
       utilComponent(p),
-      oscComponents{OscComponent(0, p.voiceParams, p.mainParamList, p.controlItemParams),
-                    OscComponent(1, p.voiceParams, p.mainParamList, p.controlItemParams),
-                    OscComponent(2, p.voiceParams, p.mainParamList, p.controlItemParams)},
-      envelopeComponents{EnvelopeComponent(0, p.voiceParams, p.mainParamList),
-                         EnvelopeComponent(1, p.voiceParams, p.mainParamList)},
-      filterComponents{FilterComponent(0, p.voiceParams, p.mainParamList, p.controlItemParams),
-                       FilterComponent(1, p.voiceParams, p.mainParamList, p.controlItemParams)},
-      lfoComponents{LfoComponent(0, p.voiceParams, p.mainParamList, p.controlItemParams),
-                    LfoComponent(1, p.voiceParams, p.mainParamList, p.controlItemParams),
-                    LfoComponent(2, p.voiceParams, p.mainParamList, p.controlItemParams)},
-      modEnvComponents{ModEnvComponent(0, p.voiceParams, p.mainParamList),
-                       ModEnvComponent(1, p.voiceParams, p.mainParamList),
-                       ModEnvComponent(2, p.voiceParams, p.mainParamList)},
-      delayComponent{DelayComponent(p.voiceParams, p.mainParamList, p.controlItemParams)},
-      masterComponent{MasterComponent(p.voiceParams, p.mainParamList)},
-      drumComponent{DrumComponent(p.voiceParams, p.mainParamList)} {
+      oscComponents{OscComponent(0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
+                    OscComponent(1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
+                    OscComponent(2, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+      envelopeComponents{EnvelopeComponent(0, p.allParams.voiceParams, p.allParams.mainParamList),
+                         EnvelopeComponent(1, p.allParams.voiceParams, p.allParams.mainParamList)},
+      filterComponents{
+          FilterComponent(0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
+          FilterComponent(1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+      lfoComponents{LfoComponent(0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
+                    LfoComponent(1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
+                    LfoComponent(2, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+      modEnvComponents{ModEnvComponent(0, p.allParams.voiceParams, p.allParams.mainParamList),
+                       ModEnvComponent(1, p.allParams.voiceParams, p.allParams.mainParamList),
+                       ModEnvComponent(2, p.allParams.voiceParams, p.allParams.mainParamList)},
+      delayComponent{DelayComponent(p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+      masterComponent{MasterComponent(p.allParams.voiceParams, p.allParams.mainParamList)},
+      drumComponent{DrumComponent(p.allParams.voiceParams, p.allParams.mainParamList)} {
     getLookAndFeel().setColour(juce::Label::textColourId, colour::TEXT);
 
     addAndMakeVisible(voiceComponent);
@@ -188,7 +190,7 @@ void GrapeAudioProcessorEditor::resized() {
 }
 
 void GrapeAudioProcessorEditor::timerCallback() {
-    auto isDrumMode = audioProcessor.voiceParams.isDrumMode();
+    auto isDrumMode = audioProcessor.allParams.voiceParams.isDrumMode();
     drumComponent.setVisible(isDrumMode);
     controlComponent.setVisible(!isDrumMode);
 }

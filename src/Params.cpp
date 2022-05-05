@@ -649,3 +649,89 @@ void ControlItemParams::loadParameters(juce::XmlElement& xml) {
     *TargetLfoParam = xml.getIntAttribute(TargetLfoParam->paramID, 0);
     *TargetMiscParam = xml.getIntAttribute(TargetMiscParam->paramID, 0);
 }
+
+//==============================================================================
+AllParams::AllParams()
+    : globalParams{},
+      voiceParams{},
+      controlItemParams{ControlItemParams{0}, ControlItemParams{1}, ControlItemParams{2}} {
+    mainParamList.reserve(129);
+    for (int i = 0; i < 129; i++) {
+        mainParamList.push_back(MainParams{i});
+    }
+}
+void AllParams::addAllParameters(juce::AudioProcessor& processor) {
+    globalParams.addAllParameters(processor);
+    voiceParams.addAllParameters(processor);
+    for (int i = 0; i < 129; i++) {
+        mainParamList[i].addAllParameters(processor);
+    }
+    for (auto& params : controlItemParams) {
+        params.addAllParameters(processor);
+    }
+}
+void AllParams::saveParameters(juce::XmlElement& xml) {
+    globalParams.saveParameters(xml);
+    voiceParams.saveParameters(xml);
+    for (int i = 0; i < 129; i++) {
+        auto enabled = mainParamList[i].isEnabled();
+        xml.setAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), enabled);
+        if (enabled) {
+            mainParamList[i].saveParameters(xml);
+        }
+    }
+    for (auto& param : controlItemParams) {
+        param.saveParameters(xml);
+    }
+}
+void AllParams::loadParameters(juce::XmlElement& xml) {
+    globalParams.loadParameters(xml);
+    voiceParams.loadParameters(xml);
+    for (int i = 0; i < 129; i++) {
+        auto enabled = xml.getBoolAttribute(juce::String("MAIN_PARAMS_" + std::to_string(i) + "_ENABLED"), i == 128);
+        if (enabled) {
+            mainParamList[i].loadParameters(xml);
+        }
+    }
+    for (auto& param : controlItemParams) {
+        param.loadParameters(xml);
+    }
+}
+void replaceAttributeNames(juce::XmlElement& xml, juce::StringRef before, juce::StringRef after) {
+    auto newAttrs = std::map<juce::String, juce::String>{};
+    for (auto i = 0; i < xml.getNumAttributes(); i++) {
+        auto attrName = xml.getAttributeName(i);
+        attrName = attrName.replace(before, after);
+        newAttrs[attrName] = xml.getAttributeValue(i);
+    }
+    xml.removeAllAttributes();
+    for (auto const& [attrName, value] : newAttrs) {
+        xml.setAttribute(attrName, value);
+    }
+}
+void AllParams::saveParametersToClipboard(juce::XmlElement& xml) {
+    // TODO: portamento, pitchbend range
+    auto index = voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128;
+    xml.setAttribute("DRUM_MODE", voiceParams.isDrumMode());
+    mainParamList[index].saveParameters(xml);
+    if (!voiceParams.isDrumMode()) {
+        for (auto& param : controlItemParams) {
+            param.saveParameters(xml);
+        }
+    }
+
+    replaceAttributeNames(xml, "G" + std::to_string(index) + "_", "GROUP_");
+}
+void AllParams::loadParametersFromClipboard(juce::XmlElement& xml) {
+    auto index = voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128;
+
+    replaceAttributeNames(xml, "GROUP_", "G" + std::to_string(index) + "_");
+
+    auto wasDrumMode = xml.getBoolAttribute("DRUM_MODE", false);
+    mainParamList[index].loadParameters(xml);
+    if (!wasDrumMode && !voiceParams.isDrumMode()) {
+        for (auto& param : controlItemParams) {
+            param.loadParameters(xml);
+        }
+    }
+}

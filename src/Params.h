@@ -656,3 +656,23 @@ public:
 private:
     ControlItemParams(){};
 };
+
+//==============================================================================
+class AllParams : public SynthParametersBase {
+public:
+    GlobalParams globalParams;
+    VoiceParams voiceParams;
+    std::vector<MainParams> mainParamList{};
+    std::array<ControlItemParams, NUM_CONTROL> controlItemParams;
+
+    AllParams();
+    AllParams(const AllParams&) = delete;
+    virtual void addAllParameters(juce::AudioProcessor& processor) override;
+    virtual void saveParameters(juce::XmlElement& xml) override;
+    virtual void loadParameters(juce::XmlElement& xml) override;
+
+    void saveParametersToClipboard(juce::XmlElement& xml);
+    void loadParametersFromClipboard(juce::XmlElement& xml);
+
+private:
+};

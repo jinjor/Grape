@@ -145,10 +145,7 @@ public:
     TimeConsumptionState timeConsumptionState;
     juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo;
 
-    GlobalParams globalParams;
-    VoiceParams voiceParams;
-    std::vector<MainParams> mainParamList{};
-    std::array<ControlItemParams, NUM_CONTROL> controlItemParams;
+    AllParams allParams;
 
     std::vector<std::unique_ptr<juce::AudioBuffer<float>>> buffers{};
     MonoStack monoStack;
