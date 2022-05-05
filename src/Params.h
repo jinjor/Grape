@@ -673,6 +673,19 @@ public:
 
     void saveParametersToClipboard(juce::XmlElement& xml);
     void loadParametersFromClipboard(juce::XmlElement& xml);
+    void freeze() {
+        globalParams.freeze();
+        voiceParams.freeze();
+        auto& mainParams = mainParamList[voiceParams.isDrumModeFreezed ? voiceParams.targetNote : 128];
+        for (auto& mainParams : mainParamList) {
+            if (mainParams.isEnabled()) {
+                mainParams.freeze();
+            }
+        }
+        for (int i = 0; i < NUM_CONTROL; ++i) {
+            controlItemParams[i].freeze();
+        }
+    }
 
 private:
 };
