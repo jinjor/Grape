@@ -4,21 +4,7 @@
 #include "../src/Params.h"
 #include "../src/Voice.h"
 
-class Params {
-public:
-    Params() {
-        for (int i = 0; i < 129; i++) {
-            mainParamList.push_back(MainParams{i});
-        }
-    }
-    GlobalParams globalParams{};
-    VoiceParams voiceParams{};
-    std::vector<MainParams> mainParamList;
-    std::array<ControlItemParams, NUM_CONTROL> controlItemParams = {
-        ControlItemParams(0), ControlItemParams(1), ControlItemParams(2)};
-};
-
-static void doStepLoop(benchmark::State& state, Params& p) {
+static void doStepLoop(benchmark::State& state, AllParams& p) {
     juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo{};
     juce::AudioBuffer<float> buf{};
 
@@ -34,7 +20,7 @@ static void doStepLoop(benchmark::State& state, Params& p) {
 
     GrapeSound sound = GrapeSound(p.voiceParams, p.mainParamList);
 
-    freezeParams(p.globalParams, p.voiceParams, p.mainParamList, p.controlItemParams);
+    p.freeze();
     voice.startNote(60, 1.0, &sound, 8192);
     voice.applyParamsBeforeLoop(sampleRate);
     for (auto _ : state) {
@@ -43,13 +29,13 @@ static void doStepLoop(benchmark::State& state, Params& p) {
 }
 
 static void BM_VoiceStep_empty(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     doStepLoop(state, p);
 }
 BENCHMARK(BM_VoiceStep_empty);
 
 static void BM_VoiceStep_single_whitenoise(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("White");
     doStepLoop(state, p);
@@ -57,7 +43,7 @@ static void BM_VoiceStep_single_whitenoise(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_single_whitenoise);
 
 static void BM_VoiceStep_single_pinknoise(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Pink");
     doStepLoop(state, p);
@@ -65,7 +51,7 @@ static void BM_VoiceStep_single_pinknoise(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_single_pinknoise);
 
 static void BM_VoiceStep_single_sine(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     doStepLoop(state, p);
@@ -73,7 +59,7 @@ static void BM_VoiceStep_single_sine(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_single_sine);
 
 static void BM_VoiceStep_single_square(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Square");
     doStepLoop(state, p);
@@ -81,7 +67,7 @@ static void BM_VoiceStep_single_square(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_single_square);
 
 static void BM_VoiceStep_single_sine_with_vibrato(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].oscParams[0].Unison = 4;
@@ -93,7 +79,7 @@ static void BM_VoiceStep_single_sine_with_vibrato(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_single_sine_with_vibrato);
 
 static void BM_VoiceStep_single_sine_with_tremolo(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].oscParams[0].Unison = 4;
@@ -105,7 +91,7 @@ static void BM_VoiceStep_single_sine_with_tremolo(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_single_sine_with_tremolo);
 
 static void BM_VoiceStep_single_sine_unison(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].oscParams[0].Unison = 4;
@@ -114,7 +100,7 @@ static void BM_VoiceStep_single_sine_unison(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_single_sine_unison);
 
 static void BM_VoiceStep_single_sine_unison_with_autopan(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].oscParams[0].Unison = 4;
@@ -126,7 +112,7 @@ static void BM_VoiceStep_single_sine_unison_with_autopan(benchmark::State& state
 BENCHMARK(BM_VoiceStep_single_sine_unison_with_autopan);
 
 static void BM_VoiceStep_multiple_sine(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].oscParams[1].Enabled = true;
@@ -138,7 +124,7 @@ static void BM_VoiceStep_multiple_sine(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_multiple_sine);
 
 static void BM_VoiceStep_single_abs_filter(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].filterParams[0].Enabled = true;
@@ -147,7 +133,7 @@ static void BM_VoiceStep_single_abs_filter(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_single_abs_filter);
 
 static void BM_VoiceStep_single_abs_filter_with_lfo_filterfreq(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].filterParams[0].Enabled = true;
@@ -159,7 +145,7 @@ static void BM_VoiceStep_single_abs_filter_with_lfo_filterfreq(benchmark::State&
 BENCHMARK(BM_VoiceStep_single_abs_filter_with_lfo_filterfreq);
 
 static void BM_VoiceStep_single_abs_lowshelf_with_lfo_filterfreq(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].filterParams[0].Enabled = true;
@@ -172,7 +158,7 @@ static void BM_VoiceStep_single_abs_lowshelf_with_lfo_filterfreq(benchmark::Stat
 BENCHMARK(BM_VoiceStep_single_abs_lowshelf_with_lfo_filterfreq);
 
 static void BM_VoiceStep_single_abs_filter_with_lfo_filterq(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].filterParams[0].Enabled = true;
@@ -184,7 +170,7 @@ static void BM_VoiceStep_single_abs_filter_with_lfo_filterq(benchmark::State& st
 BENCHMARK(BM_VoiceStep_single_abs_filter_with_lfo_filterq);
 
 static void BM_VoiceStep_single_rel_filter(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].filterParams[0].Enabled = true;
@@ -194,7 +180,7 @@ static void BM_VoiceStep_single_rel_filter(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_single_rel_filter);
 
 static void BM_VoiceStep_single_rel_filter_with_vibrato(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].filterParams[0].Enabled = true;
@@ -207,7 +193,7 @@ static void BM_VoiceStep_single_rel_filter_with_vibrato(benchmark::State& state)
 BENCHMARK(BM_VoiceStep_single_rel_filter_with_vibrato);
 
 static void BM_VoiceStep_multiple_abs_filter(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].filterParams[0].Enabled = true;
@@ -217,7 +203,7 @@ static void BM_VoiceStep_multiple_abs_filter(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_multiple_abs_filter);
 
 static void BM_VoiceStep_multiple_rel_filter(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].filterParams[0].Enabled = true;
@@ -229,7 +215,7 @@ static void BM_VoiceStep_multiple_rel_filter(benchmark::State& state) {
 BENCHMARK(BM_VoiceStep_multiple_rel_filter);
 
 static void BM_VoiceStep_multiple_rel_filter_with_vibrato(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].filterParams[0].Enabled = true;
@@ -244,7 +230,7 @@ static void BM_VoiceStep_multiple_rel_filter_with_vibrato(benchmark::State& stat
 BENCHMARK(BM_VoiceStep_multiple_rel_filter_with_vibrato);
 
 static void BM_VoiceStep_full(benchmark::State& state) {
-    Params p{};
+    AllParams p{};
     *p.mainParamList[128].oscParams[0].Enabled = true;
     *p.mainParamList[128].oscParams[0].Waveform = OSC_WAVEFORM_NAMES.indexOf("Sine");
     *p.mainParamList[128].oscParams[1].Enabled = true;

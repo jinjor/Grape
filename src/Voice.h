@@ -12,23 +12,6 @@ const double X = std::pow(2.0, 1.0 / 12.0);
 const double Y = 440.0 / std::pow(X, 69);
 const int CONTROL_INTERVAL = 16;
 const double CONTROL_RATE = 1.0 / CONTROL_INTERVAL;
-
-void freezeParams(GlobalParams &globalParams,
-                  VoiceParams &voiceParams,
-                  std::vector<MainParams> &mainParamList,
-                  std::array<ControlItemParams, NUM_CONTROL> &controlItemParams) {
-    globalParams.freeze();
-    voiceParams.freeze();
-    auto &mainParams = mainParamList[voiceParams.isDrumModeFreezed ? voiceParams.targetNote : 128];
-    for (auto &mainParams : mainParamList) {
-        if (mainParams.isEnabled()) {
-            mainParams.freeze();
-        }
-    }
-    for (int i = 0; i < NUM_CONTROL; ++i) {
-        controlItemParams[i].freeze();
-    }
-}
 }  // namespace
 
 //==============================================================================
@@ -211,18 +194,9 @@ public:
     GrapeSynthesiser(juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo,
                      MonoStack *monoStack,
                      std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers,
-                     std::array<ControlItemParams, NUM_CONTROL> &controlItemParams,
-                     GlobalParams &globalParams,
-                     VoiceParams &voiceParams,
-                     std::vector<MainParams> &mainParamList)
-        : currentPositionInfo(currentPositionInfo),
-          monoStack(monoStack),
-          buffers(buffers),
-          controlItemParams(controlItemParams),
-          globalParams(globalParams),
-          voiceParams(voiceParams),
-          mainParamList(mainParamList) {
-        addSound(new GrapeSound(voiceParams, mainParamList));
+                     AllParams &allParams)
+        : currentPositionInfo(currentPositionInfo), monoStack(monoStack), buffers(buffers), allParams(allParams) {
+        addSound(new GrapeSound(allParams.voiceParams, allParams.mainParamList));
         for (auto i = 0; i < 129; i++) {
             stereoDelays.push_back(std::unique_ptr<StereoDelay>(nullptr));
         }
@@ -232,9 +206,9 @@ public:
                                  const MidiBuffer &inputMidi,
                                  int startSample,
                                  int numSamples) {
-        freezeParams(globalParams, voiceParams, mainParamList, controlItemParams);
+        allParams.freeze();
         for (auto i = 0; i < 129; i++) {
-            if (mainParamList[i].isEnabled()) {
+            if (allParams.mainParamList[i].isEnabled()) {
                 buffers[i]->setSize(2, startSample + numSamples, false, false, true);
                 buffers[i]->clear();
             } else {
@@ -253,7 +227,7 @@ public:
                     if (GrapeVoice *voice = dynamic_cast<GrapeVoice *>(voices[0])) {
                         bool playingNotesExist = monoStack->latestNoteNumber != 0;
                         monoStack->push(midiNoteNumber, velocity);
-                        if (voiceParams.isMonoModeFreezed) {
+                        if (allParams.voiceParams.isMonoModeFreezed) {
                             jassert(getNumVoices() == 1);
                             if (voice->isPlayingChannel(channel) && playingNotesExist) {
                                 voice->glide(midiNoteNumber, velocity);
@@ -261,8 +235,8 @@ public:
                             }
                         }
                     }
-                    if (voiceParams.isDrumModeFreezed) {
-                        auto &drumParams = mainParamList[midiNoteNumber].drumParams;
+                    if (allParams.voiceParams.isDrumModeFreezed) {
+                        auto &drumParams = allParams.mainParamList[midiNoteNumber].drumParams;
                         if (drumParams.noteToMuteEnabled) {
                             for (auto *voice_ : voices) {
                                 if (GrapeVoice *voice = dynamic_cast<GrapeVoice *>(voice_)) {
@@ -287,7 +261,7 @@ public:
                             return;
                         }
                         bool playingNotesExist = monoStack->latestNoteNumber != 0;
-                        if (voiceParams.isMonoModeFreezed) {
+                        if (allParams.voiceParams.isMonoModeFreezed) {
                             jassert(getNumVoices() == 1);
                             if (voice->isPlayingChannel(channel) && playingNotesExist) {
                                 auto velocity = monoStack->getVelocity(monoStack->latestNoteNumber);
@@ -326,11 +300,11 @@ public:
         juce::Synthesiser::renderVoices(_buffer, startSample, numSamples);
 
         for (auto n = 0; n < 129; n++) {
-            if (!mainParamList[n].isEnabled()) {
+            if (!allParams.mainParamList[n].isEnabled()) {
                 continue;
             }
             auto &buffer = buffers[n];
-            auto &mainParams = mainParamList[n];
+            auto &mainParams = allParams.mainParamList[n];
             auto &delayParams = mainParams.delayParams;
             auto &stereoDelay = stereoDelays[n];
             if (delayParams.enabled) {
@@ -356,8 +330,8 @@ public:
             auto *rightIn = buffer->getReadPointer(1, startSample);
 
             auto delayEnabled = delayParams.enabled;
-            auto expression = globalParams.expression;
-            auto masterVolume = mainParams.masterParams.masterVolume * globalParams.midiVolume;
+            auto expression = allParams.globalParams.expression;
+            auto masterVolume = mainParams.masterParams.masterVolume * allParams.globalParams.midiVolume;
             for (int i = 0; i < numSamples; ++i) {
                 double sample[2]{leftIn[i] * expression, rightIn[i] * expression};
 
@@ -381,25 +355,25 @@ public:
         // predefined
         switch (number) {
             case 7:
-                globalParams.setMidiVolumeFromControl(normalizedValue);
-                globalParams.freeze();
+                allParams.globalParams.setMidiVolumeFromControl(normalizedValue);
+                allParams.globalParams.freeze();
                 break;
             case 10:
-                globalParams.setPanFromControl(normalizedValue);
-                globalParams.freeze();
+                allParams.globalParams.setPanFromControl(normalizedValue);
+                allParams.globalParams.freeze();
                 break;
             case 11:
-                globalParams.setExpressionFromControl(normalizedValue);
-                globalParams.freeze();
+                allParams.globalParams.setExpressionFromControl(normalizedValue);
+                allParams.globalParams.freeze();
                 break;
             default: {
-                if (voiceParams.isDrumMode()) {
+                if (allParams.voiceParams.isDrumMode()) {
                     break;
                 }
-                auto &mainParams = mainParamList[128];
+                auto &mainParams = allParams.mainParamList[128];
                 // custom
                 for (int i = 0; i < NUM_CONTROL; ++i) {
-                    auto &params = controlItemParams[i];
+                    auto &params = allParams.controlItemParams[i];
                     if (number != params.number) {
                         continue;
                     }
@@ -493,8 +467,8 @@ public:
                         case CONTROL_TARGET_TYPE::Master: {
                             switch (params.targetMiscParam) {
                                 case CONTROL_TARGET_MISC_PARAM::PortamentoTime: {
-                                    voiceParams.setPortamentoTimeFromControl(normalizedValue);
-                                    voiceParams.freeze();
+                                    allParams.voiceParams.setPortamentoTimeFromControl(normalizedValue);
+                                    allParams.voiceParams.freeze();
                                     break;
                                 }
                                 case CONTROL_TARGET_MISC_PARAM::DelayMix: {
@@ -512,8 +486,8 @@ public:
     }
     void pitchWheelMoved(int value) {
         value -= 8192;
-        *globalParams.Pitch = value >= 0 ? value / 8191.0 : value / 8192.0;
-        globalParams.freeze();
+        *allParams.globalParams.Pitch = value >= 0 ? value / 8191.0 : value / 8192.0;
+        allParams.globalParams.freeze();
     }
 
 private:
@@ -521,11 +495,7 @@ private:
 
     MonoStack *monoStack;
     std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers;
-    std::array<ControlItemParams, NUM_CONTROL> &controlItemParams;
-
-    GlobalParams &globalParams;
-    VoiceParams &voiceParams;
-    std::vector<MainParams> &mainParamList;
+    AllParams &allParams;
 
     std::vector<std::unique_ptr<StereoDelay>> stereoDelays{};
 };

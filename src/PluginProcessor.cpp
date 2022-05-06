@@ -18,13 +18,7 @@ GrapeAudioProcessor::GrapeAudioProcessor()
 #endif
       ,
       allParams{},
-      synth(&currentPositionInfo,
-            &monoStack,
-            buffers,
-            allParams.controlItemParams,
-            allParams.globalParams,
-            allParams.voiceParams,
-            allParams.mainParamList) {
+      synth(&currentPositionInfo, &monoStack, buffers, allParams) {
 
     buffers.reserve(129);
     for (auto i = 0; i < 129; i++) {
