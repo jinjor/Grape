@@ -128,7 +128,7 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
         synth.clearVoices();
         synth.addVoice(new GrapeVoice(
             &currentPositionInfo, buffers, allParams.globalParams, allParams.voiceParams, allParams.mainParamList));
-    } else if (voiceMode == VOICE_MODE::Poly && synth.getNumVoices() != numVoices) {
+    } else if ((voiceMode == VOICE_MODE::Poly || voiceMode == VOICE_MODE::Drum) && synth.getNumVoices() != numVoices) {
         synth.clearVoices();
         for (auto i = 0; i < numVoices; ++i) {
             synth.addVoice(new GrapeVoice(
