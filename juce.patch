@@ -1,8 +1,8 @@
 diff --git a/extras/Build/CMake/JUCEUtils.cmake b/extras/Build/CMake/JUCEUtils.cmake
-index 245fe233e..8bee15529 100644
+index 954a435db..ec6cf213f 100644
 --- a/extras/Build/CMake/JUCEUtils.cmake
 +++ b/extras/Build/CMake/JUCEUtils.cmake
-@@ -396,7 +396,7 @@ function(juce_add_binary_data target)
+@@ -340,7 +340,7 @@ function(juce_add_binary_data target)
      set(newline_delimited_input)
  
      foreach(name IN LISTS JUCE_ARG_SOURCES)
