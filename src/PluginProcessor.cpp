@@ -13,12 +13,16 @@ GrapeAudioProcessor::GrapeAudioProcessor()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
 #endif
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+                         .withOutput("Output 1", juce::AudioChannelSet::stereo(), false)
+                         .withOutput("Output 2", juce::AudioChannelSet::stereo(), false)
+                         .withOutput("Output 3", juce::AudioChannelSet::stereo(), false)
+                         .withOutput("Output 4", juce::AudioChannelSet::stereo(), false)
 #endif
                          )
 #endif
       ,
       allParams{},
-      synth(&currentPositionInfo, &monoStack, buffers, allParams) {
+      synth(&currentPositionInfo, &monoStack, buffers, busBuffers, allParams) {
 
     buffers.reserve(129);
     for (auto i = 0; i < 129; i++) {
@@ -117,7 +121,18 @@ bool GrapeAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) con
 }
 #endif
 
-void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) {
+void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& _buffer, juce::MidiBuffer& midiMessages) {
+    auto busCount = getBusCount(false);
+    busBuffers.clear();
+    for (int i = 0; i < busCount; i++) {
+        auto enabled = getBus(false, i)->isEnabled();
+        if (enabled) {
+            busBuffers.push_back(getBusBuffer(_buffer, false, i));
+            busBuffers[i]->clear();
+        } else {
+            busBuffers.push_back(nullopt);
+        }
+    }
     if (auto* playHead = getPlayHead()) {
         if (auto positionInfo = playHead->getPosition()) {
             currentPositionInfo.bpm = *positionInfo->getBpm();
@@ -137,12 +152,14 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
                 &currentPositionInfo, buffers, allParams.globalParams, allParams.voiceParams, allParams.mainParamList));
         }
     }
-    keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
+    auto buffer = *busBuffers[0];
+    auto numSamples = buffer.getNumSamples();
+
+    keyboardState.processNextMidiBuffer(midiMessages, 0, numSamples, true);
     double startMillis = juce::Time::getMillisecondCounterHiRes();
-    buffer.clear();
-    synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());  // don't upcast
+    synth.renderNextBlock(buffer, midiMessages, 0, numSamples);  // don't upcast
     double endMillis = juce::Time::getMillisecondCounterHiRes();
-    timeConsumptionState.push(getSampleRate(), buffer.getNumSamples(), (endMillis - startMillis) / 1000);
+    timeConsumptionState.push(getSampleRate(), numSamples, (endMillis - startMillis) / 1000);
 
     polyphony = 0;
     for (auto i = 0; i < synth.getNumVoices(); ++i) {
@@ -150,7 +167,7 @@ void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
             polyphony++;
         }
     }
-    latestDataProvider.push(buffer);
+    latestDataProvider.push(buffer);  // TODO: パラアウトした時は最初の bus しか表示されない
 
     midiMessages.clear();
 #if JUCE_DEBUG
