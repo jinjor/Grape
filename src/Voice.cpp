@@ -3,7 +3,7 @@
 #include "Params.h"
 
 //==============================================================================
-GrapeVoice::GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo,
+GrapeVoice::GrapeVoice(CurrentPositionInfo *currentPositionInfo,
                        std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers,
                        GlobalParams &globalParams,
                        VoiceParams &voiceParams,

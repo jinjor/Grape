@@ -5,7 +5,7 @@
 #include "../src/Voice.h"
 
 static void doStepLoop(benchmark::State& state, AllParams& p) {
-    juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo{};
+    CurrentPositionInfo currentPositionInfo{};
     juce::AudioBuffer<float> buf{};
 
     std::vector<std::unique_ptr<juce::AudioBuffer<float>>> buffers{};
