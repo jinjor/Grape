@@ -280,6 +280,7 @@ public:
         } else if (m.isAllSoundOff()) {
             monoStack->reset();
         }
+        jassert(getNumVoices() > 0);
         Synthesiser::handleMidiEvent(m);
     }
     void handleController(const int midiChannel, const int controllerNumber, const int controllerValue) override {
