@@ -924,7 +924,7 @@ public:
     ~StereoDelay() { DBG("DelayEffect's destructor called."); }
     StereoDelay(const StereoDelay &) = delete;
     void setParams(double sampleRate,
-                   double bpm,
+                   std::optional<double> bpm,  // TODO: UI 上 optional であることが分からない
                    DELAY_TYPE type,
                    bool sync,
                    double delayTimeL,
@@ -937,8 +937,8 @@ public:
                    double mix) {
         lowpass.setSampleRate(sampleRate);
         highpass.setSampleRate(sampleRate);
-        if (sync) {
-            auto timePerBar = 60 * 4 / bpm;
+        if (sync && bpm) {
+            auto timePerBar = 60 * 4 / *bpm;
             delayTimeL = timePerBar * delayTimeSyncL;
             delayTimeR = timePerBar * delayTimeSyncR;
         }

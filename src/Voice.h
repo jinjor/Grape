@@ -55,6 +55,14 @@ private:
 };
 
 //==============================================================================
+class CurrentPositionInfo {
+public:
+    CurrentPositionInfo() {}
+    ~CurrentPositionInfo(){};
+    std::optional<double> bpm{};
+};
+
+//==============================================================================
 class MonoStack {
 public:
     int latestNoteNumber = 0;
@@ -127,7 +135,7 @@ struct Modifiers {
 //==============================================================================
 class GrapeVoice : public juce::SynthesiserVoice {
 public:
-    GrapeVoice(juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo,
+    GrapeVoice(CurrentPositionInfo *currentPositionInfo,
                std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers,
                GlobalParams &globalParams,
                VoiceParams &voiceParams,
@@ -151,7 +159,7 @@ public:
 
 private:
     juce::PerformanceCounter perf;
-    juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo;
+    CurrentPositionInfo *currentPositionInfo;
 
     GlobalParams &globalParams;
     VoiceParams &voiceParams;
@@ -191,7 +199,7 @@ private:
 //==============================================================================
 class GrapeSynthesiser : public juce::Synthesiser {
 public:
-    GrapeSynthesiser(juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo,
+    GrapeSynthesiser(CurrentPositionInfo *currentPositionInfo,
                      MonoStack *monoStack,
                      std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers,
                      AllParams &allParams)
@@ -492,7 +500,7 @@ public:
     }
 
 private:
-    juce::AudioPlayHead::CurrentPositionInfo *currentPositionInfo;
+    CurrentPositionInfo *currentPositionInfo;
 
     MonoStack *monoStack;
     std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers;

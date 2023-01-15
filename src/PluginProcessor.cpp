@@ -119,7 +119,9 @@ bool GrapeAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) con
 
 void GrapeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) {
     if (auto* playHead = getPlayHead()) {
-        playHead->getCurrentPosition(currentPositionInfo);
+        if (auto positionInfo = playHead->getPosition()) {
+            currentPositionInfo.bpm = *positionInfo->getBpm();
+        }
     }
     auto voiceMode = static_cast<VOICE_MODE>(allParams.voiceParams.Mode->getIndex());
     int numVoices = 64;
