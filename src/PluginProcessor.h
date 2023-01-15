@@ -143,7 +143,7 @@ public:
     LatestDataProvider latestDataProvider;
     int polyphony = 0;
     TimeConsumptionState timeConsumptionState;
-    juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo;
+    CurrentPositionInfo currentPositionInfo;
 
     AllParams allParams;
 
