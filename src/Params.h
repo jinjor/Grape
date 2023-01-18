@@ -505,6 +505,7 @@ public:
     juce::AudioParameterBool* NoteToMuteEnabled;
     juce::AudioParameterChoice* NoteToMuteKind;
     juce::AudioParameterChoice* NoteToMuteOct;
+    juce::AudioParameterChoice* Bus;
 
     DrumParams(std::string idPrefix, std::string namePrefix);
     DrumParams(const DrumParams&) = delete;
@@ -517,6 +518,7 @@ public:
     int noteToPlay;
     bool noteToMuteEnabled;
     int noteToMute;
+    int busIndex;
     int getNoteToMute() {
         return (TARGET_NOTE_OCT_VALUES[NoteToMuteOct->getIndex()] + 2) * 12 + NoteToMuteKind->getIndex();
     }
@@ -524,6 +526,7 @@ public:
         noteToPlay = NoteToPlay->get();
         noteToMuteEnabled = NoteToMuteEnabled->get();
         noteToMute = getNoteToMute();
+        busIndex = Bus->getIndex();
     }
 
 private:

@@ -202,8 +202,13 @@ public:
     GrapeSynthesiser(CurrentPositionInfo *currentPositionInfo,
                      MonoStack *monoStack,
                      std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers,
+                     std::vector<std::optional<juce::AudioBuffer<float>>> &busBuffers,
                      AllParams &allParams)
-        : currentPositionInfo(currentPositionInfo), monoStack(monoStack), buffers(buffers), allParams(allParams) {
+        : currentPositionInfo(currentPositionInfo),
+          monoStack(monoStack),
+          buffers(buffers),
+          busBuffers(busBuffers),
+          allParams(allParams) {
         addSound(new GrapeSound(allParams.voiceParams, allParams.mainParamList));
         for (auto i = 0; i < 129; i++) {
             stereoDelays.push_back(std::unique_ptr<StereoDelay>(nullptr));
@@ -316,6 +321,9 @@ public:
             auto &mainParams = allParams.mainParamList[n];
             auto &delayParams = mainParams.delayParams;
             auto &stereoDelay = stereoDelays[n];
+
+            auto busIndex = allParams.voiceParams.isDrumModeFreezed ? mainParams.drumParams.busIndex : 0;
+            auto &outBuffer = busBuffers[busIndex];
             if (delayParams.enabled) {
                 if (!stereoDelay) {
                     stereoDelay.reset(new StereoDelay());
@@ -352,9 +360,10 @@ public:
                 // Master Volume
                 sample[0] *= masterVolume;
                 sample[1] *= masterVolume;
-
-                _buffer.addSample(0, startSample + i, sample[0]);
-                _buffer.addSample(1, startSample + i, sample[1]);
+                if (outBuffer) {
+                    outBuffer->addSample(0, startSample + i, sample[0]);
+                    outBuffer->addSample(1, startSample + i, sample[1]);
+                }
             }
         }
     }
@@ -504,6 +513,7 @@ private:
 
     MonoStack *monoStack;
     std::vector<std::unique_ptr<juce::AudioBuffer<float>>> &buffers;
+    std::vector<std::optional<juce::AudioBuffer<float>>> &busBuffers;
     AllParams &allParams;
 
     std::vector<std::unique_ptr<StereoDelay>> stereoDelays{};

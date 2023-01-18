@@ -148,6 +148,7 @@ public:
     AllParams allParams;
 
     std::vector<std::unique_ptr<juce::AudioBuffer<float>>> buffers{};
+    std::vector<std::optional<juce::AudioBuffer<float>>> busBuffers{};
     MonoStack monoStack;
     GrapeSynthesiser synth;
 

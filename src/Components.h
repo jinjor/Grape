@@ -718,9 +718,11 @@ private:
     juce::ComboBox noteToMuteEnabledSelector;
     juce::ComboBox noteToMuteKindSelector;
     juce::ComboBox noteToMuteOctSelector;
+    juce::ComboBox busSelector;
 
     juce::Label noteToPlayLabel;
     juce::Label noteToMuteLabel;
+    juce::Label busLabel;
 
     DrumParams& getSelectedDrumParams() {
         return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].drumParams;

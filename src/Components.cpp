@@ -1184,9 +1184,11 @@ DrumComponent::DrumComponent(VoiceParams& voiceParams, std::vector<MainParams>& 
     initChoice(noteToMuteEnabledSelector, params.NoteToMuteEnabled, this, noteToMuteSelector);
     initChoice(noteToMuteKindSelector, params.NoteToMuteKind, this, noteToMuteSelector);
     initChoice(noteToMuteOctSelector, params.NoteToMuteOct, this, noteToMuteSelector);
+    initChoice(busSelector, params.Bus, this, body);
 
     initLabel(noteToPlayLabel, "Note", body);
     initLabel(noteToMuteLabel, "Note to Mute", body);
+    initLabel(busLabel, "Bus", body);
 
     body.addAndMakeVisible(noteToMuteSelector);
     addAndMakeVisible(body);
@@ -1220,6 +1222,7 @@ void DrumComponent::resized() {
         noteToMuteKindSelector.setBounds(selectorsArea.removeFromLeft(60));
         noteToMuteOctSelector.setBounds(selectorsArea.removeFromLeft(60));
     }
+    consumeLabeledComboBox(upperArea, 70, busLabel, busSelector);
 }
 void DrumComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     auto& params = getSelectedDrumParams();
@@ -1229,6 +1232,8 @@ void DrumComponent::comboBoxChanged(juce::ComboBox* comboBox) {
         *params.NoteToMuteKind = noteToMuteKindSelector.getSelectedItemIndex();
     } else if (comboBox == &noteToMuteOctSelector) {
         *params.NoteToMuteOct = noteToMuteOctSelector.getSelectedItemIndex();
+    } else if (comboBox == &busSelector) {
+        *params.Bus = busSelector.getSelectedItemIndex();
     }
 }
 void DrumComponent::sliderValueChanged(juce::Slider* slider) {

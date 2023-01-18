@@ -476,6 +476,7 @@ DrumParams::DrumParams(std::string idPrefix, std::string namePrefix) {
                                                    namePrefix + "Note to Mute Oct",
                                                    TARGET_NOTE_OCT_NAMES,
                                                    TARGET_NOTE_OCT_NAMES.indexOf("1"));
+    Bus = new juce::AudioParameterChoice(idPrefix + "Bus", namePrefix + "Bus", BUS_NAMES, BUS_NAMES.indexOf("Main"));
     freeze();
 }
 void DrumParams::addAllParameters(juce::AudioProcessor& processor) {
@@ -483,18 +484,21 @@ void DrumParams::addAllParameters(juce::AudioProcessor& processor) {
     processor.addParameter(NoteToMuteEnabled);
     processor.addParameter(NoteToMuteKind);
     processor.addParameter(NoteToMuteOct);
+    processor.addParameter(Bus);
 }
 void DrumParams::saveParameters(juce::XmlElement& xml) {
     xml.setAttribute(NoteToPlay->paramID, NoteToPlay->get());
     xml.setAttribute(NoteToMuteEnabled->paramID, NoteToMuteEnabled->get());
     xml.setAttribute(NoteToMuteKind->paramID, NoteToMuteKind->getIndex());
     xml.setAttribute(NoteToMuteOct->paramID, NoteToMuteOct->getIndex());
+    xml.setAttribute(Bus->paramID, Bus->getIndex());
 }
 void DrumParams::loadParameters(juce::XmlElement& xml) {
     *NoteToPlay = xml.getIntAttribute(NoteToPlay->paramID, 60);
     *NoteToMuteEnabled = xml.getIntAttribute(NoteToMuteEnabled->paramID, false);
     *NoteToMuteKind = xml.getIntAttribute(NoteToMuteKind->paramID, TARGET_NOTE_KINDS.indexOf("C"));
     *NoteToMuteOct = xml.getIntAttribute(NoteToMuteOct->paramID, TARGET_NOTE_OCT_NAMES.indexOf("1"));
+    *Bus = xml.getIntAttribute(Bus->paramID, BUS_NAMES.indexOf("Bus"));
 }
 
 //==============================================================================
