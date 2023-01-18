@@ -252,13 +252,27 @@ private:
 
 //==============================================================================
 
+class ArrowButton2 : public Button {
+public:
+    ArrowButton2(const String& buttonName, float arrowDirection, Colour arrowColour);
+    ~ArrowButton2() override;
+    void paintButton(Graphics&, bool, bool) override;
+
+private:
+    Colour colour;
+    Path path;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ArrowButton2)
+};
+
+//==============================================================================
+
 class IncDecButton : public juce::Component, juce::Button::Listener {
 public:
     IncDecButton();
     virtual ~IncDecButton();
     IncDecButton(const IncDecButton&) = delete;
-    juce::ArrowButton incButton;
-    juce::ArrowButton decButton;
+    ArrowButton2 incButton;
+    ArrowButton2 decButton;
     juce::Label label;
     virtual void paint(juce::Graphics& g) override;
     virtual void resized() override;

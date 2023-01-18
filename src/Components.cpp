@@ -49,9 +49,39 @@ void HeaderComponent::resized() {
 }
 
 //==============================================================================
+ArrowButton2::ArrowButton2(const String& name, float arrowDirectionInRadians, Colour arrowColour)
+    : Button(name), colour(arrowColour) {
+    path.addTriangle(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f);
+    path.applyTransform(AffineTransform::rotation(MathConstants<float>::twoPi * arrowDirectionInRadians, 0.5f, 0.5f));
+}
+
+ArrowButton2::~ArrowButton2() {}
+
+void ArrowButton2::paintButton(Graphics& g, bool /*shouldDrawButtonAsHighlighted*/, bool shouldDrawButtonAsDown) {
+    auto bounds = getLocalBounds();
+    auto enabled = this->isEnabled();
+
+    // g.setColour(colour::PIT);
+    // g.fillRect(bounds);
+
+    Path p(path);
+
+    const float offset = shouldDrawButtonAsDown ? 1.0f : 0.0f;
+    auto width = (float)getWidth();
+    auto height = (float)getHeight();
+    auto x = width / 2 + offset;
+    auto y = height / 2 + offset;
+    p.applyTransform(path.getTransformToScaleToFit(x - 4, y - 2, 8, 4, false));
+
+    DropShadow(Colours::black.withAlpha(0.3f), shouldDrawButtonAsDown ? 2 : 4, Point<int>()).drawForPath(g, p);
+    g.setColour(colour.withAlpha(enabled ? 1.0f : 0.3f));
+    g.fillPath(p);
+}
+
+//==============================================================================
 IncDecButton::IncDecButton()
     : incButton("Inc Button", 0.75, colour::TEXT), decButton("Dec Button", 0.25, colour::TEXT) {
-    // label.setColour(juce::Label::textColourId, colour::TEXT);
+    label.setColour(juce::Label::textColourId, colour::TEXT);
     label.setText(juce::String(value), juce::dontSendNotification);
     label.setJustificationType(Justification::centred);
     this->addAndMakeVisible(label);
@@ -68,9 +98,9 @@ IncDecButton::~IncDecButton() {}
 void IncDecButton::paint(juce::Graphics& g) {}
 void IncDecButton::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto incButtonArea = bounds.removeFromTop(10);
+    auto incButtonArea = bounds.removeFromTop(12);  // TODO もう少し範囲を広げたい
     incButton.setBounds(incButtonArea);
-    auto decButtonArea = bounds.removeFromBottom(10);
+    auto decButtonArea = bounds.removeFromBottom(12);  // TODO
     decButton.setBounds(decButtonArea);
     label.setBounds(bounds);
 }
