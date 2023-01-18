@@ -49,6 +49,61 @@ void HeaderComponent::resized() {
 }
 
 //==============================================================================
+IncDecButton::IncDecButton()
+    : incButton("Inc Button", 0.75, colour::TEXT), decButton("Dec Button", 0.25, colour::TEXT) {
+    // label.setColour(juce::Label::textColourId, colour::TEXT);
+    label.setText(juce::String(value), juce::dontSendNotification);
+    label.setJustificationType(Justification::centred);
+    this->addAndMakeVisible(label);
+
+    incButton.setEnabled(value < max);
+    this->addAndMakeVisible(incButton);
+    incButton.addListener(this);
+
+    decButton.setEnabled(min < value);
+    this->addAndMakeVisible(decButton);
+    decButton.addListener(this);
+}
+IncDecButton::~IncDecButton() {}
+void IncDecButton::paint(juce::Graphics& g) {}
+void IncDecButton::resized() {
+    juce::Rectangle<int> bounds = getLocalBounds();
+    auto incButtonArea = bounds.removeFromTop(10);
+    incButton.setBounds(incButtonArea);
+    auto decButtonArea = bounds.removeFromBottom(10);
+    decButton.setBounds(decButtonArea);
+    label.setBounds(bounds);
+}
+void IncDecButton::setRange(int min, int max) {
+    jassert(min <= max);
+    this->min = min;
+    this->max = max;
+    incButton.setEnabled(value < max);
+    decButton.setEnabled(min < value);
+}
+void IncDecButton::setValue(int newValue, NotificationType notification) {
+    jassert(min <= value);
+    jassert(value <= max);
+    value = newValue;
+    label.setText(juce::String(newValue), notification);
+    incButton.setEnabled(value < max);
+    decButton.setEnabled(min < value);
+}
+int IncDecButton::getValue() { return value; }
+void IncDecButton::addListener(IncDecButton::Listener* l) { listeners.add(l); }
+void IncDecButton::removeListener(IncDecButton::Listener* l) { listeners.remove(l); }
+void IncDecButton::buttonClicked(juce::Button* button) {
+    if (button == &incButton) {
+        value++;
+    } else if (button == &decButton) {
+        value--;
+    }
+    incButton.setEnabled(value < max);
+    decButton.setEnabled(min < value);
+    listeners.call([this](Listener& l) { l.incDecValueChanged(this); });
+}
+
+//==============================================================================
 VoiceComponent::VoiceComponent(VoiceParams& params,
                                std::vector<MainParams>& mainParamList,
                                std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
@@ -353,8 +408,9 @@ OscComponent::OscComponent(int index,
       waveformSelector("Waveform"),
       edgeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                  juce::Slider::TextEntryBoxPosition::NoTextBox),
-      octaveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-                   juce::Slider::TextEntryBoxPosition::NoTextBox),
+      //   octaveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
+      //                juce::Slider::TextEntryBoxPosition::NoTextBox),
+      octaveButton(),
       coarseSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox),
       unisonSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -374,7 +430,14 @@ OscComponent::OscComponent(int index,
     initChoice(envelopeSelector, params.Envelope, this, body);
     initChoice(waveformSelector, params.Waveform, this, body);
     initLinear(edgeSlider, params.Edge, 0.01, this, body);
-    initLinear(octaveSlider, params.Octave, this, body);
+    // initLinear(octaveSlider, params.Octave, this, body);
+
+    octaveButton.setLookAndFeel(&grapeLookAndFeel);
+    octaveButton.setRange(params.Octave->getRange().getStart(), params.Octave->getRange().getEnd());
+    octaveButton.setValue(params.Octave->get(), juce::dontSendNotification);
+    octaveButton.addListener(this);
+    body.addAndMakeVisible(octaveButton);
+
     initLinear(coarseSlider, params.Coarse, this, body);
     initLinear(unisonSlider, params.Unison, this, body);
     initLinear(detuneSlider, params.Detune, 0.01, this, body);
@@ -384,7 +447,7 @@ OscComponent::OscComponent(int index,
     initLabel(envelopeLabel, "Amp Env", body);
     initLabel(waveformLabel, "Waveform", body);
     initLabel(edgeLabel, "Edge", body);
-    initLabel(octaveLabel, "Octave", body);
+    initLabel(octaveLabel, "Oct", body);
     initLabel(coarseLabel, "Semitone", body);
     initLabel(unisonLabel, "Unison", body);
     initLabel(coarseLabel, "Semitone", body);
@@ -416,7 +479,8 @@ void OscComponent::resized() {
     consumeLabeledComboBox(upperArea, 120, waveformLabel, waveformSelector);
     consumeLabeledKnob(upperArea, edgeLabel, edgeSlider);
     consumeLabeledKnob(upperArea, gainLabel, gainSlider);
-    consumeLabeledKnob(lowerArea, octaveLabel, octaveSlider);
+    // consumeLabeledKnob(lowerArea, octaveLabel, octaveSlider);
+    consumeLabeledIncDecButton(lowerArea, 30, octaveLabel, octaveButton);
     consumeLabeledKnob(lowerArea, coarseLabel, coarseSlider);
     consumeLabeledKnob(lowerArea, unisonLabel, unisonSlider);
     consumeLabeledKnob(lowerArea, detuneLabel, detuneSlider);
@@ -440,8 +504,6 @@ void OscComponent::sliderValueChanged(juce::Slider* slider) {
     auto& params = getSelectedOscParams();
     if (slider == &edgeSlider) {
         *params.Edge = edgeSlider.getValue();
-    } else if (slider == &octaveSlider) {
-        *params.Octave = octaveSlider.getValue();
     } else if (slider == &coarseSlider) {
         *params.Coarse = coarseSlider.getValue();
     } else if (slider == &unisonSlider) {
@@ -454,6 +516,12 @@ void OscComponent::sliderValueChanged(juce::Slider* slider) {
         *params.Gain = (float)gainSlider.getValue();
     }
 }
+void OscComponent::incDecValueChanged(IncDecButton* button) {
+    auto& params = getSelectedOscParams();
+    if (button == &octaveButton) {
+        *params.Octave = octaveButton.getValue();
+    }
+}
 void OscComponent::timerCallback() {
     auto& params = getSelectedOscParams();
 
@@ -462,7 +530,8 @@ void OscComponent::timerCallback() {
     envelopeSelector.setSelectedItemIndex(params.Envelope->getIndex(), juce::dontSendNotification);
     waveformSelector.setSelectedItemIndex(params.Waveform->getIndex(), juce::dontSendNotification);
     edgeSlider.setValue(params.Edge->get(), juce::dontSendNotification);
-    octaveSlider.setValue(params.Octave->get(), juce::dontSendNotification);
+    // octaveSlider.setValue(params.Octave->get(), juce::dontSendNotification);
+    octaveButton.setValue(params.Octave->get(), juce::dontSendNotification);
     coarseSlider.setValue(params.Coarse->get(), juce::dontSendNotification);
     unisonSlider.setValue(params.Unison->get(), juce::dontSendNotification);
     detuneSlider.setValue(params.Detune->get(), juce::dontSendNotification);

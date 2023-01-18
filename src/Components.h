@@ -213,6 +213,16 @@ protected:
         area.removeFromTop(LABEL_MARGIN_BOTTOM);
         box.setBounds(area.removeFromTop(COMBO_BOX_HEIGHT));
     }
+    void consumeLabeledIncDecButton(juce::Rectangle<int>& parentArea,
+                                    int width,
+                                    juce::Label& label,
+                                    juce::Component& button) {
+        parentArea.removeFromLeft(PARAM_MARGIN_LEFT);
+        auto area = parentArea.removeFromLeft(width);
+        label.setBounds(area.removeFromTop(LABEL_HEIGHT));
+        area.removeFromTop(LABEL_MARGIN_BOTTOM);
+        button.setBounds(area.removeFromTop(KNOB_HEIGHT));  // TODO
+    }
     void consumeKeyValueText(
         juce::Rectangle<int>& parentArea, int height, int width, juce::Label& keyLabel, juce::Label& valueLabel) {
         auto area = parentArea.removeFromTop(height);
@@ -238,6 +248,39 @@ public:
 private:
     std::string name;
     HEADER_CHECK check;
+};
+
+//==============================================================================
+
+class IncDecButton : public juce::Component, juce::Button::Listener {
+public:
+    IncDecButton();
+    virtual ~IncDecButton();
+    IncDecButton(const IncDecButton&) = delete;
+    juce::ArrowButton incButton;
+    juce::ArrowButton decButton;
+    juce::Label label;
+    virtual void paint(juce::Graphics& g) override;
+    virtual void resized() override;
+    void setRange(int min, int max);
+    void setValue(int newValue, NotificationType notification);
+    int getValue();
+
+    class Listener {
+    public:
+        virtual ~Listener() = default;
+        virtual void incDecValueChanged(IncDecButton*) = 0;
+    };
+    void addListener(Listener* newListener);
+    void removeListener(Listener* listener);
+    virtual void buttonClicked(juce::Button* button) override;
+
+private:
+    int min = 0;
+    int max = 0;
+    int value = 0;
+    std::string name;
+    ListenerList<Listener> listeners;
 };
 
 //==============================================================================
@@ -373,6 +416,7 @@ class OscComponent : public juce::Component,
                      juce::ComboBox::Listener,
                      juce::Slider::Listener,
                      private juce::Timer,
+                     IncDecButton::Listener,
                      ComponentHelper {
 public:
     OscComponent(int index,
@@ -390,6 +434,7 @@ private:
     virtual void buttonClicked(juce::Button* button) override;
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
+    virtual void incDecValueChanged(IncDecButton* button) override;
     virtual void timerCallback() override;
     int index;
 
@@ -403,7 +448,8 @@ private:
     juce::ComboBox envelopeSelector;
     juce::ComboBox waveformSelector;
     juce::Slider edgeSlider;
-    juce::Slider octaveSlider;
+    // juce::Slider octaveSlider;
+    IncDecButton octaveButton;
     juce::Slider coarseSlider;
     juce::Slider unisonSlider;
     juce::Slider detuneSlider;
