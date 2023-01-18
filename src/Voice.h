@@ -322,7 +322,7 @@ public:
             auto &delayParams = mainParams.delayParams;
             auto &stereoDelay = stereoDelays[n];
 
-            auto busIndex = 0;  // TODO
+            auto busIndex = allParams.voiceParams.isDrumModeFreezed ? mainParams.drumParams.busIndex : 0;
             auto &outBuffer = busBuffers[busIndex];
             if (delayParams.enabled) {
                 if (!stereoDelay) {
@@ -360,9 +360,10 @@ public:
                 // Master Volume
                 sample[0] *= masterVolume;
                 sample[1] *= masterVolume;
-
-                outBuffer->addSample(0, startSample + i, sample[0]);
-                outBuffer->addSample(1, startSample + i, sample[1]);
+                if (outBuffer) {
+                    outBuffer->addSample(0, startSample + i, sample[0]);
+                    outBuffer->addSample(1, startSample + i, sample[1]);
+                }
             }
         }
     }
