@@ -441,8 +441,9 @@ OscComponent::OscComponent(int index,
       //   octaveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
       //                juce::Slider::TextEntryBoxPosition::NoTextBox),
       octaveButton(),
-      coarseSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-                   juce::Slider::TextEntryBoxPosition::NoTextBox),
+      //   coarseSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
+      //                juce::Slider::TextEntryBoxPosition::NoTextBox),
+      semitoneButton(),
       unisonSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox),
       detuneSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -468,7 +469,14 @@ OscComponent::OscComponent(int index,
     octaveButton.addListener(this);
     body.addAndMakeVisible(octaveButton);
 
-    initLinear(coarseSlider, params.Coarse, this, body);
+    // initLinear(coarseSlider, params.Coarse, this, body);
+
+    semitoneButton.setLookAndFeel(&grapeLookAndFeel);
+    semitoneButton.setRange(params.Coarse->getRange().getStart(), params.Coarse->getRange().getEnd());
+    semitoneButton.setValue(params.Coarse->get(), juce::dontSendNotification);
+    semitoneButton.addListener(this);
+    body.addAndMakeVisible(semitoneButton);
+
     initLinear(unisonSlider, params.Unison, this, body);
     initLinear(detuneSlider, params.Detune, 0.01, this, body);
     initLinear(spreadSlider, params.Spread, 0.01, this, body);
@@ -478,9 +486,8 @@ OscComponent::OscComponent(int index,
     initLabel(waveformLabel, "Waveform", body);
     initLabel(edgeLabel, "Edge", body);
     initLabel(octaveLabel, "Oct", body);
-    initLabel(coarseLabel, "Semitone", body);
+    initLabel(coarseLabel, "Semi", body);
     initLabel(unisonLabel, "Unison", body);
-    initLabel(coarseLabel, "Semitone", body);
     initLabel(detuneLabel, "Detune", body);
     initLabel(spreadLabel, "Spread", body);
     initLabel(gainLabel, "Gain", body);
@@ -511,7 +518,9 @@ void OscComponent::resized() {
     consumeLabeledKnob(upperArea, gainLabel, gainSlider);
     // consumeLabeledKnob(lowerArea, octaveLabel, octaveSlider);
     consumeLabeledIncDecButton(lowerArea, 30, octaveLabel, octaveButton);
-    consumeLabeledKnob(lowerArea, coarseLabel, coarseSlider);
+    // consumeLabeledKnob(lowerArea, coarseLabel, coarseSlider);
+    consumeLabeledIncDecButton(lowerArea, 30, coarseLabel, semitoneButton);
+
     consumeLabeledKnob(lowerArea, unisonLabel, unisonSlider);
     consumeLabeledKnob(lowerArea, detuneLabel, detuneSlider);
     consumeLabeledKnob(lowerArea, spreadLabel, spreadSlider);
@@ -534,8 +543,6 @@ void OscComponent::sliderValueChanged(juce::Slider* slider) {
     auto& params = getSelectedOscParams();
     if (slider == &edgeSlider) {
         *params.Edge = edgeSlider.getValue();
-    } else if (slider == &coarseSlider) {
-        *params.Coarse = coarseSlider.getValue();
     } else if (slider == &unisonSlider) {
         *params.Unison = unisonSlider.getValue();
     } else if (slider == &detuneSlider) {
@@ -550,6 +557,8 @@ void OscComponent::incDecValueChanged(IncDecButton* button) {
     auto& params = getSelectedOscParams();
     if (button == &octaveButton) {
         *params.Octave = octaveButton.getValue();
+    } else if (button == &semitoneButton) {
+        *params.Coarse = semitoneButton.getValue();
     }
 }
 void OscComponent::timerCallback() {
@@ -562,7 +571,8 @@ void OscComponent::timerCallback() {
     edgeSlider.setValue(params.Edge->get(), juce::dontSendNotification);
     // octaveSlider.setValue(params.Octave->get(), juce::dontSendNotification);
     octaveButton.setValue(params.Octave->get(), juce::dontSendNotification);
-    coarseSlider.setValue(params.Coarse->get(), juce::dontSendNotification);
+    // coarseSlider.setValue(params.Coarse->get(), juce::dontSendNotification);
+    semitoneButton.setValue(params.Coarse->get(), juce::dontSendNotification);
     unisonSlider.setValue(params.Unison->get(), juce::dontSendNotification);
     detuneSlider.setValue(params.Detune->get(), juce::dontSendNotification);
     spreadSlider.setValue(params.Spread->get(), juce::dontSendNotification);

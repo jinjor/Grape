@@ -464,7 +464,8 @@ private:
     juce::Slider edgeSlider;
     // juce::Slider octaveSlider;
     IncDecButton octaveButton;
-    juce::Slider coarseSlider;
+    // juce::Slider coarseSlider;
+    IncDecButton semitoneButton;
     juce::Slider unisonSlider;
     juce::Slider detuneSlider;
     juce::Slider spreadSlider;
