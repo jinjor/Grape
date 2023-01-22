@@ -163,14 +163,13 @@ VoiceComponent::VoiceComponent(VoiceParams& params,
       modeSelector("Mode"),
       portamentoTimeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                            juce::Slider::TextEntryBoxPosition::NoTextBox),
-      pitchBendRangeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-                           juce::Slider::TextEntryBoxPosition::NoTextBox) {
+      pitchBendRangeButton() {
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
     initChoice(modeSelector, params.Mode, this, *this);
     initLinear(portamentoTimeSlider, params.PortamentoTime, 0.001, " sec", nullptr, this, *this);
-    initLinear(pitchBendRangeSlider, params.PitchBendRange, this, *this);
+    initIncDec(pitchBendRangeButton, params.PitchBendRange, this, *this);
     initChoice(targetNoteKindSelector, params.TargetNoteKind, this, drumTargetSelector);
     initChoice(targetNoteOctSelector, params.TargetNoteOct, this, drumTargetSelector);
     initLabel(modeLabel, "Mode", *this);
@@ -202,7 +201,7 @@ void VoiceComponent::resized() {
         targetNoteOctSelector.setBounds(selectorsArea.removeFromLeft(60));
     }
     consumeLabeledKnob(bounds, portamentoTimeLabel, portamentoTimeSlider);
-    consumeLabeledKnob(bounds, pitchBendRangeLabel, pitchBendRangeSlider);
+    consumeLabeledIncDecButton(bounds, 60, pitchBendRangeLabel, pitchBendRangeButton);
 }
 void VoiceComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     if (comboBox == &modeSelector) {
@@ -216,14 +215,17 @@ void VoiceComponent::comboBoxChanged(juce::ComboBox* comboBox) {
 void VoiceComponent::sliderValueChanged(juce::Slider* slider) {
     if (slider == &portamentoTimeSlider) {
         *params.PortamentoTime = portamentoTimeSlider.getValue();
-    } else if (slider == &pitchBendRangeSlider) {
-        *params.PitchBendRange = pitchBendRangeSlider.getValue();
+    }
+}
+void VoiceComponent::incDecValueChanged(IncDecButton* button) {
+    if (button == &pitchBendRangeButton) {
+        *params.PitchBendRange = pitchBendRangeButton.getValue();
     }
 }
 void VoiceComponent::timerCallback() {
     modeSelector.setSelectedItemIndex(params.Mode->getIndex(), juce::dontSendNotification);
     portamentoTimeSlider.setValue(params.PortamentoTime->get(), juce::dontSendNotification);
-    pitchBendRangeSlider.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
+    pitchBendRangeButton.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
     targetNoteKindSelector.setSelectedItemIndex(params.TargetNoteKind->getIndex(), juce::dontSendNotification);
     targetNoteOctSelector.setSelectedItemIndex(params.TargetNoteOct->getIndex(), juce::dontSendNotification);
 
@@ -255,7 +257,7 @@ void VoiceComponent::timerCallback() {
     portamentoTimeLabel.setVisible(!isDrum);
     portamentoTimeSlider.setVisible(!isDrum);
     pitchBendRangeLabel.setVisible(!isDrum);
-    pitchBendRangeSlider.setVisible(!isDrum);
+    pitchBendRangeButton.setVisible(!isDrum);
     targetNoteLabel.setVisible(isDrum);
     drumTargetSelector.setVisible(isDrum);
 

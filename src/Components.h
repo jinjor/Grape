@@ -313,6 +313,7 @@ private:
 class VoiceComponent : public juce::Component,
                        juce::ComboBox::Listener,
                        juce::Slider::Listener,
+                       IncDecButton::Listener,
                        private juce::Timer,
                        ComponentHelper {
 public:
@@ -328,6 +329,7 @@ public:
 private:
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
+    virtual void incDecValueChanged(IncDecButton* button) override;
     virtual void timerCallback() override;
 
     VoiceParams& params;
@@ -339,7 +341,7 @@ private:
 
     juce::ComboBox modeSelector;
     juce::Slider portamentoTimeSlider;
-    juce::Slider pitchBendRangeSlider;
+    IncDecButton pitchBendRangeButton;
     juce::ComboBox targetNoteKindSelector;
     juce::ComboBox targetNoteOctSelector;
 
