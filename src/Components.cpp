@@ -96,7 +96,8 @@ IncDecButton::IncDecButton()
     this->addAndMakeVisible(decButton);
     decButton.addListener(this);
 
-    // slider.setRange(min, max, 1);
+    slider.setRange(min, max, 1);
+    slider.setValue(value);
     this->addAndMakeVisible(slider);
     slider.addListener(this);
 }
@@ -139,6 +140,7 @@ void IncDecButton::buttonClicked(juce::Button* button) {
     }
     incButton.setEnabled(value < max);
     decButton.setEnabled(min < value);
+    slider.setValue(value);
     listeners.call([this](Listener& l) { l.incDecValueChanged(this); });
 }
 void IncDecButton::sliderValueChanged(juce::Slider* _slider) {

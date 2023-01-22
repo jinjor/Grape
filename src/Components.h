@@ -292,7 +292,7 @@ public:
 
 private:
     int min = 0;
-    int max = 0;
+    int max = 1;
     int value = 0;
     std::string name;
     ListenerList<Listener> listeners;
