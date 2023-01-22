@@ -121,8 +121,8 @@ void IncDecButton::setRange(int min, int max) {
     slider.setRange(min, max, 1);
 }
 void IncDecButton::setValue(int newValue, NotificationType notification) {
-    jassert(min <= value);
-    jassert(value <= max);
+    jassert(min <= newValue);
+    jassert(newValue <= max);
     value = newValue;
     label.setText(juce::String(newValue), notification);
     incButton.setEnabled(value < max);
@@ -463,8 +463,9 @@ OscComponent::OscComponent(int index,
       //   coarseSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
       //                juce::Slider::TextEntryBoxPosition::NoTextBox),
       semitoneButton(),
-      unisonSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-                   juce::Slider::TextEntryBoxPosition::NoTextBox),
+      //   unisonSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
+      //                juce::Slider::TextEntryBoxPosition::NoTextBox),
+      unisonButton(),
       detuneSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox),
       spreadSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -496,7 +497,14 @@ OscComponent::OscComponent(int index,
     semitoneButton.addListener(this);
     body.addAndMakeVisible(semitoneButton);
 
-    initLinear(unisonSlider, params.Unison, this, body);
+    // initLinear(unisonSlider, params.Unison, this, body);
+
+    unisonButton.setLookAndFeel(&grapeLookAndFeel);
+    unisonButton.setRange(params.Unison->getRange().getStart(), params.Unison->getRange().getEnd());
+    unisonButton.setValue(params.Unison->get(), juce::dontSendNotification);
+    unisonButton.addListener(this);
+    body.addAndMakeVisible(unisonButton);
+
     initLinear(detuneSlider, params.Detune, 0.01, this, body);
     initLinear(spreadSlider, params.Spread, 0.01, this, body);
     auto formatGain = [](double gain) { return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
@@ -506,7 +514,7 @@ OscComponent::OscComponent(int index,
     initLabel(edgeLabel, "Edge", body);
     initLabel(octaveLabel, "Oct", body);
     initLabel(coarseLabel, "Semi", body);
-    initLabel(unisonLabel, "Unison", body);
+    initLabel(unisonLabel, "Unis", body);
     initLabel(detuneLabel, "Detune", body);
     initLabel(spreadLabel, "Spread", body);
     initLabel(gainLabel, "Gain", body);
@@ -540,7 +548,8 @@ void OscComponent::resized() {
     // consumeLabeledKnob(lowerArea, coarseLabel, coarseSlider);
     consumeLabeledIncDecButton(lowerArea, 30, coarseLabel, semitoneButton);
 
-    consumeLabeledKnob(lowerArea, unisonLabel, unisonSlider);
+    // consumeLabeledKnob(lowerArea, unisonLabel, unisonSlider);
+    consumeLabeledIncDecButton(lowerArea, 30, unisonLabel, unisonButton);
     consumeLabeledKnob(lowerArea, detuneLabel, detuneSlider);
     consumeLabeledKnob(lowerArea, spreadLabel, spreadSlider);
 }
@@ -562,8 +571,6 @@ void OscComponent::sliderValueChanged(juce::Slider* slider) {
     auto& params = getSelectedOscParams();
     if (slider == &edgeSlider) {
         *params.Edge = edgeSlider.getValue();
-    } else if (slider == &unisonSlider) {
-        *params.Unison = unisonSlider.getValue();
     } else if (slider == &detuneSlider) {
         *params.Detune = (float)detuneSlider.getValue();
     } else if (slider == &spreadSlider) {
@@ -578,6 +585,8 @@ void OscComponent::incDecValueChanged(IncDecButton* button) {
         *params.Octave = octaveButton.getValue();
     } else if (button == &semitoneButton) {
         *params.Coarse = semitoneButton.getValue();
+    } else if (button == &unisonButton) {
+        *params.Unison = unisonButton.getValue();
     }
 }
 void OscComponent::timerCallback() {
@@ -592,7 +601,8 @@ void OscComponent::timerCallback() {
     octaveButton.setValue(params.Octave->get(), juce::dontSendNotification);
     // coarseSlider.setValue(params.Coarse->get(), juce::dontSendNotification);
     semitoneButton.setValue(params.Coarse->get(), juce::dontSendNotification);
-    unisonSlider.setValue(params.Unison->get(), juce::dontSendNotification);
+    // unisonSlider.setValue(params.Unison->get(), juce::dontSendNotification);
+    unisonButton.setValue(params.Unison->get(), juce::dontSendNotification);
     detuneSlider.setValue(params.Detune->get(), juce::dontSendNotification);
     spreadSlider.setValue(params.Spread->get(), juce::dontSendNotification);
     gainSlider.setValue(params.Gain->get(), juce::dontSendNotification);
@@ -603,7 +613,8 @@ void OscComponent::timerCallback() {
 
     auto isNoise = params.isNoise();
     unisonLabel.setEnabled(!isNoise);
-    unisonSlider.setEnabled(!isNoise);
+    // unisonSlider.setEnabled(!isNoise);
+    unisonButton.setEnabled(!isNoise);
     detuneLabel.setEnabled(!isNoise);
     detuneSlider.setEnabled(!isNoise);
     spreadLabel.setEnabled(!isNoise);
