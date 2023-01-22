@@ -49,6 +49,10 @@ void GrapeLookAndFeel::drawRotarySlider(juce::Graphics& g,
                                         const float rotaryStartAngle,
                                         const float rotaryEndAngle,
                                         juce::Slider& slider) {
+    // 数値のドラッグ
+    if (height < 24) {
+        return;
+    }
     auto knobWidth = (float)juce::jmin(width, height);
     auto fromCentre = dynamic_cast<CentredSlider*>(&slider) != nullptr;
     auto radius = knobWidth / 2 - 4.0f;

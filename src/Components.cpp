@@ -49,6 +49,110 @@ void HeaderComponent::resized() {
 }
 
 //==============================================================================
+ArrowButton2::ArrowButton2(const String& name, float arrowDirectionInRadians, Colour arrowColour)
+    : Button(name), colour(arrowColour) {
+    path.addTriangle(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f);
+    path.applyTransform(AffineTransform::rotation(MathConstants<float>::twoPi * arrowDirectionInRadians, 0.5f, 0.5f));
+}
+
+ArrowButton2::~ArrowButton2() {}
+
+void ArrowButton2::paintButton(Graphics& g, bool /*shouldDrawButtonAsHighlighted*/, bool shouldDrawButtonAsDown) {
+    auto bounds = getLocalBounds();
+    auto enabled = this->isEnabled();
+
+    // g.setColour(colour::PIT);
+    // g.fillRect(bounds);
+
+    Path p(path);
+
+    const float offset = shouldDrawButtonAsDown ? 1.0f : 0.0f;
+    auto width = (float)getWidth();
+    auto height = (float)getHeight();
+    auto x = width / 2 + offset;
+    auto y = height / 2 + offset;
+    p.applyTransform(path.getTransformToScaleToFit(x - 4, y - 2, 8, 4, false));
+
+    DropShadow(Colours::black.withAlpha(0.3f), shouldDrawButtonAsDown ? 2 : 4, Point<int>()).drawForPath(g, p);
+    g.setColour(colour.withAlpha(enabled ? 1.0f : 0.3f));
+    g.fillPath(p);
+}
+
+//==============================================================================
+IncDecButton::IncDecButton()
+    : incButton("Inc Button", 0.75, colour::TEXT),
+      decButton("Dec Button", 0.25, colour::TEXT),
+      slider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox) {
+    label.setColour(juce::Label::textColourId, colour::TEXT);
+    label.setText(juce::String(value), juce::dontSendNotification);
+    label.setJustificationType(Justification::centred);
+    this->addAndMakeVisible(label);
+
+    incButton.setEnabled(value < max);
+    this->addAndMakeVisible(incButton);
+    incButton.addListener(this);
+
+    decButton.setEnabled(min < value);
+    this->addAndMakeVisible(decButton);
+    decButton.addListener(this);
+
+    slider.setRange(min, max, 1);
+    slider.setValue(value);
+    this->addAndMakeVisible(slider);
+    slider.addListener(this);
+}
+IncDecButton::~IncDecButton() {}
+void IncDecButton::paint(juce::Graphics& g) {}
+void IncDecButton::resized() {
+    juce::Rectangle<int> bounds = getLocalBounds();
+    auto incButtonArea = bounds.removeFromTop(12);  // TODO もう少し範囲を広げたい
+    incButton.setBounds(incButtonArea);
+    auto decButtonArea = bounds.removeFromBottom(12);  // TODO
+    decButton.setBounds(decButtonArea);
+    label.setBounds(bounds);
+    slider.setBounds(bounds);
+}
+void IncDecButton::setRange(int min, int max) {
+    jassert(min < max);
+    this->min = min;
+    this->max = max;
+    incButton.setEnabled(value < max);
+    decButton.setEnabled(min < value);
+    slider.setRange(min, max, 1);
+}
+void IncDecButton::setValue(int newValue, NotificationType notification) {
+    jassert(min <= newValue);
+    jassert(newValue <= max);
+    value = newValue;
+    label.setText(juce::String(newValue), notification);
+    incButton.setEnabled(value < max);
+    decButton.setEnabled(min < value);
+    slider.setValue(value);
+}
+int IncDecButton::getValue() { return value; }
+void IncDecButton::addListener(IncDecButton::Listener* l) { listeners.add(l); }
+void IncDecButton::removeListener(IncDecButton::Listener* l) { listeners.remove(l); }
+void IncDecButton::buttonClicked(juce::Button* button) {
+    if (button == &incButton) {
+        value++;
+    } else if (button == &decButton) {
+        value--;
+    }
+    incButton.setEnabled(value < max);
+    decButton.setEnabled(min < value);
+    slider.setValue(value);
+    listeners.call([this](Listener& l) { l.incDecValueChanged(this); });
+}
+void IncDecButton::sliderValueChanged(juce::Slider* _slider) {
+    if (_slider == &slider) {
+        value = slider.getValue();
+        incButton.setEnabled(value < max);
+        decButton.setEnabled(min < value);
+        listeners.call([this](Listener& l) { l.incDecValueChanged(this); });
+    }
+}
+
+//==============================================================================
 VoiceComponent::VoiceComponent(VoiceParams& params,
                                std::vector<MainParams>& mainParamList,
                                std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
@@ -59,14 +163,13 @@ VoiceComponent::VoiceComponent(VoiceParams& params,
       modeSelector("Mode"),
       portamentoTimeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                            juce::Slider::TextEntryBoxPosition::NoTextBox),
-      pitchBendRangeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-                           juce::Slider::TextEntryBoxPosition::NoTextBox) {
+      pitchBendRangeButton() {
     header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
     addAndMakeVisible(header);
 
     initChoice(modeSelector, params.Mode, this, *this);
     initLinear(portamentoTimeSlider, params.PortamentoTime, 0.001, " sec", nullptr, this, *this);
-    initLinear(pitchBendRangeSlider, params.PitchBendRange, this, *this);
+    initIncDec(pitchBendRangeButton, params.PitchBendRange, this, *this);
     initChoice(targetNoteKindSelector, params.TargetNoteKind, this, drumTargetSelector);
     initChoice(targetNoteOctSelector, params.TargetNoteOct, this, drumTargetSelector);
     initLabel(modeLabel, "Mode", *this);
@@ -98,7 +201,7 @@ void VoiceComponent::resized() {
         targetNoteOctSelector.setBounds(selectorsArea.removeFromLeft(60));
     }
     consumeLabeledKnob(bounds, portamentoTimeLabel, portamentoTimeSlider);
-    consumeLabeledKnob(bounds, pitchBendRangeLabel, pitchBendRangeSlider);
+    consumeLabeledIncDecButton(bounds, 60, pitchBendRangeLabel, pitchBendRangeButton);
 }
 void VoiceComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     if (comboBox == &modeSelector) {
@@ -112,14 +215,17 @@ void VoiceComponent::comboBoxChanged(juce::ComboBox* comboBox) {
 void VoiceComponent::sliderValueChanged(juce::Slider* slider) {
     if (slider == &portamentoTimeSlider) {
         *params.PortamentoTime = portamentoTimeSlider.getValue();
-    } else if (slider == &pitchBendRangeSlider) {
-        *params.PitchBendRange = pitchBendRangeSlider.getValue();
+    }
+}
+void VoiceComponent::incDecValueChanged(IncDecButton* button) {
+    if (button == &pitchBendRangeButton) {
+        *params.PitchBendRange = pitchBendRangeButton.getValue();
     }
 }
 void VoiceComponent::timerCallback() {
     modeSelector.setSelectedItemIndex(params.Mode->getIndex(), juce::dontSendNotification);
     portamentoTimeSlider.setValue(params.PortamentoTime->get(), juce::dontSendNotification);
-    pitchBendRangeSlider.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
+    pitchBendRangeButton.setValue(params.PitchBendRange->get(), juce::dontSendNotification);
     targetNoteKindSelector.setSelectedItemIndex(params.TargetNoteKind->getIndex(), juce::dontSendNotification);
     targetNoteOctSelector.setSelectedItemIndex(params.TargetNoteOct->getIndex(), juce::dontSendNotification);
 
@@ -151,7 +257,7 @@ void VoiceComponent::timerCallback() {
     portamentoTimeLabel.setVisible(!isDrum);
     portamentoTimeSlider.setVisible(!isDrum);
     pitchBendRangeLabel.setVisible(!isDrum);
-    pitchBendRangeSlider.setVisible(!isDrum);
+    pitchBendRangeButton.setVisible(!isDrum);
     targetNoteLabel.setVisible(isDrum);
     drumTargetSelector.setVisible(isDrum);
 
@@ -353,12 +459,9 @@ OscComponent::OscComponent(int index,
       waveformSelector("Waveform"),
       edgeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                  juce::Slider::TextEntryBoxPosition::NoTextBox),
-      octaveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-                   juce::Slider::TextEntryBoxPosition::NoTextBox),
-      coarseSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-                   juce::Slider::TextEntryBoxPosition::NoTextBox),
-      unisonSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-                   juce::Slider::TextEntryBoxPosition::NoTextBox),
+      octaveButton(),
+      semitoneButton(),
+      unisonButton(),
       detuneSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox),
       spreadSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -374,20 +477,19 @@ OscComponent::OscComponent(int index,
     initChoice(envelopeSelector, params.Envelope, this, body);
     initChoice(waveformSelector, params.Waveform, this, body);
     initLinear(edgeSlider, params.Edge, 0.01, this, body);
-    initLinear(octaveSlider, params.Octave, this, body);
-    initLinear(coarseSlider, params.Coarse, this, body);
-    initLinear(unisonSlider, params.Unison, this, body);
+    initIncDec(octaveButton, params.Octave, this, body);
+    initIncDec(semitoneButton, params.Coarse, this, body);
+    initIncDec(unisonButton, params.Unison, this, body);
     initLinear(detuneSlider, params.Detune, 0.01, this, body);
     initLinear(spreadSlider, params.Spread, 0.01, this, body);
     auto formatGain = [](double gain) { return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
     initSkewFromMid(gainSlider, params.Gain, 0.01f, nullptr, std::move(formatGain), this, body);
-    initLabel(envelopeLabel, "Amp Env", body);
+    initLabel(envelopeLabel, "Env", body);
     initLabel(waveformLabel, "Waveform", body);
     initLabel(edgeLabel, "Edge", body);
-    initLabel(octaveLabel, "Octave", body);
-    initLabel(coarseLabel, "Semitone", body);
-    initLabel(unisonLabel, "Unison", body);
-    initLabel(coarseLabel, "Semitone", body);
+    initLabel(octaveLabel, "Oct", body);
+    initLabel(coarseLabel, "Semi", body);
+    initLabel(unisonLabel, "Unis", body);
     initLabel(detuneLabel, "Detune", body);
     initLabel(spreadLabel, "Spread", body);
     initLabel(gainLabel, "Gain", body);
@@ -413,12 +515,12 @@ void OscComponent::resized() {
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
     consumeLabeledComboBox(upperArea, 60, envelopeLabel, envelopeSelector);
-    consumeLabeledComboBox(upperArea, 120, waveformLabel, waveformSelector);
+    consumeLabeledComboBox(upperArea, 105, waveformLabel, waveformSelector);
     consumeLabeledKnob(upperArea, edgeLabel, edgeSlider);
     consumeLabeledKnob(upperArea, gainLabel, gainSlider);
-    consumeLabeledKnob(lowerArea, octaveLabel, octaveSlider);
-    consumeLabeledKnob(lowerArea, coarseLabel, coarseSlider);
-    consumeLabeledKnob(lowerArea, unisonLabel, unisonSlider);
+    consumeLabeledIncDecButton(lowerArea, 35, octaveLabel, octaveButton);
+    consumeLabeledIncDecButton(lowerArea, 35, coarseLabel, semitoneButton);
+    consumeLabeledIncDecButton(lowerArea, 35, unisonLabel, unisonButton);
     consumeLabeledKnob(lowerArea, detuneLabel, detuneSlider);
     consumeLabeledKnob(lowerArea, spreadLabel, spreadSlider);
 }
@@ -440,18 +542,22 @@ void OscComponent::sliderValueChanged(juce::Slider* slider) {
     auto& params = getSelectedOscParams();
     if (slider == &edgeSlider) {
         *params.Edge = edgeSlider.getValue();
-    } else if (slider == &octaveSlider) {
-        *params.Octave = octaveSlider.getValue();
-    } else if (slider == &coarseSlider) {
-        *params.Coarse = coarseSlider.getValue();
-    } else if (slider == &unisonSlider) {
-        *params.Unison = unisonSlider.getValue();
     } else if (slider == &detuneSlider) {
         *params.Detune = (float)detuneSlider.getValue();
     } else if (slider == &spreadSlider) {
         *params.Spread = (float)spreadSlider.getValue();
     } else if (slider == &gainSlider) {
         *params.Gain = (float)gainSlider.getValue();
+    }
+}
+void OscComponent::incDecValueChanged(IncDecButton* button) {
+    auto& params = getSelectedOscParams();
+    if (button == &octaveButton) {
+        *params.Octave = octaveButton.getValue();
+    } else if (button == &semitoneButton) {
+        *params.Coarse = semitoneButton.getValue();
+    } else if (button == &unisonButton) {
+        *params.Unison = unisonButton.getValue();
     }
 }
 void OscComponent::timerCallback() {
@@ -462,9 +568,9 @@ void OscComponent::timerCallback() {
     envelopeSelector.setSelectedItemIndex(params.Envelope->getIndex(), juce::dontSendNotification);
     waveformSelector.setSelectedItemIndex(params.Waveform->getIndex(), juce::dontSendNotification);
     edgeSlider.setValue(params.Edge->get(), juce::dontSendNotification);
-    octaveSlider.setValue(params.Octave->get(), juce::dontSendNotification);
-    coarseSlider.setValue(params.Coarse->get(), juce::dontSendNotification);
-    unisonSlider.setValue(params.Unison->get(), juce::dontSendNotification);
+    octaveButton.setValue(params.Octave->get(), juce::dontSendNotification);
+    semitoneButton.setValue(params.Coarse->get(), juce::dontSendNotification);
+    unisonButton.setValue(params.Unison->get(), juce::dontSendNotification);
     detuneSlider.setValue(params.Detune->get(), juce::dontSendNotification);
     spreadSlider.setValue(params.Spread->get(), juce::dontSendNotification);
     gainSlider.setValue(params.Gain->get(), juce::dontSendNotification);
@@ -475,7 +581,7 @@ void OscComponent::timerCallback() {
 
     auto isNoise = params.isNoise();
     unisonLabel.setEnabled(!isNoise);
-    unisonSlider.setEnabled(!isNoise);
+    unisonButton.setEnabled(!isNoise);
     detuneLabel.setEnabled(!isNoise);
     detuneSlider.setEnabled(!isNoise);
     spreadLabel.setEnabled(!isNoise);

@@ -12,6 +12,55 @@ using namespace styles;
 enum class ANALYSER_MODE { Spectrum, Envelope, Filter };
 
 //==============================================================================
+
+class ArrowButton2 : public Button {
+public:
+    ArrowButton2(const String& buttonName, float arrowDirection, Colour arrowColour);
+    ~ArrowButton2() override;
+    void paintButton(Graphics&, bool, bool) override;
+
+private:
+    Colour colour;
+    Path path;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ArrowButton2)
+};
+
+//==============================================================================
+
+class IncDecButton : public juce::Component, juce::Button::Listener, juce::Slider::Listener {
+public:
+    IncDecButton();
+    virtual ~IncDecButton();
+    IncDecButton(const IncDecButton&) = delete;
+    ArrowButton2 incButton;
+    ArrowButton2 decButton;
+    juce::Label label;
+    juce::Slider slider;
+    virtual void paint(juce::Graphics& g) override;
+    virtual void resized() override;
+    void setRange(int min, int max);
+    void setValue(int newValue, NotificationType notification);
+    int getValue();
+
+    class Listener {
+    public:
+        virtual ~Listener() = default;
+        virtual void incDecValueChanged(IncDecButton*) = 0;
+    };
+    void addListener(Listener* newListener);
+    void removeListener(Listener* listener);
+    virtual void buttonClicked(juce::Button* button) override;
+
+private:
+    int min = 0;
+    int max = 1;
+    int value = 0;
+    std::string name;
+    ListenerList<Listener> listeners;
+    virtual void sliderValueChanged(juce::Slider* slider) override;
+};
+
+//==============================================================================
 class ComponentHelper {
 protected:
     GrapeLookAndFeel grapeLookAndFeel;
@@ -163,6 +212,16 @@ protected:
         auto f = [](double gain) { return juce::String(gain * 100, 0) + " %"; };
         initLinear(slider, param, step, nullptr, std::move(f), listener, parent);
     }
+    void initIncDec(IncDecButton& incDec,
+                    juce::AudioParameterInt* param,
+                    IncDecButton::Listener* listener,
+                    juce::Component& parent) {
+        incDec.setLookAndFeel(&grapeLookAndFeel);
+        incDec.setRange(param->getRange().getStart(), param->getRange().getEnd());
+        incDec.setValue(param->get(), juce::dontSendNotification);
+        incDec.addListener(listener);
+        parent.addAndMakeVisible(incDec);
+    }
     void initEnum(juce::Slider& slider,
                   juce::AudioParameterChoice* param,
                   juce::Slider::Listener* listener,
@@ -213,6 +272,16 @@ protected:
         area.removeFromTop(LABEL_MARGIN_BOTTOM);
         box.setBounds(area.removeFromTop(COMBO_BOX_HEIGHT));
     }
+    void consumeLabeledIncDecButton(juce::Rectangle<int>& parentArea,
+                                    int width,
+                                    juce::Label& label,
+                                    juce::Component& button) {
+        parentArea.removeFromLeft(PARAM_MARGIN_LEFT);
+        auto area = parentArea.removeFromLeft(width);
+        label.setBounds(area.removeFromTop(LABEL_HEIGHT));
+        area.removeFromTop(LABEL_MARGIN_BOTTOM);
+        button.setBounds(area.removeFromTop(KNOB_HEIGHT));  // TODO
+    }
     void consumeKeyValueText(
         juce::Rectangle<int>& parentArea, int height, int width, juce::Label& keyLabel, juce::Label& valueLabel) {
         auto area = parentArea.removeFromTop(height);
@@ -244,6 +313,7 @@ private:
 class VoiceComponent : public juce::Component,
                        juce::ComboBox::Listener,
                        juce::Slider::Listener,
+                       IncDecButton::Listener,
                        private juce::Timer,
                        ComponentHelper {
 public:
@@ -259,6 +329,7 @@ public:
 private:
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
+    virtual void incDecValueChanged(IncDecButton* button) override;
     virtual void timerCallback() override;
 
     VoiceParams& params;
@@ -270,7 +341,7 @@ private:
 
     juce::ComboBox modeSelector;
     juce::Slider portamentoTimeSlider;
-    juce::Slider pitchBendRangeSlider;
+    IncDecButton pitchBendRangeButton;
     juce::ComboBox targetNoteKindSelector;
     juce::ComboBox targetNoteOctSelector;
 
@@ -373,6 +444,7 @@ class OscComponent : public juce::Component,
                      juce::ComboBox::Listener,
                      juce::Slider::Listener,
                      private juce::Timer,
+                     IncDecButton::Listener,
                      ComponentHelper {
 public:
     OscComponent(int index,
@@ -390,6 +462,7 @@ private:
     virtual void buttonClicked(juce::Button* button) override;
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
+    virtual void incDecValueChanged(IncDecButton* button) override;
     virtual void timerCallback() override;
     int index;
 
@@ -403,9 +476,9 @@ private:
     juce::ComboBox envelopeSelector;
     juce::ComboBox waveformSelector;
     juce::Slider edgeSlider;
-    juce::Slider octaveSlider;
-    juce::Slider coarseSlider;
-    juce::Slider unisonSlider;
+    IncDecButton octaveButton;
+    IncDecButton semitoneButton;
+    IncDecButton unisonButton;
     juce::Slider detuneSlider;
     juce::Slider spreadSlider;
     juce::Slider gainSlider;
