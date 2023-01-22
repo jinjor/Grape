@@ -29,14 +29,14 @@ void GrapeLookAndFeel::drawTickBox(juce::Graphics& g,
     juce::ignoreUnused(isEnabled, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
     juce::Rectangle<float> bounds = component.getLocalBounds().toFloat();
     auto reduced = bounds.reduced(0.5);
-    if (isEnabled) {
-        g.setColour(colour::PIT);
-        g.fillRect(bounds);
-    }
+
+    g.setColour(colour::PIT.withAlpha(isEnabled ? 1.0f : 0.3f));
+    g.fillRect(bounds);
+
     g.setColour(colour::BORDER.withBrightness(isEnabled ? 0.1 : 0.14));
     g.drawRect(reduced, 1.0f);
     if (ticked) {
-        g.setColour(colour::SELECT);
+        g.setColour(colour::SELECT.withAlpha(isEnabled ? 1.0f : 0.3f));
         g.fillRect(bounds.reduced(1.5f));
     }
 }

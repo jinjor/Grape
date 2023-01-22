@@ -126,6 +126,17 @@ protected:
         box.addListener(listener);
         parent.addAndMakeVisible(box);
     }
+    void initChoiceToggle(juce::ToggleButton& toggle,
+                          int checkIndex,
+                          juce::AudioParameterChoice* param,
+                          juce::ToggleButton::Listener* listener,
+                          juce::Component& parent) {
+        toggle.setLookAndFeel(&grapeLookAndFeel);
+        toggle.addListener(listener);
+        toggle.setButtonText("");
+        toggle.setToggleState(param->getIndex() == checkIndex, juce::dontSendNotification);
+        parent.addAndMakeVisible(toggle);
+    }
     void initSkewFromMid(juce::Slider& slider,
                          juce::AudioParameterFloat* param,
                          float step,
@@ -281,6 +292,18 @@ protected:
         label.setBounds(area.removeFromTop(LABEL_HEIGHT));
         area.removeFromTop(LABEL_MARGIN_BOTTOM);
         button.setBounds(area.removeFromTop(KNOB_HEIGHT));  // TODO
+    }
+    void consumeLabeledToggle(juce::Rectangle<int>& parentArea,
+                              int width,
+                              juce::Label& label,
+                              juce::ToggleButton& toggle) {
+        parentArea.removeFromLeft(PARAM_MARGIN_LEFT);
+        auto area = parentArea.removeFromLeft(width);
+        label.setBounds(area.removeFromTop(LABEL_HEIGHT));
+        area.removeFromTop(LABEL_MARGIN_BOTTOM);
+        const auto SIZE = 12.0f;
+        auto padding = (width - SIZE) / 2.0f;
+        toggle.setBounds(area.removeFromTop(SIZE).removeFromLeft(padding + SIZE).removeFromRight(SIZE));
     }
     void consumeKeyValueText(
         juce::Rectangle<int>& parentArea, int height, int width, juce::Label& keyLabel, juce::Label& valueLabel) {
@@ -571,7 +594,7 @@ private:
 
     juce::ComboBox targetSelector;
     juce::ComboBox typeSelector;
-    juce::ComboBox freqTypeSelector;
+    juce::ToggleButton freqTypeToggle;
     juce::Slider hzSlider;
     juce::Slider semitoneSlider;
     juce::Slider qSlider;
