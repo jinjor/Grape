@@ -509,7 +509,7 @@ OscComponent::OscComponent(int index,
     initLinear(spreadSlider, params.Spread, 0.01, this, body);
     auto formatGain = [](double gain) { return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
     initSkewFromMid(gainSlider, params.Gain, 0.01f, nullptr, std::move(formatGain), this, body);
-    initLabel(envelopeLabel, "Amp Env", body);
+    initLabel(envelopeLabel, "Env", body);
     initLabel(waveformLabel, "Waveform", body);
     initLabel(edgeLabel, "Edge", body);
     initLabel(octaveLabel, "Oct", body);
@@ -540,16 +540,16 @@ void OscComponent::resized() {
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
     consumeLabeledComboBox(upperArea, 60, envelopeLabel, envelopeSelector);
-    consumeLabeledComboBox(upperArea, 120, waveformLabel, waveformSelector);
+    consumeLabeledComboBox(upperArea, 105, waveformLabel, waveformSelector);
     consumeLabeledKnob(upperArea, edgeLabel, edgeSlider);
     consumeLabeledKnob(upperArea, gainLabel, gainSlider);
     // consumeLabeledKnob(lowerArea, octaveLabel, octaveSlider);
-    consumeLabeledIncDecButton(lowerArea, 30, octaveLabel, octaveButton);
+    consumeLabeledIncDecButton(lowerArea, 35, octaveLabel, octaveButton);
     // consumeLabeledKnob(lowerArea, coarseLabel, coarseSlider);
-    consumeLabeledIncDecButton(lowerArea, 30, coarseLabel, semitoneButton);
+    consumeLabeledIncDecButton(lowerArea, 35, coarseLabel, semitoneButton);
 
     // consumeLabeledKnob(lowerArea, unisonLabel, unisonSlider);
-    consumeLabeledIncDecButton(lowerArea, 30, unisonLabel, unisonButton);
+    consumeLabeledIncDecButton(lowerArea, 35, unisonLabel, unisonButton);
     consumeLabeledKnob(lowerArea, detuneLabel, detuneSlider);
     consumeLabeledKnob(lowerArea, spreadLabel, spreadSlider);
 }
