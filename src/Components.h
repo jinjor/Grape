@@ -12,6 +12,55 @@ using namespace styles;
 enum class ANALYSER_MODE { Spectrum, Envelope, Filter };
 
 //==============================================================================
+
+class ArrowButton2 : public Button {
+public:
+    ArrowButton2(const String& buttonName, float arrowDirection, Colour arrowColour);
+    ~ArrowButton2() override;
+    void paintButton(Graphics&, bool, bool) override;
+
+private:
+    Colour colour;
+    Path path;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ArrowButton2)
+};
+
+//==============================================================================
+
+class IncDecButton : public juce::Component, juce::Button::Listener, juce::Slider::Listener {
+public:
+    IncDecButton();
+    virtual ~IncDecButton();
+    IncDecButton(const IncDecButton&) = delete;
+    ArrowButton2 incButton;
+    ArrowButton2 decButton;
+    juce::Label label;
+    juce::Slider slider;
+    virtual void paint(juce::Graphics& g) override;
+    virtual void resized() override;
+    void setRange(int min, int max);
+    void setValue(int newValue, NotificationType notification);
+    int getValue();
+
+    class Listener {
+    public:
+        virtual ~Listener() = default;
+        virtual void incDecValueChanged(IncDecButton*) = 0;
+    };
+    void addListener(Listener* newListener);
+    void removeListener(Listener* listener);
+    virtual void buttonClicked(juce::Button* button) override;
+
+private:
+    int min = 0;
+    int max = 1;
+    int value = 0;
+    std::string name;
+    ListenerList<Listener> listeners;
+    virtual void sliderValueChanged(juce::Slider* slider) override;
+};
+
+//==============================================================================
 class ComponentHelper {
 protected:
     GrapeLookAndFeel grapeLookAndFeel;
@@ -163,6 +212,16 @@ protected:
         auto f = [](double gain) { return juce::String(gain * 100, 0) + " %"; };
         initLinear(slider, param, step, nullptr, std::move(f), listener, parent);
     }
+    void initIncDec(IncDecButton& incDec,
+                    juce::AudioParameterInt* param,
+                    IncDecButton::Listener* listener,
+                    juce::Component& parent) {
+        incDec.setLookAndFeel(&grapeLookAndFeel);
+        incDec.setRange(param->getRange().getStart(), param->getRange().getEnd());
+        incDec.setValue(param->get(), juce::dontSendNotification);
+        incDec.addListener(listener);
+        parent.addAndMakeVisible(incDec);
+    }
     void initEnum(juce::Slider& slider,
                   juce::AudioParameterChoice* param,
                   juce::Slider::Listener* listener,
@@ -248,55 +307,6 @@ public:
 private:
     std::string name;
     HEADER_CHECK check;
-};
-
-//==============================================================================
-
-class ArrowButton2 : public Button {
-public:
-    ArrowButton2(const String& buttonName, float arrowDirection, Colour arrowColour);
-    ~ArrowButton2() override;
-    void paintButton(Graphics&, bool, bool) override;
-
-private:
-    Colour colour;
-    Path path;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ArrowButton2)
-};
-
-//==============================================================================
-
-class IncDecButton : public juce::Component, juce::Button::Listener, juce::Slider::Listener {
-public:
-    IncDecButton();
-    virtual ~IncDecButton();
-    IncDecButton(const IncDecButton&) = delete;
-    ArrowButton2 incButton;
-    ArrowButton2 decButton;
-    juce::Label label;
-    juce::Slider slider;
-    virtual void paint(juce::Graphics& g) override;
-    virtual void resized() override;
-    void setRange(int min, int max);
-    void setValue(int newValue, NotificationType notification);
-    int getValue();
-
-    class Listener {
-    public:
-        virtual ~Listener() = default;
-        virtual void incDecValueChanged(IncDecButton*) = 0;
-    };
-    void addListener(Listener* newListener);
-    void removeListener(Listener* listener);
-    virtual void buttonClicked(juce::Button* button) override;
-
-private:
-    int min = 0;
-    int max = 1;
-    int value = 0;
-    std::string name;
-    ListenerList<Listener> listeners;
-    virtual void sliderValueChanged(juce::Slider* slider) override;
 };
 
 //==============================================================================
@@ -464,11 +474,8 @@ private:
     juce::ComboBox envelopeSelector;
     juce::ComboBox waveformSelector;
     juce::Slider edgeSlider;
-    // juce::Slider octaveSlider;
     IncDecButton octaveButton;
-    // juce::Slider coarseSlider;
     IncDecButton semitoneButton;
-    // juce::Slider unisonSlider;
     IncDecButton unisonButton;
     juce::Slider detuneSlider;
     juce::Slider spreadSlider;
