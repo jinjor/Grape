@@ -689,7 +689,7 @@ FilterComponent::FilterComponent(int index,
       header("FILTER " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       targetSelector("Target"),
       typeSelector("Type"),
-      freqTypeSelector("Type"),
+      freqTypeToggle("Freq Type"),
       hzSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox),
       semitoneSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                      juce::Slider::TextEntryBoxPosition::NoTextBox),
@@ -704,7 +704,7 @@ FilterComponent::FilterComponent(int index,
 
     initChoice(targetSelector, params.Target, this, body);
     initChoice(typeSelector, params.Type, this, body);
-    initChoice(freqTypeSelector, params.FreqType, this, body);
+    initChoiceToggle(freqTypeToggle, FILTER_FREQ_TYPE_NAMES.indexOf("Rel"), params.FreqType, this, body);
     initSkewFromMid(hzSlider, params.Hz, 0.01f, " Hz", nullptr, this, body);
     auto formatSemitone = [](double value) -> std::string {
         int cent = value;
@@ -718,7 +718,7 @@ FilterComponent::FilterComponent(int index,
     initLinear(gainSlider, params.Gain, 0.01, " dB", nullptr, this, body);
     initLabel(targetLabel, "OSC", body);
     initLabel(typeLabel, "Type", body);
-    initLabel(freqTypeLabel, "Freq Type", body);
+    initLabel(freqTypeLabel, "Rel", body);
     initLabel(freqLabel, "Freq", body);
     initLabel(qLabel, "Q", body);
     initLabel(gainLabel, "Gain", body);
@@ -744,7 +744,7 @@ void FilterComponent::resized() {
     auto& lowerArea = bounds;
     consumeLabeledComboBox(upperArea, 70, targetLabel, targetSelector);
     consumeLabeledComboBox(upperArea, 120, typeLabel, typeSelector);
-    consumeLabeledComboBox(lowerArea, 60, freqTypeLabel, freqTypeSelector);
+    consumeLabeledToggle(lowerArea, 35, freqTypeLabel, freqTypeToggle);
     consumeLabeledKnob(lowerArea, freqLabel, hzSlider, semitoneSlider);
     consumeLabeledKnob(lowerArea, qLabel, qSlider);
     consumeLabeledKnob(lowerArea, gainLabel, gainSlider);
@@ -753,6 +753,9 @@ void FilterComponent::buttonClicked(juce::Button* button) {
     auto& params = getSelectedFilterParams();
     if (button == &header.enabledButton) {
         *params.Enabled = header.enabledButton.getToggleState();
+    } else if (button == &freqTypeToggle) {
+        *params.FreqType = freqTypeToggle.getToggleState() ? FILTER_FREQ_TYPE_NAMES.indexOf("Rel")
+                                                           : FILTER_FREQ_TYPE_NAMES.indexOf("Abs");
     }
 }
 void FilterComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
@@ -761,8 +764,6 @@ void FilterComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
         *params.Target = targetSelector.getSelectedItemIndex();
     } else if (comboBoxThatHasChanged == &typeSelector) {
         *params.Type = typeSelector.getSelectedItemIndex();
-    } else if (comboBoxThatHasChanged == &freqTypeSelector) {
-        *params.FreqType = freqTypeSelector.getSelectedItemIndex();
     }
 }
 void FilterComponent::sliderValueChanged(juce::Slider* slider) {
@@ -784,7 +785,8 @@ void FilterComponent::timerCallback() {
 
     targetSelector.setSelectedItemIndex(params.Target->getIndex(), juce::dontSendNotification);
     typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
-    freqTypeSelector.setSelectedItemIndex(params.FreqType->getIndex(), juce::dontSendNotification);
+    freqTypeToggle.setToggleState(params.FreqType->getIndex() == FILTER_FREQ_TYPE_NAMES.indexOf("Rel"),
+                                  juce::dontSendNotification);
     hzSlider.setValue(params.Hz->get(), juce::dontSendNotification);
     semitoneSlider.setValue(params.Semitone->get(), juce::dontSendNotification);
     qSlider.setValue(params.Q->get(), juce::dontSendNotification);
