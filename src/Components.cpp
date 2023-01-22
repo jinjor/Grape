@@ -80,7 +80,9 @@ void ArrowButton2::paintButton(Graphics& g, bool /*shouldDrawButtonAsHighlighted
 
 //==============================================================================
 IncDecButton::IncDecButton()
-    : incButton("Inc Button", 0.75, colour::TEXT), decButton("Dec Button", 0.25, colour::TEXT) {
+    : incButton("Inc Button", 0.75, colour::TEXT),
+      decButton("Dec Button", 0.25, colour::TEXT),
+      slider(juce::Slider::SliderStyle::RotaryVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox) {
     label.setColour(juce::Label::textColourId, colour::TEXT);
     label.setText(juce::String(value), juce::dontSendNotification);
     label.setJustificationType(Justification::centred);
@@ -93,6 +95,10 @@ IncDecButton::IncDecButton()
     decButton.setEnabled(min < value);
     this->addAndMakeVisible(decButton);
     decButton.addListener(this);
+
+    // slider.setRange(min, max, 1);
+    this->addAndMakeVisible(slider);
+    slider.addListener(this);
 }
 IncDecButton::~IncDecButton() {}
 void IncDecButton::paint(juce::Graphics& g) {}
@@ -103,13 +109,15 @@ void IncDecButton::resized() {
     auto decButtonArea = bounds.removeFromBottom(12);  // TODO
     decButton.setBounds(decButtonArea);
     label.setBounds(bounds);
+    slider.setBounds(bounds);
 }
 void IncDecButton::setRange(int min, int max) {
-    jassert(min <= max);
+    jassert(min < max);
     this->min = min;
     this->max = max;
     incButton.setEnabled(value < max);
     decButton.setEnabled(min < value);
+    slider.setRange(min, max, 1);
 }
 void IncDecButton::setValue(int newValue, NotificationType notification) {
     jassert(min <= value);
@@ -118,6 +126,7 @@ void IncDecButton::setValue(int newValue, NotificationType notification) {
     label.setText(juce::String(newValue), notification);
     incButton.setEnabled(value < max);
     decButton.setEnabled(min < value);
+    slider.setValue(value);
 }
 int IncDecButton::getValue() { return value; }
 void IncDecButton::addListener(IncDecButton::Listener* l) { listeners.add(l); }
@@ -131,6 +140,14 @@ void IncDecButton::buttonClicked(juce::Button* button) {
     incButton.setEnabled(value < max);
     decButton.setEnabled(min < value);
     listeners.call([this](Listener& l) { l.incDecValueChanged(this); });
+}
+void IncDecButton::sliderValueChanged(juce::Slider* _slider) {
+    if (_slider == &slider) {
+        value = slider.getValue();
+        incButton.setEnabled(value < max);
+        decButton.setEnabled(min < value);
+        listeners.call([this](Listener& l) { l.incDecValueChanged(this); });
+    }
 }
 
 //==============================================================================

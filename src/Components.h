@@ -266,7 +266,7 @@ private:
 
 //==============================================================================
 
-class IncDecButton : public juce::Component, juce::Button::Listener {
+class IncDecButton : public juce::Component, juce::Button::Listener, juce::Slider::Listener {
 public:
     IncDecButton();
     virtual ~IncDecButton();
@@ -274,6 +274,7 @@ public:
     ArrowButton2 incButton;
     ArrowButton2 decButton;
     juce::Label label;
+    juce::Slider slider;
     virtual void paint(juce::Graphics& g) override;
     virtual void resized() override;
     void setRange(int min, int max);
@@ -295,6 +296,7 @@ private:
     int value = 0;
     std::string name;
     ListenerList<Listener> listeners;
+    virtual void sliderValueChanged(juce::Slider* slider) override;
 };
 
 //==============================================================================
