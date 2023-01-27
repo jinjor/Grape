@@ -137,6 +137,16 @@ protected:
         toggle.setToggleState(param->getIndex() == checkIndex, juce::dontSendNotification);
         parent.addAndMakeVisible(toggle);
     }
+    void initChoiceToggle(juce::ToggleButton& toggle,
+                          juce::AudioParameterBool* param,
+                          juce::ToggleButton::Listener* listener,
+                          juce::Component& parent) {
+        toggle.setLookAndFeel(&grapeLookAndFeel);
+        toggle.addListener(listener);
+        toggle.setButtonText("");
+        toggle.setToggleState(param->get(), juce::dontSendNotification);
+        parent.addAndMakeVisible(toggle);
+    }
     void initSkewFromMid(juce::Slider& slider,
                          juce::AudioParameterFloat* param,
                          float step,
@@ -758,7 +768,7 @@ private:
     juce::Component body;
 
     juce::ComboBox typeSelector;
-    juce::ComboBox syncSelector;
+    juce::ToggleButton syncToggle;
     juce::Slider timeLSlider;
     juce::Slider timeRSlider;
     juce::Slider timeSyncLSlider;

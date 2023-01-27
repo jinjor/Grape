@@ -1165,7 +1165,7 @@ DelayComponent::DelayComponent(VoiceParams& voiceParams,
     addAndMakeVisible(header);
 
     initChoice(typeSelector, params.Type, this, body);
-    initChoice(syncSelector, params.Sync, this, body);
+    initChoiceToggle(syncToggle, params.Sync, this, body);
     initSkewFromMid(timeLSlider, params.TimeL, 0.01, " sec", nullptr, this, body);
     initSkewFromMid(timeRSlider, params.TimeR, 0.01, " sec", nullptr, this, body);
     initEnum(timeSyncLSlider, params.TimeSyncL, this, body);
@@ -1205,7 +1205,7 @@ void DelayComponent::resized() {
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
     consumeLabeledComboBox(upperArea, 120, typeLabel, typeSelector);
-    consumeLabeledComboBox(upperArea, 80, syncLabel, syncSelector);
+    consumeLabeledToggle(upperArea, 35, syncLabel, syncToggle);
     consumeLabeledKnob(upperArea, lowFreqLabel, lowFreqSlider);
     consumeLabeledKnob(upperArea, highFreqLabel, highFreqSlider);
     consumeLabeledKnob(lowerArea, timeLLabel, timeLSlider, timeSyncLSlider);
@@ -1217,14 +1217,14 @@ void DelayComponent::buttonClicked(juce::Button* button) {
     auto& params = getSelectedDelayParams();
     if (button == &header.enabledButton) {
         *params.Enabled = header.enabledButton.getToggleState();
+    } else if (button == &syncToggle) {
+        *params.Sync = syncToggle.getToggleState();
     }
 }
 void DelayComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     auto& params = getSelectedDelayParams();
     if (comboBox == &typeSelector) {
         *params.Type = typeSelector.getSelectedItemIndex();
-    } else if (comboBox == &syncSelector) {
-        *params.Sync = syncSelector.getSelectedItemIndex();
     }
 }
 void DelayComponent::sliderValueChanged(juce::Slider* slider) {
@@ -1253,7 +1253,7 @@ void DelayComponent::timerCallback() {
     body.setEnabled(params.Enabled->get());
 
     typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
-    syncSelector.setSelectedItemIndex(params.Sync->get(), juce::dontSendNotification);
+    syncToggle.setToggleState(params.Sync->get(), juce::dontSendNotification);
     timeLSlider.setVisible(!params.Sync->get());
     timeRSlider.setVisible(!params.Sync->get());
     timeSyncLSlider.setVisible(params.Sync->get());
