@@ -830,7 +830,6 @@ private:
 //==============================================================================
 namespace {
 constexpr int MAX_NUM_OSC = 4;
-const double GAIN_AT_CENTER = std::cos(HALF_PI / 2);
 }  // namespace
 class MultiOsc {
 public:
@@ -855,10 +854,12 @@ public:
               double normalizedAngleShift,
               double edge,
               double *outout) {
+        setUnison(numOsc, pan, detune, spread);
         if (numOsc == 1) {
-            outout[0] = outout[1] = oscs[0].step(freq, normalizedAngleShift, edge) * GAIN_AT_CENTER;
+            auto value = oscs[0].step(freq, normalizedAngleShift, edge);
+            outout[0] = value * pans[0][0];
+            outout[1] = value * pans[0][1];
         } else {
-            setUnison(numOsc, pan, detune, spread);
             outout[0] = 0;
             outout[1] = 0;
             for (int i = 0; i < currentNumOsc; ++i) {
@@ -880,21 +881,24 @@ private:
     double currentSpread = 1;
     void setUnison(int numOsc, double pan, double detune, double spread) {
         if (detune != currentDetune || numOsc != currentNumOsc) {
-            auto reciprocal_intervals = 1.0 / (numOsc - 1);
-            for (int i = 0; i < numOsc; ++i) {
-                double detuneValue = numOsc == 1 ? 0 : -detune + (detune * 2) * reciprocal_intervals * i;
-                detunes[i] = std::pow(2, detuneValue * 0.05);  // TODO: ?
+            if (numOsc > 1) {
+                auto reciprocal_intervals = 1.0 / (numOsc - 1);
+                for (int i = 0; i < numOsc; ++i) {
+                    double detuneValue = numOsc == 1 ? 0 : -detune + (detune * 2) * reciprocal_intervals * i;
+                    detunes[i] = std::pow(2, detuneValue * 0.05);  // TODO: ?
+                }
             }
         }
         if (pan != currentPan || spread != currentSpread || numOsc != currentNumOsc) {
-            auto panMax = std::min(1.0, pan + spread);
-            auto panMin = std::max(-1.0, pan - spread);
             if (numOsc == 1) {
-                double p = (panMin + panMax) * 0.5;
-                double theta = (p + 1) * 0.5 * HALF_PI;
+                jassert(pan >= -1);
+                jassert(pan <= 1);
+                double theta = (pan + 1) * 0.5 * HALF_PI;
                 pans[0][0] = std::cos(theta);
                 pans[0][1] = std::sin(theta);
             } else {
+                auto panMax = std::min(1.0, pan + spread);
+                auto panMin = std::max(-1.0, pan - spread);
                 auto reciprocal_intervals = 1.0 / (numOsc - 1);
                 for (int i = 0; i < numOsc; ++i) {
                     double p = panMin * (numOsc - 1 - i) * reciprocal_intervals + panMax * i * reciprocal_intervals;
@@ -907,8 +911,10 @@ private:
             }
         }
         if (numOsc != currentNumOsc) {
-            for (int i = 0; i < numOsc; ++i) {
-                normalizedAngleShifts[i] = 0.5 * i / numOsc;
+            if (numOsc > 1) {
+                for (int i = 0; i < numOsc; ++i) {
+                    normalizedAngleShifts[i] = 0.5 * i / numOsc;
+                }
             }
         }
         currentNumOsc = numOsc;
