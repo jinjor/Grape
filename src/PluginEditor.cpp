@@ -228,7 +228,7 @@ void GrapeAudioProcessorEditor::enabledChanged(SectionComponent *section) {
         }
     }
     for (auto i = 0; i < NUM_LFO; i++) {
-        if (&filterComponents[i] == section) {
+        if (&lfoComponents[i] == section) {
             auto &params = audioProcessor.allParams.getCurrentMainParams().lfoParams[i];
             *params.Enabled = section->getEnabled();
             return;
