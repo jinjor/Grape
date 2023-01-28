@@ -49,6 +49,35 @@ void HeaderComponent::resized() {
 }
 
 //==============================================================================
+SectionComponent::SectionComponent(std::string name, HEADER_CHECK check, std::unique_ptr<juce::Component> _body)
+    : header(std::move(name), check), body(std::move(_body)) {
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    header.enabledButton.addListener(this);
+    addAndMakeVisible(header);
+    addAndMakeVisible(*body);
+}
+SectionComponent::~SectionComponent() {}
+void SectionComponent::paint(juce::Graphics& g) {}
+void SectionComponent::resized() {
+    juce::Rectangle<int> bounds = getLocalBounds();
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+    body->setBounds(bounds);
+}
+void SectionComponent::addListener(Listener* newListener) { listeners.add(newListener); }
+void SectionComponent::setEnabled(bool enabled) {
+    header.enabledButton.setToggleState(enabled, juce::dontSendNotification);
+    body->setEnabled(enabled);
+}
+bool SectionComponent::getEnabled() { return header.enabledButton.getToggleState(); }
+void SectionComponent::buttonClicked(juce::Button* button) {
+    if (button == &header.enabledButton) {
+        body->setEnabled(getEnabled());
+        listeners.call([this](Listener& l) { l.enabledChanged(this); });
+    }
+}
+
+//==============================================================================
 ArrowButton2::ArrowButton2(const String& name, float arrowDirectionInRadians, Colour arrowColour)
     : Button(name), colour(arrowColour) {
     path.addTriangle(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f);
@@ -454,7 +483,6 @@ OscComponent::OscComponent(int index,
       voiceParams(voiceParams),
       mainParamList(mainParamList),
       controlItemParams(controlItemParams),
-      header("OSC " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       envelopeSelector("Envelope"),
       waveformSelector("Waveform"),
       edgeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -468,34 +496,27 @@ OscComponent::OscComponent(int index,
                    juce::Slider::TextEntryBoxPosition::NoTextBox),
       gainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                  juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    header.enabledButton.addListener(this);
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     auto& params = getSelectedOscParams();
 
-    initChoice(envelopeSelector, params.Envelope, this, body);
-    initChoice(waveformSelector, params.Waveform, this, body);
-    initLinear(edgeSlider, params.Edge, 0.01, this, body);
-    initIncDec(octaveButton, params.Octave, this, body);
-    initIncDec(semitoneButton, params.Coarse, this, body);
-    initIncDec(unisonButton, params.Unison, this, body);
-    initLinear(detuneSlider, params.Detune, 0.01, this, body);
-    initLinear(spreadSlider, params.Spread, 0.01, this, body);
+    initChoice(envelopeSelector, params.Envelope, this, *this);
+    initChoice(waveformSelector, params.Waveform, this, *this);
+    initLinear(edgeSlider, params.Edge, 0.01, this, *this);
+    initIncDec(octaveButton, params.Octave, this, *this);
+    initIncDec(semitoneButton, params.Coarse, this, *this);
+    initIncDec(unisonButton, params.Unison, this, *this);
+    initLinear(detuneSlider, params.Detune, 0.01, this, *this);
+    initLinear(spreadSlider, params.Spread, 0.01, this, *this);
     auto formatGain = [](double gain) { return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
-    initSkewFromMid(gainSlider, params.Gain, 0.01f, nullptr, std::move(formatGain), this, body);
-    initLabel(envelopeLabel, "Env", body);
-    initLabel(waveformLabel, "Waveform", body);
-    initLabel(edgeLabel, "Edge", body);
-    initLabel(octaveLabel, "Oct", body);
-    initLabel(coarseLabel, "Semi", body);
-    initLabel(unisonLabel, "Unis", body);
-    initLabel(detuneLabel, "Detune", body);
-    initLabel(spreadLabel, "Spread", body);
-    initLabel(gainLabel, "Gain", body);
-
-    body.setEnabled(params.Enabled->get());
-    addAndMakeVisible(body);
+    initSkewFromMid(gainSlider, params.Gain, 0.01f, nullptr, std::move(formatGain), this, *this);
+    initLabel(envelopeLabel, "Env", *this);
+    initLabel(waveformLabel, "Waveform", *this);
+    initLabel(edgeLabel, "Edge", *this);
+    initLabel(octaveLabel, "Oct", *this);
+    initLabel(coarseLabel, "Semi", *this);
+    initLabel(unisonLabel, "Unis", *this);
+    initLabel(detuneLabel, "Detune", *this);
+    initLabel(spreadLabel, "Spread", *this);
+    initLabel(gainLabel, "Gain", *this);
 
     startTimerHz(30.0f);
 }
@@ -506,11 +527,6 @@ void OscComponent::paint(juce::Graphics& g) {}
 
 void OscComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
@@ -523,12 +539,6 @@ void OscComponent::resized() {
     consumeLabeledIncDecButton(lowerArea, 35, unisonLabel, unisonButton);
     consumeLabeledKnob(lowerArea, detuneLabel, detuneSlider);
     consumeLabeledKnob(lowerArea, spreadLabel, spreadSlider);
-}
-void OscComponent::buttonClicked(juce::Button* button) {
-    auto& params = getSelectedOscParams();
-    if (button == &header.enabledButton) {
-        *params.Enabled = header.enabledButton.getToggleState();
-    }
 }
 void OscComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     auto& params = getSelectedOscParams();
@@ -562,9 +572,6 @@ void OscComponent::incDecValueChanged(IncDecButton* button) {
 }
 void OscComponent::timerCallback() {
     auto& params = getSelectedOscParams();
-
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(params.Enabled->get());
     envelopeSelector.setSelectedItemIndex(params.Envelope->getIndex(), juce::dontSendNotification);
     waveformSelector.setSelectedItemIndex(params.Waveform->getIndex(), juce::dontSendNotification);
     edgeSlider.setValue(params.Edge->get(), juce::dontSendNotification);

@@ -18,9 +18,21 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
           &analyserMode, &p.latestDataProvider, &p.monoStack, p.allParams.voiceParams, p.allParams.mainParamList),
       statusComponent(&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider),
       utilComponent(p),
-      oscComponents{OscComponent(0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
-                    OscComponent(1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
-                    OscComponent(2, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+      oscComponents{
+          SectionComponent{"OSC 1",
+                           HEADER_CHECK::Enabled,
+                           std::make_unique<OscComponent>(
+                               0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+          SectionComponent{"OSC 2",
+                           HEADER_CHECK::Enabled,
+                           std::make_unique<OscComponent>(
+                               1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+          SectionComponent{"OSC 3",
+                           HEADER_CHECK::Enabled,
+                           std::make_unique<OscComponent>(
+                               2, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+
+      },
       envelopeComponents{EnvelopeComponent(0, p.allParams.voiceParams, p.allParams.mainParamList),
                          EnvelopeComponent(1, p.allParams.voiceParams, p.allParams.mainParamList)},
       filterComponents{
@@ -42,9 +54,14 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     addAndMakeVisible(analyserWindow);
     addAndMakeVisible(statusComponent);
     addAndMakeVisible(utilComponent);
-    addAndMakeVisible(oscComponents[0]);
-    addAndMakeVisible(oscComponents[1]);
-    addAndMakeVisible(oscComponents[2]);
+
+    for (auto i = 0; i < NUM_OSC; i++) {
+        auto &params = audioProcessor.allParams.getCurrentMainParams().oscParams[i];
+        auto &component = oscComponents[i];
+        component.setEnabled(params.Enabled->get());
+        component.addListener(this);
+        addAndMakeVisible(component);
+    }
     addAndMakeVisible(envelopeComponents[0]);
     addAndMakeVisible(envelopeComponents[1]);
     addAndMakeVisible(filterComponents[0]);
@@ -188,9 +205,17 @@ void GrapeAudioProcessorEditor::resized() {
         }
     }
 }
-
 void GrapeAudioProcessorEditor::timerCallback() {
     auto isDrumMode = audioProcessor.allParams.voiceParams.isDrumMode();
     drumComponent.setVisible(isDrumMode);
     controlComponent.setVisible(!isDrumMode);
+}
+void GrapeAudioProcessorEditor::enabledChanged(SectionComponent *section) {
+    for (auto i = 0; i < NUM_OSC; i++) {
+        if (&oscComponents[i] == section) {
+            auto &params = audioProcessor.allParams.getCurrentMainParams().oscParams[i];
+            *params.Enabled = section->getEnabled();
+            return;
+        }
+    }
 }

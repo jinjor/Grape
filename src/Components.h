@@ -343,6 +343,33 @@ private:
 };
 
 //==============================================================================
+
+class SectionComponent : public juce::Component, juce::Button::Listener {
+public:
+    SectionComponent(std::string name, HEADER_CHECK check, std::unique_ptr<juce::Component> body);
+    virtual ~SectionComponent();
+    SectionComponent(const SectionComponent&) = delete;
+    virtual void paint(juce::Graphics& g) override;
+    virtual void resized() override;
+
+    class Listener {
+    public:
+        virtual ~Listener() = default;
+        virtual void enabledChanged(SectionComponent*) = 0;
+    };
+    void addListener(Listener* newListener);
+    void setEnabled(bool enabled);
+    bool getEnabled();
+
+private:
+    GrapeLookAndFeel grapeLookAndFeel;
+    HeaderComponent header;
+    std::unique_ptr<juce::Component> body;
+    ListenerList<Listener> listeners;
+    virtual void buttonClicked(juce::Button* button) override;
+};
+
+//==============================================================================
 class VoiceComponent : public juce::Component,
                        juce::ComboBox::Listener,
                        juce::Slider::Listener,
@@ -473,7 +500,6 @@ private:
 
 //==============================================================================
 class OscComponent : public juce::Component,
-                     juce::ToggleButton::Listener,
                      juce::ComboBox::Listener,
                      juce::Slider::Listener,
                      private juce::Timer,
@@ -492,7 +518,6 @@ public:
     virtual void resized() override;
 
 private:
-    virtual void buttonClicked(juce::Button* button) override;
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void incDecValueChanged(IncDecButton* button) override;
@@ -502,9 +527,6 @@ private:
     VoiceParams& voiceParams;
     std::vector<MainParams>& mainParamList;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
-
-    HeaderComponent header;
-    juce::Component body;
 
     juce::ComboBox envelopeSelector;
     juce::ComboBox waveformSelector;
