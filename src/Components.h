@@ -620,10 +620,6 @@ private:
     std::vector<MainParams>& mainParamList;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
 
-    HeaderComponent header;
-
-    juce::Component body;
-
     juce::ComboBox targetSelector;
     juce::ComboBox typeSelector;
     juce::ToggleButton freqTypeToggle;

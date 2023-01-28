@@ -693,7 +693,6 @@ FilterComponent::FilterComponent(int index,
       voiceParams(voiceParams),
       mainParamList(mainParamList),
       controlItemParams(controlItemParams),
-      header("FILTER " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       targetSelector("Target"),
       typeSelector("Type"),
       freqTypeToggle("Freq Type"),
@@ -704,15 +703,11 @@ FilterComponent::FilterComponent(int index,
       gainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                  juce::Slider::TextEntryBoxPosition::NoTextBox) {
     auto& params = getSelectedFilterParams();
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    header.enabledButton.addListener(this);
-    addAndMakeVisible(header);
 
-    initChoice(targetSelector, params.Target, this, body);
-    initChoice(typeSelector, params.Type, this, body);
-    initChoiceToggle(freqTypeToggle, FILTER_FREQ_TYPE_NAMES.indexOf("Rel"), params.FreqType, this, body);
-    initSkewFromMid(hzSlider, params.Hz, 0.01f, " Hz", nullptr, this, body);
+    initChoice(targetSelector, params.Target, this, *this);
+    initChoice(typeSelector, params.Type, this, *this);
+    initChoiceToggle(freqTypeToggle, FILTER_FREQ_TYPE_NAMES.indexOf("Rel"), params.FreqType, this, *this);
+    initSkewFromMid(hzSlider, params.Hz, 0.01f, " Hz", nullptr, this, *this);
     auto formatSemitone = [](double value) -> std::string {
         int cent = value;
         int centAbs = std::abs(cent);
@@ -720,17 +715,15 @@ FilterComponent::FilterComponent(int index,
         int octFrac = centAbs % 12;
         return (cent == 0 ? " " : cent > 0 ? "+" : "-") + std::to_string(oct) + ":" + std::to_string(octFrac) + " oct";
     };
-    initLinear(semitoneSlider, params.Semitone, 0.01, nullptr, std::move(formatSemitone), this, body);
-    initSkewFromMid(qSlider, params.Q, 0.01, nullptr, nullptr, this, body);
-    initLinear(gainSlider, params.Gain, 0.01, " dB", nullptr, this, body);
-    initLabel(targetLabel, "OSC", body);
-    initLabel(typeLabel, "Type", body);
-    initLabel(freqTypeLabel, "Rel", body);
-    initLabel(freqLabel, "Freq", body);
-    initLabel(qLabel, "Q", body);
-    initLabel(gainLabel, "Gain", body);
-
-    addAndMakeVisible(body);
+    initLinear(semitoneSlider, params.Semitone, 0.01, nullptr, std::move(formatSemitone), this, *this);
+    initSkewFromMid(qSlider, params.Q, 0.01, nullptr, nullptr, this, *this);
+    initLinear(gainSlider, params.Gain, 0.01, " dB", nullptr, this, *this);
+    initLabel(targetLabel, "OSC", *this);
+    initLabel(typeLabel, "Type", *this);
+    initLabel(freqTypeLabel, "Rel", *this);
+    initLabel(freqLabel, "Freq", *this);
+    initLabel(qLabel, "Q", *this);
+    initLabel(gainLabel, "Gain", *this);
 
     startTimerHz(30.0f);
 }
@@ -741,11 +734,6 @@ void FilterComponent::paint(juce::Graphics& g) {}
 
 void FilterComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
@@ -758,9 +746,7 @@ void FilterComponent::resized() {
 }
 void FilterComponent::buttonClicked(juce::Button* button) {
     auto& params = getSelectedFilterParams();
-    if (button == &header.enabledButton) {
-        *params.Enabled = header.enabledButton.getToggleState();
-    } else if (button == &freqTypeToggle) {
+    if (button == &freqTypeToggle) {
         *params.FreqType = freqTypeToggle.getToggleState() ? FILTER_FREQ_TYPE_NAMES.indexOf("Rel")
                                                            : FILTER_FREQ_TYPE_NAMES.indexOf("Abs");
     }
@@ -787,8 +773,6 @@ void FilterComponent::sliderValueChanged(juce::Slider* slider) {
 }
 void FilterComponent::timerCallback() {
     auto& params = getSelectedFilterParams();
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(params.Enabled->get());
 
     targetSelector.setSelectedItemIndex(params.Target->getIndex(), juce::dontSendNotification);
     typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
