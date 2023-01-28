@@ -31,7 +31,7 @@ private:
     SectionComponent filterComponents[NUM_FILTER];
     SectionComponent lfoComponents[NUM_LFO];
     SectionComponent modEnvComponents[NUM_MODENV];
-    DelayComponent delayComponent;
+    SectionComponent delayComponent;
     MasterComponent masterComponent;
     DrumComponent drumComponent;
 

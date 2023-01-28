@@ -721,14 +721,11 @@ class DelayComponent : public juce::Component,
                        private juce::Timer,
                        ComponentHelper {
 public:
-    DelayComponent(VoiceParams& voiceParams,
-                   std::vector<MainParams>& mainParamList,
-                   std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    DelayComponent(AllParams& allParams);
     virtual ~DelayComponent();
     DelayComponent(const DelayComponent&) = delete;
 
     virtual void paint(juce::Graphics& g) override;
-
     virtual void resized() override;
 
 private:
@@ -737,13 +734,7 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
 
-    VoiceParams& voiceParams;
-    std::vector<MainParams>& mainParamList;
-    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
-
-    HeaderComponent header;
-
-    juce::Component body;
+    AllParams& allParams;
 
     juce::ComboBox typeSelector;
     juce::ToggleButton syncToggle;
@@ -765,9 +756,7 @@ private:
     juce::Label feedbackLabel;
     juce::Label mixLabel;
 
-    DelayParams& getSelectedDelayParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].delayParams;
-    }
+    DelayParams& getSelectedDelayParams() { return allParams.getCurrentMainParams().delayParams; }
 };
 
 //==============================================================================

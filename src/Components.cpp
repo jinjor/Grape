@@ -1064,13 +1064,8 @@ void ModEnvComponent::timerCallback() {
 }
 
 //==============================================================================
-DelayComponent::DelayComponent(VoiceParams& voiceParams,
-                               std::vector<MainParams>& mainParamList,
-                               std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
-    : voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      controlItemParams(controlItemParams),
-      header("DELAY", HEADER_CHECK::Enabled),
+DelayComponent::DelayComponent(AllParams& allParams)
+    : allParams(allParams),
       typeSelector("Type"),
       timeLSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                   juce::Slider::TextEntryBoxPosition::NoTextBox),
@@ -1089,32 +1084,26 @@ DelayComponent::DelayComponent(VoiceParams& voiceParams,
       mixSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                 juce::Slider::TextEntryBoxPosition::NoTextBox) {
     auto& params = getSelectedDelayParams();
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    header.enabledButton.addListener(this);
-    addAndMakeVisible(header);
 
-    initChoice(typeSelector, params.Type, this, body);
-    initChoiceToggle(syncToggle, params.Sync, this, body);
-    initSkewFromMid(timeLSlider, params.TimeL, 0.01, " sec", nullptr, this, body);
-    initSkewFromMid(timeRSlider, params.TimeR, 0.01, " sec", nullptr, this, body);
-    initEnum(timeSyncLSlider, params.TimeSyncL, this, body);
-    initEnum(timeSyncRSlider, params.TimeSyncR, this, body);
-    initSkewFromMid(lowFreqSlider, params.LowFreq, 1.0, " Hz", nullptr, this, body);
-    initSkewFromMid(highFreqSlider, params.HighFreq, 1.0, " Hz", nullptr, this, body);
-    initLinearPercent(feedbackSlider, params.Feedback, 0.01, this, body);
-    initLinear(mixSlider, params.Mix, 0.01, this, body);
+    initChoice(typeSelector, params.Type, this, *this);
+    initChoiceToggle(syncToggle, params.Sync, this, *this);
+    initSkewFromMid(timeLSlider, params.TimeL, 0.01, " sec", nullptr, this, *this);
+    initSkewFromMid(timeRSlider, params.TimeR, 0.01, " sec", nullptr, this, *this);
+    initEnum(timeSyncLSlider, params.TimeSyncL, this, *this);
+    initEnum(timeSyncRSlider, params.TimeSyncR, this, *this);
+    initSkewFromMid(lowFreqSlider, params.LowFreq, 1.0, " Hz", nullptr, this, *this);
+    initSkewFromMid(highFreqSlider, params.HighFreq, 1.0, " Hz", nullptr, this, *this);
+    initLinearPercent(feedbackSlider, params.Feedback, 0.01, this, *this);
+    initLinear(mixSlider, params.Mix, 0.01, this, *this);
 
-    initLabel(typeLabel, "Type", body);
-    initLabel(syncLabel, "Sync", body);
-    initLabel(timeLLabel, "Time L", body);
-    initLabel(timeRLabel, "Time R", body);
-    initLabel(lowFreqLabel, "Lo Cut", body);
-    initLabel(highFreqLabel, "Hi Cut", body);
-    initLabel(feedbackLabel, "Feedback", body);
-    initLabel(mixLabel, "Mix", body);
-
-    addAndMakeVisible(body);
+    initLabel(typeLabel, "Type", *this);
+    initLabel(syncLabel, "Sync", *this);
+    initLabel(timeLLabel, "Time L", *this);
+    initLabel(timeRLabel, "Time R", *this);
+    initLabel(lowFreqLabel, "Lo Cut", *this);
+    initLabel(highFreqLabel, "Hi Cut", *this);
+    initLabel(feedbackLabel, "Feedback", *this);
+    initLabel(mixLabel, "Mix", *this);
 
     startTimerHz(30.0f);
 }
@@ -1126,11 +1115,6 @@ void DelayComponent::paint(juce::Graphics& g) {}
 void DelayComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
 
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
@@ -1145,9 +1129,7 @@ void DelayComponent::resized() {
 }
 void DelayComponent::buttonClicked(juce::Button* button) {
     auto& params = getSelectedDelayParams();
-    if (button == &header.enabledButton) {
-        *params.Enabled = header.enabledButton.getToggleState();
-    } else if (button == &syncToggle) {
+    if (button == &syncToggle) {
         *params.Sync = syncToggle.getToggleState();
     }
 }
@@ -1179,8 +1161,6 @@ void DelayComponent::sliderValueChanged(juce::Slider* slider) {
 }
 void DelayComponent::timerCallback() {
     auto& params = getSelectedDelayParams();
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(params.Enabled->get());
 
     typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
     syncToggle.setToggleState(params.Sync->get(), juce::dontSendNotification);
@@ -1199,7 +1179,7 @@ void DelayComponent::timerCallback() {
     mixSlider.setValue(params.Mix->get(), juce::dontSendNotification);
 
     mixSlider.setLookAndFeel(&grapeLookAndFeel);
-    for (auto& p : controlItemParams) {
+    for (auto& p : allParams.controlItemParams) {
         if (p.isControlling(CONTROL_TARGET_MISC_PARAM::DelayMix)) {
             mixSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }

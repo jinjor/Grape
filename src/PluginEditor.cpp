@@ -36,7 +36,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
           SectionComponent{"MOD ENV 1", HEADER_CHECK::Enabled, std::make_unique<ModEnvComponent>(0, p.allParams)},
           SectionComponent{"MOD ENV 2", HEADER_CHECK::Enabled, std::make_unique<ModEnvComponent>(1, p.allParams)},
           SectionComponent{"MOD ENV 3", HEADER_CHECK::Enabled, std::make_unique<ModEnvComponent>(2, p.allParams)}},
-      delayComponent{DelayComponent(p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+      delayComponent{SectionComponent{"DELAY", HEADER_CHECK::Enabled, std::make_unique<DelayComponent>(p.allParams)}},
       masterComponent{MasterComponent(p.allParams.voiceParams, p.allParams.mainParamList)},
       drumComponent{DrumComponent(p.allParams.voiceParams, p.allParams.mainParamList)} {
     getLookAndFeel().setColour(juce::Label::textColourId, colour::TEXT);
@@ -245,5 +245,9 @@ void GrapeAudioProcessorEditor::enabledChanged(SectionComponent *section) {
             *params.Enabled = section->getEnabled();
             return;
         }
+    }
+    if (&delayComponent == section) {
+        auto &params = audioProcessor.allParams.getCurrentMainParams().delayParams;
+        *params.Enabled = section->getEnabled();
     }
 }
