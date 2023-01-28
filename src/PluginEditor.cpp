@@ -32,9 +32,10 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
       lfoComponents{SectionComponent{"LFO 1", HEADER_CHECK::Enabled, std::make_unique<LfoComponent>(0, p.allParams)},
                     SectionComponent{"LFO 2", HEADER_CHECK::Enabled, std::make_unique<LfoComponent>(1, p.allParams)},
                     SectionComponent{"LFO 3", HEADER_CHECK::Enabled, std::make_unique<LfoComponent>(2, p.allParams)}},
-      modEnvComponents{ModEnvComponent(0, p.allParams.voiceParams, p.allParams.mainParamList),
-                       ModEnvComponent(1, p.allParams.voiceParams, p.allParams.mainParamList),
-                       ModEnvComponent(2, p.allParams.voiceParams, p.allParams.mainParamList)},
+      modEnvComponents{
+          SectionComponent{"MOD ENV 1", HEADER_CHECK::Enabled, std::make_unique<ModEnvComponent>(0, p.allParams)},
+          SectionComponent{"MOD ENV 2", HEADER_CHECK::Enabled, std::make_unique<ModEnvComponent>(1, p.allParams)},
+          SectionComponent{"MOD ENV 3", HEADER_CHECK::Enabled, std::make_unique<ModEnvComponent>(2, p.allParams)}},
       delayComponent{DelayComponent(p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
       masterComponent{MasterComponent(p.allParams.voiceParams, p.allParams.mainParamList)},
       drumComponent{DrumComponent(p.allParams.voiceParams, p.allParams.mainParamList)} {
@@ -71,9 +72,13 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
         component.addListener(this);
         addAndMakeVisible(component);
     }
-    addAndMakeVisible(modEnvComponents[0]);
-    addAndMakeVisible(modEnvComponents[1]);
-    addAndMakeVisible(modEnvComponents[2]);
+    for (auto i = 0; i < NUM_MODENV; i++) {
+        auto &params = audioProcessor.allParams.getCurrentMainParams().modEnvParams[i];
+        auto &component = modEnvComponents[i];
+        component.setEnabled(params.Enabled->get());
+        component.addListener(this);
+        addAndMakeVisible(component);
+    }
     addAndMakeVisible(delayComponent);
     addAndMakeVisible(masterComponent);
     addAndMakeVisible(drumComponent);
@@ -230,6 +235,13 @@ void GrapeAudioProcessorEditor::enabledChanged(SectionComponent *section) {
     for (auto i = 0; i < NUM_LFO; i++) {
         if (&lfoComponents[i] == section) {
             auto &params = audioProcessor.allParams.getCurrentMainParams().lfoParams[i];
+            *params.Enabled = section->getEnabled();
+            return;
+        }
+    }
+    for (auto i = 0; i < NUM_MODENV; i++) {
+        if (&modEnvComponents[i] == section) {
+            auto &params = audioProcessor.allParams.getCurrentMainParams().modEnvParams[i];
             *params.Enabled = section->getEnabled();
             return;
         }

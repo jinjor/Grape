@@ -914,11 +914,9 @@ void LfoComponent::timerCallback() {
 }
 
 //==============================================================================
-ModEnvComponent::ModEnvComponent(int index, VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
+ModEnvComponent::ModEnvComponent(int index, AllParams& allParams)
     : index(index),
-      voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      header("MOD ENV " + std::to_string(index + 1), HEADER_CHECK::Enabled),
+      allParams(allParams),
       targetTypeSelector("TargetType"),
       targetOscSelector("TargetOsc"),
       targetFilterSelector("TargetFilter"),
@@ -933,10 +931,6 @@ ModEnvComponent::ModEnvComponent(int index, VoiceParams& voiceParams, std::vecto
       decaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                   juce::Slider::TextEntryBoxPosition::NoTextBox) {
     auto& params = getSelectedModEnvParams();
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    header.enabledButton.addListener(this);
-    addAndMakeVisible(header);
 
     initChoice(targetTypeSelector, params.TargetType, this, targetSelector);
     initChoice(targetOscSelector, params.TargetOsc, this, targetSelector);
@@ -945,24 +939,23 @@ ModEnvComponent::ModEnvComponent(int index, VoiceParams& voiceParams, std::vecto
     initChoice(targetOscParamSelector, params.TargetOscParam, this, targetSelector);
     initChoice(targetFilterParamSelector, params.TargetFilterParam, this, targetSelector);
     initChoice(targetLfoParamSelector, params.TargetLfoParam, this, targetSelector);
-    initChoice(fadeSelector, params.Fade, this, body);
+    initChoice(fadeSelector, params.Fade, this, *this);
     auto formatPeakFreq = [](double oct) -> juce::String {
         return (oct == 0 ? " " : oct > 0 ? "+" : "-") + juce::String(std::abs(oct), 2) + " oct";
     };
-    initLinear(peakFreqSlider, params.PeakFreq, 0.01, nullptr, std::move(formatPeakFreq), this, body);
-    initSkewFromMid(waitSlider, params.Wait, 0.01, " sec", nullptr, this, body);
-    initSkewFromMid(attackSlider, params.Attack, 0.001, " sec", nullptr, this, body);
-    initSkewFromMid(decaySlider, params.Decay, 0.01, " sec", nullptr, this, body);
-    initLabel(targetLabel, "Destination", body);
-    initLabel(typeLabel, "Type", body);
-    initLabel(fadeLabel, "Fade", body);
-    initLabel(peakFreqLabel, "Peak Freq", body);
-    initLabel(waitLabel, "Wait", body);
-    initLabel(attackLabel, "Attack", body);
-    initLabel(decayLabel, "Decay", body);
+    initLinear(peakFreqSlider, params.PeakFreq, 0.01, nullptr, std::move(formatPeakFreq), this, *this);
+    initSkewFromMid(waitSlider, params.Wait, 0.01, " sec", nullptr, this, *this);
+    initSkewFromMid(attackSlider, params.Attack, 0.001, " sec", nullptr, this, *this);
+    initSkewFromMid(decaySlider, params.Decay, 0.01, " sec", nullptr, this, *this);
+    initLabel(targetLabel, "Destination", *this);
+    initLabel(typeLabel, "Type", *this);
+    initLabel(fadeLabel, "Fade", *this);
+    initLabel(peakFreqLabel, "Peak Freq", *this);
+    initLabel(waitLabel, "Wait", *this);
+    initLabel(attackLabel, "Attack", *this);
+    initLabel(decayLabel, "Decay", *this);
 
-    body.addAndMakeVisible(targetSelector);
-    addAndMakeVisible(body);
+    this->addAndMakeVisible(targetSelector);
 
     startTimerHz(30.0f);
 }
@@ -974,11 +967,6 @@ void ModEnvComponent::paint(juce::Graphics& g) {}
 void ModEnvComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
 
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
@@ -1004,12 +992,6 @@ void ModEnvComponent::resized() {
     }
     consumeLabeledKnob(lowerArea, waitLabel, waitSlider, attackLabel, attackSlider);
     consumeLabeledKnob(lowerArea, decayLabel, decaySlider);
-}
-void ModEnvComponent::buttonClicked(juce::Button* button) {
-    auto& params = getSelectedModEnvParams();
-    if (button == &header.enabledButton) {
-        *params.Enabled = header.enabledButton.getToggleState();
-    }
 }
 void ModEnvComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
     auto& params = getSelectedModEnvParams();
@@ -1046,8 +1028,6 @@ void ModEnvComponent::sliderValueChanged(juce::Slider* slider) {
 }
 void ModEnvComponent::timerCallback() {
     auto& params = getSelectedModEnvParams();
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(params.Enabled->get());
 
     targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
     targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);

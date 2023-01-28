@@ -30,7 +30,7 @@ private:
     SectionComponent envelopeComponents[NUM_ENVELOPE];
     SectionComponent filterComponents[NUM_FILTER];
     SectionComponent lfoComponents[NUM_LFO];
-    ModEnvComponent modEnvComponents[NUM_MODENV];
+    SectionComponent modEnvComponents[NUM_MODENV];
     DelayComponent delayComponent;
     MasterComponent masterComponent;
     DrumComponent drumComponent;

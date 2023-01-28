@@ -667,33 +667,26 @@ private:
 
 //==============================================================================
 class ModEnvComponent : public juce::Component,
-                        juce::ToggleButton::Listener,
                         juce::ComboBox::Listener,
                         juce::Slider::Listener,
                         private juce::Timer,
                         ComponentHelper {
 public:
-    ModEnvComponent(int index, VoiceParams& voiceParams, std::vector<MainParams>& mainParamList);
+    ModEnvComponent(int index, AllParams& allParams);
     virtual ~ModEnvComponent();
     ModEnvComponent(const ModEnvComponent&) = delete;
 
     virtual void paint(juce::Graphics& g) override;
-
     virtual void resized() override;
 
 private:
-    virtual void buttonClicked(juce::Button* button) override;
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     int index;
 
-    VoiceParams& voiceParams;
-    std::vector<MainParams>& mainParamList;
+    AllParams& allParams;
 
-    HeaderComponent header;
-
-    juce::Component body;
     juce::Component targetSelector;
 
     juce::ComboBox targetTypeSelector;
@@ -717,9 +710,7 @@ private:
     juce::Label attackLabel;
     juce::Label decayLabel;
 
-    ModEnvParams& getSelectedModEnvParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].modEnvParams[index];
-    }
+    ModEnvParams& getSelectedModEnvParams() { return allParams.getCurrentMainParams().modEnvParams[index]; }
 };
 
 //==============================================================================
