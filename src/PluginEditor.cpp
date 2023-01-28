@@ -33,8 +33,13 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
                                2, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
 
       },
-      envelopeComponents{EnvelopeComponent(0, p.allParams.voiceParams, p.allParams.mainParamList),
-                         EnvelopeComponent(1, p.allParams.voiceParams, p.allParams.mainParamList)},
+      envelopeComponents{
+          SectionComponent{"ENV 1",
+                           HEADER_CHECK::Hidden,
+                           std::make_unique<EnvelopeComponent>(0, p.allParams.voiceParams, p.allParams.mainParamList)},
+          SectionComponent{"ENV 2",
+                           HEADER_CHECK::Hidden,
+                           std::make_unique<EnvelopeComponent>(1, p.allParams.voiceParams, p.allParams.mainParamList)}},
       filterComponents{
           SectionComponent{"FILTER 1",
                            HEADER_CHECK::Enabled,
@@ -67,8 +72,12 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
         component.addListener(this);
         addAndMakeVisible(component);
     }
-    addAndMakeVisible(envelopeComponents[0]);
-    addAndMakeVisible(envelopeComponents[1]);
+    for (auto i = 0; i < NUM_ENVELOPE; i++) {
+        auto &component = envelopeComponents[i];
+        // component.setEnabled(true);
+        component.addListener(this);
+        addAndMakeVisible(component);
+    }
     for (auto i = 0; i < NUM_FILTER; i++) {
         auto &params = audioProcessor.allParams.getCurrentMainParams().filterParams[i];
         auto &component = filterComponents[i];

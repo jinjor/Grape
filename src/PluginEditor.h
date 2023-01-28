@@ -27,7 +27,7 @@ private:
     StatusComponent statusComponent;
     UtilComponent utilComponent;
     SectionComponent oscComponents[NUM_OSC];
-    EnvelopeComponent envelopeComponents[NUM_ENVELOPE];
+    SectionComponent envelopeComponents[NUM_ENVELOPE];
     SectionComponent filterComponents[NUM_FILTER];
     LfoComponent lfoComponents[NUM_LFO];
     ModEnvComponent modEnvComponents[NUM_MODENV];

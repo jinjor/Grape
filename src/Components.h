@@ -571,8 +571,6 @@ private:
     VoiceParams& voiceParams;
     std::vector<MainParams>& mainParamList;
 
-    HeaderComponent header;
-
     juce::Slider attackCurveSlider;
     juce::Slider attackSlider;
     juce::Slider decaySlider;

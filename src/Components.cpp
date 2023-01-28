@@ -616,7 +616,6 @@ EnvelopeComponent::EnvelopeComponent(int index, VoiceParams& voiceParams, std::v
     : index(index),
       voiceParams(voiceParams),
       mainParamList(mainParamList),
-      header("ENV " + std::to_string(index + 1), HEADER_CHECK::Hidden),
       attackCurveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                         juce::Slider::TextEntryBoxPosition::NoTextBox),
       attackSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -627,9 +626,6 @@ EnvelopeComponent::EnvelopeComponent(int index, VoiceParams& voiceParams, std::v
                     juce::Slider::TextEntryBoxPosition::NoTextBox),
       releaseSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                     juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     auto& params = getSelectedEnvelopeParams();
 
     initLinear(attackCurveSlider, params.AttackCurve, 0.01, this, *this);
@@ -652,8 +648,6 @@ void EnvelopeComponent::paint(juce::Graphics& g) {}
 
 void EnvelopeComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
 
     consumeLabeledKnob(bounds, attackCurveLabel, attackCurveSlider);
     consumeLabeledKnob(bounds, attackLabel, attackSlider);
