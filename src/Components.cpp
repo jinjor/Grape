@@ -475,14 +475,9 @@ void MasterComponent::timerCallback() {
 }
 
 //==============================================================================
-OscComponent::OscComponent(int index,
-                           VoiceParams& voiceParams,
-                           std::vector<MainParams>& mainParamList,
-                           std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+OscComponent::OscComponent(int index, AllParams& allParams)
     : index(index),
-      voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      controlItemParams(controlItemParams),
+      allParams(allParams),
       envelopeSelector("Envelope"),
       waveformSelector("Waveform"),
       edgeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -598,7 +593,7 @@ void OscComponent::timerCallback() {
     detuneSlider.setLookAndFeel(&grapeLookAndFeel);
     spreadSlider.setLookAndFeel(&grapeLookAndFeel);
     gainSlider.setLookAndFeel(&grapeLookAndFeel);
-    for (auto& p : controlItemParams) {
+    for (auto& p : allParams.controlItemParams) {
         if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Edge, index)) {
             edgeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         } else if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Detune, index)) {
@@ -612,10 +607,9 @@ void OscComponent::timerCallback() {
 }
 
 //==============================================================================
-EnvelopeComponent::EnvelopeComponent(int index, VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
+EnvelopeComponent::EnvelopeComponent(int index, AllParams& allParams)
     : index(index),
-      voiceParams(voiceParams),
-      mainParamList(mainParamList),
+      allParams(allParams),
       attackCurveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                         juce::Slider::TextEntryBoxPosition::NoTextBox),
       attackSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -679,14 +673,9 @@ void EnvelopeComponent::timerCallback() {
 }
 
 //==============================================================================
-FilterComponent::FilterComponent(int index,
-                                 VoiceParams& voiceParams,
-                                 std::vector<MainParams>& mainParamList,
-                                 std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+FilterComponent::FilterComponent(int index, AllParams& allParams)
     : index(index),
-      voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      controlItemParams(controlItemParams),
+      allParams(allParams),
       targetSelector("Target"),
       typeSelector("Type"),
       freqTypeToggle("Freq Type"),
@@ -786,7 +775,7 @@ void FilterComponent::timerCallback() {
     hzSlider.setLookAndFeel(&grapeLookAndFeel);
     semitoneSlider.setLookAndFeel(&grapeLookAndFeel);
     qSlider.setLookAndFeel(&grapeLookAndFeel);
-    for (auto& p : controlItemParams) {
+    for (auto& p : allParams.controlItemParams) {
         if (p.isControlling(CONTROL_TARGET_FILTER_PARAM::Freq, index)) {
             hzSlider.setLookAndFeel(&grapeLookAndFeelControlled);
             semitoneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
@@ -797,14 +786,9 @@ void FilterComponent::timerCallback() {
 }
 
 //==============================================================================
-LfoComponent::LfoComponent(int index,
-                           VoiceParams& voiceParams,
-                           std::vector<MainParams>& mainParamList,
-                           std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+LfoComponent::LfoComponent(int index, AllParams& allParams)
     : index(index),
-      voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      controlItemParams(controlItemParams),
+      allParams(allParams),
       targetTypeSelector("TargetType"),
       targetOscSelector("TargetOsc"),
       targetFilterSelector("TargetFilter"),
@@ -919,7 +903,7 @@ void LfoComponent::timerCallback() {
     fastFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     amountSlider.setLookAndFeel(&grapeLookAndFeel);
-    for (auto& p : controlItemParams) {
+    for (auto& p : allParams.controlItemParams) {
         if (p.isControlling(CONTROL_TARGET_LFO_PARAM::Freq, index)) {
             fastFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
             slowFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);

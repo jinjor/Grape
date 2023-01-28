@@ -19,49 +19,19 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
       statusComponent(&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider),
       utilComponent(p),
       oscComponents{
-          SectionComponent{"OSC 1",
-                           HEADER_CHECK::Enabled,
-                           std::make_unique<OscComponent>(
-                               0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
-          SectionComponent{"OSC 2",
-                           HEADER_CHECK::Enabled,
-                           std::make_unique<OscComponent>(
-                               1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
-          SectionComponent{"OSC 3",
-                           HEADER_CHECK::Enabled,
-                           std::make_unique<OscComponent>(
-                               2, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
-
+          SectionComponent{"OSC 1", HEADER_CHECK::Enabled, std::make_unique<OscComponent>(0, p.allParams)},
+          SectionComponent{"OSC 2", HEADER_CHECK::Enabled, std::make_unique<OscComponent>(1, p.allParams)},
+          SectionComponent{"OSC 3", HEADER_CHECK::Enabled, std::make_unique<OscComponent>(2, p.allParams)},
       },
       envelopeComponents{
-          SectionComponent{"ENV 1",
-                           HEADER_CHECK::Hidden,
-                           std::make_unique<EnvelopeComponent>(0, p.allParams.voiceParams, p.allParams.mainParamList)},
-          SectionComponent{"ENV 2",
-                           HEADER_CHECK::Hidden,
-                           std::make_unique<EnvelopeComponent>(1, p.allParams.voiceParams, p.allParams.mainParamList)}},
+          SectionComponent{"ENV 1", HEADER_CHECK::Hidden, std::make_unique<EnvelopeComponent>(0, p.allParams)},
+          SectionComponent{"ENV 2", HEADER_CHECK::Hidden, std::make_unique<EnvelopeComponent>(1, p.allParams)}},
       filterComponents{
-          SectionComponent{"FILTER 1",
-                           HEADER_CHECK::Enabled,
-                           std::make_unique<FilterComponent>(
-                               0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
-          SectionComponent{"FILTER 2",
-                           HEADER_CHECK::Enabled,
-                           std::make_unique<FilterComponent>(
-                               1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)}},
-      lfoComponents{
-          SectionComponent{"LFO 1",
-                           HEADER_CHECK::Enabled,
-                           std::make_unique<LfoComponent>(
-                               0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
-          SectionComponent{"LFO 2",
-                           HEADER_CHECK::Enabled,
-                           std::make_unique<LfoComponent>(
-                               1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
-          SectionComponent{"LFO 3",
-                           HEADER_CHECK::Enabled,
-                           std::make_unique<LfoComponent>(
-                               2, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)}},
+          SectionComponent{"FILTER 1", HEADER_CHECK::Enabled, std::make_unique<FilterComponent>(0, p.allParams)},
+          SectionComponent{"FILTER 2", HEADER_CHECK::Enabled, std::make_unique<FilterComponent>(1, p.allParams)}},
+      lfoComponents{SectionComponent{"LFO 1", HEADER_CHECK::Enabled, std::make_unique<LfoComponent>(0, p.allParams)},
+                    SectionComponent{"LFO 2", HEADER_CHECK::Enabled, std::make_unique<LfoComponent>(1, p.allParams)},
+                    SectionComponent{"LFO 3", HEADER_CHECK::Enabled, std::make_unique<LfoComponent>(2, p.allParams)}},
       modEnvComponents{ModEnvComponent(0, p.allParams.voiceParams, p.allParams.mainParamList),
                        ModEnvComponent(1, p.allParams.voiceParams, p.allParams.mainParamList),
                        ModEnvComponent(2, p.allParams.voiceParams, p.allParams.mainParamList)},
