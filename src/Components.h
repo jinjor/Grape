@@ -640,7 +640,6 @@ private:
 
 //==============================================================================
 class LfoComponent : public juce::Component,
-                     juce::ToggleButton::Listener,
                      juce::ComboBox::Listener,
                      juce::Slider::Listener,
                      private juce::Timer,
@@ -658,7 +657,6 @@ public:
     virtual void resized() override;
 
 private:
-    virtual void buttonClicked(juce::Button* button) override;
     virtual void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
@@ -668,9 +666,6 @@ private:
     std::vector<MainParams>& mainParamList;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
 
-    HeaderComponent header;
-
-    juce::Component body;
     juce::Component targetSelector;
 
     juce::ComboBox targetTypeSelector;

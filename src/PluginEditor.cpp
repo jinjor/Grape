@@ -49,9 +49,19 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
                            HEADER_CHECK::Enabled,
                            std::make_unique<FilterComponent>(
                                1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)}},
-      lfoComponents{LfoComponent(0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
-                    LfoComponent(1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
-                    LfoComponent(2, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+      lfoComponents{
+          SectionComponent{"LFO 1",
+                           HEADER_CHECK::Enabled,
+                           std::make_unique<LfoComponent>(
+                               0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+          SectionComponent{"LFO 2",
+                           HEADER_CHECK::Enabled,
+                           std::make_unique<LfoComponent>(
+                               1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
+          SectionComponent{"LFO 3",
+                           HEADER_CHECK::Enabled,
+                           std::make_unique<LfoComponent>(
+                               2, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)}},
       modEnvComponents{ModEnvComponent(0, p.allParams.voiceParams, p.allParams.mainParamList),
                        ModEnvComponent(1, p.allParams.voiceParams, p.allParams.mainParamList),
                        ModEnvComponent(2, p.allParams.voiceParams, p.allParams.mainParamList)},
@@ -74,7 +84,6 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     }
     for (auto i = 0; i < NUM_ENVELOPE; i++) {
         auto &component = envelopeComponents[i];
-        // component.setEnabled(true);
         component.addListener(this);
         addAndMakeVisible(component);
     }
@@ -85,9 +94,13 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
         component.addListener(this);
         addAndMakeVisible(component);
     }
-    addAndMakeVisible(lfoComponents[0]);
-    addAndMakeVisible(lfoComponents[1]);
-    addAndMakeVisible(lfoComponents[2]);
+    for (auto i = 0; i < NUM_LFO; i++) {
+        auto &params = audioProcessor.allParams.getCurrentMainParams().lfoParams[i];
+        auto &component = lfoComponents[i];
+        component.setEnabled(params.Enabled->get());
+        component.addListener(this);
+        addAndMakeVisible(component);
+    }
     addAndMakeVisible(modEnvComponents[0]);
     addAndMakeVisible(modEnvComponents[1]);
     addAndMakeVisible(modEnvComponents[2]);
@@ -240,6 +253,13 @@ void GrapeAudioProcessorEditor::enabledChanged(SectionComponent *section) {
     for (auto i = 0; i < NUM_FILTER; i++) {
         if (&filterComponents[i] == section) {
             auto &params = audioProcessor.allParams.getCurrentMainParams().filterParams[i];
+            *params.Enabled = section->getEnabled();
+            return;
+        }
+    }
+    for (auto i = 0; i < NUM_LFO; i++) {
+        if (&filterComponents[i] == section) {
+            auto &params = audioProcessor.allParams.getCurrentMainParams().lfoParams[i];
             *params.Enabled = section->getEnabled();
             return;
         }

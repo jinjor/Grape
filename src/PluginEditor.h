@@ -29,7 +29,7 @@ private:
     SectionComponent oscComponents[NUM_OSC];
     SectionComponent envelopeComponents[NUM_ENVELOPE];
     SectionComponent filterComponents[NUM_FILTER];
-    LfoComponent lfoComponents[NUM_LFO];
+    SectionComponent lfoComponents[NUM_LFO];
     ModEnvComponent modEnvComponents[NUM_MODENV];
     DelayComponent delayComponent;
     MasterComponent masterComponent;

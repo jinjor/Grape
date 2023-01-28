@@ -805,7 +805,6 @@ LfoComponent::LfoComponent(int index,
       voiceParams(voiceParams),
       mainParamList(mainParamList),
       controlItemParams(controlItemParams),
-      header("LFO " + std::to_string(index + 1), HEADER_CHECK::Enabled),
       targetTypeSelector("TargetType"),
       targetOscSelector("TargetOsc"),
       targetFilterSelector("TargetFilter"),
@@ -819,29 +818,24 @@ LfoComponent::LfoComponent(int index,
       amountSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox) {
     auto& params = getSelectedLfoParams();
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    header.enabledButton.addListener(this);
-    addAndMakeVisible(header);
 
     initChoice(targetTypeSelector, params.TargetType, this, targetSelector);
     initChoice(targetOscSelector, params.TargetOsc, this, targetSelector);
     initChoice(targetFilterSelector, params.TargetFilter, this, targetSelector);
     initChoice(targetOscParamSelector, params.TargetOscParam, this, targetSelector);
     initChoice(targetFilterParamSelector, params.TargetFilterParam, this, targetSelector);
-    initChoice(waveformSelector, params.Waveform, this, body);
-    initSkewFromMid(slowFreqSlider, params.SlowFreq, 0.01f, " Hz", nullptr, this, body);
-    initSkewFromMid(fastFreqSlider, params.FastFreq, 0.01f, " x", nullptr, this, body);
-    initLinear(amountSlider, params.Amount, 0.01, this, body);
+    initChoice(waveformSelector, params.Waveform, this, *this);
+    initSkewFromMid(slowFreqSlider, params.SlowFreq, 0.01f, " Hz", nullptr, this, *this);
+    initSkewFromMid(fastFreqSlider, params.FastFreq, 0.01f, " x", nullptr, this, *this);
+    initLinear(amountSlider, params.Amount, 0.01, this, *this);
 
-    initLabel(targetLabel, "Destination", body);
-    initLabel(typeLabel, "Type", body);
-    initLabel(waveformLabel, "Waveform", body);
-    initLabel(freqLabel, "Freq", body);
-    initLabel(amountLabel, "Amount", body);
+    initLabel(targetLabel, "Destination", *this);
+    initLabel(typeLabel, "Type", *this);
+    initLabel(waveformLabel, "Waveform", *this);
+    initLabel(freqLabel, "Freq", *this);
+    initLabel(amountLabel, "Amount", *this);
 
-    body.addAndMakeVisible(targetSelector);
-    addAndMakeVisible(body);
+    this->addAndMakeVisible(targetSelector);
 
     startTimerHz(30.0f);
 }
@@ -853,11 +847,6 @@ void LfoComponent::paint(juce::Graphics& g) {}
 void LfoComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
 
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
@@ -875,12 +864,6 @@ void LfoComponent::resized() {
     consumeLabeledComboBox(lowerArea, 120, waveformLabel, waveformSelector);
     consumeLabeledKnob(lowerArea, freqLabel, fastFreqSlider, slowFreqSlider);
     consumeLabeledKnob(lowerArea, amountLabel, amountSlider);
-}
-void LfoComponent::buttonClicked(juce::Button* button) {
-    auto& params = getSelectedLfoParams();
-    if (button == &header.enabledButton) {
-        *params.Enabled = header.enabledButton.getToggleState();
-    }
 }
 void LfoComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
     auto& params = getSelectedLfoParams();
@@ -911,8 +894,6 @@ void LfoComponent::sliderValueChanged(juce::Slider* slider) {
 }
 void LfoComponent::timerCallback() {
     auto& params = getSelectedLfoParams();
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(params.Enabled->get());
 
     targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
     targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
