@@ -80,7 +80,11 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
         component.addListener(this);
         addAndMakeVisible(component);
     }
-    addAndMakeVisible(delayComponent);
+    {
+        auto &params = audioProcessor.allParams.getCurrentMainParams().delayParams;
+        delayComponent.setEnabled(params.Enabled->get());
+        addAndMakeVisible(delayComponent);
+    }
     addAndMakeVisible(masterComponent);
     addAndMakeVisible(drumComponent);
     addAndMakeVisible(controlComponent);
