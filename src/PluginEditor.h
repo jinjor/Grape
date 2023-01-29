@@ -7,7 +7,7 @@
 #include "Voice.h"
 
 //==============================================================================
-class GrapeAudioProcessorEditor : public juce::AudioProcessorEditor, private juce::Timer {
+class GrapeAudioProcessorEditor : public juce::AudioProcessorEditor, private juce::Timer, SectionComponent::Listener {
 public:
     GrapeAudioProcessorEditor(GrapeAudioProcessor &);
     ~GrapeAudioProcessorEditor() override;
@@ -20,22 +20,23 @@ private:
     GrapeAudioProcessor &audioProcessor;
     ANALYSER_MODE analyserMode = ANALYSER_MODE::Spectrum;
 
-    ControlComponent controlComponent;
-    VoiceComponent voiceComponent;
+    SectionComponent controlComponent;
+    SectionComponent voiceComponent;
     AnalyserToggle analyserToggle;
     AnalyserWindow analyserWindow;
     StatusComponent statusComponent;
-    UtilComponent utilComponent;
-    OscComponent oscComponents[NUM_OSC];
-    EnvelopeComponent envelopeComponents[NUM_ENVELOPE];
-    FilterComponent filterComponents[NUM_FILTER];
-    LfoComponent lfoComponents[NUM_LFO];
-    ModEnvComponent modEnvComponents[NUM_MODENV];
-    DelayComponent delayComponent;
-    MasterComponent masterComponent;
-    DrumComponent drumComponent;
+    SectionComponent utilComponent;
+    SectionComponent oscComponents[NUM_OSC];
+    SectionComponent envelopeComponents[NUM_ENVELOPE];
+    SectionComponent filterComponents[NUM_FILTER];
+    SectionComponent lfoComponents[NUM_LFO];
+    SectionComponent modEnvComponents[NUM_MODENV];
+    SectionComponent delayComponent;
+    SectionComponent masterComponent;
+    SectionComponent drumComponent;
 
     virtual void timerCallback() override;
+    virtual void enabledChanged(SectionComponent *section) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GrapeAudioProcessorEditor)
 };

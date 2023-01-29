@@ -11,30 +11,35 @@ using namespace styles;
 GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     : AudioProcessorEditor(&p),
       audioProcessor(p),
-      controlComponent{ControlComponent(p.allParams.controlItemParams)},
-      voiceComponent(p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
+      controlComponent{SectionComponent{
+          "CONTROLS", HEADER_CHECK::Hidden, std::make_unique<ControlComponent>(p.allParams.controlItemParams)}},
+      voiceComponent{SectionComponent{"VOICE", HEADER_CHECK::Hidden, std::make_unique<VoiceComponent>(p.allParams)}},
       analyserToggle(&analyserMode),
       analyserWindow(
           &analyserMode, &p.latestDataProvider, &p.monoStack, p.allParams.voiceParams, p.allParams.mainParamList),
       statusComponent(&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider),
-      utilComponent(p),
-      oscComponents{OscComponent(0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
-                    OscComponent(1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
-                    OscComponent(2, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
-      envelopeComponents{EnvelopeComponent(0, p.allParams.voiceParams, p.allParams.mainParamList),
-                         EnvelopeComponent(1, p.allParams.voiceParams, p.allParams.mainParamList)},
+      utilComponent{SectionComponent{"UTILITY", HEADER_CHECK::Hidden, std::make_unique<UtilComponent>(p)}},
+      oscComponents{
+          SectionComponent{"OSC 1", HEADER_CHECK::Enabled, std::make_unique<OscComponent>(0, p.allParams)},
+          SectionComponent{"OSC 2", HEADER_CHECK::Enabled, std::make_unique<OscComponent>(1, p.allParams)},
+          SectionComponent{"OSC 3", HEADER_CHECK::Enabled, std::make_unique<OscComponent>(2, p.allParams)},
+      },
+      envelopeComponents{
+          SectionComponent{"ENV 1", HEADER_CHECK::Hidden, std::make_unique<EnvelopeComponent>(0, p.allParams)},
+          SectionComponent{"ENV 2", HEADER_CHECK::Hidden, std::make_unique<EnvelopeComponent>(1, p.allParams)}},
       filterComponents{
-          FilterComponent(0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
-          FilterComponent(1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
-      lfoComponents{LfoComponent(0, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
-                    LfoComponent(1, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
-                    LfoComponent(2, p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
-      modEnvComponents{ModEnvComponent(0, p.allParams.voiceParams, p.allParams.mainParamList),
-                       ModEnvComponent(1, p.allParams.voiceParams, p.allParams.mainParamList),
-                       ModEnvComponent(2, p.allParams.voiceParams, p.allParams.mainParamList)},
-      delayComponent{DelayComponent(p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams)},
-      masterComponent{MasterComponent(p.allParams.voiceParams, p.allParams.mainParamList)},
-      drumComponent{DrumComponent(p.allParams.voiceParams, p.allParams.mainParamList)} {
+          SectionComponent{"FILTER 1", HEADER_CHECK::Enabled, std::make_unique<FilterComponent>(0, p.allParams)},
+          SectionComponent{"FILTER 2", HEADER_CHECK::Enabled, std::make_unique<FilterComponent>(1, p.allParams)}},
+      lfoComponents{SectionComponent{"LFO 1", HEADER_CHECK::Enabled, std::make_unique<LfoComponent>(0, p.allParams)},
+                    SectionComponent{"LFO 2", HEADER_CHECK::Enabled, std::make_unique<LfoComponent>(1, p.allParams)},
+                    SectionComponent{"LFO 3", HEADER_CHECK::Enabled, std::make_unique<LfoComponent>(2, p.allParams)}},
+      modEnvComponents{
+          SectionComponent{"MOD ENV 1", HEADER_CHECK::Enabled, std::make_unique<ModEnvComponent>(0, p.allParams)},
+          SectionComponent{"MOD ENV 2", HEADER_CHECK::Enabled, std::make_unique<ModEnvComponent>(1, p.allParams)},
+          SectionComponent{"MOD ENV 3", HEADER_CHECK::Enabled, std::make_unique<ModEnvComponent>(2, p.allParams)}},
+      delayComponent{SectionComponent{"DELAY", HEADER_CHECK::Enabled, std::make_unique<DelayComponent>(p.allParams)}},
+      masterComponent{SectionComponent{"MASTER", HEADER_CHECK::Hidden, std::make_unique<MasterComponent>(p.allParams)}},
+      drumComponent{SectionComponent{"DRUM", HEADER_CHECK::Hidden, std::make_unique<DrumComponent>(p.allParams)}} {
     getLookAndFeel().setColour(juce::Label::textColourId, colour::TEXT);
 
     addAndMakeVisible(voiceComponent);
@@ -42,20 +47,44 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     addAndMakeVisible(analyserWindow);
     addAndMakeVisible(statusComponent);
     addAndMakeVisible(utilComponent);
-    addAndMakeVisible(oscComponents[0]);
-    addAndMakeVisible(oscComponents[1]);
-    addAndMakeVisible(oscComponents[2]);
-    addAndMakeVisible(envelopeComponents[0]);
-    addAndMakeVisible(envelopeComponents[1]);
-    addAndMakeVisible(filterComponents[0]);
-    addAndMakeVisible(filterComponents[1]);
-    addAndMakeVisible(lfoComponents[0]);
-    addAndMakeVisible(lfoComponents[1]);
-    addAndMakeVisible(lfoComponents[2]);
-    addAndMakeVisible(modEnvComponents[0]);
-    addAndMakeVisible(modEnvComponents[1]);
-    addAndMakeVisible(modEnvComponents[2]);
-    addAndMakeVisible(delayComponent);
+    for (auto i = 0; i < NUM_OSC; i++) {
+        auto &params = audioProcessor.allParams.getCurrentMainParams().oscParams[i];
+        auto &component = oscComponents[i];
+        component.setEnabled(params.Enabled->get());
+        component.addListener(this);
+        addAndMakeVisible(component);
+    }
+    for (auto i = 0; i < NUM_ENVELOPE; i++) {
+        auto &component = envelopeComponents[i];
+        component.addListener(this);
+        addAndMakeVisible(component);
+    }
+    for (auto i = 0; i < NUM_FILTER; i++) {
+        auto &params = audioProcessor.allParams.getCurrentMainParams().filterParams[i];
+        auto &component = filterComponents[i];
+        component.setEnabled(params.Enabled->get());
+        component.addListener(this);
+        addAndMakeVisible(component);
+    }
+    for (auto i = 0; i < NUM_LFO; i++) {
+        auto &params = audioProcessor.allParams.getCurrentMainParams().lfoParams[i];
+        auto &component = lfoComponents[i];
+        component.setEnabled(params.Enabled->get());
+        component.addListener(this);
+        addAndMakeVisible(component);
+    }
+    for (auto i = 0; i < NUM_MODENV; i++) {
+        auto &params = audioProcessor.allParams.getCurrentMainParams().modEnvParams[i];
+        auto &component = modEnvComponents[i];
+        component.setEnabled(params.Enabled->get());
+        component.addListener(this);
+        addAndMakeVisible(component);
+    }
+    {
+        auto &params = audioProcessor.allParams.getCurrentMainParams().delayParams;
+        delayComponent.setEnabled(params.Enabled->get());
+        addAndMakeVisible(delayComponent);
+    }
     addAndMakeVisible(masterComponent);
     addAndMakeVisible(drumComponent);
     addAndMakeVisible(controlComponent);
@@ -188,9 +217,42 @@ void GrapeAudioProcessorEditor::resized() {
         }
     }
 }
-
 void GrapeAudioProcessorEditor::timerCallback() {
     auto isDrumMode = audioProcessor.allParams.voiceParams.isDrumMode();
     drumComponent.setVisible(isDrumMode);
     controlComponent.setVisible(!isDrumMode);
+}
+void GrapeAudioProcessorEditor::enabledChanged(SectionComponent *section) {
+    for (auto i = 0; i < NUM_OSC; i++) {
+        if (&oscComponents[i] == section) {
+            auto &params = audioProcessor.allParams.getCurrentMainParams().oscParams[i];
+            *params.Enabled = section->getEnabled();
+            return;
+        }
+    }
+    for (auto i = 0; i < NUM_FILTER; i++) {
+        if (&filterComponents[i] == section) {
+            auto &params = audioProcessor.allParams.getCurrentMainParams().filterParams[i];
+            *params.Enabled = section->getEnabled();
+            return;
+        }
+    }
+    for (auto i = 0; i < NUM_LFO; i++) {
+        if (&lfoComponents[i] == section) {
+            auto &params = audioProcessor.allParams.getCurrentMainParams().lfoParams[i];
+            *params.Enabled = section->getEnabled();
+            return;
+        }
+    }
+    for (auto i = 0; i < NUM_MODENV; i++) {
+        if (&modEnvComponents[i] == section) {
+            auto &params = audioProcessor.allParams.getCurrentMainParams().modEnvParams[i];
+            *params.Enabled = section->getEnabled();
+            return;
+        }
+    }
+    if (&delayComponent == section) {
+        auto &params = audioProcessor.allParams.getCurrentMainParams().delayParams;
+        *params.Enabled = section->getEnabled();
+    }
 }

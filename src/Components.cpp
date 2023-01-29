@@ -49,6 +49,35 @@ void HeaderComponent::resized() {
 }
 
 //==============================================================================
+SectionComponent::SectionComponent(std::string name, HEADER_CHECK check, std::unique_ptr<juce::Component> _body)
+    : header(std::move(name), check), body(std::move(_body)) {
+    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
+    header.enabledButton.addListener(this);
+    addAndMakeVisible(header);
+    addAndMakeVisible(*body);
+}
+SectionComponent::~SectionComponent() {}
+void SectionComponent::paint(juce::Graphics& g) {}
+void SectionComponent::resized() {
+    juce::Rectangle<int> bounds = getLocalBounds();
+    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
+    header.setBounds(headerArea);
+    body->setBounds(bounds);
+}
+void SectionComponent::addListener(Listener* newListener) { listeners.add(newListener); }
+void SectionComponent::setEnabled(bool enabled) {
+    header.enabledButton.setToggleState(enabled, juce::dontSendNotification);
+    body->setEnabled(enabled);
+}
+bool SectionComponent::getEnabled() { return header.enabledButton.getToggleState(); }
+void SectionComponent::buttonClicked(juce::Button* button) {
+    if (button == &header.enabledButton) {
+        body->setEnabled(getEnabled());
+        listeners.call([this](Listener& l) { l.enabledChanged(this); });
+    }
+}
+
+//==============================================================================
 ArrowButton2::ArrowButton2(const String& name, float arrowDirectionInRadians, Colour arrowColour)
     : Button(name), colour(arrowColour) {
     path.addTriangle(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f);
@@ -153,20 +182,14 @@ void IncDecButton::sliderValueChanged(juce::Slider* _slider) {
 }
 
 //==============================================================================
-VoiceComponent::VoiceComponent(VoiceParams& params,
-                               std::vector<MainParams>& mainParamList,
-                               std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
-    : params(params),
-      mainParamList(mainParamList),
-      controlItemParams(controlItemParams),
-      header("VOICE", HEADER_CHECK::Hidden),
+VoiceComponent::VoiceComponent(AllParams& allParams)
+    : params(allParams.voiceParams),
+      mainParamList(allParams.mainParamList),
+      controlItemParams(allParams.controlItemParams),
       modeSelector("Mode"),
       portamentoTimeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                            juce::Slider::TextEntryBoxPosition::NoTextBox),
       pitchBendRangeButton() {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     initChoice(modeSelector, params.Mode, this, *this);
     initLinear(portamentoTimeSlider, params.PortamentoTime, 0.001, " sec", nullptr, this, *this);
     initIncDec(pitchBendRangeButton, params.PitchBendRange, this, *this);
@@ -188,9 +211,6 @@ void VoiceComponent::paint(juce::Graphics& g) {}
 
 void VoiceComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
     bounds.reduce(0, 10);
     consumeLabeledComboBox(bounds, 70, modeLabel, modeSelector);
     auto drumBounds = bounds;
@@ -271,13 +291,7 @@ void VoiceComponent::timerCallback() {
 
 //==============================================================================
 UtilComponent::UtilComponent(GrapeAudioProcessor& processor)
-    : processor(processor),
-      header("UTILITY", HEADER_CHECK::Hidden),
-      copyToClipboardButton(),
-      pasteFromClipboardButton() {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
+    : processor(processor), copyToClipboardButton(), pasteFromClipboardButton() {
     copyToClipboardButton.setLookAndFeel(&grapeLookAndFeel);
     copyToClipboardButton.setButtonText("Copy");
     copyToClipboardButton.addListener(this);
@@ -300,9 +314,6 @@ void UtilComponent::paint(juce::Graphics& g) {}
 
 void UtilComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
     bounds.reduce(0, 10);
     consumeLabeledComboBox(bounds, 60, copyToClipboardLabel, copyToClipboardButton);
     consumeLabeledComboBox(bounds, 60, pasteFromClipboardLabel, pasteFromClipboardButton);
@@ -398,16 +409,11 @@ void StatusComponent::timerCallback() {
 }
 
 //==============================================================================
-MasterComponent::MasterComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
-    : voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      header("MASTER", HEADER_CHECK::Hidden),
+MasterComponent::MasterComponent(AllParams& allParams)
+    : allParams(allParams),
       panSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox),
       volumeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     auto& params = getSelectedOscParams();
     initLinear(panSlider, params.Pan, 0.01, this, *this);
     initLinear(volumeSlider, params.MasterVolume, 0.01, this, *this);
@@ -423,9 +429,6 @@ void MasterComponent::paint(juce::Graphics& g) {}
 
 void MasterComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
     bounds = bounds.removeFromTop(bounds.getHeight() * 3 / 4);
 
     consumeLabeledKnob(bounds, panLabel, panSlider);
@@ -446,15 +449,9 @@ void MasterComponent::timerCallback() {
 }
 
 //==============================================================================
-OscComponent::OscComponent(int index,
-                           VoiceParams& voiceParams,
-                           std::vector<MainParams>& mainParamList,
-                           std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+OscComponent::OscComponent(int index, AllParams& allParams)
     : index(index),
-      voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      controlItemParams(controlItemParams),
-      header("OSC " + std::to_string(index + 1), HEADER_CHECK::Enabled),
+      allParams(allParams),
       envelopeSelector("Envelope"),
       waveformSelector("Waveform"),
       edgeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -468,34 +465,27 @@ OscComponent::OscComponent(int index,
                    juce::Slider::TextEntryBoxPosition::NoTextBox),
       gainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                  juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    header.enabledButton.addListener(this);
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     auto& params = getSelectedOscParams();
 
-    initChoice(envelopeSelector, params.Envelope, this, body);
-    initChoice(waveformSelector, params.Waveform, this, body);
-    initLinear(edgeSlider, params.Edge, 0.01, this, body);
-    initIncDec(octaveButton, params.Octave, this, body);
-    initIncDec(semitoneButton, params.Coarse, this, body);
-    initIncDec(unisonButton, params.Unison, this, body);
-    initLinear(detuneSlider, params.Detune, 0.01, this, body);
-    initLinear(spreadSlider, params.Spread, 0.01, this, body);
+    initChoice(envelopeSelector, params.Envelope, this, *this);
+    initChoice(waveformSelector, params.Waveform, this, *this);
+    initLinear(edgeSlider, params.Edge, 0.01, this, *this);
+    initIncDec(octaveButton, params.Octave, this, *this);
+    initIncDec(semitoneButton, params.Coarse, this, *this);
+    initIncDec(unisonButton, params.Unison, this, *this);
+    initLinear(detuneSlider, params.Detune, 0.01, this, *this);
+    initLinear(spreadSlider, params.Spread, 0.01, this, *this);
     auto formatGain = [](double gain) { return juce::String(juce::Decibels::gainToDecibels(gain), 2) + " dB"; };
-    initSkewFromMid(gainSlider, params.Gain, 0.01f, nullptr, std::move(formatGain), this, body);
-    initLabel(envelopeLabel, "Env", body);
-    initLabel(waveformLabel, "Waveform", body);
-    initLabel(edgeLabel, "Edge", body);
-    initLabel(octaveLabel, "Oct", body);
-    initLabel(coarseLabel, "Semi", body);
-    initLabel(unisonLabel, "Unis", body);
-    initLabel(detuneLabel, "Detune", body);
-    initLabel(spreadLabel, "Spread", body);
-    initLabel(gainLabel, "Gain", body);
-
-    body.setEnabled(params.Enabled->get());
-    addAndMakeVisible(body);
+    initSkewFromMid(gainSlider, params.Gain, 0.01f, nullptr, std::move(formatGain), this, *this);
+    initLabel(envelopeLabel, "Env", *this);
+    initLabel(waveformLabel, "Waveform", *this);
+    initLabel(edgeLabel, "Edge", *this);
+    initLabel(octaveLabel, "Oct", *this);
+    initLabel(coarseLabel, "Semi", *this);
+    initLabel(unisonLabel, "Unis", *this);
+    initLabel(detuneLabel, "Detune", *this);
+    initLabel(spreadLabel, "Spread", *this);
+    initLabel(gainLabel, "Gain", *this);
 
     startTimerHz(30.0f);
 }
@@ -506,11 +496,6 @@ void OscComponent::paint(juce::Graphics& g) {}
 
 void OscComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
@@ -523,12 +508,6 @@ void OscComponent::resized() {
     consumeLabeledIncDecButton(lowerArea, 35, unisonLabel, unisonButton);
     consumeLabeledKnob(lowerArea, detuneLabel, detuneSlider);
     consumeLabeledKnob(lowerArea, spreadLabel, spreadSlider);
-}
-void OscComponent::buttonClicked(juce::Button* button) {
-    auto& params = getSelectedOscParams();
-    if (button == &header.enabledButton) {
-        *params.Enabled = header.enabledButton.getToggleState();
-    }
 }
 void OscComponent::comboBoxChanged(juce::ComboBox* comboBox) {
     auto& params = getSelectedOscParams();
@@ -562,9 +541,6 @@ void OscComponent::incDecValueChanged(IncDecButton* button) {
 }
 void OscComponent::timerCallback() {
     auto& params = getSelectedOscParams();
-
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(params.Enabled->get());
     envelopeSelector.setSelectedItemIndex(params.Envelope->getIndex(), juce::dontSendNotification);
     waveformSelector.setSelectedItemIndex(params.Waveform->getIndex(), juce::dontSendNotification);
     edgeSlider.setValue(params.Edge->get(), juce::dontSendNotification);
@@ -591,7 +567,7 @@ void OscComponent::timerCallback() {
     detuneSlider.setLookAndFeel(&grapeLookAndFeel);
     spreadSlider.setLookAndFeel(&grapeLookAndFeel);
     gainSlider.setLookAndFeel(&grapeLookAndFeel);
-    for (auto& p : controlItemParams) {
+    for (auto& p : allParams.controlItemParams) {
         if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Edge, index)) {
             edgeSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         } else if (p.isControlling(CONTROL_TARGET_OSC_PARAM::Detune, index)) {
@@ -605,11 +581,9 @@ void OscComponent::timerCallback() {
 }
 
 //==============================================================================
-EnvelopeComponent::EnvelopeComponent(int index, VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
+EnvelopeComponent::EnvelopeComponent(int index, AllParams& allParams)
     : index(index),
-      voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      header("ENV " + std::to_string(index + 1), HEADER_CHECK::Hidden),
+      allParams(allParams),
       attackCurveSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                         juce::Slider::TextEntryBoxPosition::NoTextBox),
       attackSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
@@ -620,9 +594,6 @@ EnvelopeComponent::EnvelopeComponent(int index, VoiceParams& voiceParams, std::v
                     juce::Slider::TextEntryBoxPosition::NoTextBox),
       releaseSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                     juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     auto& params = getSelectedEnvelopeParams();
 
     initLinear(attackCurveSlider, params.AttackCurve, 0.01, this, *this);
@@ -645,8 +616,6 @@ void EnvelopeComponent::paint(juce::Graphics& g) {}
 
 void EnvelopeComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
 
     consumeLabeledKnob(bounds, attackCurveLabel, attackCurveSlider);
     consumeLabeledKnob(bounds, attackLabel, attackSlider);
@@ -678,15 +647,9 @@ void EnvelopeComponent::timerCallback() {
 }
 
 //==============================================================================
-FilterComponent::FilterComponent(int index,
-                                 VoiceParams& voiceParams,
-                                 std::vector<MainParams>& mainParamList,
-                                 std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+FilterComponent::FilterComponent(int index, AllParams& allParams)
     : index(index),
-      voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      controlItemParams(controlItemParams),
-      header("FILTER " + std::to_string(index + 1), HEADER_CHECK::Enabled),
+      allParams(allParams),
       targetSelector("Target"),
       typeSelector("Type"),
       freqTypeToggle("Freq Type"),
@@ -697,15 +660,11 @@ FilterComponent::FilterComponent(int index,
       gainSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                  juce::Slider::TextEntryBoxPosition::NoTextBox) {
     auto& params = getSelectedFilterParams();
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    header.enabledButton.addListener(this);
-    addAndMakeVisible(header);
 
-    initChoice(targetSelector, params.Target, this, body);
-    initChoice(typeSelector, params.Type, this, body);
-    initChoiceToggle(freqTypeToggle, FILTER_FREQ_TYPE_NAMES.indexOf("Rel"), params.FreqType, this, body);
-    initSkewFromMid(hzSlider, params.Hz, 0.01f, " Hz", nullptr, this, body);
+    initChoice(targetSelector, params.Target, this, *this);
+    initChoice(typeSelector, params.Type, this, *this);
+    initChoiceToggle(freqTypeToggle, FILTER_FREQ_TYPE_NAMES.indexOf("Rel"), params.FreqType, this, *this);
+    initSkewFromMid(hzSlider, params.Hz, 0.01f, " Hz", nullptr, this, *this);
     auto formatSemitone = [](double value) -> std::string {
         int cent = value;
         int centAbs = std::abs(cent);
@@ -713,17 +672,15 @@ FilterComponent::FilterComponent(int index,
         int octFrac = centAbs % 12;
         return (cent == 0 ? " " : cent > 0 ? "+" : "-") + std::to_string(oct) + ":" + std::to_string(octFrac) + " oct";
     };
-    initLinear(semitoneSlider, params.Semitone, 0.01, nullptr, std::move(formatSemitone), this, body);
-    initSkewFromMid(qSlider, params.Q, 0.01, nullptr, nullptr, this, body);
-    initLinear(gainSlider, params.Gain, 0.01, " dB", nullptr, this, body);
-    initLabel(targetLabel, "OSC", body);
-    initLabel(typeLabel, "Type", body);
-    initLabel(freqTypeLabel, "Rel", body);
-    initLabel(freqLabel, "Freq", body);
-    initLabel(qLabel, "Q", body);
-    initLabel(gainLabel, "Gain", body);
-
-    addAndMakeVisible(body);
+    initLinear(semitoneSlider, params.Semitone, 0.01, nullptr, std::move(formatSemitone), this, *this);
+    initSkewFromMid(qSlider, params.Q, 0.01, nullptr, nullptr, this, *this);
+    initLinear(gainSlider, params.Gain, 0.01, " dB", nullptr, this, *this);
+    initLabel(targetLabel, "OSC", *this);
+    initLabel(typeLabel, "Type", *this);
+    initLabel(freqTypeLabel, "Rel", *this);
+    initLabel(freqLabel, "Freq", *this);
+    initLabel(qLabel, "Q", *this);
+    initLabel(gainLabel, "Gain", *this);
 
     startTimerHz(30.0f);
 }
@@ -734,11 +691,6 @@ void FilterComponent::paint(juce::Graphics& g) {}
 
 void FilterComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
@@ -751,9 +703,7 @@ void FilterComponent::resized() {
 }
 void FilterComponent::buttonClicked(juce::Button* button) {
     auto& params = getSelectedFilterParams();
-    if (button == &header.enabledButton) {
-        *params.Enabled = header.enabledButton.getToggleState();
-    } else if (button == &freqTypeToggle) {
+    if (button == &freqTypeToggle) {
         *params.FreqType = freqTypeToggle.getToggleState() ? FILTER_FREQ_TYPE_NAMES.indexOf("Rel")
                                                            : FILTER_FREQ_TYPE_NAMES.indexOf("Abs");
     }
@@ -780,8 +730,6 @@ void FilterComponent::sliderValueChanged(juce::Slider* slider) {
 }
 void FilterComponent::timerCallback() {
     auto& params = getSelectedFilterParams();
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(params.Enabled->get());
 
     targetSelector.setSelectedItemIndex(params.Target->getIndex(), juce::dontSendNotification);
     typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
@@ -801,7 +749,7 @@ void FilterComponent::timerCallback() {
     hzSlider.setLookAndFeel(&grapeLookAndFeel);
     semitoneSlider.setLookAndFeel(&grapeLookAndFeel);
     qSlider.setLookAndFeel(&grapeLookAndFeel);
-    for (auto& p : controlItemParams) {
+    for (auto& p : allParams.controlItemParams) {
         if (p.isControlling(CONTROL_TARGET_FILTER_PARAM::Freq, index)) {
             hzSlider.setLookAndFeel(&grapeLookAndFeelControlled);
             semitoneSlider.setLookAndFeel(&grapeLookAndFeelControlled);
@@ -812,15 +760,9 @@ void FilterComponent::timerCallback() {
 }
 
 //==============================================================================
-LfoComponent::LfoComponent(int index,
-                           VoiceParams& voiceParams,
-                           std::vector<MainParams>& mainParamList,
-                           std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
+LfoComponent::LfoComponent(int index, AllParams& allParams)
     : index(index),
-      voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      controlItemParams(controlItemParams),
-      header("LFO " + std::to_string(index + 1), HEADER_CHECK::Enabled),
+      allParams(allParams),
       targetTypeSelector("TargetType"),
       targetOscSelector("TargetOsc"),
       targetFilterSelector("TargetFilter"),
@@ -834,29 +776,24 @@ LfoComponent::LfoComponent(int index,
       amountSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox) {
     auto& params = getSelectedLfoParams();
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    header.enabledButton.addListener(this);
-    addAndMakeVisible(header);
 
     initChoice(targetTypeSelector, params.TargetType, this, targetSelector);
     initChoice(targetOscSelector, params.TargetOsc, this, targetSelector);
     initChoice(targetFilterSelector, params.TargetFilter, this, targetSelector);
     initChoice(targetOscParamSelector, params.TargetOscParam, this, targetSelector);
     initChoice(targetFilterParamSelector, params.TargetFilterParam, this, targetSelector);
-    initChoice(waveformSelector, params.Waveform, this, body);
-    initSkewFromMid(slowFreqSlider, params.SlowFreq, 0.01f, " Hz", nullptr, this, body);
-    initSkewFromMid(fastFreqSlider, params.FastFreq, 0.01f, " x", nullptr, this, body);
-    initLinear(amountSlider, params.Amount, 0.01, this, body);
+    initChoice(waveformSelector, params.Waveform, this, *this);
+    initSkewFromMid(slowFreqSlider, params.SlowFreq, 0.01f, " Hz", nullptr, this, *this);
+    initSkewFromMid(fastFreqSlider, params.FastFreq, 0.01f, " x", nullptr, this, *this);
+    initLinear(amountSlider, params.Amount, 0.01, this, *this);
 
-    initLabel(targetLabel, "Destination", body);
-    initLabel(typeLabel, "Type", body);
-    initLabel(waveformLabel, "Waveform", body);
-    initLabel(freqLabel, "Freq", body);
-    initLabel(amountLabel, "Amount", body);
+    initLabel(targetLabel, "Destination", *this);
+    initLabel(typeLabel, "Type", *this);
+    initLabel(waveformLabel, "Waveform", *this);
+    initLabel(freqLabel, "Freq", *this);
+    initLabel(amountLabel, "Amount", *this);
 
-    body.addAndMakeVisible(targetSelector);
-    addAndMakeVisible(body);
+    this->addAndMakeVisible(targetSelector);
 
     startTimerHz(30.0f);
 }
@@ -868,11 +805,6 @@ void LfoComponent::paint(juce::Graphics& g) {}
 void LfoComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
 
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
@@ -890,12 +822,6 @@ void LfoComponent::resized() {
     consumeLabeledComboBox(lowerArea, 120, waveformLabel, waveformSelector);
     consumeLabeledKnob(lowerArea, freqLabel, fastFreqSlider, slowFreqSlider);
     consumeLabeledKnob(lowerArea, amountLabel, amountSlider);
-}
-void LfoComponent::buttonClicked(juce::Button* button) {
-    auto& params = getSelectedLfoParams();
-    if (button == &header.enabledButton) {
-        *params.Enabled = header.enabledButton.getToggleState();
-    }
 }
 void LfoComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
     auto& params = getSelectedLfoParams();
@@ -926,8 +852,6 @@ void LfoComponent::sliderValueChanged(juce::Slider* slider) {
 }
 void LfoComponent::timerCallback() {
     auto& params = getSelectedLfoParams();
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(params.Enabled->get());
 
     targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
     targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
@@ -953,7 +877,7 @@ void LfoComponent::timerCallback() {
     fastFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     slowFreqSlider.setLookAndFeel(&grapeLookAndFeel);
     amountSlider.setLookAndFeel(&grapeLookAndFeel);
-    for (auto& p : controlItemParams) {
+    for (auto& p : allParams.controlItemParams) {
         if (p.isControlling(CONTROL_TARGET_LFO_PARAM::Freq, index)) {
             fastFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
             slowFreqSlider.setLookAndFeel(&grapeLookAndFeelControlled);
@@ -964,11 +888,9 @@ void LfoComponent::timerCallback() {
 }
 
 //==============================================================================
-ModEnvComponent::ModEnvComponent(int index, VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
+ModEnvComponent::ModEnvComponent(int index, AllParams& allParams)
     : index(index),
-      voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      header("MOD ENV " + std::to_string(index + 1), HEADER_CHECK::Enabled),
+      allParams(allParams),
       targetTypeSelector("TargetType"),
       targetOscSelector("TargetOsc"),
       targetFilterSelector("TargetFilter"),
@@ -983,10 +905,6 @@ ModEnvComponent::ModEnvComponent(int index, VoiceParams& voiceParams, std::vecto
       decaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                   juce::Slider::TextEntryBoxPosition::NoTextBox) {
     auto& params = getSelectedModEnvParams();
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    header.enabledButton.addListener(this);
-    addAndMakeVisible(header);
 
     initChoice(targetTypeSelector, params.TargetType, this, targetSelector);
     initChoice(targetOscSelector, params.TargetOsc, this, targetSelector);
@@ -995,24 +913,23 @@ ModEnvComponent::ModEnvComponent(int index, VoiceParams& voiceParams, std::vecto
     initChoice(targetOscParamSelector, params.TargetOscParam, this, targetSelector);
     initChoice(targetFilterParamSelector, params.TargetFilterParam, this, targetSelector);
     initChoice(targetLfoParamSelector, params.TargetLfoParam, this, targetSelector);
-    initChoice(fadeSelector, params.Fade, this, body);
+    initChoice(fadeSelector, params.Fade, this, *this);
     auto formatPeakFreq = [](double oct) -> juce::String {
         return (oct == 0 ? " " : oct > 0 ? "+" : "-") + juce::String(std::abs(oct), 2) + " oct";
     };
-    initLinear(peakFreqSlider, params.PeakFreq, 0.01, nullptr, std::move(formatPeakFreq), this, body);
-    initSkewFromMid(waitSlider, params.Wait, 0.01, " sec", nullptr, this, body);
-    initSkewFromMid(attackSlider, params.Attack, 0.001, " sec", nullptr, this, body);
-    initSkewFromMid(decaySlider, params.Decay, 0.01, " sec", nullptr, this, body);
-    initLabel(targetLabel, "Destination", body);
-    initLabel(typeLabel, "Type", body);
-    initLabel(fadeLabel, "Fade", body);
-    initLabel(peakFreqLabel, "Peak Freq", body);
-    initLabel(waitLabel, "Wait", body);
-    initLabel(attackLabel, "Attack", body);
-    initLabel(decayLabel, "Decay", body);
+    initLinear(peakFreqSlider, params.PeakFreq, 0.01, nullptr, std::move(formatPeakFreq), this, *this);
+    initSkewFromMid(waitSlider, params.Wait, 0.01, " sec", nullptr, this, *this);
+    initSkewFromMid(attackSlider, params.Attack, 0.001, " sec", nullptr, this, *this);
+    initSkewFromMid(decaySlider, params.Decay, 0.01, " sec", nullptr, this, *this);
+    initLabel(targetLabel, "Destination", *this);
+    initLabel(typeLabel, "Type", *this);
+    initLabel(fadeLabel, "Fade", *this);
+    initLabel(peakFreqLabel, "Peak Freq", *this);
+    initLabel(waitLabel, "Wait", *this);
+    initLabel(attackLabel, "Attack", *this);
+    initLabel(decayLabel, "Decay", *this);
 
-    body.addAndMakeVisible(targetSelector);
-    addAndMakeVisible(body);
+    this->addAndMakeVisible(targetSelector);
 
     startTimerHz(30.0f);
 }
@@ -1024,11 +941,6 @@ void ModEnvComponent::paint(juce::Graphics& g) {}
 void ModEnvComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
 
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
@@ -1054,12 +966,6 @@ void ModEnvComponent::resized() {
     }
     consumeLabeledKnob(lowerArea, waitLabel, waitSlider, attackLabel, attackSlider);
     consumeLabeledKnob(lowerArea, decayLabel, decaySlider);
-}
-void ModEnvComponent::buttonClicked(juce::Button* button) {
-    auto& params = getSelectedModEnvParams();
-    if (button == &header.enabledButton) {
-        *params.Enabled = header.enabledButton.getToggleState();
-    }
 }
 void ModEnvComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) {
     auto& params = getSelectedModEnvParams();
@@ -1096,8 +1002,6 @@ void ModEnvComponent::sliderValueChanged(juce::Slider* slider) {
 }
 void ModEnvComponent::timerCallback() {
     auto& params = getSelectedModEnvParams();
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(params.Enabled->get());
 
     targetTypeSelector.setSelectedItemIndex(params.TargetType->getIndex(), juce::dontSendNotification);
     targetOscSelector.setSelectedItemIndex(params.TargetOsc->getIndex(), juce::dontSendNotification);
@@ -1134,13 +1038,8 @@ void ModEnvComponent::timerCallback() {
 }
 
 //==============================================================================
-DelayComponent::DelayComponent(VoiceParams& voiceParams,
-                               std::vector<MainParams>& mainParamList,
-                               std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
-    : voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      controlItemParams(controlItemParams),
-      header("DELAY", HEADER_CHECK::Enabled),
+DelayComponent::DelayComponent(AllParams& allParams)
+    : allParams(allParams),
       typeSelector("Type"),
       timeLSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                   juce::Slider::TextEntryBoxPosition::NoTextBox),
@@ -1159,32 +1058,26 @@ DelayComponent::DelayComponent(VoiceParams& voiceParams,
       mixSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                 juce::Slider::TextEntryBoxPosition::NoTextBox) {
     auto& params = getSelectedDelayParams();
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    header.enabledButton.addListener(this);
-    addAndMakeVisible(header);
 
-    initChoice(typeSelector, params.Type, this, body);
-    initChoiceToggle(syncToggle, params.Sync, this, body);
-    initSkewFromMid(timeLSlider, params.TimeL, 0.01, " sec", nullptr, this, body);
-    initSkewFromMid(timeRSlider, params.TimeR, 0.01, " sec", nullptr, this, body);
-    initEnum(timeSyncLSlider, params.TimeSyncL, this, body);
-    initEnum(timeSyncRSlider, params.TimeSyncR, this, body);
-    initSkewFromMid(lowFreqSlider, params.LowFreq, 1.0, " Hz", nullptr, this, body);
-    initSkewFromMid(highFreqSlider, params.HighFreq, 1.0, " Hz", nullptr, this, body);
-    initLinearPercent(feedbackSlider, params.Feedback, 0.01, this, body);
-    initLinear(mixSlider, params.Mix, 0.01, this, body);
+    initChoice(typeSelector, params.Type, this, *this);
+    initChoiceToggle(syncToggle, params.Sync, this, *this);
+    initSkewFromMid(timeLSlider, params.TimeL, 0.01, " sec", nullptr, this, *this);
+    initSkewFromMid(timeRSlider, params.TimeR, 0.01, " sec", nullptr, this, *this);
+    initEnum(timeSyncLSlider, params.TimeSyncL, this, *this);
+    initEnum(timeSyncRSlider, params.TimeSyncR, this, *this);
+    initSkewFromMid(lowFreqSlider, params.LowFreq, 1.0, " Hz", nullptr, this, *this);
+    initSkewFromMid(highFreqSlider, params.HighFreq, 1.0, " Hz", nullptr, this, *this);
+    initLinearPercent(feedbackSlider, params.Feedback, 0.01, this, *this);
+    initLinear(mixSlider, params.Mix, 0.01, this, *this);
 
-    initLabel(typeLabel, "Type", body);
-    initLabel(syncLabel, "Sync", body);
-    initLabel(timeLLabel, "Time L", body);
-    initLabel(timeRLabel, "Time R", body);
-    initLabel(lowFreqLabel, "Lo Cut", body);
-    initLabel(highFreqLabel, "Hi Cut", body);
-    initLabel(feedbackLabel, "Feedback", body);
-    initLabel(mixLabel, "Mix", body);
-
-    addAndMakeVisible(body);
+    initLabel(typeLabel, "Type", *this);
+    initLabel(syncLabel, "Sync", *this);
+    initLabel(timeLLabel, "Time L", *this);
+    initLabel(timeRLabel, "Time R", *this);
+    initLabel(lowFreqLabel, "Lo Cut", *this);
+    initLabel(highFreqLabel, "Hi Cut", *this);
+    initLabel(feedbackLabel, "Feedback", *this);
+    initLabel(mixLabel, "Mix", *this);
 
     startTimerHz(30.0f);
 }
@@ -1196,11 +1089,6 @@ void DelayComponent::paint(juce::Graphics& g) {}
 void DelayComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
 
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
     auto bodyHeight = bounds.getHeight();
     auto upperArea = bounds.removeFromTop(bodyHeight / 2);
     auto& lowerArea = bounds;
@@ -1215,9 +1103,7 @@ void DelayComponent::resized() {
 }
 void DelayComponent::buttonClicked(juce::Button* button) {
     auto& params = getSelectedDelayParams();
-    if (button == &header.enabledButton) {
-        *params.Enabled = header.enabledButton.getToggleState();
-    } else if (button == &syncToggle) {
+    if (button == &syncToggle) {
         *params.Sync = syncToggle.getToggleState();
     }
 }
@@ -1249,8 +1135,6 @@ void DelayComponent::sliderValueChanged(juce::Slider* slider) {
 }
 void DelayComponent::timerCallback() {
     auto& params = getSelectedDelayParams();
-    header.enabledButton.setToggleState(params.Enabled->get(), juce::dontSendNotification);
-    body.setEnabled(params.Enabled->get());
 
     typeSelector.setSelectedItemIndex(params.Type->getIndex(), juce::dontSendNotification);
     syncToggle.setToggleState(params.Sync->get(), juce::dontSendNotification);
@@ -1269,7 +1153,7 @@ void DelayComponent::timerCallback() {
     mixSlider.setValue(params.Mix->get(), juce::dontSendNotification);
 
     mixSlider.setLookAndFeel(&grapeLookAndFeel);
-    for (auto& p : controlItemParams) {
+    for (auto& p : allParams.controlItemParams) {
         if (p.isControlling(CONTROL_TARGET_MISC_PARAM::DelayMix)) {
             mixSlider.setLookAndFeel(&grapeLookAndFeelControlled);
         }
@@ -1277,29 +1161,23 @@ void DelayComponent::timerCallback() {
 }
 
 //==============================================================================
-DrumComponent::DrumComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
-    : voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      header("DRUM", HEADER_CHECK::Hidden),
+DrumComponent::DrumComponent(AllParams& allParams)
+    : allParams(allParams),
       noteToPlaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                        juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     auto& params = getSelectedDrumParams();
 
-    initLinear(noteToPlaySlider, params.NoteToPlay, this, body);
+    initLinear(noteToPlaySlider, params.NoteToPlay, this, *this);
     initChoice(noteToMuteEnabledSelector, params.NoteToMuteEnabled, this, noteToMuteSelector);
     initChoice(noteToMuteKindSelector, params.NoteToMuteKind, this, noteToMuteSelector);
     initChoice(noteToMuteOctSelector, params.NoteToMuteOct, this, noteToMuteSelector);
-    initChoice(busSelector, params.Bus, this, body);
+    initChoice(busSelector, params.Bus, this, *this);
 
-    initLabel(noteToPlayLabel, "Note", body);
-    initLabel(noteToMuteLabel, "Note to Mute", body);
-    initLabel(busLabel, "Bus", body);
+    initLabel(noteToPlayLabel, "Note", *this);
+    initLabel(noteToMuteLabel, "Note to Mute", *this);
+    initLabel(busLabel, "Bus", *this);
 
-    body.addAndMakeVisible(noteToMuteSelector);
-    addAndMakeVisible(body);
+    this->addAndMakeVisible(noteToMuteSelector);
 
     startTimerHz(30.0f);
 }
@@ -1310,14 +1188,9 @@ void DrumComponent::paint(juce::Graphics& g) {}
 
 void DrumComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
-    auto bodyHeight = bounds.getHeight();
-    // auto upperArea = bounds.removeFromTop(bodyHeight / 2);
-    auto upperArea = bounds.removeFromTop(bodyHeight * 3 / 4);
+    auto height = bounds.getHeight();
+    // auto upperArea = bounds.removeFromTop(height / 2);
+    auto upperArea = bounds.removeFromTop(height * 3 / 4);
     auto& lowerArea = bounds;
 
     auto& params = getSelectedDrumParams();
@@ -1465,12 +1338,8 @@ void ControlItemComponent::timerCallback() {
 
 //==============================================================================
 ControlComponent::ControlComponent(std::array<ControlItemParams, NUM_CONTROL>& params)
-    : header("CONTROLS", HEADER_CHECK::Hidden),
-      controlItemComponents{
+    : controlItemComponents{
           ControlItemComponent(params[0]), ControlItemComponent(params[1]), ControlItemComponent(params[2])} {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     initLabel(numberLabel, "CC", *this);
     initLabel(targetLabel, "Destination", *this);
 
@@ -1487,8 +1356,6 @@ void ControlComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
     auto width = bounds.getWidth();
 
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
     auto labelArea = bounds.removeFromTop(LABEL_HEIGHT);
     numberLabel.setBounds(labelArea.removeFromLeft(width / 5));
     targetLabel.setBounds(labelArea);

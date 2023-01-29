@@ -689,6 +689,9 @@ public:
             controlItemParams[i].freeze();
         }
     }
+    MainParams& getCurrentMainParams() {
+        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128];
+    }
 
 private:
 };

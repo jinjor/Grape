@@ -343,6 +343,33 @@ private:
 };
 
 //==============================================================================
+
+class SectionComponent : public juce::Component, juce::Button::Listener {
+public:
+    SectionComponent(std::string name, HEADER_CHECK check, std::unique_ptr<juce::Component> body);
+    virtual ~SectionComponent();
+    SectionComponent(const SectionComponent&) = delete;
+    virtual void paint(juce::Graphics& g) override;
+    virtual void resized() override;
+
+    class Listener {
+    public:
+        virtual ~Listener() = default;
+        virtual void enabledChanged(SectionComponent*) = 0;
+    };
+    void addListener(Listener* newListener);
+    void setEnabled(bool enabled);
+    bool getEnabled();
+
+private:
+    GrapeLookAndFeel grapeLookAndFeel;
+    HeaderComponent header;
+    std::unique_ptr<juce::Component> body;
+    ListenerList<Listener> listeners;
+    virtual void buttonClicked(juce::Button* button) override;
+};
+
+//==============================================================================
 class VoiceComponent : public juce::Component,
                        juce::ComboBox::Listener,
                        juce::Slider::Listener,
@@ -350,9 +377,7 @@ class VoiceComponent : public juce::Component,
                        private juce::Timer,
                        ComponentHelper {
 public:
-    VoiceComponent(VoiceParams& params,
-                   std::vector<MainParams>& mainParamList,
-                   std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    VoiceComponent(AllParams& allParams);
     virtual ~VoiceComponent();
     VoiceComponent(const VoiceComponent&) = delete;
 
@@ -369,7 +394,6 @@ private:
     std::vector<MainParams>& mainParamList;
     std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
 
-    HeaderComponent header;
     juce::Component drumTargetSelector;
 
     juce::ComboBox modeSelector;
@@ -399,8 +423,6 @@ private:
     GrapeAudioProcessor& processor;
 
     virtual void buttonClicked(juce::Button* button) override;
-
-    HeaderComponent header;
 
     juce::TextButton copyToClipboardButton;
     juce::TextButton pasteFromClipboardButton;
@@ -443,7 +465,7 @@ private:
 //==============================================================================
 class MasterComponent : public juce::Component, juce::Slider::Listener, private juce::Timer, ComponentHelper {
 public:
-    MasterComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList);
+    MasterComponent(AllParams& allParams);
     virtual ~MasterComponent();
     MasterComponent(const MasterComponent&) = delete;
 
@@ -455,10 +477,7 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
 
-    VoiceParams& voiceParams;
-    std::vector<MainParams>& mainParamList;
-
-    HeaderComponent header;
+    AllParams& allParams;
 
     juce::Slider panSlider;
     juce::Slider volumeSlider;
@@ -466,24 +485,18 @@ private:
     juce::Label panLabel;
     juce::Label volumeLabel;
 
-    MasterParams& getSelectedOscParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].masterParams;
-    }
+    MasterParams& getSelectedOscParams() { return allParams.getCurrentMainParams().masterParams; }
 };
 
 //==============================================================================
 class OscComponent : public juce::Component,
-                     juce::ToggleButton::Listener,
                      juce::ComboBox::Listener,
                      juce::Slider::Listener,
                      private juce::Timer,
                      IncDecButton::Listener,
                      ComponentHelper {
 public:
-    OscComponent(int index,
-                 VoiceParams& voiceParams,
-                 std::vector<MainParams>& mainParamList,
-                 std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    OscComponent(int index, AllParams& allParams);
     virtual ~OscComponent();
     OscComponent(const OscComponent&) = delete;
 
@@ -492,19 +505,13 @@ public:
     virtual void resized() override;
 
 private:
-    virtual void buttonClicked(juce::Button* button) override;
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void incDecValueChanged(IncDecButton* button) override;
     virtual void timerCallback() override;
     int index;
 
-    VoiceParams& voiceParams;
-    std::vector<MainParams>& mainParamList;
-    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
-
-    HeaderComponent header;
-    juce::Component body;
+    AllParams& allParams;
 
     juce::ComboBox envelopeSelector;
     juce::ComboBox waveformSelector;
@@ -526,15 +533,13 @@ private:
     juce::Label spreadLabel;
     juce::Label gainLabel;
 
-    OscParams& getSelectedOscParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].oscParams[index];
-    }
+    OscParams& getSelectedOscParams() { return allParams.getCurrentMainParams().oscParams[index]; }
 };
 
 //==============================================================================
 class EnvelopeComponent : public juce::Component, juce::Slider::Listener, private juce::Timer, ComponentHelper {
 public:
-    EnvelopeComponent(int index, VoiceParams& voiceParams, std::vector<MainParams>& mainParamList);
+    EnvelopeComponent(int index, AllParams& allParams);
     virtual ~EnvelopeComponent();
     EnvelopeComponent(const EnvelopeComponent&) = delete;
 
@@ -546,10 +551,8 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     int index;
-    VoiceParams& voiceParams;
-    std::vector<MainParams>& mainParamList;
 
-    HeaderComponent header;
+    AllParams& allParams;
 
     juce::Slider attackCurveSlider;
     juce::Slider attackSlider;
@@ -563,9 +566,7 @@ private:
     juce::Label sustainLabel;
     juce::Label releaseLabel;
 
-    EnvelopeParams& getSelectedEnvelopeParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].envelopeParams[index];
-    }
+    EnvelopeParams& getSelectedEnvelopeParams() { return allParams.getCurrentMainParams().envelopeParams[index]; }
 };
 
 //==============================================================================
@@ -576,10 +577,7 @@ class FilterComponent : public juce::Component,
                         private juce::Timer,
                         ComponentHelper {
 public:
-    FilterComponent(int index,
-                    VoiceParams& voiceParams,
-                    std::vector<MainParams>& mainParamList,
-                    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    FilterComponent(int index, AllParams& allParams);
     virtual ~FilterComponent();
     FilterComponent(const FilterComponent&) = delete;
 
@@ -594,13 +592,7 @@ private:
     virtual void timerCallback() override;
     int index;
 
-    VoiceParams& voiceParams;
-    std::vector<MainParams>& mainParamList;
-    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
-
-    HeaderComponent header;
-
-    juce::Component body;
+    AllParams& allParams;
 
     juce::ComboBox targetSelector;
     juce::ComboBox typeSelector;
@@ -617,44 +609,31 @@ private:
     juce::Label qLabel;
     juce::Label gainLabel;
 
-    FilterParams& getSelectedFilterParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].filterParams[index];
-    }
+    FilterParams& getSelectedFilterParams() { return allParams.getCurrentMainParams().filterParams[index]; }
 };
 
 //==============================================================================
 class LfoComponent : public juce::Component,
-                     juce::ToggleButton::Listener,
                      juce::ComboBox::Listener,
                      juce::Slider::Listener,
                      private juce::Timer,
                      ComponentHelper {
 public:
-    LfoComponent(int index,
-                 VoiceParams& voiceParams,
-                 std::vector<MainParams>& mainParamList,
-                 std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    LfoComponent(int index, AllParams& allParams);
     virtual ~LfoComponent();
     LfoComponent(const LfoComponent&) = delete;
 
     virtual void paint(juce::Graphics& g) override;
-
     virtual void resized() override;
 
 private:
-    virtual void buttonClicked(juce::Button* button) override;
     virtual void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     int index;
 
-    VoiceParams& voiceParams;
-    std::vector<MainParams>& mainParamList;
-    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
+    AllParams& allParams;
 
-    HeaderComponent header;
-
-    juce::Component body;
     juce::Component targetSelector;
 
     juce::ComboBox targetTypeSelector;
@@ -673,40 +652,31 @@ private:
     juce::Label freqLabel;
     juce::Label amountLabel;
 
-    LfoParams& getSelectedLfoParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].lfoParams[index];
-    }
+    LfoParams& getSelectedLfoParams() { return allParams.getCurrentMainParams().lfoParams[index]; }
 };
 
 //==============================================================================
 class ModEnvComponent : public juce::Component,
-                        juce::ToggleButton::Listener,
                         juce::ComboBox::Listener,
                         juce::Slider::Listener,
                         private juce::Timer,
                         ComponentHelper {
 public:
-    ModEnvComponent(int index, VoiceParams& voiceParams, std::vector<MainParams>& mainParamList);
+    ModEnvComponent(int index, AllParams& allParams);
     virtual ~ModEnvComponent();
     ModEnvComponent(const ModEnvComponent&) = delete;
 
     virtual void paint(juce::Graphics& g) override;
-
     virtual void resized() override;
 
 private:
-    virtual void buttonClicked(juce::Button* button) override;
     virtual void comboBoxChanged(juce::ComboBox* comboBox) override;
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
     int index;
 
-    VoiceParams& voiceParams;
-    std::vector<MainParams>& mainParamList;
+    AllParams& allParams;
 
-    HeaderComponent header;
-
-    juce::Component body;
     juce::Component targetSelector;
 
     juce::ComboBox targetTypeSelector;
@@ -730,9 +700,7 @@ private:
     juce::Label attackLabel;
     juce::Label decayLabel;
 
-    ModEnvParams& getSelectedModEnvParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].modEnvParams[index];
-    }
+    ModEnvParams& getSelectedModEnvParams() { return allParams.getCurrentMainParams().modEnvParams[index]; }
 };
 
 //==============================================================================
@@ -743,14 +711,11 @@ class DelayComponent : public juce::Component,
                        private juce::Timer,
                        ComponentHelper {
 public:
-    DelayComponent(VoiceParams& voiceParams,
-                   std::vector<MainParams>& mainParamList,
-                   std::array<ControlItemParams, NUM_CONTROL>& controlItemParams);
+    DelayComponent(AllParams& allParams);
     virtual ~DelayComponent();
     DelayComponent(const DelayComponent&) = delete;
 
     virtual void paint(juce::Graphics& g) override;
-
     virtual void resized() override;
 
 private:
@@ -759,13 +724,7 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
 
-    VoiceParams& voiceParams;
-    std::vector<MainParams>& mainParamList;
-    std::array<ControlItemParams, NUM_CONTROL>& controlItemParams;
-
-    HeaderComponent header;
-
-    juce::Component body;
+    AllParams& allParams;
 
     juce::ComboBox typeSelector;
     juce::ToggleButton syncToggle;
@@ -787,9 +746,7 @@ private:
     juce::Label feedbackLabel;
     juce::Label mixLabel;
 
-    DelayParams& getSelectedDelayParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].delayParams;
-    }
+    DelayParams& getSelectedDelayParams() { return allParams.getCurrentMainParams().delayParams; }
 };
 
 //==============================================================================
@@ -799,12 +756,11 @@ class DrumComponent : public juce::Component,
                       private juce::Timer,
                       ComponentHelper {
 public:
-    DrumComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList);
+    DrumComponent(AllParams& allParams);
     virtual ~DrumComponent();
     DrumComponent(const DrumComponent&) = delete;
 
     virtual void paint(juce::Graphics& g) override;
-
     virtual void resized() override;
 
 private:
@@ -812,12 +768,8 @@ private:
     virtual void sliderValueChanged(juce::Slider* slider) override;
     virtual void timerCallback() override;
 
-    VoiceParams& voiceParams;
-    std::vector<MainParams>& mainParamList;
+    AllParams& allParams;
 
-    HeaderComponent header;
-
-    juce::Component body;
     juce::Component noteToMuteSelector;
 
     juce::Slider noteToPlaySlider;
@@ -830,9 +782,7 @@ private:
     juce::Label noteToMuteLabel;
     juce::Label busLabel;
 
-    DrumParams& getSelectedDrumParams() {
-        return mainParamList[voiceParams.isDrumMode() ? voiceParams.getTargetNote() : 128].drumParams;
-    }
+    DrumParams& getSelectedDrumParams() { return allParams.getCurrentMainParams().drumParams; }
 };
 
 //==============================================================================
@@ -1058,7 +1008,6 @@ public:
     virtual void resized() override;
 
 private:
-    HeaderComponent header;
     juce::Label numberLabel;
     juce::Label targetLabel;
     std::array<ControlItemComponent, NUM_CONTROL> controlItemComponents;
