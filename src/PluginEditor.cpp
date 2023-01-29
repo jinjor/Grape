@@ -222,6 +222,20 @@ void GrapeAudioProcessorEditor::timerCallback() {
     auto isDrumMode = audioProcessor.allParams.voiceParams.isDrumMode();
     drumComponent.setVisible(isDrumMode);
     controlComponent.setVisible(!isDrumMode);
+    auto &mainParams = audioProcessor.allParams.getCurrentMainParams();
+    for (auto i = 0; i < NUM_OSC; i++) {
+        oscComponents[i].setEnabled(mainParams.oscParams[i].Enabled->get());
+    }
+    for (auto i = 0; i < NUM_FILTER; i++) {
+        filterComponents[i].setEnabled(mainParams.filterParams[i].Enabled->get());
+    }
+    for (auto i = 0; i < NUM_LFO; i++) {
+        lfoComponents[i].setEnabled(mainParams.lfoParams[i].Enabled->get());
+    }
+    for (auto i = 0; i < NUM_MODENV; i++) {
+        modEnvComponents[i].setEnabled(mainParams.modEnvParams[i].Enabled->get());
+    }
+    delayComponent.setEnabled(mainParams.delayParams.Enabled->get());
 }
 void GrapeAudioProcessorEditor::enabledChanged(SectionComponent *section) {
     for (auto i = 0; i < NUM_OSC; i++) {
