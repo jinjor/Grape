@@ -11,13 +11,14 @@ using namespace styles;
 GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     : AudioProcessorEditor(&p),
       audioProcessor(p),
-      controlComponent{ControlComponent(p.allParams.controlItemParams)},
-      voiceComponent(p.allParams.voiceParams, p.allParams.mainParamList, p.allParams.controlItemParams),
+      controlComponent{SectionComponent{
+          "CONTROLS", HEADER_CHECK::Hidden, std::make_unique<ControlComponent>(p.allParams.controlItemParams)}},
+      voiceComponent{SectionComponent{"VOICE", HEADER_CHECK::Hidden, std::make_unique<VoiceComponent>(p.allParams)}},
       analyserToggle(&analyserMode),
       analyserWindow(
           &analyserMode, &p.latestDataProvider, &p.monoStack, p.allParams.voiceParams, p.allParams.mainParamList),
       statusComponent(&p.polyphony, &p.timeConsumptionState, &p.latestDataProvider),
-      utilComponent(p),
+      utilComponent{SectionComponent{"UTILITY", HEADER_CHECK::Hidden, std::make_unique<UtilComponent>(p)}},
       oscComponents{
           SectionComponent{"OSC 1", HEADER_CHECK::Enabled, std::make_unique<OscComponent>(0, p.allParams)},
           SectionComponent{"OSC 2", HEADER_CHECK::Enabled, std::make_unique<OscComponent>(1, p.allParams)},
@@ -37,8 +38,8 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
           SectionComponent{"MOD ENV 2", HEADER_CHECK::Enabled, std::make_unique<ModEnvComponent>(1, p.allParams)},
           SectionComponent{"MOD ENV 3", HEADER_CHECK::Enabled, std::make_unique<ModEnvComponent>(2, p.allParams)}},
       delayComponent{SectionComponent{"DELAY", HEADER_CHECK::Enabled, std::make_unique<DelayComponent>(p.allParams)}},
-      masterComponent{MasterComponent(p.allParams.voiceParams, p.allParams.mainParamList)},
-      drumComponent{DrumComponent(p.allParams.voiceParams, p.allParams.mainParamList)} {
+      masterComponent{SectionComponent{"MASTER", HEADER_CHECK::Hidden, std::make_unique<MasterComponent>(p.allParams)}},
+      drumComponent{SectionComponent{"DRUM", HEADER_CHECK::Hidden, std::make_unique<DrumComponent>(p.allParams)}} {
     getLookAndFeel().setColour(juce::Label::textColourId, colour::TEXT);
 
     addAndMakeVisible(voiceComponent);

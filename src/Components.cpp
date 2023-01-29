@@ -182,20 +182,14 @@ void IncDecButton::sliderValueChanged(juce::Slider* _slider) {
 }
 
 //==============================================================================
-VoiceComponent::VoiceComponent(VoiceParams& params,
-                               std::vector<MainParams>& mainParamList,
-                               std::array<ControlItemParams, NUM_CONTROL>& controlItemParams)
-    : params(params),
-      mainParamList(mainParamList),
-      controlItemParams(controlItemParams),
-      header("VOICE", HEADER_CHECK::Hidden),
+VoiceComponent::VoiceComponent(AllParams& allParams)
+    : params(allParams.voiceParams),
+      mainParamList(allParams.mainParamList),
+      controlItemParams(allParams.controlItemParams),
       modeSelector("Mode"),
       portamentoTimeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                            juce::Slider::TextEntryBoxPosition::NoTextBox),
       pitchBendRangeButton() {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     initChoice(modeSelector, params.Mode, this, *this);
     initLinear(portamentoTimeSlider, params.PortamentoTime, 0.001, " sec", nullptr, this, *this);
     initIncDec(pitchBendRangeButton, params.PitchBendRange, this, *this);
@@ -217,9 +211,6 @@ void VoiceComponent::paint(juce::Graphics& g) {}
 
 void VoiceComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
     bounds.reduce(0, 10);
     consumeLabeledComboBox(bounds, 70, modeLabel, modeSelector);
     auto drumBounds = bounds;
@@ -300,13 +291,7 @@ void VoiceComponent::timerCallback() {
 
 //==============================================================================
 UtilComponent::UtilComponent(GrapeAudioProcessor& processor)
-    : processor(processor),
-      header("UTILITY", HEADER_CHECK::Hidden),
-      copyToClipboardButton(),
-      pasteFromClipboardButton() {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
+    : processor(processor), copyToClipboardButton(), pasteFromClipboardButton() {
     copyToClipboardButton.setLookAndFeel(&grapeLookAndFeel);
     copyToClipboardButton.setButtonText("Copy");
     copyToClipboardButton.addListener(this);
@@ -329,9 +314,6 @@ void UtilComponent::paint(juce::Graphics& g) {}
 
 void UtilComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
     bounds.reduce(0, 10);
     consumeLabeledComboBox(bounds, 60, copyToClipboardLabel, copyToClipboardButton);
     consumeLabeledComboBox(bounds, 60, pasteFromClipboardLabel, pasteFromClipboardButton);
@@ -427,16 +409,11 @@ void StatusComponent::timerCallback() {
 }
 
 //==============================================================================
-MasterComponent::MasterComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
-    : voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      header("MASTER", HEADER_CHECK::Hidden),
+MasterComponent::MasterComponent(AllParams& allParams)
+    : allParams(allParams),
       panSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox),
       volumeSlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                    juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     auto& params = getSelectedOscParams();
     initLinear(panSlider, params.Pan, 0.01, this, *this);
     initLinear(volumeSlider, params.MasterVolume, 0.01, this, *this);
@@ -452,9 +429,6 @@ void MasterComponent::paint(juce::Graphics& g) {}
 
 void MasterComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
     bounds = bounds.removeFromTop(bounds.getHeight() * 3 / 4);
 
     consumeLabeledKnob(bounds, panLabel, panSlider);
@@ -1187,29 +1161,23 @@ void DelayComponent::timerCallback() {
 }
 
 //==============================================================================
-DrumComponent::DrumComponent(VoiceParams& voiceParams, std::vector<MainParams>& mainParamList)
-    : voiceParams(voiceParams),
-      mainParamList(mainParamList),
-      header("DRUM", HEADER_CHECK::Hidden),
+DrumComponent::DrumComponent(AllParams& allParams)
+    : allParams(allParams),
       noteToPlaySlider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
                        juce::Slider::TextEntryBoxPosition::NoTextBox) {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     auto& params = getSelectedDrumParams();
 
-    initLinear(noteToPlaySlider, params.NoteToPlay, this, body);
+    initLinear(noteToPlaySlider, params.NoteToPlay, this, *this);
     initChoice(noteToMuteEnabledSelector, params.NoteToMuteEnabled, this, noteToMuteSelector);
     initChoice(noteToMuteKindSelector, params.NoteToMuteKind, this, noteToMuteSelector);
     initChoice(noteToMuteOctSelector, params.NoteToMuteOct, this, noteToMuteSelector);
-    initChoice(busSelector, params.Bus, this, body);
+    initChoice(busSelector, params.Bus, this, *this);
 
-    initLabel(noteToPlayLabel, "Note", body);
-    initLabel(noteToMuteLabel, "Note to Mute", body);
-    initLabel(busLabel, "Bus", body);
+    initLabel(noteToPlayLabel, "Note", *this);
+    initLabel(noteToMuteLabel, "Note to Mute", *this);
+    initLabel(busLabel, "Bus", *this);
 
-    body.addAndMakeVisible(noteToMuteSelector);
-    addAndMakeVisible(body);
+    this->addAndMakeVisible(noteToMuteSelector);
 
     startTimerHz(30.0f);
 }
@@ -1220,14 +1188,9 @@ void DrumComponent::paint(juce::Graphics& g) {}
 
 void DrumComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
-
-    body.setBounds(bounds);
-    bounds = body.getLocalBounds();
-    auto bodyHeight = bounds.getHeight();
-    // auto upperArea = bounds.removeFromTop(bodyHeight / 2);
-    auto upperArea = bounds.removeFromTop(bodyHeight * 3 / 4);
+    auto height = bounds.getHeight();
+    // auto upperArea = bounds.removeFromTop(height / 2);
+    auto upperArea = bounds.removeFromTop(height * 3 / 4);
     auto& lowerArea = bounds;
 
     auto& params = getSelectedDrumParams();
@@ -1375,12 +1338,8 @@ void ControlItemComponent::timerCallback() {
 
 //==============================================================================
 ControlComponent::ControlComponent(std::array<ControlItemParams, NUM_CONTROL>& params)
-    : header("CONTROLS", HEADER_CHECK::Hidden),
-      controlItemComponents{
+    : controlItemComponents{
           ControlItemComponent(params[0]), ControlItemComponent(params[1]), ControlItemComponent(params[2])} {
-    header.enabledButton.setLookAndFeel(&grapeLookAndFeel);
-    addAndMakeVisible(header);
-
     initLabel(numberLabel, "CC", *this);
     initLabel(targetLabel, "Destination", *this);
 
@@ -1397,8 +1356,6 @@ void ControlComponent::resized() {
     juce::Rectangle<int> bounds = getLocalBounds();
     auto width = bounds.getWidth();
 
-    auto headerArea = bounds.removeFromLeft(PANEL_NAME_HEIGHT);
-    header.setBounds(headerArea);
     auto labelArea = bounds.removeFromTop(LABEL_HEIGHT);
     numberLabel.setBounds(labelArea.removeFromLeft(width / 5));
     targetLabel.setBounds(labelArea);

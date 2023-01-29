@@ -20,20 +20,20 @@ private:
     GrapeAudioProcessor &audioProcessor;
     ANALYSER_MODE analyserMode = ANALYSER_MODE::Spectrum;
 
-    ControlComponent controlComponent;
-    VoiceComponent voiceComponent;
+    SectionComponent controlComponent;
+    SectionComponent voiceComponent;
     AnalyserToggle analyserToggle;
     AnalyserWindow analyserWindow;
     StatusComponent statusComponent;
-    UtilComponent utilComponent;
+    SectionComponent utilComponent;
     SectionComponent oscComponents[NUM_OSC];
     SectionComponent envelopeComponents[NUM_ENVELOPE];
     SectionComponent filterComponents[NUM_FILTER];
     SectionComponent lfoComponents[NUM_LFO];
     SectionComponent modEnvComponents[NUM_MODENV];
     SectionComponent delayComponent;
-    MasterComponent masterComponent;
-    DrumComponent drumComponent;
+    SectionComponent masterComponent;
+    SectionComponent drumComponent;
 
     virtual void timerCallback() override;
     virtual void enabledChanged(SectionComponent *section) override;
