@@ -83,6 +83,7 @@ GrapeAudioProcessorEditor::GrapeAudioProcessorEditor(GrapeAudioProcessor &p)
     {
         auto &params = audioProcessor.allParams.getCurrentMainParams().delayParams;
         delayComponent.setEnabled(params.Enabled->get());
+        delayComponent.addListener(this);
         addAndMakeVisible(delayComponent);
     }
     addAndMakeVisible(masterComponent);
