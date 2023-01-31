@@ -1234,6 +1234,7 @@ void DrumComponent::timerCallback() {
     auto muteEnabled = params.NoteToMuteEnabled->get();
     noteToMuteKindSelector.setEnabled(muteEnabled);
     noteToMuteOctSelector.setEnabled(muteEnabled);
+    busSelector.setSelectedItemIndex(params.Bus->getIndex(), juce::dontSendNotification);
 }
 
 //==============================================================================
