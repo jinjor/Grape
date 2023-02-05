@@ -381,7 +381,7 @@ void ModEnvParams::loadParameters(juce::XmlElement& xml) {
     *Enabled = xml.getIntAttribute(Enabled->paramID, 0);
     *TargetType = xml.getIntAttribute(TargetType->paramID, 0);
     *TargetOsc = xml.getIntAttribute(TargetOsc->paramID, NUM_OSC);
-    *TargetFilter = xml.getIntAttribute(TargetOsc->paramID, NUM_FILTER);
+    *TargetFilter = xml.getIntAttribute(TargetFilter->paramID, NUM_FILTER);
     *TargetLfo = xml.getIntAttribute(TargetOsc->paramID, NUM_LFO);
     *TargetOscParam = xml.getIntAttribute(TargetOscParam->paramID, 0);
     *TargetFilterParam = xml.getIntAttribute(TargetFilterParam->paramID, 0);
